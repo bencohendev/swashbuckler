@@ -6,8 +6,7 @@
 	export let data;
 	export let form;
 
-	let { session, supabase, profile } = data;
-	$: ({ session, supabase, profile } = data);
+	$: ({ session, profile } = data);
 
 	let profileForm: HTMLFormElement;
 	let loading = false;
@@ -32,14 +31,8 @@
 	};
 </script>
 
-<div class="form-widget">
-	<form
-		class="form-widget"
-		method="post"
-		action="?/update"
-		use:enhance={handleSubmit}
-		bind:this={profileForm}
-	>
+<div>
+	<form method="post" action="?/update" use:enhance={handleSubmit} bind:this={profileForm}>
 		<div>
 			<label for="email">Email</label>
 			<input id="email" type="text" value={session.user.email} disabled />
@@ -61,18 +54,13 @@
 		</div>
 
 		<div>
-			<input
-				type="submit"
-				class="button block primary"
-				value={loading ? 'Loading...' : 'Update'}
-				disabled={loading}
-			/>
+			<input type="submit" value={loading ? 'Loading...' : 'Update'} disabled={loading} />
 		</div>
 	</form>
 
 	<form method="post" action="?/signout" use:enhance={handleSignOut}>
 		<div>
-			<button class="button block" disabled={loading}>Sign Out</button>
+			<button disabled={loading}>Sign Out</button>
 		</div>
 	</form>
 </div>

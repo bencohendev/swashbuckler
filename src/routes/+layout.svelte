@@ -1,12 +1,11 @@
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
-	import '../styles.css';
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import '../app.css';
 
 	export let data;
 
-	let { supabase, session } = data;
 	$: ({ supabase, session } = data);
 
 	onMount(() => {
@@ -24,6 +23,6 @@
 	<title>User Management</title>
 </svelte:head>
 
-<div class="container" style="padding: 50px 0 100px 0">
+<div class="flex p-8 justify-center">
 	<slot />
 </div>
