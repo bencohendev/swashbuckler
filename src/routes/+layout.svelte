@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-	<title>User Management</title>
+	<title>Swashbuckler</title>
 </svelte:head>
 
 <div class="flex p-8 justify-center">

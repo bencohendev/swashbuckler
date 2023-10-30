@@ -10,12 +10,10 @@
 </svelte:head>
 
 <div>
-	<div>
-		<Auth
-			supabaseClient={data.supabase}
-			view="magic_link"
-			redirectTo={`${data.url}/auth/callback`}
-			showLinks={false}
-		/>
-	</div>
+	<Auth
+		supabaseClient={data.supabase}
+		view="magic_link"
+		redirectTo={`${data.url}/auth/callback`}
+		showLinks={false}
+	/>
 </div>
