@@ -34,16 +34,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Redirect unauthenticated users to login (except for auth pages)
+  // Auth pages that should redirect authenticated users away
   const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/signup") ||
     request.nextUrl.pathname.startsWith("/auth")
-
-  if (!user && !isAuthPage) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/login"
-    return NextResponse.redirect(url)
-  }
 
   // Redirect authenticated users away from auth pages
   if (user && isAuthPage) {
@@ -51,6 +45,9 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/"
     return NextResponse.redirect(url)
   }
+
+  // Guest mode: allow unauthenticated users to access the app
+  // They will use local storage (IndexedDB) instead of Supabase
 
   return supabaseResponse
 }
