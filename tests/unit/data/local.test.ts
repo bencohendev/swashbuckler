@@ -105,7 +105,9 @@ describe('Local Data Client (IndexedDB)', () => {
 
     it('sorts by updated_at descending', async () => {
       const first = await client.objects.create({ title: 'First', type: 'page' })
+      await new Promise(resolve => setTimeout(resolve, 10))
       await client.objects.create({ title: 'Second', type: 'page' })
+      await new Promise(resolve => setTimeout(resolve, 10))
       await client.objects.update(first.data!.id, { title: 'First Updated' })
 
       const result = await client.objects.list()
