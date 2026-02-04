@@ -57,6 +57,7 @@ export interface ListObjectsOptions {
   parentId?: string | null
   type?: 'page' | 'note'
   isDeleted?: boolean
+  isTemplate?: boolean
   limit?: number
   offset?: number
 }

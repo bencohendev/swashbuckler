@@ -57,6 +57,10 @@ function createObjectsClient(): ObjectsClient {
           filters.push(obj => obj.is_deleted === options.isDeleted)
         }
 
+        if (options.isTemplate !== undefined) {
+          filters.push(obj => obj.is_template === options.isTemplate)
+        }
+
         let results = await collection.toArray()
 
         // Apply filters

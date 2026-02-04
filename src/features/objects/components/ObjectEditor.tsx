@@ -2,10 +2,17 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrashIcon, MoreHorizontalIcon } from 'lucide-react'
+import { TrashIcon, MoreHorizontalIcon, CopyIcon, BookmarkIcon, BookmarkMinusIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { Button } from '@/shared/components/ui/Button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/DropdownMenu'
 import { useDataClient } from '@/shared/lib/data'
 import { Editor } from '@/features/editor'
 
@@ -51,6 +58,32 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
     router.push('/')
   }
 
+  const handleSaveAsTemplate = async () => {
+    if (!object) return
+
+    // Create a copy of the object as a template
+    const result = await dataClient.objects.create({
+      title: `${object.title} (Template)`,
+      type: object.type,
+      icon: object.icon,
+      cover_image: object.cover_image,
+      properties: { ...object.properties },
+      content: object.content ? JSON.parse(JSON.stringify(object.content)) : null,
+      is_template: true,
+    })
+
+    if (result.data) {
+      // Show a brief confirmation (could be improved with toast)
+      alert('Saved as template!')
+    }
+  }
+
+  const handleToggleTemplate = async () => {
+    if (!object) return
+
+    await update({ is_template: !object.is_template })
+  }
+
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4 p-6">
@@ -82,12 +115,47 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
           )}
         </div>
         <div className="flex items-center gap-1">
+          {object.is_template && (
+            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              Template
+            </span>
+          )}
           <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash">
             <TrashIcon className="size-4" />
           </Button>
-          <Button size="icon-sm" variant="ghost" title="More options">
-            <MoreHorizontalIcon className="size-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon-sm" variant="ghost" title="More options">
+                <MoreHorizontalIcon className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {!object.is_template && (
+                <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                  <CopyIcon className="size-4" />
+                  Save as Template
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={handleToggleTemplate}>
+                {object.is_template ? (
+                  <>
+                    <BookmarkMinusIcon className="size-4" />
+                    Remove Template Status
+                  </>
+                ) : (
+                  <>
+                    <BookmarkIcon className="size-4" />
+                    Mark as Template
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                <TrashIcon className="size-4" />
+                Move to Trash
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

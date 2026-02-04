@@ -32,6 +32,10 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
         query = query.eq('is_deleted', options.isDeleted)
       }
 
+      if (options.isTemplate !== undefined) {
+        query = query.eq('is_template', options.isTemplate)
+      }
+
       if (options.limit) {
         query = query.limit(options.limit)
       }
