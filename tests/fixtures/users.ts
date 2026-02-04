@@ -26,7 +26,7 @@ export function createMockUser(overrides = {}) {
   }
 }
 
-export function createMockSession(overrides = {}) {
+export function createMockSession(overrides: Partial<typeof mockSession> = {}) {
   const user = overrides.user || createMockUser()
   return {
     ...mockSession,
