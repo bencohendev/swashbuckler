@@ -3,9 +3,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { TrashIcon, MoreHorizontalIcon } from 'lucide-react'
+import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { Button } from '@/shared/components/ui/Button'
 import { useDataClient } from '@/shared/lib/data'
+import { Editor } from '@/features/editor'
 
 interface ObjectEditorProps {
   id: string
@@ -33,6 +35,10 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
     setIsSaving(true)
     await update({ title: newTitle })
     setIsSaving(false)
+  }, [update])
+
+  const handleContentSave = useCallback(async (content: Value) => {
+    await update({ content })
   }, [update])
 
   const handleDelete = async () => {
@@ -94,11 +100,11 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
           className="mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground"
         />
 
-        <div className="prose prose-sm max-w-none">
-          <p className="text-muted-foreground">
-            Start writing here... (Editor coming soon)
-          </p>
-        </div>
+        <Editor
+          initialContent={object.content ?? undefined}
+          onSave={handleContentSave}
+          placeholder="Start writing..."
+        />
       </main>
     </div>
   )
