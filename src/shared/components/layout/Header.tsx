@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/shared/lib/supabase/client"
 import { Button } from "@/shared/components/ui/Button"
@@ -11,10 +12,11 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback } from "@/shared/components/ui/Avatar"
-import { LogOutIcon, UserIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, UserIcon, UserPlusIcon } from "lucide-react"
 
 export function Header({ email }: { email?: string }) {
   const router = useRouter()
+  const isGuest = !email
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -25,7 +27,7 @@ export function Header({ email }: { email?: string }) {
 
   const initials = email
     ? email.slice(0, 2).toUpperCase()
-    : "U"
+    : "G"
 
   return (
     <header className="flex h-14 items-center justify-between border-b px-4">
@@ -39,15 +41,39 @@ export function Header({ email }: { email?: string }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem disabled>
-            <UserIcon className="size-4" />
-            {email}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
-            <LogOutIcon className="size-4" />
-            Sign out
-          </DropdownMenuItem>
+          {isGuest ? (
+            <>
+              <DropdownMenuItem disabled>
+                <UserIcon className="size-4" />
+                Guest
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/signup">
+                  <UserPlusIcon className="size-4" />
+                  Sign up
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/login">
+                  <LogInIcon className="size-4" />
+                  Sign in
+                </Link>
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem disabled>
+                <UserIcon className="size-4" />
+                {email}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOutIcon className="size-4" />
+                Sign out
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useDataClient, type DataObject, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
 
 interface UseObjectsOptions extends ListObjectsOptions {
@@ -19,11 +19,20 @@ interface UseObjectsReturn {
 }
 
 export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
-  const { enabled = true, ...queryOptions } = options
+  const { enabled = true, parentId, type, isDeleted, limit, offset } = options
   const dataClient = useDataClient()
   const [objects, setObjects] = useState<DataObject[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const isMounted = useRef(true)
+
+  const queryOptions = useMemo<ListObjectsOptions>(() => ({
+    parentId,
+    type,
+    isDeleted,
+    limit,
+    offset,
+  }), [parentId, type, isDeleted, limit, offset])
 
   const fetchObjects = useCallback(async () => {
     if (!enabled) {
@@ -36,6 +45,8 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
 
     const result = await dataClient.objects.list(queryOptions)
 
+    if (!isMounted.current) return
+
     if (result.error) {
       setError(result.error.message)
       setObjects([])
@@ -44,10 +55,13 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
     }
 
     setIsLoading(false)
-  }, [dataClient, enabled, JSON.stringify(queryOptions)])
+  }, [dataClient, enabled, queryOptions])
 
   useEffect(() => {
+    isMounted.current = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
     fetchObjects()
+    return () => { isMounted.current = false }
   }, [fetchObjects])
 
   const create = useCallback(async (input: CreateObjectInput): Promise<DataObject | null> => {
@@ -114,6 +128,7 @@ export function useObject(id: string | null) {
   const [object, setObject] = useState<DataObject | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const isMounted = useRef(true)
 
   const fetchObject = useCallback(async () => {
     if (!id) {
@@ -127,6 +142,8 @@ export function useObject(id: string | null) {
 
     const result = await dataClient.objects.get(id)
 
+    if (!isMounted.current) return
+
     if (result.error) {
       setError(result.error.message)
       setObject(null)
@@ -138,7 +155,10 @@ export function useObject(id: string | null) {
   }, [dataClient, id])
 
   useEffect(() => {
+    isMounted.current = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
     fetchObject()
+    return () => { isMounted.current = false }
   }, [fetchObject])
 
   const update = useCallback(async (input: UpdateObjectInput): Promise<DataObject | null> => {

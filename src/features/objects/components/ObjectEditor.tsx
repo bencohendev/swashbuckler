@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { TrashIcon, MoreHorizontalIcon } from 'lucide-react'
 import { useObject } from '../hooks/useObjects'
@@ -18,16 +18,18 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
+  // Sync title when object changes (e.g., on initial load or navigation)
   useEffect(() => {
     if (object) {
       setTitle(object.title)
     }
-  }, [object])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync on id change
+  }, [object?.id])
 
   const handleTitleChange = useCallback(async (newTitle: string) => {
     setTitle(newTitle)
 
-    // Debounced auto-save
+    // Auto-save
     setIsSaving(true)
     await update({ title: newTitle })
     setIsSaving(false)

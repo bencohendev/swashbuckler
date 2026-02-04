@@ -37,10 +37,8 @@ class MockIntersectionObserver implements IntersectionObserver {
   readonly rootMargin: string = ''
   readonly thresholds: ReadonlyArray<number> = []
 
-  constructor(
-    private callback: IntersectionObserverCallback,
-    _options?: IntersectionObserverInit
-  ) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
 
   observe = vi.fn()
   unobserve = vi.fn()
@@ -52,6 +50,7 @@ window.IntersectionObserver = MockIntersectionObserver
 
 // Mock ResizeObserver
 class MockResizeObserver implements ResizeObserver {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(_callback: ResizeObserverCallback) {}
   observe = vi.fn()
   unobserve = vi.fn()
