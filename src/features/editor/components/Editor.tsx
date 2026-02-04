@@ -6,6 +6,29 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import type { Value } from '@udecode/plate';
 import { editorPlugins, initialEditorValue } from '../lib/plate-config';
+import {
+  ParagraphElement,
+  H1Element,
+  H2Element,
+  H3Element,
+  BlockquoteElement,
+  CodeBlockElement,
+  CodeLineElement,
+  BulletedListElement,
+  NumberedListElement,
+  ListItemElement,
+  ToggleElement,
+  CalloutElement,
+  TableElement,
+  TableRowElement,
+  TableCellElement,
+  TableHeaderCellElement,
+  ImageElement,
+  LinkElement,
+  MentionElement,
+  MentionInputElement,
+  SlashInputElement,
+} from './elements';
 import { useEditorStore } from '../store';
 import { useAutoSave } from '../hooks/useAutoSave';
 
@@ -26,10 +49,35 @@ export function Editor({
 
   const editorValue = initialContent || initialEditorValue;
 
-  // Create editor with plugins
+  // Create editor with plugins and components
   const editor = usePlateEditor({
     plugins: editorPlugins,
     value: editorValue,
+    override: {
+      components: {
+        p: ParagraphElement,
+        h1: H1Element,
+        h2: H2Element,
+        h3: H3Element,
+        blockquote: BlockquoteElement,
+        code_block: CodeBlockElement,
+        code_line: CodeLineElement,
+        ul: BulletedListElement,
+        ol: NumberedListElement,
+        li: ListItemElement,
+        toggle: ToggleElement,
+        callout: CalloutElement,
+        table: TableElement,
+        tr: TableRowElement,
+        td: TableCellElement,
+        th: TableHeaderCellElement,
+        img: ImageElement,
+        a: LinkElement,
+        mention: MentionElement,
+        mention_input: MentionInputElement,
+        slash_input: SlashInputElement,
+      },
+    },
   });
 
   // Handle content changes

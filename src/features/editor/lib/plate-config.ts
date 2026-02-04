@@ -14,7 +14,8 @@ import { CalloutPlugin } from '@udecode/plate-callout/react';
 import { TablePlugin } from '@udecode/plate-table/react';
 import { ImagePlugin } from '@udecode/plate-media/react';
 import { LinkPlugin } from '@udecode/plate-link/react';
-import { SlashPlugin } from '@udecode/plate-slash-command/react';
+import { SlashPlugin, SlashInputPlugin } from '@udecode/plate-slash-command/react';
+import { SlashInputElement } from '../components/elements';
 import { MentionPlugin, MentionInputPlugin } from '@udecode/plate-mention/react';
 import { DndPlugin } from '@udecode/plate-dnd';
 import { AutoformatPlugin } from '@udecode/plate-autoformat/react';
@@ -54,7 +55,13 @@ export const editorPlugins = [
   IndentPlugin,
 
   // Commands and mentions
-  SlashPlugin,
+  SlashPlugin.configure({
+    options: {
+      trigger: '/',
+      triggerPreviousCharPattern: /^\s?$/,
+    },
+  }),
+  SlashInputPlugin,
   MentionPlugin.configure({
     options: {
       triggerPreviousCharPattern: /^\s?$/,

@@ -9,3 +9,4 @@ export { TableElement, TableRowElement, TableCellElement, TableHeaderCellElement
 export { ImageElement } from './Image';
 export { LinkElement } from './Link';
 export { MentionElement, MentionInputElement } from './Mention';
+export { SlashInputElement } from './SlashInput';
