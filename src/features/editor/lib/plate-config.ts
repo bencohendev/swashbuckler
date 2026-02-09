@@ -64,14 +64,11 @@ export const editorPlugins = [
   SlashInputPlugin,
   MentionPlugin.configure({
     options: {
-      triggerPreviousCharPattern: /^\s?$/,
+      trigger: '[',
+      triggerPreviousCharPattern: /^\[$/,
     },
   }),
-  MentionInputPlugin.configure({
-    options: {
-      trigger: '[[',
-    },
-  }),
+  MentionInputPlugin,
 
   // Drag and drop
   DndPlugin.configure({

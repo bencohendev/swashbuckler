@@ -38,10 +38,9 @@ export function useObjectRelations(objectId: string | null): UseObjectRelationsR
     }
     setError(null)
 
-    // Fetch outgoing link-type relations only
+    // Fetch all outgoing relations (links and mentions)
     const result = await dataClient.relations.list({
       objectId,
-      relationType: 'link',
     })
 
     if (!isMounted.current) return
@@ -53,12 +52,22 @@ export function useObjectRelations(objectId: string | null): UseObjectRelationsR
       return
     }
 
-    // Only include outgoing links from this object
+    // Only include outgoing relations from this object
     const outgoing = result.data.filter(r => r.source_id === objectId)
+
+    // Deduplicate by target_id, preferring 'link' over 'mention'
+    const byTarget = new Map<string, typeof outgoing[number]>()
+    for (const r of outgoing) {
+      const existing = byTarget.get(r.target_id)
+      if (!existing || r.relation_type === 'link') {
+        byTarget.set(r.target_id, r)
+      }
+    }
+    const deduplicated = Array.from(byTarget.values())
 
     // Enrich with object data
     const enriched: EnrichedRelation[] = await Promise.all(
-      outgoing.map(async (relation) => {
+      deduplicated.map(async (relation) => {
         const targetResult = await dataClient.objects.get(relation.target_id)
         return {
           ...relation,

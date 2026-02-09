@@ -41,14 +41,18 @@ export function LinkedObjects({ objectId }: LinkedObjectsProps) {
               >
                 {relation.linkedObject?.title || 'Untitled'}
               </Link>
-              <button
-                type="button"
-                onClick={() => removeLink(relation.id)}
-                className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                title="Remove link"
-              >
-                <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
-              </button>
+              {relation.relation_type === 'link' ? (
+                <button
+                  type="button"
+                  onClick={() => removeLink(relation.id)}
+                  className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                  title="Remove link"
+                >
+                  <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
+              ) : (
+                <span className="shrink-0 text-xs text-muted-foreground">mention</span>
+              )}
             </div>
           ))}
         </div>
