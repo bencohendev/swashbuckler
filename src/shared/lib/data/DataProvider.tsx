@@ -74,9 +74,10 @@ export function DataProvider({ children }: DataProviderProps) {
       })
     }
 
-    // Migrate objects
+    // Migrate objects (track old→new ID mapping for relations)
+    const objectIdMap = new Map<string, string>()
     for (const obj of localData.objects) {
-      await supabaseClient.objects.create({
+      const result = await supabaseClient.objects.create({
         title: obj.title,
         type_id: obj.type_id,
         parent_id: obj.parent_id,
@@ -85,6 +86,9 @@ export function DataProvider({ children }: DataProviderProps) {
         properties: obj.properties,
         content: obj.content,
       })
+      if (result.data) {
+        objectIdMap.set(obj.id, result.data.id)
+      }
     }
 
     // Migrate templates
@@ -97,6 +101,21 @@ export function DataProvider({ children }: DataProviderProps) {
         properties: template.properties,
         content: template.content,
       })
+    }
+
+    // Migrate relations (remap object IDs)
+    for (const relation of localData.objectRelations) {
+      const newSourceId = objectIdMap.get(relation.source_id)
+      const newTargetId = objectIdMap.get(relation.target_id)
+      if (newSourceId && newTargetId) {
+        await supabaseClient.relations.create({
+          source_id: newSourceId,
+          target_id: newTargetId,
+          relation_type: relation.relation_type,
+          source_property: relation.source_property,
+          context: relation.context,
+        })
+      }
     }
 
     // Clear local data after successful migration

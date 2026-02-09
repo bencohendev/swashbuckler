@@ -4,16 +4,20 @@ import type {
   ObjectsClient,
   ObjectTypesClient,
   TemplatesClient,
+  RelationsClient,
   DataObject,
   ObjectType,
+  ObjectRelation,
   Template,
   CreateObjectInput,
   UpdateObjectInput,
   CreateObjectTypeInput,
   UpdateObjectTypeInput,
+  CreateObjectRelationInput,
   CreateTemplateInput,
   UpdateTemplateInput,
   ListObjectsOptions,
+  ListRelationsOptions,
   ListTemplatesOptions,
   DataResult,
   DataListResult,
@@ -372,11 +376,147 @@ function createTemplatesClient(supabase: SupabaseClient): TemplatesClient {
   }
 }
 
+function createRelationsClient(supabase: SupabaseClient): RelationsClient {
+  return {
+    async list(options: ListRelationsOptions): Promise<DataListResult<ObjectRelation>> {
+      let query = supabase
+        .from('object_relations')
+        .select('*')
+        .or(`source_id.eq.${options.objectId},target_id.eq.${options.objectId}`)
+        .order('created_at', { ascending: false })
+
+      if (options.relationType) {
+        query = query.eq('relation_type', options.relationType)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectRelation[], error: null }
+    },
+
+    async create(input: CreateObjectRelationInput): Promise<DataResult<ObjectRelation>> {
+      if (input.source_id === input.target_id) {
+        return { data: null, error: { message: 'Cannot create self-referencing relation' } }
+      }
+
+      const relationData = {
+        source_id: input.source_id,
+        target_id: input.target_id,
+        relation_type: input.relation_type ?? 'link',
+        source_property: input.source_property ?? null,
+        context: input.context ?? null,
+      }
+
+      const { data, error } = await supabase
+        .from('object_relations')
+        .upsert(relationData, { onConflict: 'source_id,target_id,relation_type,source_property' })
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectRelation, error: null }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('object_relations')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async deleteBySourceAndTarget(sourceId: string, targetId: string, relationType?: string): Promise<DataResult<void>> {
+      let query = supabase
+        .from('object_relations')
+        .delete()
+        .eq('source_id', sourceId)
+        .eq('target_id', targetId)
+
+      if (relationType) {
+        query = query.eq('relation_type', relationType)
+      }
+
+      const { error } = await query
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async syncMentions(sourceId: string, mentionTargetIds: string[]): Promise<DataResult<void>> {
+      // Fetch existing mention relations for this source
+      const { data: existing, error: fetchError } = await supabase
+        .from('object_relations')
+        .select('*')
+        .eq('source_id', sourceId)
+        .eq('relation_type', 'mention')
+
+      if (fetchError) {
+        return { data: null, error: { message: fetchError.message, code: fetchError.code } }
+      }
+
+      const existingTargetIds = new Set((existing ?? []).map((r: ObjectRelation) => r.target_id))
+      const desiredTargetIds = new Set(mentionTargetIds.filter(id => id !== sourceId))
+
+      // Delete removed mentions
+      const toDelete = (existing ?? []).filter((r: ObjectRelation) => !desiredTargetIds.has(r.target_id))
+      if (toDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('object_relations')
+          .delete()
+          .in('id', toDelete.map((r: ObjectRelation) => r.id))
+
+        if (deleteError) {
+          return { data: null, error: { message: deleteError.message, code: deleteError.code } }
+        }
+      }
+
+      // Add new mentions
+      const toAdd = [...desiredTargetIds]
+        .filter(id => !existingTargetIds.has(id))
+        .map(targetId => ({
+          source_id: sourceId,
+          target_id: targetId,
+          relation_type: 'mention',
+          source_property: null,
+          context: null,
+        }))
+
+      if (toAdd.length > 0) {
+        const { error: insertError } = await supabase
+          .from('object_relations')
+          .insert(toAdd)
+
+        if (insertError) {
+          return { data: null, error: { message: insertError.message, code: insertError.code } }
+        }
+      }
+
+      return { data: null, error: null }
+    },
+  }
+}
+
 export function createSupabaseDataClient(supabase: SupabaseClient): DataClient {
   return {
     objects: createObjectsClient(supabase),
     objectTypes: createObjectTypesClient(supabase),
     templates: createTemplatesClient(supabase),
+    relations: createRelationsClient(supabase),
     isLocal: false,
   }
 }

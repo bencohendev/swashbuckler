@@ -4,16 +4,20 @@ import type {
   ObjectsClient,
   ObjectTypesClient,
   TemplatesClient,
+  RelationsClient,
   DataObject,
   ObjectType,
+  ObjectRelation,
   Template,
   CreateObjectInput,
   UpdateObjectInput,
   CreateObjectTypeInput,
   UpdateObjectTypeInput,
+  CreateObjectRelationInput,
   CreateTemplateInput,
   UpdateTemplateInput,
   ListObjectsOptions,
+  ListRelationsOptions,
   ListTemplatesOptions,
   DataResult,
   DataListResult,
@@ -56,6 +60,7 @@ class SwashbucklerDB extends Dexie {
   objects!: EntityTable<DataObject, 'id'>
   objectTypes!: EntityTable<ObjectType, 'id'>
   templates!: EntityTable<Template, 'id'>
+  objectRelations!: EntityTable<ObjectRelation, 'id'>
 
   constructor() {
     super('swashbuckler')
@@ -133,6 +138,13 @@ class SwashbucklerDB extends Dexie {
       await tx.table('objects').toCollection().modify((obj: Record<string, unknown>) => {
         delete obj.is_template
       })
+    })
+
+    this.version(5).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, updated_at',
+      objectTypes: 'id, name, slug, owner_id, sort_order',
+      templates: 'id, name, type_id, owner_id, updated_at',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
     })
   }
 }
@@ -417,6 +429,13 @@ function createObjectsClient(): ObjectsClient {
 
         if (permanent) {
           await database.objects.delete(id)
+          // Cascade: delete relations referencing this object
+          const relatedRelations = await database.objectRelations
+            .filter(r => r.source_id === id || r.target_id === id)
+            .toArray()
+          if (relatedRelations.length > 0) {
+            await database.objectRelations.bulkDelete(relatedRelations.map(r => r.id))
+          }
         } else {
           const existing = await database.objects.get(id)
           if (existing) {
@@ -604,11 +623,162 @@ function createTemplatesClient(): TemplatesClient {
   }
 }
 
+function createRelationsClient(): RelationsClient {
+  return {
+    async list(options: ListRelationsOptions): Promise<DataListResult<ObjectRelation>> {
+      try {
+        const database = getDB()
+        const results = await database.objectRelations
+          .filter(r => {
+            const matchesObject = r.source_id === options.objectId || r.target_id === options.objectId
+            if (!matchesObject) return false
+            if (options.relationType) return r.relation_type === options.relationType
+            return true
+          })
+          .toArray()
+
+        results.sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+
+        return { data: results, error: null }
+      } catch (error) {
+        return {
+          data: [],
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async create(input: CreateObjectRelationInput): Promise<DataResult<ObjectRelation>> {
+      try {
+        const database = getDB()
+
+        if (input.source_id === input.target_id) {
+          return { data: null, error: { message: 'Cannot create self-referencing relation' } }
+        }
+
+        // Check for duplicate
+        const existing = await database.objectRelations
+          .filter(r =>
+            r.source_id === input.source_id &&
+            r.target_id === input.target_id &&
+            r.relation_type === (input.relation_type ?? 'link') &&
+            r.source_property === (input.source_property ?? null)
+          )
+          .first()
+
+        if (existing) {
+          return { data: existing, error: null }
+        }
+
+        const relation: ObjectRelation = {
+          id: generateUUID(),
+          source_id: input.source_id,
+          target_id: input.target_id,
+          relation_type: input.relation_type ?? 'link',
+          source_property: input.source_property ?? null,
+          context: input.context ?? null,
+          created_at: new Date().toISOString(),
+        }
+
+        await database.objectRelations.add(relation)
+        return { data: relation, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        await database.objectRelations.delete(id)
+        return { data: null, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async deleteBySourceAndTarget(sourceId: string, targetId: string, relationType?: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        const matches = await database.objectRelations
+          .filter(r => {
+            if (r.source_id !== sourceId || r.target_id !== targetId) return false
+            if (relationType) return r.relation_type === relationType
+            return true
+          })
+          .toArray()
+
+        await database.objectRelations.bulkDelete(matches.map(r => r.id))
+        return { data: null, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async syncMentions(sourceId: string, mentionTargetIds: string[]): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+
+        const existing = await database.objectRelations
+          .filter(r => r.source_id === sourceId && r.relation_type === 'mention')
+          .toArray()
+
+        const existingTargetIds = new Set(existing.map(r => r.target_id))
+        const desiredTargetIds = new Set(mentionTargetIds.filter(id => id !== sourceId))
+
+        // Delete removed mentions
+        const toDelete = existing.filter(r => !desiredTargetIds.has(r.target_id))
+        if (toDelete.length > 0) {
+          await database.objectRelations.bulkDelete(toDelete.map(r => r.id))
+        }
+
+        // Add new mentions
+        const toAdd: ObjectRelation[] = []
+        for (const targetId of desiredTargetIds) {
+          if (!existingTargetIds.has(targetId)) {
+            toAdd.push({
+              id: generateUUID(),
+              source_id: sourceId,
+              target_id: targetId,
+              relation_type: 'mention',
+              source_property: null,
+              context: null,
+              created_at: new Date().toISOString(),
+            })
+          }
+        }
+        if (toAdd.length > 0) {
+          await database.objectRelations.bulkAdd(toAdd)
+        }
+
+        return { data: null, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+  }
+}
+
 export function createLocalDataClient(): DataClient {
   return {
     objects: createObjectsClient(),
     objectTypes: createObjectTypesClient(),
     templates: createTemplatesClient(),
+    relations: createRelationsClient(),
     isLocal: true,
   }
 }
@@ -618,14 +788,21 @@ export async function clearLocalData(): Promise<void> {
   await database.objects.clear()
   await database.objectTypes.clear()
   await database.templates.clear()
+  await database.objectRelations.clear()
   // Re-seed built-in types
   await database.objectTypes.bulkAdd(BUILT_IN_TYPES)
 }
 
-export async function exportLocalData(): Promise<{ objects: DataObject[]; objectTypes: ObjectType[]; templates: Template[] }> {
+export async function exportLocalData(): Promise<{
+  objects: DataObject[]
+  objectTypes: ObjectType[]
+  templates: Template[]
+  objectRelations: ObjectRelation[]
+}> {
   const database = getDB()
   const objects = await database.objects.toArray()
   const objectTypes = await database.objectTypes.toArray()
   const templates = await database.templates.toArray()
-  return { objects, objectTypes, templates }
+  const objectRelations = await database.objectRelations.toArray()
+  return { objects, objectTypes, templates, objectRelations }
 }

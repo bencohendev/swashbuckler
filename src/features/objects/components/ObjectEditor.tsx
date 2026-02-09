@@ -7,6 +7,9 @@ import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
 import { useTemplates } from '@/features/templates'
+import { extractMentionIds, LinkedObjects } from '@/features/relations'
+import { useDataClient } from '@/shared/lib/data'
+import { emit } from '@/shared/lib/data/events'
 import { Button } from '@/shared/components/ui/Button'
 import {
   DropdownMenu,
@@ -24,6 +27,7 @@ interface ObjectEditorProps {
 
 export function ObjectEditor({ id }: ObjectEditorProps) {
   const router = useRouter()
+  const dataClient = useDataClient()
   const { object, isLoading, error, update, remove } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
   const { saveObjectAsTemplate } = useTemplates({ enabled: false })
@@ -49,7 +53,12 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
 
   const handleContentSave = useCallback(async (content: Value) => {
     await update({ content })
-  }, [update])
+
+    // Sync mention relations
+    const mentionIds = extractMentionIds(content)
+    await dataClient.relations.syncMentions(id, mentionIds)
+    emit('objectRelations')
+  }, [update, dataClient, id])
 
   const handlePropertyChange = useCallback(async (fieldId: string, value: unknown) => {
     if (!object) return
@@ -153,6 +162,8 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
           onSave={handleContentSave}
           placeholder="Start writing..."
         />
+
+        <LinkedObjects objectId={id} />
       </main>
     </div>
   )

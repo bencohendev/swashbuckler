@@ -1,4 +1,4 @@
-type EventChannel = 'objects' | 'objectTypes' | 'templates'
+type EventChannel = 'objects' | 'objectTypes' | 'templates' | 'objectRelations'
 type Listener = () => void
 
 const listeners = new Map<EventChannel, Set<Listener>>()

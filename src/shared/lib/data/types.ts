@@ -210,6 +210,7 @@ export interface DataClient {
   objects: ObjectsClient
   objectTypes: ObjectTypesClient
   templates: TemplatesClient
+  relations: RelationsClient
   isLocal: boolean
 }
 
@@ -221,6 +222,43 @@ export interface ObjectsClient {
   delete(id: string, permanent?: boolean): Promise<DataResult<void>>
   restore(id: string): Promise<DataResult<DataObject>>
   search(query: string): Promise<DataListResult<DataObject>>
+}
+
+// --- Object Relation schemas ---
+
+export const objectRelationSchema = z.object({
+  id: z.string().uuid(),
+  source_id: z.string().uuid(),
+  target_id: z.string().uuid(),
+  relation_type: z.string(),
+  source_property: z.string().nullable(),
+  context: z.any().nullable(),
+  created_at: z.string().datetime(),
+})
+
+export type ObjectRelation = z.infer<typeof objectRelationSchema>
+
+export const createObjectRelationSchema = z.object({
+  source_id: z.string().uuid(),
+  target_id: z.string().uuid(),
+  relation_type: z.string().optional(),
+  source_property: z.string().nullable().optional(),
+  context: z.any().nullable().optional(),
+})
+
+export type CreateObjectRelationInput = z.infer<typeof createObjectRelationSchema>
+
+export interface ListRelationsOptions {
+  objectId: string
+  relationType?: string
+}
+
+export interface RelationsClient {
+  list(options: ListRelationsOptions): Promise<DataListResult<ObjectRelation>>
+  create(input: CreateObjectRelationInput): Promise<DataResult<ObjectRelation>>
+  delete(id: string): Promise<DataResult<void>>
+  deleteBySourceAndTarget(sourceId: string, targetId: string, relationType?: string): Promise<DataResult<void>>
+  syncMentions(sourceId: string, mentionTargetIds: string[]): Promise<DataResult<void>>
 }
 
 // Storage mode
