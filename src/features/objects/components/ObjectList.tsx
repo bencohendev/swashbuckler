@@ -2,10 +2,11 @@
 
 import { usePathname } from 'next/navigation'
 import { ObjectItem } from './ObjectItem'
-import type { DataObject } from '@/shared/lib/data'
+import type { DataObject, ObjectType } from '@/shared/lib/data'
 
 interface ObjectListProps {
   objects: DataObject[]
+  objectType?: ObjectType
   isLoading?: boolean
   emptyMessage?: string
   compact?: boolean
@@ -13,6 +14,7 @@ interface ObjectListProps {
 
 export function ObjectList({
   objects,
+  objectType,
   isLoading,
   emptyMessage = 'No objects yet',
   compact,
@@ -47,6 +49,7 @@ export function ObjectList({
         <ObjectItem
           key={object.id}
           object={object}
+          objectType={objectType}
           isActive={pathname === `/objects/${object.id}`}
           compact={compact}
         />

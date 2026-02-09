@@ -5,7 +5,7 @@ import { useDataClient, type DataObject, type CreateObjectInput } from '@/shared
 import { useObjects } from '@/features/objects/hooks/useObjects'
 
 interface UseTemplatesOptions {
-  type?: 'page' | 'note'
+  typeId?: string
   enabled?: boolean
 }
 
@@ -21,7 +21,7 @@ interface UseTemplatesReturn {
 }
 
 export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesReturn {
-  const { type, enabled = true } = options
+  const { typeId, enabled = true } = options
   const dataClient = useDataClient()
 
   const {
@@ -34,7 +34,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
   } = useObjects({
     isTemplate: true,
     isDeleted: false,
-    type,
+    typeId,
     enabled,
   })
 
@@ -54,7 +54,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     // Create a new object based on the template
     const input: CreateObjectInput = {
       title: title || `Copy of ${template.title}`,
-      type: template.type,
+      type_id: template.type_id,
       parent_id: parentId ?? null,
       icon: template.icon,
       cover_image: template.cover_image,

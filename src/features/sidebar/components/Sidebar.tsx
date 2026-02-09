@@ -1,15 +1,17 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { HomeIcon, NetworkIcon, SettingsIcon, TrashIcon, PlusIcon } from "lucide-react"
+import { HomeIcon, NetworkIcon, PlusIcon, SettingsIcon, TrashIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
-import { useAuth } from "@/shared/lib/data"
+import { useAuth, BUILT_IN_TYPE_IDS } from "@/shared/lib/data"
 import type { DataObject } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
-import { ObjectList } from "@/features/objects/components"
-import { TemplateSelector, useTemplates } from "@/features/templates"
+import { useTemplates } from "@/features/templates"
+import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { Button } from "@/shared/components/ui/Button"
+import { TypeSection } from "./TypeSection"
 
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
@@ -22,17 +24,31 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { isGuest } = useAuth()
-  const { objects, isLoading, create } = useObjects({
+  const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
     isTemplate: false,
   })
+  const { types, isLoading: typesLoading, create: createType } = useObjectTypes()
   const { createFromTemplate } = useTemplates()
+  const [createTypeOpen, setCreateTypeOpen] = useState(false)
 
-  const handleCreateBlank = async (type: 'page' | 'note') => {
+  const objectsByType = useMemo(() => {
+    const grouped = new Map<string, DataObject[]>()
+    for (const obj of objects) {
+      const existing = grouped.get(obj.type_id) ?? []
+      existing.push(obj)
+      grouped.set(obj.type_id, existing)
+    }
+    return grouped
+  }, [objects])
+
+  const handleCreateBlank = async (typeId: string) => {
+    const typeDef = types.find(t => t.id === typeId)
+    const defaultTitle = typeId === BUILT_IN_TYPE_IDS.note ? 'Untitled Note' : 'Untitled'
     const result = await create({
-      title: type === 'page' ? 'Untitled' : 'Untitled Note',
-      type,
+      title: typeDef ? `Untitled ${typeDef.name}` : defaultTitle,
+      type_id: typeId,
     })
     if (result) {
       router.push(`/objects/${result.id}`)
@@ -45,6 +61,8 @@ export function Sidebar() {
       router.push(`/objects/${result.id}`)
     }
   }
+
+  const isLoading = objectsLoading || typesLoading
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-muted/30">
@@ -78,30 +96,42 @@ export function Sidebar() {
           )
         })}
       </nav>
-      <div className="flex-1 overflow-auto border-t p-2">
-        <div className="mb-2 flex items-center justify-between px-2">
-          <span className="text-xs font-medium text-muted-foreground">Pages</span>
-          <TemplateSelector
-            trigger={
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                title="Create new"
-              >
-                <PlusIcon className="size-3" />
-              </Button>
-            }
-            onCreateBlank={handleCreateBlank}
-            onSelectTemplate={handleSelectTemplate}
-          />
-        </div>
-        <ObjectList
-          objects={objects}
-          isLoading={isLoading}
-          emptyMessage="No pages yet"
-          compact
-        />
+      <div className="flex-1 space-y-3 overflow-auto border-t p-2">
+        {isLoading ? (
+          <div className="space-y-2 px-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-8 animate-pulse rounded-md bg-muted" />
+            ))}
+          </div>
+        ) : (
+          <>
+            {types.map((type) => (
+              <TypeSection
+                key={type.id}
+                type={type}
+                objects={objectsByType.get(type.id) ?? []}
+                isLoading={false}
+                onCreateBlank={handleCreateBlank}
+                onSelectTemplate={handleSelectTemplate}
+              />
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-1 text-xs text-muted-foreground"
+              onClick={() => setCreateTypeOpen(true)}
+            >
+              <PlusIcon className="size-3" />
+              New Type
+            </Button>
+          </>
+        )}
       </div>
+      <CreateTypeDialog
+        open={createTypeOpen}
+        onOpenChange={setCreateTypeOpen}
+        onCreate={createType}
+      />
     </aside>
   )
 }

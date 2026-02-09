@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { TrashIcon, MoreHorizontalIcon, CopyIcon, BookmarkIcon, BookmarkMinusIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
+import { useObjectType } from '@/features/object-types'
 import { Button } from '@/shared/components/ui/Button'
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ import {
 } from '@/shared/components/ui/DropdownMenu'
 import { useDataClient } from '@/shared/lib/data'
 import { Editor } from '@/features/editor'
+import { PropertyFields } from './PropertyFields'
 
 interface ObjectEditorProps {
   id: string
@@ -24,6 +26,7 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
   const router = useRouter()
   const dataClient = useDataClient()
   const { object, isLoading, error, update } = useObject(id)
+  const { objectType } = useObjectType(object?.type_id ?? null)
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
@@ -48,6 +51,12 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
     await update({ content })
   }, [update])
 
+  const handlePropertyChange = useCallback(async (fieldId: string, value: unknown) => {
+    if (!object) return
+    const updatedProperties = { ...object.properties, [fieldId]: value }
+    await update({ properties: updatedProperties })
+  }, [object, update])
+
   const handleDelete = async () => {
     if (!object) return
 
@@ -64,7 +73,7 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
     // Create a copy of the object as a template
     const result = await dataClient.objects.create({
       title: `${object.title} (Template)`,
-      type: object.type,
+      type_id: object.type_id,
       icon: object.icon,
       cover_image: object.cover_image,
       properties: { ...object.properties },
@@ -109,7 +118,7 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
       <header className="flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-center gap-2">
           {object.icon && <span className="text-2xl">{object.icon}</span>}
-          <span className="text-sm text-muted-foreground capitalize">{object.type}</span>
+          <span className="text-sm text-muted-foreground">{objectType?.name ?? 'Object'}</span>
           {isSaving && (
             <span className="text-xs text-muted-foreground">Saving...</span>
           )}
@@ -167,6 +176,14 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
           placeholder="Untitled"
           className="mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground"
         />
+
+        {objectType && objectType.fields.length > 0 && (
+          <PropertyFields
+            fields={objectType.fields}
+            values={object.properties}
+            onChange={handlePropertyChange}
+          />
+        )}
 
         <Editor
           initialContent={object.content ?? undefined}

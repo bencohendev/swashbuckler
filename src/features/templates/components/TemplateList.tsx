@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileIcon, FileTextIcon, TrashIcon, EditIcon, MoreHorizontalIcon } from 'lucide-react'
+import { TrashIcon, EditIcon, MoreHorizontalIcon } from 'lucide-react'
 import { useTemplates } from '../hooks/useTemplates'
+import { useObjectTypes } from '@/features/object-types'
+import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { Button } from '@/shared/components/ui/Button'
 import {
   DropdownMenu,
@@ -12,16 +14,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
-import type { DataObject } from '@/shared/lib/data'
+import type { DataObject, ObjectType } from '@/shared/lib/data'
 
 interface TemplateCardProps {
   template: DataObject
+  objectType?: ObjectType
   onEdit: (id: string) => void
   onDelete: (id: string, permanent?: boolean) => Promise<void>
   onUnmark: (id: string) => Promise<void>
 }
 
-function TemplateCard({ template, onEdit, onDelete, onUnmark }: TemplateCardProps) {
+function TemplateCard({ template, objectType, onEdit, onDelete, onUnmark }: TemplateCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async (permanent: boolean) => {
@@ -44,14 +47,14 @@ function TemplateCard({ template, onEdit, onDelete, onUnmark }: TemplateCardProp
   return (
     <div className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
       <div className="flex items-center gap-3">
-        {template.type === 'page' ? (
-          <FileIcon className="size-5 text-muted-foreground" />
+        {objectType ? (
+          <TypeIcon icon={objectType.icon} className="size-5 text-muted-foreground" />
         ) : (
-          <FileTextIcon className="size-5 text-muted-foreground" />
+          <TypeIcon icon="file" className="size-5 text-muted-foreground" />
         )}
         <div>
           <h3 className="font-medium">{template.title}</h3>
-          <p className="text-sm text-muted-foreground capitalize">{template.type}</p>
+          <p className="text-sm text-muted-foreground">{objectType?.name ?? 'Object'}</p>
         </div>
       </div>
 
@@ -94,6 +97,7 @@ function TemplateCard({ template, onEdit, onDelete, onUnmark }: TemplateCardProp
 export function TemplateList() {
   const router = useRouter()
   const { templates, isLoading, error, deleteTemplate, unmarkAsTemplate } = useTemplates()
+  const { types } = useObjectTypes()
 
   const handleEdit = (id: string) => {
     router.push(`/objects/${id}`)
@@ -135,40 +139,39 @@ export function TemplateList() {
     )
   }
 
-  const pageTemplates = templates.filter(t => t.type === 'page')
-  const noteTemplates = templates.filter(t => t.type === 'note')
+  // Group templates by type
+  const typeMap = new Map(types.map(t => [t.id, t]))
+  const templatesByType = new Map<string, DataObject[]>()
+  for (const template of templates) {
+    const existing = templatesByType.get(template.type_id) ?? []
+    existing.push(template)
+    templatesByType.set(template.type_id, existing)
+  }
 
   return (
     <div className="space-y-6">
-      {pageTemplates.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Page Templates</h3>
-          {pageTemplates.map(template => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onUnmark={handleUnmark}
-            />
-          ))}
-        </div>
-      )}
+      {types.map(type => {
+        const typeTemplates = templatesByType.get(type.id)
+        if (!typeTemplates || typeTemplates.length === 0) return null
 
-      {noteTemplates.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Note Templates</h3>
-          {noteTemplates.map(template => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onUnmark={handleUnmark}
-            />
-          ))}
-        </div>
-      )}
+        return (
+          <div key={type.id} className="space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {type.plural_name} Templates
+            </h3>
+            {typeTemplates.map(template => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                objectType={typeMap.get(template.type_id)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onUnmark={handleUnmark}
+              />
+            ))}
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { PlusIcon } from 'lucide-react'
 import { Button } from '@/shared/components/ui/Button'
 import { useObjects } from '../hooks/useObjects'
+import { useObjectTypes } from '@/features/object-types'
+import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 
 interface CreateObjectButtonProps {
   parentId?: string
@@ -12,14 +14,15 @@ interface CreateObjectButtonProps {
 
 export function CreateObjectButton({ parentId, onCreated }: CreateObjectButtonProps) {
   const { create } = useObjects({ enabled: false })
+  const { types } = useObjectTypes()
   const [isCreating, setIsCreating] = useState(false)
 
-  const handleCreate = async (type: 'page' | 'note') => {
+  const handleCreate = async (typeId: string, typeName: string) => {
     setIsCreating(true)
 
     const result = await create({
-      title: type === 'page' ? 'Untitled Page' : 'Untitled Note',
-      type,
+      title: `Untitled ${typeName}`,
+      type_id: typeId,
       parent_id: parentId ?? null,
     })
 
@@ -32,24 +35,18 @@ export function CreateObjectButton({ parentId, onCreated }: CreateObjectButtonPr
 
   return (
     <div className="flex gap-1">
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => handleCreate('page')}
-        disabled={isCreating}
-      >
-        <PlusIcon className="size-4" />
-        Page
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => handleCreate('note')}
-        disabled={isCreating}
-      >
-        <PlusIcon className="size-4" />
-        Note
-      </Button>
+      {types.map(type => (
+        <Button
+          key={type.id}
+          size="sm"
+          variant="ghost"
+          onClick={() => handleCreate(type.id, type.name)}
+          disabled={isCreating}
+        >
+          <PlusIcon className="size-4" />
+          {type.name}
+        </Button>
+      ))}
     </div>
   )
 }

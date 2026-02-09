@@ -19,7 +19,7 @@ interface UseObjectsReturn {
 }
 
 export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
-  const { enabled = true, parentId, type, isDeleted, limit, offset } = options
+  const { enabled = true, parentId, typeId, isDeleted, limit, offset } = options
   const dataClient = useDataClient()
   const [objects, setObjects] = useState<DataObject[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -28,11 +28,11 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
 
   const queryOptions = useMemo<ListObjectsOptions>(() => ({
     parentId,
-    type,
+    typeId,
     isDeleted,
     limit,
     offset,
-  }), [parentId, type, isDeleted, limit, offset])
+  }), [parentId, typeId, isDeleted, limit, offset])
 
   const fetchObjects = useCallback(async () => {
     if (!enabled) {

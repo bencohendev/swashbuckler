@@ -2,13 +2,109 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   DataClient,
   ObjectsClient,
+  ObjectTypesClient,
   DataObject,
+  ObjectType,
   CreateObjectInput,
   UpdateObjectInput,
+  CreateObjectTypeInput,
+  UpdateObjectTypeInput,
   ListObjectsOptions,
   DataResult,
   DataListResult,
 } from './types'
+
+function createObjectTypesClient(supabase: SupabaseClient): ObjectTypesClient {
+  return {
+    async list(): Promise<DataListResult<ObjectType>> {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      let query = supabase
+        .from('object_types')
+        .select('*')
+        .order('sort_order', { ascending: true })
+
+      if (user) {
+        query = query.or(`is_built_in.eq.true,owner_id.eq.${user.id}`)
+      } else {
+        query = query.eq('is_built_in', true)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType[], error: null }
+    },
+
+    async get(id: string): Promise<DataResult<ObjectType>> {
+      const { data, error } = await supabase
+        .from('object_types')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
+    },
+
+    async create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>> {
+      const now = new Date().toISOString()
+      const typeData = {
+        ...input,
+        fields: input.fields ?? [],
+        is_built_in: false,
+        created_at: now,
+        updated_at: now,
+      }
+
+      const { data, error } = await supabase
+        .from('object_types')
+        .insert(typeData)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
+    },
+
+    async update(id: string, input: UpdateObjectTypeInput): Promise<DataResult<ObjectType>> {
+      const { data, error } = await supabase
+        .from('object_types')
+        .update({ ...input, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('object_types')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+  }
+}
 
 function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
   return {
@@ -24,8 +120,8 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
           : query.eq('parent_id', options.parentId)
       }
 
-      if (options.type) {
-        query = query.eq('type', options.type)
+      if (options.typeId) {
+        query = query.eq('type_id', options.typeId)
       }
 
       if (options.isDeleted !== undefined) {
@@ -174,6 +270,7 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
 export function createSupabaseDataClient(supabase: SupabaseClient): DataClient {
   return {
     objects: createObjectsClient(supabase),
+    objectTypes: createObjectTypesClient(supabase),
     isLocal: false,
   }
 }

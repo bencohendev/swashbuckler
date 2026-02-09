@@ -1,7 +1,7 @@
 'use client'
 
 import { type ReactNode, useState } from 'react'
-import { FileIcon, FileTextIcon, CopyIcon } from 'lucide-react'
+import { FileIcon, CopyIcon } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,37 +11,54 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
 import { useTemplates } from '../hooks/useTemplates'
+import { useObjectTypes } from '@/features/object-types'
+import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import type { DataObject } from '@/shared/lib/data'
 
 interface TemplateSelectorProps {
   trigger: ReactNode
-  onCreateBlank: (type: 'page' | 'note') => Promise<void>
+  typeId?: string
+  onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: DataObject) => Promise<void>
   align?: 'start' | 'center' | 'end'
 }
 
 export function TemplateSelector({
   trigger,
+  typeId,
   onCreateBlank,
   onSelectTemplate,
   align = 'start',
 }: TemplateSelectorProps) {
-  const { templates, isLoading } = useTemplates()
+  const { templates, isLoading: templatesLoading } = useTemplates()
+  const { types } = useObjectTypes()
   const [open, setOpen] = useState(false)
 
-  const pageTemplates = templates.filter(t => t.type === 'page')
-  const noteTemplates = templates.filter(t => t.type === 'note')
-  const hasTemplates = pageTemplates.length > 0 || noteTemplates.length > 0
-
-  const handleCreateBlank = async (type: 'page' | 'note') => {
+  const handleCreateBlank = async (id: string) => {
     setOpen(false)
-    await onCreateBlank(type)
+    await onCreateBlank(id)
   }
 
   const handleSelectTemplate = async (template: DataObject) => {
     setOpen(false)
     await onSelectTemplate(template)
   }
+
+  // If typeId is provided, only show that type's blank option and templates
+  const filteredTypes = typeId ? types.filter(t => t.id === typeId) : types
+  const filteredTemplates = typeId
+    ? templates.filter(t => t.type_id === typeId)
+    : templates
+
+  // Group templates by type
+  const templatesByType = new Map<string, DataObject[]>()
+  for (const template of filteredTemplates) {
+    const existing = templatesByType.get(template.type_id) ?? []
+    existing.push(template)
+    templatesByType.set(template.type_id, existing)
+  }
+
+  const hasTemplates = filteredTemplates.length > 0
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -50,53 +67,41 @@ export function TemplateSelector({
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-56">
         <DropdownMenuLabel>Create New</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => handleCreateBlank('page')}>
-          <FileIcon className="size-4" />
-          Blank Page
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleCreateBlank('note')}>
-          <FileTextIcon className="size-4" />
-          Blank Note
-        </DropdownMenuItem>
+        {filteredTypes.map(type => (
+          <DropdownMenuItem key={type.id} onClick={() => handleCreateBlank(type.id)}>
+            <TypeIcon icon={type.icon} className="size-4" />
+            Blank {type.name}
+          </DropdownMenuItem>
+        ))}
 
-        {!isLoading && hasTemplates && (
+        {!templatesLoading && hasTemplates && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Templates</DropdownMenuLabel>
 
-            {pageTemplates.length > 0 && (
-              <>
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Pages
-                </DropdownMenuLabel>
-                {pageTemplates.map(template => (
-                  <DropdownMenuItem
-                    key={template.id}
-                    onClick={() => handleSelectTemplate(template)}
-                  >
-                    <CopyIcon className="size-4" />
-                    <span className="truncate">{template.title}</span>
-                  </DropdownMenuItem>
-                ))}
-              </>
-            )}
+            {types.map(type => {
+              const typeTemplates = templatesByType.get(type.id)
+              if (!typeTemplates || typeTemplates.length === 0) return null
 
-            {noteTemplates.length > 0 && (
-              <>
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Notes
-                </DropdownMenuLabel>
-                {noteTemplates.map(template => (
-                  <DropdownMenuItem
-                    key={template.id}
-                    onClick={() => handleSelectTemplate(template)}
-                  >
-                    <CopyIcon className="size-4" />
-                    <span className="truncate">{template.title}</span>
-                  </DropdownMenuItem>
-                ))}
-              </>
-            )}
+              return (
+                <div key={type.id}>
+                  {!typeId && (
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                      {type.name}
+                    </DropdownMenuLabel>
+                  )}
+                  {typeTemplates.map(template => (
+                    <DropdownMenuItem
+                      key={template.id}
+                      onClick={() => handleSelectTemplate(template)}
+                    >
+                      <CopyIcon className="size-4" />
+                      <span className="truncate">{template.title}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              )
+            })}
           </>
         )}
       </DropdownMenuContent>

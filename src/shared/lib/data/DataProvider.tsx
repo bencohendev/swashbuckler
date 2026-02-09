@@ -56,15 +56,29 @@ export function DataProvider({ children }: DataProviderProps) {
     }
 
     const localData = await exportLocalData()
-    if (localData.length === 0) return
+    if (localData.objects.length === 0 && localData.objectTypes.length === 0) return
 
     const supabaseClient = createSupabaseDataClient(supabase)
 
-    // Migrate each object
-    for (const obj of localData) {
+    // Migrate custom object types first (skip built-in types)
+    for (const objectType of localData.objectTypes) {
+      if (objectType.is_built_in) continue
+      await supabaseClient.objectTypes.create({
+        name: objectType.name,
+        plural_name: objectType.plural_name,
+        slug: objectType.slug,
+        icon: objectType.icon,
+        color: objectType.color,
+        fields: objectType.fields,
+        sort_order: objectType.sort_order,
+      })
+    }
+
+    // Migrate objects
+    for (const obj of localData.objects) {
       await supabaseClient.objects.create({
         title: obj.title,
-        type: obj.type,
+        type_id: obj.type_id,
         parent_id: obj.parent_id,
         icon: obj.icon,
         cover_image: obj.cover_image,
