@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useDataClient, type DataObject } from '@/shared/lib/data'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
-import { useObjects } from '@/features/objects'
+import { useObjects, useObject } from '@/features/objects'
 import { useObjectModal } from '@/shared/stores/objectModal'
 
 function getMentionProps(element: Record<string, unknown>) {
@@ -20,6 +20,8 @@ function getMentionProps(element: Record<string, unknown>) {
 
 export function MentionElement({ element, children, ...props }: PlateElementProps) {
   const { objectId, objectTitle } = getMentionProps(element)
+  const { object } = useObject(objectId ?? null)
+  const displayTitle = object?.title || objectTitle || 'Untitled'
 
   if (!objectId) {
     return (
@@ -36,7 +38,7 @@ export function MentionElement({ element, children, ...props }: PlateElementProp
         contentEditable={false}
         className="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-sm font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
       >
-        {objectTitle || 'Untitled'}
+        {displayTitle}
       </Link>
       {children}
     </PlateElement>
