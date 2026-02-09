@@ -7,6 +7,8 @@ import { PlateElement, useEditorRef } from '@udecode/plate/react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useDataClient, type DataObject } from '@/shared/lib/data'
+import { useObjectTypes, TypeIcon } from '@/features/object-types'
+import { useObjects } from '@/features/objects'
 
 function getMentionProps(element: Record<string, unknown>) {
   return {
@@ -44,6 +46,8 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   const editor = useEditorRef()
   const dataClient = useDataClient()
   const params = useParams<{ id: string }>()
+  const { types } = useObjectTypes()
+  const { create } = useObjects({ enabled: false })
   const triggerRef = useRef<HTMLSpanElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -52,6 +56,9 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isKeyboardMode, setIsKeyboardMode] = useState(false)
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
+
+  // Total selectable items = search results + create-new items (one per type)
+  const totalItems = results.length + types.length
 
   // Remove the leftover first '[' from the '[[' trigger on mount
   useEffect(() => {
@@ -125,6 +132,18 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
     [editor]
   )
 
+  // Create a new object and insert mention
+  const createAndInsert = useCallback(
+    async (typeId: string, typeName: string) => {
+      const title = query || `Untitled ${typeName}`
+      const obj = await create({ title, type_id: typeId })
+      if (obj) {
+        selectObject(obj)
+      }
+    },
+    [query, create, selectObject]
+  )
+
   // Close the mention menu
   const closeMenu = useCallback(() => {
     const mentionInputEntry = editor.api.nodes({
@@ -148,18 +167,26 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
         e.preventDefault()
         setIsKeyboardMode(true)
         setSelectedIndex(prev =>
-          prev < results.length - 1 ? prev + 1 : 0
+          prev < totalItems - 1 ? prev + 1 : 0
         )
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
         setIsKeyboardMode(true)
         setSelectedIndex(prev =>
-          prev > 0 ? prev - 1 : results.length - 1
+          prev > 0 ? prev - 1 : totalItems - 1
         )
       } else if (e.key === 'Enter') {
         e.preventDefault()
-        if (results[selectedIndex]) {
-          selectObject(results[selectedIndex])
+        if (selectedIndex < results.length) {
+          if (results[selectedIndex]) {
+            selectObject(results[selectedIndex])
+          }
+        } else {
+          const typeIndex = selectedIndex - results.length
+          const type = types[typeIndex]
+          if (type) {
+            createAndInsert(type.id, type.name)
+          }
         }
       } else if (e.key === 'Escape') {
         e.preventDefault()
@@ -169,7 +196,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [results, selectedIndex, selectObject, closeMenu])
+  }, [results, types, totalItems, selectedIndex, selectObject, createAndInsert, closeMenu])
 
   // Scroll selected item into view
   useEffect(() => {
@@ -233,7 +260,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
           className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
         >
           <div ref={scrollContainerRef} className="max-h-60 overflow-y-auto p-1" onMouseMove={handleMouseMove}>
-            {results.length > 0 ? (
+            {results.length > 0 && (
               results.map((obj, index) => {
                 const isSelected = index === selectedIndex
                 return (
@@ -259,10 +286,51 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
                   </button>
                 )
               })
-            ) : (
+            )}
+            {results.length === 0 && !types.length && (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 {query ? 'No objects found' : 'Type to search objects...'}
               </div>
+            )}
+            {types.length > 0 && (
+              <>
+                {results.length > 0 && (
+                  <div className="my-1 border-t" />
+                )}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                  Create New
+                </div>
+                {types.map((type, i) => {
+                  const flatIndex = results.length + i
+                  const isSelected = flatIndex === selectedIndex
+                  return (
+                    <button
+                      key={type.id}
+                      type="button"
+                      data-index={flatIndex}
+                      onMouseDown={e => {
+                        e.preventDefault()
+                        createAndInsert(type.id, type.name)
+                      }}
+                      onMouseEnter={() => {
+                        if (!isKeyboardMode) {
+                          setSelectedIndex(flatIndex)
+                        }
+                      }}
+                      className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm ${
+                        isSelected ? 'bg-accent' : 'hover:bg-accent/50'
+                      }`}
+                    >
+                      <TypeIcon icon={type.icon} className="shrink-0" />
+                      <span className="truncate">
+                        {query
+                          ? `Create '${query}' as ${type.name}`
+                          : `Create new ${type.name}`}
+                      </span>
+                    </button>
+                  )
+                })}
+              </>
             )}
           </div>
         </div>,
