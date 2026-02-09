@@ -3,6 +3,7 @@ import { createClient } from "@/shared/lib/supabase/server"
 import { Sidebar } from "@/features/sidebar/components"
 import { Header } from "@/shared/components/layout"
 import { GuestBanner } from "@/shared/components/GuestBanner"
+import { ObjectEditorModal } from "@/features/objects/components/ObjectEditorModal"
 
 export default async function MainLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -16,6 +17,7 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
         <Header email={user?.email} />
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
+      <ObjectEditorModal />
     </div>
   )
 }

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
 import { useObjects } from '@/features/objects'
+import { useObjectModal } from '@/shared/stores/objectModal'
 
 interface SlashMenuItem {
   key: string
@@ -270,6 +271,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
           children: [{ text: '' }],
         })
         editor.tf.move()
+        useObjectModal.getState().open(obj.id)
       }
     },
     [editor, create]

@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation'
 import { useDataClient, type DataObject } from '@/shared/lib/data'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
 import { useObjects } from '@/features/objects'
+import { useObjectModal } from '@/shared/stores/objectModal'
 
 function getMentionProps(element: Record<string, unknown>) {
   return {
@@ -139,6 +140,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
       const obj = await create({ title, type_id: typeId })
       if (obj) {
         selectObject(obj)
+        useObjectModal.getState().open(obj.id)
       }
     },
     [query, create, selectObject]

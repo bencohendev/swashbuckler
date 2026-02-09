@@ -23,9 +23,11 @@ import { PropertyFields } from './PropertyFields'
 
 interface ObjectEditorProps {
   id: string
+  onDelete?: () => void
+  onNavigateAway?: () => void
 }
 
-export function ObjectEditor({ id }: ObjectEditorProps) {
+export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
   const dataClient = useDataClient()
   const { object, isLoading, error, update, remove } = useObject(id)
@@ -73,7 +75,11 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
     if (!confirmed) return
 
     await remove()
-    router.push('/')
+    if (onDelete) {
+      onDelete()
+    } else {
+      router.push('/')
+    }
   }
 
   const handleSaveAsTemplate = async () => {
@@ -98,7 +104,7 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
     return (
       <div className="p-6">
         <p className="text-destructive">{error || 'Object not found'}</p>
-        <Button variant="outline" onClick={() => router.push('/')} className="mt-4">
+        <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/'))} className="mt-4">
           Go back
         </Button>
       </div>
