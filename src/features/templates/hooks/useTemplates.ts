@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useDataClient } from '@/shared/lib/data'
 import type { Template, CreateTemplateInput, DataObject, CreateObjectInput } from '@/shared/lib/data'
+import { emit, subscribe } from '@/shared/lib/data/events'
 
 interface UseTemplatesOptions {
   typeId?: string
@@ -27,13 +28,17 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
   const [error, setError] = useState<string | null>(null)
   const isMounted = useRef(true)
 
+  const hasFetched = useRef(false)
+
   const fetchTemplates = useCallback(async () => {
     if (!enabled) {
       setIsLoading(false)
       return
     }
 
-    setIsLoading(true)
+    if (!hasFetched.current) {
+      setIsLoading(true)
+    }
     setError(null)
 
     const result = await dataClient.templates.list({ typeId })
@@ -47,14 +52,17 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
       setTemplates(result.data)
     }
 
+    hasFetched.current = true
     setIsLoading(false)
   }, [dataClient, enabled, typeId])
 
   useEffect(() => {
     isMounted.current = true
+    hasFetched.current = false
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
     fetchTemplates()
-    return () => { isMounted.current = false }
+    const unsubscribe = subscribe('templates', fetchTemplates)
+    return () => { isMounted.current = false; unsubscribe() }
   }, [fetchTemplates])
 
   const saveObjectAsTemplate = useCallback(async (
@@ -76,9 +84,9 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
       return null
     }
 
-    await fetchTemplates()
+    emit('templates')
     return result.data
-  }, [dataClient, fetchTemplates])
+  }, [dataClient])
 
   const createFromTemplate = useCallback(async (
     templateId: string,
@@ -107,6 +115,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
       return null
     }
 
+    emit('objects')
     return result.data
   }, [dataClient])
 
@@ -116,8 +125,8 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
       setError(result.error.message)
       return
     }
-    await fetchTemplates()
-  }, [dataClient, fetchTemplates])
+    emit('templates')
+  }, [dataClient])
 
   return {
     templates,

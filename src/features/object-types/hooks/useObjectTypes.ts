@@ -7,6 +7,7 @@ import {
   type CreateObjectTypeInput,
   type UpdateObjectTypeInput,
 } from '@/shared/lib/data'
+import { emit, subscribe } from '@/shared/lib/data/events'
 
 interface UseObjectTypesReturn {
   types: ObjectType[]
@@ -25,8 +26,12 @@ export function useObjectTypes(): UseObjectTypesReturn {
   const [error, setError] = useState<string | null>(null)
   const isMounted = useRef(true)
 
+  const hasFetched = useRef(false)
+
   const fetchTypes = useCallback(async () => {
-    setIsLoading(true)
+    if (!hasFetched.current) {
+      setIsLoading(true)
+    }
     setError(null)
 
     const result = await dataClient.objectTypes.list()
@@ -40,13 +45,16 @@ export function useObjectTypes(): UseObjectTypesReturn {
       setTypes(result.data)
     }
 
+    hasFetched.current = true
     setIsLoading(false)
   }, [dataClient])
 
   useEffect(() => {
     isMounted.current = true
+    hasFetched.current = false
     fetchTypes()
-    return () => { isMounted.current = false }
+    const unsubscribe = subscribe('objectTypes', fetchTypes)
+    return () => { isMounted.current = false; unsubscribe() }
   }, [fetchTypes])
 
   const create = useCallback(async (input: CreateObjectTypeInput): Promise<ObjectType | null> => {
@@ -57,9 +65,9 @@ export function useObjectTypes(): UseObjectTypesReturn {
       return null
     }
 
-    await fetchTypes()
+    emit('objectTypes')
     return result.data
-  }, [dataClient, fetchTypes])
+  }, [dataClient])
 
   const update = useCallback(async (id: string, input: UpdateObjectTypeInput): Promise<ObjectType | null> => {
     const result = await dataClient.objectTypes.update(id, input)
@@ -69,9 +77,9 @@ export function useObjectTypes(): UseObjectTypesReturn {
       return null
     }
 
-    await fetchTypes()
+    emit('objectTypes')
     return result.data
-  }, [dataClient, fetchTypes])
+  }, [dataClient])
 
   const remove = useCallback(async (id: string): Promise<void> => {
     const result = await dataClient.objectTypes.delete(id)
@@ -81,8 +89,8 @@ export function useObjectTypes(): UseObjectTypesReturn {
       return
     }
 
-    await fetchTypes()
-  }, [dataClient, fetchTypes])
+    emit('objectTypes')
+  }, [dataClient])
 
   return {
     types,
@@ -102,6 +110,8 @@ export function useObjectType(id: string | null) {
   const [error, setError] = useState<string | null>(null)
   const isMounted = useRef(true)
 
+  const hasFetched = useRef(false)
+
   const fetchType = useCallback(async () => {
     if (!id) {
       setObjectType(null)
@@ -109,7 +119,9 @@ export function useObjectType(id: string | null) {
       return
     }
 
-    setIsLoading(true)
+    if (!hasFetched.current) {
+      setIsLoading(true)
+    }
     setError(null)
 
     const result = await dataClient.objectTypes.get(id)
@@ -123,13 +135,16 @@ export function useObjectType(id: string | null) {
       setObjectType(result.data)
     }
 
+    hasFetched.current = true
     setIsLoading(false)
   }, [dataClient, id])
 
   useEffect(() => {
     isMounted.current = true
+    hasFetched.current = false
     fetchType()
-    return () => { isMounted.current = false }
+    const unsubscribe = subscribe('objectTypes', fetchType)
+    return () => { isMounted.current = false; unsubscribe() }
   }, [fetchType])
 
   return {

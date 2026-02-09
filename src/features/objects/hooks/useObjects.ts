@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useDataClient, type DataObject, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
+import { emit, subscribe } from '@/shared/lib/data/events'
 
 interface UseObjectsOptions extends ListObjectsOptions {
   enabled?: boolean
@@ -34,13 +35,17 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
     offset,
   }), [parentId, typeId, isDeleted, limit, offset])
 
+  const hasFetched = useRef(false)
+
   const fetchObjects = useCallback(async () => {
     if (!enabled) {
       setIsLoading(false)
       return
     }
 
-    setIsLoading(true)
+    if (!hasFetched.current) {
+      setIsLoading(true)
+    }
     setError(null)
 
     const result = await dataClient.objects.list(queryOptions)
@@ -54,14 +59,17 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
       setObjects(result.data)
     }
 
+    hasFetched.current = true
     setIsLoading(false)
   }, [dataClient, enabled, queryOptions])
 
   useEffect(() => {
     isMounted.current = true
+    hasFetched.current = false
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
     fetchObjects()
-    return () => { isMounted.current = false }
+    const unsubscribe = subscribe('objects', fetchObjects)
+    return () => { isMounted.current = false; unsubscribe() }
   }, [fetchObjects])
 
   const create = useCallback(async (input: CreateObjectInput): Promise<DataObject | null> => {
@@ -72,9 +80,9 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
       return null
     }
 
-    await fetchObjects()
+    emit('objects')
     return result.data
-  }, [dataClient, fetchObjects])
+  }, [dataClient])
 
   const update = useCallback(async (id: string, input: UpdateObjectInput): Promise<DataObject | null> => {
     const result = await dataClient.objects.update(id, input)
@@ -84,9 +92,9 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
       return null
     }
 
-    await fetchObjects()
+    emit('objects')
     return result.data
-  }, [dataClient, fetchObjects])
+  }, [dataClient])
 
   const remove = useCallback(async (id: string, permanent = false): Promise<void> => {
     const result = await dataClient.objects.delete(id, permanent)
@@ -96,8 +104,8 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
       return
     }
 
-    await fetchObjects()
-  }, [dataClient, fetchObjects])
+    emit('objects')
+  }, [dataClient])
 
   const restore = useCallback(async (id: string): Promise<DataObject | null> => {
     const result = await dataClient.objects.restore(id)
@@ -107,9 +115,9 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
       return null
     }
 
-    await fetchObjects()
+    emit('objects')
     return result.data
-  }, [dataClient, fetchObjects])
+  }, [dataClient])
 
   return {
     objects,
@@ -130,6 +138,8 @@ export function useObject(id: string | null) {
   const [error, setError] = useState<string | null>(null)
   const isMounted = useRef(true)
 
+  const hasFetched = useRef(false)
+
   const fetchObject = useCallback(async () => {
     if (!id) {
       setObject(null)
@@ -137,7 +147,9 @@ export function useObject(id: string | null) {
       return
     }
 
-    setIsLoading(true)
+    if (!hasFetched.current) {
+      setIsLoading(true)
+    }
     setError(null)
 
     const result = await dataClient.objects.get(id)
@@ -151,14 +163,17 @@ export function useObject(id: string | null) {
       setObject(result.data)
     }
 
+    hasFetched.current = true
     setIsLoading(false)
   }, [dataClient, id])
 
   useEffect(() => {
     isMounted.current = true
+    hasFetched.current = false
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
     fetchObject()
-    return () => { isMounted.current = false }
+    const unsubscribe = subscribe('objects', fetchObject)
+    return () => { isMounted.current = false; unsubscribe() }
   }, [fetchObject])
 
   const update = useCallback(async (input: UpdateObjectInput): Promise<DataObject | null> => {
@@ -172,7 +187,21 @@ export function useObject(id: string | null) {
     }
 
     setObject(result.data)
+    emit('objects')
     return result.data
+  }, [dataClient, id])
+
+  const remove = useCallback(async (permanent = false): Promise<void> => {
+    if (!id) return
+
+    const result = await dataClient.objects.delete(id, permanent)
+
+    if (result.error) {
+      setError(result.error.message)
+      return
+    }
+
+    emit('objects')
   }, [dataClient, id])
 
   return {
@@ -181,5 +210,6 @@ export function useObject(id: string | null) {
     error,
     refetch: fetchObject,
     update,
+    remove,
   }
 }

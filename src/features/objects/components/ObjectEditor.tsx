@@ -15,7 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
-import { useDataClient } from '@/shared/lib/data'
 import { Editor } from '@/features/editor'
 import { PropertyFields } from './PropertyFields'
 
@@ -25,8 +24,7 @@ interface ObjectEditorProps {
 
 export function ObjectEditor({ id }: ObjectEditorProps) {
   const router = useRouter()
-  const dataClient = useDataClient()
-  const { object, isLoading, error, update } = useObject(id)
+  const { object, isLoading, error, update, remove } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
   const { saveObjectAsTemplate } = useTemplates({ enabled: false })
   const [title, setTitle] = useState('')
@@ -65,7 +63,7 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
     const confirmed = window.confirm('Move this to trash?')
     if (!confirmed) return
 
-    await dataClient.objects.delete(object.id)
+    await remove()
     router.push('/')
   }
 
