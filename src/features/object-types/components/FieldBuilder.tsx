@@ -62,7 +62,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">Custom Fields</label>
-        <Button size="sm" variant="outline" onClick={handleAddField}>
+        <Button type="button" size="sm" variant="outline" onClick={handleAddField}>
           <PlusIcon className="size-3" />
           Add Field
         </Button>
@@ -153,6 +153,7 @@ function FieldRow({ field, index, totalFields, onUpdate, onRemove, onMove }: Fie
         </label>
 
         <Button
+          type="button"
           size="icon-xs"
           variant="ghost"
           onClick={onRemove}
@@ -225,7 +226,7 @@ function OptionsEditor({ options, onChange }: OptionsEditorProps) {
           placeholder="Add option..."
           className="flex-1 rounded-md border bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-ring"
         />
-        <Button size="sm" variant="outline" onClick={handleAdd} className="text-xs">
+        <Button type="button" size="sm" variant="outline" onClick={handleAdd} className="text-xs">
           Add
         </Button>
       </div>

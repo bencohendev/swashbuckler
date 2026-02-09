@@ -54,11 +54,17 @@ function createObjectTypesClient(supabase: SupabaseClient): ObjectTypesClient {
     },
 
     async create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Must be logged in to create types' } }
+      }
+
       const now = new Date().toISOString()
       const typeData = {
         ...input,
         fields: input.fields ?? [],
         is_built_in: false,
+        owner_id: user.id,
         created_at: now,
         updated_at: now,
       }
@@ -164,12 +170,18 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
     },
 
     async create(input: CreateObjectInput): Promise<DataResult<DataObject>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Must be logged in to create objects' } }
+      }
+
       const now = new Date().toISOString()
       const objectData = {
         ...input,
         properties: input.properties || {},
         is_template: input.is_template ?? false,
         is_deleted: input.is_deleted ?? false,
+        owner_id: user.id,
         created_at: now,
         updated_at: now,
       }
