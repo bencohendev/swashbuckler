@@ -2,10 +2,11 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrashIcon, MoreHorizontalIcon, CopyIcon, BookmarkIcon, BookmarkMinusIcon } from 'lucide-react'
+import { TrashIcon, MoreHorizontalIcon, CopyIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
+import { useTemplates } from '@/features/templates'
 import { Button } from '@/shared/components/ui/Button'
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
   const dataClient = useDataClient()
   const { object, isLoading, error, update } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
+  const { saveObjectAsTemplate } = useTemplates({ enabled: false })
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
@@ -70,27 +72,10 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
   const handleSaveAsTemplate = async () => {
     if (!object) return
 
-    // Create a copy of the object as a template
-    const result = await dataClient.objects.create({
-      title: `${object.title} (Template)`,
-      type_id: object.type_id,
-      icon: object.icon,
-      cover_image: object.cover_image,
-      properties: { ...object.properties },
-      content: object.content ? JSON.parse(JSON.stringify(object.content)) : null,
-      is_template: true,
-    })
-
-    if (result.data) {
-      // Show a brief confirmation (could be improved with toast)
+    const result = await saveObjectAsTemplate(object)
+    if (result) {
       alert('Saved as template!')
     }
-  }
-
-  const handleToggleTemplate = async () => {
-    if (!object) return
-
-    await update({ is_template: !object.is_template })
   }
 
   if (isLoading) {
@@ -124,11 +109,6 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
           )}
         </div>
         <div className="flex items-center gap-1">
-          {object.is_template && (
-            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-              Template
-            </span>
-          )}
           <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash">
             <TrashIcon className="size-4" />
           </Button>
@@ -139,24 +119,9 @@ export function ObjectEditor({ id }: ObjectEditorProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {!object.is_template && (
-                <DropdownMenuItem onClick={handleSaveAsTemplate}>
-                  <CopyIcon className="size-4" />
-                  Save as Template
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={handleToggleTemplate}>
-                {object.is_template ? (
-                  <>
-                    <BookmarkMinusIcon className="size-4" />
-                    Remove Template Status
-                  </>
-                ) : (
-                  <>
-                    <BookmarkIcon className="size-4" />
-                    Mark as Template
-                  </>
-                )}
+              <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                <CopyIcon className="size-4" />
+                Save as Template
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={handleDelete}>

@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { TrashIcon, EditIcon, MoreHorizontalIcon } from 'lucide-react'
+import { TrashIcon, MoreHorizontalIcon } from 'lucide-react'
 import { useTemplates } from '../hooks/useTemplates'
 import { useObjectTypes } from '@/features/object-types'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
@@ -11,37 +10,26 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
-import type { DataObject, ObjectType } from '@/shared/lib/data'
+import type { Template, ObjectType } from '@/shared/lib/data'
 
 interface TemplateCardProps {
-  template: DataObject
+  template: Template
   objectType?: ObjectType
-  onEdit: (id: string) => void
-  onDelete: (id: string, permanent?: boolean) => Promise<void>
-  onUnmark: (id: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }
 
-function TemplateCard({ template, objectType, onEdit, onDelete, onUnmark }: TemplateCardProps) {
+function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const handleDelete = async (permanent: boolean) => {
-    const action = permanent ? 'permanently delete' : 'move to trash'
-    const confirmed = window.confirm(`Are you sure you want to ${action} this template?`)
+  const handleDelete = async () => {
+    const confirmed = window.confirm('Are you sure you want to permanently delete this template?')
     if (!confirmed) return
 
     setIsDeleting(true)
-    await onDelete(template.id, permanent)
+    await onDelete(template.id)
     setIsDeleting(false)
-  }
-
-  const handleUnmark = async () => {
-    const confirmed = window.confirm('Remove template status? This will turn it into a regular object.')
-    if (!confirmed) return
-
-    await onUnmark(template.id)
   }
 
   return (
@@ -53,62 +41,34 @@ function TemplateCard({ template, objectType, onEdit, onDelete, onUnmark }: Temp
           <TypeIcon icon="file" className="size-5 text-muted-foreground" />
         )}
         <div>
-          <h3 className="font-medium">{template.title}</h3>
+          <h3 className="font-medium">{template.name}</h3>
           <p className="text-sm text-muted-foreground">{objectType?.name ?? 'Object'}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onEdit(template.id)}
-        >
-          <EditIcon className="size-4" />
-          Edit
-        </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="icon-sm" variant="ghost" disabled={isDeleting}>
-              <MoreHorizontalIcon className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleUnmark}>
-              Remove Template Status
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleDelete(false)}>
-              <TrashIcon className="size-4" />
-              Move to Trash
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={() => handleDelete(true)}>
-              <TrashIcon className="size-4" />
-              Delete Permanently
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon-sm" variant="ghost" disabled={isDeleting}>
+            <MoreHorizontalIcon className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+            <TrashIcon className="size-4" />
+            Delete Permanently
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
 
 export function TemplateList() {
-  const router = useRouter()
-  const { templates, isLoading, error, deleteTemplate, unmarkAsTemplate } = useTemplates()
+  const { templates, isLoading, error, deleteTemplate } = useTemplates()
   const { types } = useObjectTypes()
 
-  const handleEdit = (id: string) => {
-    router.push(`/objects/${id}`)
-  }
-
-  const handleDelete = async (id: string, permanent = false) => {
-    await deleteTemplate(id, permanent)
-  }
-
-  const handleUnmark = async (id: string) => {
-    await unmarkAsTemplate(id)
+  const handleDelete = async (id: string) => {
+    await deleteTemplate(id)
   }
 
   if (isLoading) {
@@ -141,7 +101,7 @@ export function TemplateList() {
 
   // Group templates by type
   const typeMap = new Map(types.map(t => [t.id, t]))
-  const templatesByType = new Map<string, DataObject[]>()
+  const templatesByType = new Map<string, Template[]>()
   for (const template of templates) {
     const existing = templatesByType.get(template.type_id) ?? []
     existing.push(template)
@@ -164,9 +124,7 @@ export function TemplateList() {
                 key={template.id}
                 template={template}
                 objectType={typeMap.get(template.type_id)}
-                onEdit={handleEdit}
                 onDelete={handleDelete}
-                onUnmark={handleUnmark}
               />
             ))}
           </div>

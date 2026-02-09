@@ -93,7 +93,6 @@ export const objectSchema = z.object({
   cover_image: z.string().url().nullable(),
   properties: z.record(z.string(), z.any()),
   content: z.any().nullable(),
-  is_template: z.boolean(),
   is_deleted: z.boolean(),
   deleted_at: z.string().datetime().nullable(),
   created_at: z.string().datetime(),
@@ -111,7 +110,6 @@ export const createObjectSchema = z.object({
   cover_image: z.string().url().nullable().optional(),
   properties: z.record(z.string(), z.any()).optional(),
   content: z.any().nullable().optional(),
-  is_template: z.boolean().optional(),
   is_deleted: z.boolean().optional(),
 })
 
@@ -126,7 +124,6 @@ export const updateObjectSchema = z.object({
   cover_image: z.string().url().nullable().optional(),
   properties: z.record(z.string(), z.any()).optional(),
   content: z.any().nullable().optional(),
-  is_template: z.boolean().optional(),
   is_deleted: z.boolean().optional(),
 })
 
@@ -137,9 +134,59 @@ export interface ListObjectsOptions {
   parentId?: string | null
   typeId?: string
   isDeleted?: boolean
-  isTemplate?: boolean
   limit?: number
   offset?: number
+}
+
+// --- Template schemas ---
+
+export const templateSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(255),
+  type_id: z.string().uuid(),
+  owner_id: z.string().uuid().nullable(),
+  icon: z.string().nullable(),
+  cover_image: z.string().url().nullable(),
+  properties: z.record(z.string(), z.any()),
+  content: z.any().nullable(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+})
+
+export type Template = z.infer<typeof templateSchema>
+
+export const createTemplateSchema = z.object({
+  name: z.string().min(1).max(255),
+  type_id: z.string().uuid(),
+  icon: z.string().nullable().optional(),
+  cover_image: z.string().url().nullable().optional(),
+  properties: z.record(z.string(), z.any()).optional(),
+  content: z.any().nullable().optional(),
+})
+
+export type CreateTemplateInput = z.infer<typeof createTemplateSchema>
+
+export const updateTemplateSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  type_id: z.string().uuid().optional(),
+  icon: z.string().nullable().optional(),
+  cover_image: z.string().url().nullable().optional(),
+  properties: z.record(z.string(), z.any()).optional(),
+  content: z.any().nullable().optional(),
+})
+
+export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>
+
+export interface ListTemplatesOptions {
+  typeId?: string
+}
+
+export interface TemplatesClient {
+  list(options?: ListTemplatesOptions): Promise<DataListResult<Template>>
+  get(id: string): Promise<DataResult<Template>>
+  create(input: CreateTemplateInput): Promise<DataResult<Template>>
+  update(id: string, input: UpdateTemplateInput): Promise<DataResult<Template>>
+  delete(id: string): Promise<DataResult<void>>
 }
 
 // Generic result types
@@ -162,6 +209,7 @@ export interface DataError {
 export interface DataClient {
   objects: ObjectsClient
   objectTypes: ObjectTypesClient
+  templates: TemplatesClient
   isLocal: boolean
 }
 

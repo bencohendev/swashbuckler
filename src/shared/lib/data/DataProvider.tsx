@@ -84,7 +84,18 @@ export function DataProvider({ children }: DataProviderProps) {
         cover_image: obj.cover_image,
         properties: obj.properties,
         content: obj.content,
-        is_template: obj.is_template,
+      })
+    }
+
+    // Migrate templates
+    for (const template of localData.templates) {
+      await supabaseClient.templates.create({
+        name: template.name,
+        type_id: template.type_id,
+        icon: template.icon,
+        cover_image: template.cover_image,
+        properties: template.properties,
+        content: template.content,
       })
     }
 

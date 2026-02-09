@@ -1,7 +1,7 @@
 'use client'
 
 import { type ReactNode, useState } from 'react'
-import { FileIcon, CopyIcon } from 'lucide-react'
+import { CopyIcon } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,13 +13,13 @@ import {
 import { useTemplates } from '../hooks/useTemplates'
 import { useObjectTypes } from '@/features/object-types'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
-import type { DataObject } from '@/shared/lib/data'
+import type { Template } from '@/shared/lib/data'
 
 interface TemplateSelectorProps {
   trigger: ReactNode
   typeId?: string
   onCreateBlank: (typeId: string) => Promise<void>
-  onSelectTemplate: (template: DataObject) => Promise<void>
+  onSelectTemplate: (template: Template) => Promise<void>
   align?: 'start' | 'center' | 'end'
 }
 
@@ -39,7 +39,7 @@ export function TemplateSelector({
     await onCreateBlank(id)
   }
 
-  const handleSelectTemplate = async (template: DataObject) => {
+  const handleSelectTemplate = async (template: Template) => {
     setOpen(false)
     await onSelectTemplate(template)
   }
@@ -51,7 +51,7 @@ export function TemplateSelector({
     : templates
 
   // Group templates by type
-  const templatesByType = new Map<string, DataObject[]>()
+  const templatesByType = new Map<string, Template[]>()
   for (const template of filteredTemplates) {
     const existing = templatesByType.get(template.type_id) ?? []
     existing.push(template)
@@ -96,7 +96,7 @@ export function TemplateSelector({
                       onClick={() => handleSelectTemplate(template)}
                     >
                       <CopyIcon className="size-4" />
-                      <span className="truncate">{template.title}</span>
+                      <span className="truncate">{template.name}</span>
                     </DropdownMenuItem>
                   ))}
                 </div>

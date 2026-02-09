@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronRightIcon, PlusIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import type { DataObject, ObjectType } from '@/shared/lib/data'
+import type { DataObject, ObjectType, Template } from '@/shared/lib/data'
 import { ObjectList } from '@/features/objects/components'
 import { TemplateSelector } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
@@ -14,7 +14,7 @@ interface TypeSectionProps {
   objects: DataObject[]
   isLoading: boolean
   onCreateBlank: (typeId: string) => Promise<void>
-  onSelectTemplate: (template: DataObject) => Promise<void>
+  onSelectTemplate: (template: Template) => Promise<void>
 }
 
 function getStorageKey(typeId: string) {

@@ -3,13 +3,18 @@ import type {
   DataClient,
   ObjectsClient,
   ObjectTypesClient,
+  TemplatesClient,
   DataObject,
   ObjectType,
+  Template,
   CreateObjectInput,
   UpdateObjectInput,
   CreateObjectTypeInput,
   UpdateObjectTypeInput,
+  CreateTemplateInput,
+  UpdateTemplateInput,
   ListObjectsOptions,
+  ListTemplatesOptions,
   DataResult,
   DataListResult,
 } from './types'
@@ -50,6 +55,7 @@ const BUILT_IN_TYPES: ObjectType[] = [
 class SwashbucklerDB extends Dexie {
   objects!: EntityTable<DataObject, 'id'>
   objectTypes!: EntityTable<ObjectType, 'id'>
+  templates!: EntityTable<Template, 'id'>
 
   constructor() {
     super('swashbuckler')
@@ -88,6 +94,44 @@ class SwashbucklerDB extends Dexie {
         if (!type.plural_name) {
           type.plural_name = (type.name as string) + 's'
         }
+      })
+    })
+
+    this.version(4).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, updated_at',
+      objectTypes: 'id, name, slug, owner_id, sort_order',
+      templates: 'id, name, type_id, owner_id, updated_at',
+    }).upgrade(async (tx) => {
+      // Migrate template objects to the new templates table
+      const allObjects = await tx.table('objects').toArray()
+      const templateObjects = allObjects.filter(
+        (obj: Record<string, unknown>) => obj.is_template === true && obj.is_deleted !== true
+      )
+
+      for (const obj of templateObjects) {
+        await tx.table('templates').add({
+          id: obj.id,
+          name: obj.title,
+          type_id: obj.type_id,
+          owner_id: obj.owner_id,
+          icon: obj.icon,
+          cover_image: obj.cover_image,
+          properties: obj.properties ?? {},
+          content: obj.content ?? null,
+          created_at: obj.created_at,
+          updated_at: obj.updated_at,
+        })
+      }
+
+      // Delete all template objects (including soft-deleted ones)
+      const templateIds = allObjects
+        .filter((obj: Record<string, unknown>) => obj.is_template === true)
+        .map((obj: Record<string, unknown>) => obj.id)
+      await tx.table('objects').bulkDelete(templateIds)
+
+      // Remove is_template field from remaining objects
+      await tx.table('objects').toCollection().modify((obj: Record<string, unknown>) => {
+        delete obj.is_template
       })
     })
   }
@@ -261,10 +305,6 @@ function createObjectsClient(): ObjectsClient {
           filters.push(obj => obj.is_deleted === options.isDeleted)
         }
 
-        if (options.isTemplate !== undefined) {
-          filters.push(obj => obj.is_template === options.isTemplate)
-        }
-
         let results = await collection.toArray()
 
         // Apply filters
@@ -328,7 +368,6 @@ function createObjectsClient(): ObjectsClient {
           cover_image: input.cover_image ?? null,
           properties: input.properties ?? {},
           content: input.content ?? null,
-          is_template: input.is_template ?? false,
           is_deleted: false,
           deleted_at: null,
           created_at: now,
@@ -455,10 +494,121 @@ function createObjectsClient(): ObjectsClient {
   }
 }
 
+function createTemplatesClient(): TemplatesClient {
+  return {
+    async list(options: ListTemplatesOptions = {}): Promise<DataListResult<Template>> {
+      try {
+        const database = getDB()
+        let results = await database.templates.toArray()
+
+        if (options.typeId) {
+          results = results.filter(t => t.type_id === options.typeId)
+        }
+
+        results.sort((a, b) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        )
+
+        return { data: results, error: null }
+      } catch (error) {
+        return {
+          data: [],
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async get(id: string): Promise<DataResult<Template>> {
+      try {
+        const database = getDB()
+        const template = await database.templates.get(id)
+
+        if (!template) {
+          return { data: null, error: { message: 'Template not found', code: 'NOT_FOUND' } }
+        }
+
+        return { data: template, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async create(input: CreateTemplateInput): Promise<DataResult<Template>> {
+      try {
+        const database = getDB()
+        const now = new Date().toISOString()
+
+        const template: Template = {
+          id: generateUUID(),
+          name: input.name,
+          type_id: input.type_id,
+          owner_id: null, // Guest mode has no owner
+          icon: input.icon ?? null,
+          cover_image: input.cover_image ?? null,
+          properties: input.properties ?? {},
+          content: input.content ?? null,
+          created_at: now,
+          updated_at: now,
+        }
+
+        await database.templates.add(template)
+        return { data: template, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async update(id: string, input: UpdateTemplateInput): Promise<DataResult<Template>> {
+      try {
+        const database = getDB()
+        const existing = await database.templates.get(id)
+
+        if (!existing) {
+          return { data: null, error: { message: 'Template not found', code: 'NOT_FOUND' } }
+        }
+
+        const updated: Template = {
+          ...existing,
+          ...input,
+          updated_at: new Date().toISOString(),
+        }
+
+        await database.templates.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        await database.templates.delete(id)
+        return { data: null, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+  }
+}
+
 export function createLocalDataClient(): DataClient {
   return {
     objects: createObjectsClient(),
     objectTypes: createObjectTypesClient(),
+    templates: createTemplatesClient(),
     isLocal: true,
   }
 }
@@ -467,13 +617,15 @@ export async function clearLocalData(): Promise<void> {
   const database = getDB()
   await database.objects.clear()
   await database.objectTypes.clear()
+  await database.templates.clear()
   // Re-seed built-in types
   await database.objectTypes.bulkAdd(BUILT_IN_TYPES)
 }
 
-export async function exportLocalData(): Promise<{ objects: DataObject[]; objectTypes: ObjectType[] }> {
+export async function exportLocalData(): Promise<{ objects: DataObject[]; objectTypes: ObjectType[]; templates: Template[] }> {
   const database = getDB()
   const objects = await database.objects.toArray()
   const objectTypes = await database.objectTypes.toArray()
-  return { objects, objectTypes }
+  const templates = await database.templates.toArray()
+  return { objects, objectTypes, templates }
 }

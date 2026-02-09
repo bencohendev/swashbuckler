@@ -3,13 +3,18 @@ import type {
   DataClient,
   ObjectsClient,
   ObjectTypesClient,
+  TemplatesClient,
   DataObject,
   ObjectType,
+  Template,
   CreateObjectInput,
   UpdateObjectInput,
   CreateObjectTypeInput,
   UpdateObjectTypeInput,
+  CreateTemplateInput,
+  UpdateTemplateInput,
   ListObjectsOptions,
+  ListTemplatesOptions,
   DataResult,
   DataListResult,
 } from './types'
@@ -134,10 +139,6 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
         query = query.eq('is_deleted', options.isDeleted)
       }
 
-      if (options.isTemplate !== undefined) {
-        query = query.eq('is_template', options.isTemplate)
-      }
-
       if (options.limit) {
         query = query.limit(options.limit)
       }
@@ -179,7 +180,6 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
       const objectData = {
         ...input,
         properties: input.properties || {},
-        is_template: input.is_template ?? false,
         is_deleted: input.is_deleted ?? false,
         owner_id: user.id,
         created_at: now,
@@ -279,10 +279,104 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
   }
 }
 
+function createTemplatesClient(supabase: SupabaseClient): TemplatesClient {
+  return {
+    async list(options: ListTemplatesOptions = {}): Promise<DataListResult<Template>> {
+      let query = supabase
+        .from('templates')
+        .select('*')
+        .order('updated_at', { ascending: false })
+
+      if (options.typeId) {
+        query = query.eq('type_id', options.typeId)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Template[], error: null }
+    },
+
+    async get(id: string): Promise<DataResult<Template>> {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Template, error: null }
+    },
+
+    async create(input: CreateTemplateInput): Promise<DataResult<Template>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Must be logged in to create templates' } }
+      }
+
+      const now = new Date().toISOString()
+      const templateData = {
+        ...input,
+        properties: input.properties || {},
+        owner_id: user.id,
+        created_at: now,
+        updated_at: now,
+      }
+
+      const { data, error } = await supabase
+        .from('templates')
+        .insert(templateData)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Template, error: null }
+    },
+
+    async update(id: string, input: UpdateTemplateInput): Promise<DataResult<Template>> {
+      const { data, error } = await supabase
+        .from('templates')
+        .update({ ...input, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Template, error: null }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('templates')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+  }
+}
+
 export function createSupabaseDataClient(supabase: SupabaseClient): DataClient {
   return {
     objects: createObjectsClient(supabase),
     objectTypes: createObjectTypesClient(supabase),
+    templates: createTemplatesClient(supabase),
     isLocal: false,
   }
 }

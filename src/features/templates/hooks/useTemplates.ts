@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback } from 'react'
-import { useDataClient, type DataObject, type CreateObjectInput } from '@/shared/lib/data'
-import { useObjects } from '@/features/objects/hooks/useObjects'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useDataClient } from '@/shared/lib/data'
+import type { Template, CreateTemplateInput, DataObject, CreateObjectInput } from '@/shared/lib/data'
 
 interface UseTemplatesOptions {
   typeId?: string
@@ -10,57 +10,96 @@ interface UseTemplatesOptions {
 }
 
 interface UseTemplatesReturn {
-  templates: DataObject[]
+  templates: Template[]
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
   createFromTemplate: (templateId: string, title?: string, parentId?: string | null) => Promise<DataObject | null>
-  markAsTemplate: (objectId: string) => Promise<DataObject | null>
-  unmarkAsTemplate: (objectId: string) => Promise<DataObject | null>
-  deleteTemplate: (id: string, permanent?: boolean) => Promise<void>
+  saveObjectAsTemplate: (object: DataObject, name?: string) => Promise<Template | null>
+  deleteTemplate: (id: string) => Promise<void>
 }
 
 export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesReturn {
   const { typeId, enabled = true } = options
   const dataClient = useDataClient()
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const isMounted = useRef(true)
 
-  const {
-    objects: templates,
-    isLoading,
-    error,
-    refetch,
-    update,
-    remove,
-  } = useObjects({
-    isTemplate: true,
-    isDeleted: false,
-    typeId,
-    enabled,
-  })
+  const fetchTemplates = useCallback(async () => {
+    if (!enabled) {
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    const result = await dataClient.templates.list({ typeId })
+
+    if (!isMounted.current) return
+
+    if (result.error) {
+      setError(result.error.message)
+      setTemplates([])
+    } else {
+      setTemplates(result.data)
+    }
+
+    setIsLoading(false)
+  }, [dataClient, enabled, typeId])
+
+  useEffect(() => {
+    isMounted.current = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
+    fetchTemplates()
+    return () => { isMounted.current = false }
+  }, [fetchTemplates])
+
+  const saveObjectAsTemplate = useCallback(async (
+    object: DataObject,
+    name?: string
+  ): Promise<Template | null> => {
+    const input: CreateTemplateInput = {
+      name: name || `${object.title} (Template)`,
+      type_id: object.type_id,
+      icon: object.icon,
+      cover_image: object.cover_image,
+      properties: { ...object.properties },
+      content: object.content ? JSON.parse(JSON.stringify(object.content)) : null,
+    }
+
+    const result = await dataClient.templates.create(input)
+    if (result.error) {
+      setError(result.error.message)
+      return null
+    }
+
+    await fetchTemplates()
+    return result.data
+  }, [dataClient, fetchTemplates])
 
   const createFromTemplate = useCallback(async (
     templateId: string,
     title?: string,
     parentId?: string | null
   ): Promise<DataObject | null> => {
-    // Fetch the template
-    const templateResult = await dataClient.objects.get(templateId)
+    const templateResult = await dataClient.templates.get(templateId)
     if (templateResult.error || !templateResult.data) {
       return null
     }
 
     const template = templateResult.data
 
-    // Create a new object based on the template
     const input: CreateObjectInput = {
-      title: title || `Copy of ${template.title}`,
+      title: title || `Copy of ${template.name}`,
       type_id: template.type_id,
       parent_id: parentId ?? null,
       icon: template.icon,
       cover_image: template.cover_image,
       properties: { ...template.properties },
       content: template.content ? JSON.parse(JSON.stringify(template.content)) : null,
-      is_template: false,
     }
 
     const result = await dataClient.objects.create(input)
@@ -71,28 +110,22 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     return result.data
   }, [dataClient])
 
-  const markAsTemplate = useCallback(async (objectId: string): Promise<DataObject | null> => {
-    const result = await update(objectId, { is_template: true })
-    return result
-  }, [update])
-
-  const unmarkAsTemplate = useCallback(async (objectId: string): Promise<DataObject | null> => {
-    const result = await update(objectId, { is_template: false })
-    return result
-  }, [update])
-
-  const deleteTemplate = useCallback(async (id: string, permanent = false): Promise<void> => {
-    await remove(id, permanent)
-  }, [remove])
+  const deleteTemplate = useCallback(async (id: string): Promise<void> => {
+    const result = await dataClient.templates.delete(id)
+    if (result.error) {
+      setError(result.error.message)
+      return
+    }
+    await fetchTemplates()
+  }, [dataClient, fetchTemplates])
 
   return {
     templates,
     isLoading,
     error,
-    refetch,
+    refetch: fetchTemplates,
     createFromTemplate,
-    markAsTemplate,
-    unmarkAsTemplate,
+    saveObjectAsTemplate,
     deleteTemplate,
   }
 }

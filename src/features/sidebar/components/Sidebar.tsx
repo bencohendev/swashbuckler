@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { HomeIcon, NetworkIcon, PlusIcon, SettingsIcon, TrashIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useAuth, BUILT_IN_TYPE_IDS } from "@/shared/lib/data"
-import type { DataObject } from "@/shared/lib/data"
+import type { DataObject, Template } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
@@ -27,7 +27,6 @@ export function Sidebar() {
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
-    isTemplate: false,
   })
   const { types, isLoading: typesLoading, create: createType } = useObjectTypes()
   const { createFromTemplate } = useTemplates()
@@ -55,7 +54,7 @@ export function Sidebar() {
     }
   }
 
-  const handleSelectTemplate = async (template: DataObject) => {
+  const handleSelectTemplate = async (template: Template) => {
     const result = await createFromTemplate(template.id)
     if (result) {
       router.push(`/objects/${result.id}`)
