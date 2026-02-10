@@ -13,6 +13,7 @@ interface TypeSectionProps {
   type: ObjectType
   objects: DataObject[]
   isLoading: boolean
+  isDragging?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
 }
@@ -25,6 +26,7 @@ export function TypeSection({
   type,
   objects,
   isLoading,
+  isDragging,
   onCreateBlank,
   onSelectTemplate,
 }: TypeSectionProps) {
@@ -38,7 +40,7 @@ export function TypeSection({
   }, [collapsed, type.id])
 
   return (
-    <div>
+    <div className={cn(isDragging && 'opacity-40')}>
       <div className="mb-1 flex items-center justify-between px-2">
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -70,13 +72,15 @@ export function TypeSection({
         />
       </div>
       {!collapsed && (
-        <ObjectList
-          objects={objects}
-          objectType={type}
-          isLoading={isLoading}
-          emptyMessage={`No ${type.plural_name.toLowerCase()} yet`}
-          compact
-        />
+        <div className="pl-8">
+          <ObjectList
+            objects={objects}
+            objectType={type}
+            isLoading={isLoading}
+            emptyMessage={`No ${type.plural_name.toLowerCase()} yet`}
+            compact
+          />
+        </div>
       )}
     </div>
   )

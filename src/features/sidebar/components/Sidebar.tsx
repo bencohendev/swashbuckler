@@ -1,17 +1,25 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { DndProvider, useDrag, useDrop } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
 import { HomeIcon, NetworkIcon, PlusIcon, SettingsIcon, TrashIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useAuth, BUILT_IN_TYPE_IDS } from "@/shared/lib/data"
-import type { DataObject, Template } from "@/shared/lib/data"
+import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { Button } from "@/shared/components/ui/Button"
 import { TypeSection } from "./TypeSection"
+
+const DRAG_TYPE = "OBJECT_TYPE"
+
+interface DragItem {
+  index: number
+}
 
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
@@ -19,6 +27,79 @@ const navItems = [
   { href: "/trash", label: "Trash", icon: TrashIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]
+
+function DraggableTypeSection({
+  index,
+  type,
+  objects,
+  onCreateBlank,
+  onSelectTemplate,
+  onMove,
+  onDrop,
+}: {
+  index: number
+  type: ObjectType
+  objects: DataObject[]
+  onCreateBlank: (typeId: string) => Promise<void>
+  onSelectTemplate: (template: Template) => Promise<void>
+  onMove: (from: number, to: number) => void
+  onDrop: () => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Use refs so useDrag/useDrop specs never need to reconnect mid-drag
+  const indexRef = useRef(index)
+  indexRef.current = index
+  const onMoveRef = useRef(onMove)
+  onMoveRef.current = onMove
+  const onDropRef = useRef(onDrop)
+  onDropRef.current = onDrop
+
+  const [{ isDragging }, drag] = useDrag({
+    type: DRAG_TYPE,
+    item: (): DragItem => ({ index: indexRef.current }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    end: () => onDropRef.current(),
+  })
+
+  const [, drop] = useDrop<DragItem>({
+    accept: DRAG_TYPE,
+    hover: (item, monitor) => {
+      if (!ref.current) return
+      const dragIndex = item.index
+      const hoverIndex = indexRef.current
+      if (dragIndex === hoverIndex) return
+
+      const hoverRect = ref.current.getBoundingClientRect()
+      const hoverMiddleY = (hoverRect.bottom - hoverRect.top) / 2
+      const clientOffset = monitor.getClientOffset()
+      if (!clientOffset) return
+      const hoverClientY = clientOffset.y - hoverRect.top
+
+      // Only move when cursor crosses the midpoint
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return
+
+      onMoveRef.current(dragIndex, hoverIndex)
+      item.index = hoverIndex
+    },
+  })
+
+  drag(drop(ref))
+
+  return (
+    <div ref={ref} className="cursor-grab [&_*]:cursor-grab">
+      <TypeSection
+        type={type}
+        objects={objects}
+        isLoading={false}
+        isDragging={isDragging}
+        onCreateBlank={onCreateBlank}
+        onSelectTemplate={onSelectTemplate}
+      />
+    </div>
+  )
+}
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -28,9 +109,46 @@ export function Sidebar() {
     parentId: null,
     isDeleted: false,
   })
-  const { types, isLoading: typesLoading, create: createType } = useObjectTypes()
+  const { types, isLoading: typesLoading, create: createType, update: updateType } = useObjectTypes()
   const { createFromTemplate } = useTemplates()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
+  const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
+  const orderedTypesRef = useRef(orderedTypes)
+  orderedTypesRef.current = orderedTypes
+
+  // Sync orderedTypes when upstream types change.
+  // Only reset order when types are added/removed — not when sort_order updates
+  // come back from persistence, which would overwrite our optimistic local order.
+  useEffect(() => {
+    setOrderedTypes((prev) => {
+      const prevIds = new Set(prev.map((t) => t.id))
+      const nextIds = new Set(types.map((t) => t.id))
+      const idsChanged =
+        prevIds.size !== nextIds.size || types.some((t) => !prevIds.has(t.id))
+
+      if (idsChanged) return types
+
+      // Preserve local order, but pick up data changes (name, icon, etc.)
+      return prev.map((pt) => types.find((t) => t.id === pt.id) ?? pt)
+    })
+  }, [types])
+
+  const handleMoveType = useCallback((fromIndex: number, toIndex: number) => {
+    setOrderedTypes((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+  }, [])
+
+  const handleDropType = useCallback(() => {
+    orderedTypesRef.current.forEach((t, i) => {
+      if (t.sort_order !== i) {
+        updateType(t.id, { sort_order: i })
+      }
+    })
+  }, [updateType])
 
   const objectsByType = useMemo(() => {
     const grouped = new Map<string, DataObject[]>()
@@ -95,37 +213,41 @@ export function Sidebar() {
           )
         })}
       </nav>
-      <div className="flex-1 space-y-3 overflow-auto border-t p-2">
-        {isLoading ? (
-          <div className="space-y-2 px-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-8 animate-pulse rounded-md bg-muted" />
-            ))}
-          </div>
-        ) : (
-          <>
-            {types.map((type) => (
-              <TypeSection
-                key={type.id}
-                type={type}
-                objects={objectsByType.get(type.id) ?? []}
-                isLoading={false}
-                onCreateBlank={handleCreateBlank}
-                onSelectTemplate={handleSelectTemplate}
-              />
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start gap-1 text-xs text-muted-foreground"
-              onClick={() => setCreateTypeOpen(true)}
-            >
-              <PlusIcon className="size-3" />
-              New Type
-            </Button>
-          </>
-        )}
-      </div>
+      <DndProvider backend={HTML5Backend}>
+        <div className="flex-1 space-y-3 overflow-auto border-t p-2">
+          {isLoading ? (
+            <div className="space-y-2 px-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-8 animate-pulse rounded-md bg-muted" />
+              ))}
+            </div>
+          ) : (
+            <>
+              {orderedTypes.map((type, index) => (
+                <DraggableTypeSection
+                  key={type.id}
+                  index={index}
+                  type={type}
+                  objects={objectsByType.get(type.id) ?? []}
+                  onCreateBlank={handleCreateBlank}
+                  onSelectTemplate={handleSelectTemplate}
+                  onMove={handleMoveType}
+                  onDrop={handleDropType}
+                />
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                onClick={() => setCreateTypeOpen(true)}
+              >
+                <PlusIcon className="size-3" />
+                New Type
+              </Button>
+            </>
+          )}
+        </div>
+      </DndProvider>
       <CreateTypeDialog
         open={createTypeOpen}
         onOpenChange={setCreateTypeOpen}
