@@ -5,6 +5,8 @@ import type {
   ObjectTypesClient,
   TemplatesClient,
   RelationsClient,
+  SpacesClient,
+  Space,
   DataObject,
   ObjectType,
   ObjectRelation,
@@ -24,6 +26,8 @@ import type {
 } from './types'
 import { BUILT_IN_TYPE_IDS } from './types'
 
+const LOCAL_DEFAULT_SPACE_ID = '00000000-0000-0000-0000-000000000099'
+
 const BUILT_IN_TYPES: ObjectType[] = [
   {
     id: BUILT_IN_TYPE_IDS.page,
@@ -35,6 +39,7 @@ const BUILT_IN_TYPES: ObjectType[] = [
     fields: [],
     is_built_in: true,
     owner_id: null,
+    space_id: null,
     sort_order: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -49,6 +54,7 @@ const BUILT_IN_TYPES: ObjectType[] = [
     fields: [],
     is_built_in: true,
     owner_id: null,
+    space_id: null,
     sort_order: 1,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -61,6 +67,7 @@ class SwashbucklerDB extends Dexie {
   objectTypes!: EntityTable<ObjectType, 'id'>
   templates!: EntityTable<Template, 'id'>
   objectRelations!: EntityTable<ObjectRelation, 'id'>
+  spaces!: EntityTable<Space, 'id'>
 
   constructor() {
     super('swashbuckler')
@@ -146,6 +153,44 @@ class SwashbucklerDB extends Dexie {
       templates: 'id, name, type_id, owner_id, updated_at',
       objectRelations: 'id, source_id, target_id, relation_type, created_at',
     })
+
+    this.version(6).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+    }).upgrade(async (tx) => {
+      // Create default local space
+      const now = new Date().toISOString()
+      await tx.table('spaces').add({
+        id: LOCAL_DEFAULT_SPACE_ID,
+        name: 'My Space',
+        icon: '📁',
+        owner_id: 'local',
+        created_at: now,
+        updated_at: now,
+      })
+
+      // Backfill space_id on all existing objects
+      await tx.table('objects').toCollection().modify((obj: Record<string, unknown>) => {
+        obj.space_id = LOCAL_DEFAULT_SPACE_ID
+      })
+
+      // Backfill space_id on custom object types (not built-in)
+      await tx.table('objectTypes').toCollection().modify((type: Record<string, unknown>) => {
+        if (!type.is_built_in) {
+          type.space_id = LOCAL_DEFAULT_SPACE_ID
+        } else {
+          type.space_id = null
+        }
+      })
+
+      // Backfill space_id on all templates
+      await tx.table('templates').toCollection().modify((template: Record<string, unknown>) => {
+        template.space_id = LOCAL_DEFAULT_SPACE_ID
+      })
+    })
   }
 }
 
@@ -162,12 +207,16 @@ function generateUUID(): string {
   return crypto.randomUUID()
 }
 
-function createObjectTypesClient(): ObjectTypesClient {
+function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
   return {
     async list(): Promise<DataListResult<ObjectType>> {
       try {
         const database = getDB()
-        const results = await database.objectTypes.toArray()
+        let results = await database.objectTypes.toArray()
+        // Return built-in types plus space-specific types
+        if (spaceId) {
+          results = results.filter(t => t.is_built_in || t.space_id === spaceId)
+        }
         results.sort((a, b) => a.sort_order - b.sort_order)
         return { data: results, error: null }
       } catch (error) {
@@ -218,6 +267,7 @@ function createObjectTypesClient(): ObjectTypesClient {
           fields: input.fields ?? [],
           is_built_in: false,
           owner_id: null,
+          space_id: spaceId ?? null,
           sort_order: sortOrder,
           created_at: now,
           updated_at: now,
@@ -295,7 +345,7 @@ function createObjectTypesClient(): ObjectTypesClient {
   }
 }
 
-function createObjectsClient(): ObjectsClient {
+function createObjectsClient(spaceId?: string): ObjectsClient {
   return {
     async list(options: ListObjectsOptions = {}): Promise<DataListResult<DataObject>> {
       try {
@@ -304,6 +354,10 @@ function createObjectsClient(): ObjectsClient {
 
         // Apply filters
         const filters: ((obj: DataObject) => boolean)[] = []
+
+        if (spaceId) {
+          filters.push(obj => obj.space_id === spaceId)
+        }
 
         if (options.parentId !== undefined) {
           filters.push(obj => obj.parent_id === options.parentId)
@@ -369,12 +423,14 @@ function createObjectsClient(): ObjectsClient {
       try {
         const database = getDB()
         const now = new Date().toISOString()
+        const effectiveSpaceId = spaceId ?? LOCAL_DEFAULT_SPACE_ID
 
         const obj: DataObject = {
           id: generateUUID(),
           title: input.title,
           type_id: input.type_id,
           owner_id: null, // Guest mode has no owner
+          space_id: effectiveSpaceId,
           parent_id: input.parent_id ?? null,
           icon: input.icon ?? null,
           cover_image: input.cover_image ?? null,
@@ -492,6 +548,7 @@ function createObjectsClient(): ObjectsClient {
         const results = await database.objects
           .filter(obj =>
             !obj.is_deleted &&
+            (!spaceId || obj.space_id === spaceId) &&
             obj.title.toLowerCase().includes(lowerQuery)
           )
           .limit(50)
@@ -513,12 +570,16 @@ function createObjectsClient(): ObjectsClient {
   }
 }
 
-function createTemplatesClient(): TemplatesClient {
+function createTemplatesClient(spaceId?: string): TemplatesClient {
   return {
     async list(options: ListTemplatesOptions = {}): Promise<DataListResult<Template>> {
       try {
         const database = getDB()
         let results = await database.templates.toArray()
+
+        if (spaceId) {
+          results = results.filter(t => t.space_id === spaceId)
+        }
 
         if (options.typeId) {
           results = results.filter(t => t.type_id === options.typeId)
@@ -559,12 +620,14 @@ function createTemplatesClient(): TemplatesClient {
       try {
         const database = getDB()
         const now = new Date().toISOString()
+        const effectiveSpaceId = spaceId ?? LOCAL_DEFAULT_SPACE_ID
 
         const template: Template = {
           id: generateUUID(),
           name: input.name,
           type_id: input.type_id,
           owner_id: null, // Guest mode has no owner
+          space_id: effectiveSpaceId,
           icon: input.icon ?? null,
           cover_image: input.cover_image ?? null,
           properties: input.properties ?? {},
@@ -773,12 +836,126 @@ function createRelationsClient(): RelationsClient {
   }
 }
 
-export function createLocalDataClient(): DataClient {
+function createLocalSpacesClient(): SpacesClient {
   return {
-    objects: createObjectsClient(),
-    objectTypes: createObjectTypesClient(),
-    templates: createTemplatesClient(),
+    async list(): Promise<DataListResult<Space>> {
+      try {
+        const database = getDB()
+        const results = await database.spaces.toArray()
+        results.sort((a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+        return { data: results, error: null }
+      } catch (error) {
+        return {
+          data: [],
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async get(id: string): Promise<DataResult<Space>> {
+      try {
+        const database = getDB()
+        const space = await database.spaces.get(id)
+
+        if (!space) {
+          return { data: null, error: { message: 'Space not found', code: 'NOT_FOUND' } }
+        }
+
+        return { data: space, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async create(input: { name: string; icon?: string }): Promise<DataResult<Space>> {
+      try {
+        const database = getDB()
+        const now = new Date().toISOString()
+
+        const space: Space = {
+          id: generateUUID(),
+          name: input.name,
+          icon: input.icon ?? '📁',
+          owner_id: 'local',
+          created_at: now,
+          updated_at: now,
+        }
+
+        await database.spaces.add(space)
+        return { data: space, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async update(id: string, input: { name?: string; icon?: string }): Promise<DataResult<Space>> {
+      try {
+        const database = getDB()
+        const existing = await database.spaces.get(id)
+
+        if (!existing) {
+          return { data: null, error: { message: 'Space not found', code: 'NOT_FOUND' } }
+        }
+
+        const updated: Space = {
+          ...existing,
+          ...input,
+          updated_at: new Date().toISOString(),
+        }
+
+        await database.spaces.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        // Delete all objects, types, and templates in this space
+        const objectsInSpace = await database.objects.filter(o => o.space_id === id).toArray()
+        if (objectsInSpace.length > 0) {
+          await database.objects.bulkDelete(objectsInSpace.map(o => o.id))
+        }
+        const typesInSpace = await database.objectTypes.filter(t => t.space_id === id).toArray()
+        if (typesInSpace.length > 0) {
+          await database.objectTypes.bulkDelete(typesInSpace.map(t => t.id))
+        }
+        const templatesInSpace = await database.templates.filter(t => t.space_id === id).toArray()
+        if (templatesInSpace.length > 0) {
+          await database.templates.bulkDelete(templatesInSpace.map(t => t.id))
+        }
+        await database.spaces.delete(id)
+        return { data: null, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+  }
+}
+
+export function createLocalDataClient(spaceId?: string): DataClient {
+  return {
+    objects: createObjectsClient(spaceId),
+    objectTypes: createObjectTypesClient(spaceId),
+    templates: createTemplatesClient(spaceId),
     relations: createRelationsClient(),
+    spaces: createLocalSpacesClient(),
     isLocal: true,
   }
 }
@@ -789,6 +966,7 @@ export async function clearLocalData(): Promise<void> {
   await database.objectTypes.clear()
   await database.templates.clear()
   await database.objectRelations.clear()
+  await database.spaces.clear()
   // Re-seed built-in types
   await database.objectTypes.bulkAdd(BUILT_IN_TYPES)
 }
@@ -798,11 +976,33 @@ export async function exportLocalData(): Promise<{
   objectTypes: ObjectType[]
   templates: Template[]
   objectRelations: ObjectRelation[]
+  spaces: Space[]
 }> {
   const database = getDB()
   const objects = await database.objects.toArray()
   const objectTypes = await database.objectTypes.toArray()
   const templates = await database.templates.toArray()
   const objectRelations = await database.objectRelations.toArray()
-  return { objects, objectTypes, templates, objectRelations }
+  const spaces = await database.spaces.toArray()
+  return { objects, objectTypes, templates, objectRelations, spaces }
 }
+
+export async function ensureLocalDefaultSpace(): Promise<Space> {
+  const database = getDB()
+  const existing = await database.spaces.get(LOCAL_DEFAULT_SPACE_ID)
+  if (existing) return existing
+
+  const now = new Date().toISOString()
+  const space: Space = {
+    id: LOCAL_DEFAULT_SPACE_ID,
+    name: 'My Space',
+    icon: '📁',
+    owner_id: 'local',
+    created_at: now,
+    updated_at: now,
+  }
+  await database.spaces.add(space)
+  return space
+}
+
+export { LOCAL_DEFAULT_SPACE_ID }

@@ -5,6 +5,8 @@ import type {
   ObjectTypesClient,
   TemplatesClient,
   RelationsClient,
+  SpacesClient,
+  Space,
   DataObject,
   ObjectType,
   ObjectRelation,
@@ -23,18 +25,17 @@ import type {
   DataListResult,
 } from './types'
 
-function createObjectTypesClient(supabase: SupabaseClient): ObjectTypesClient {
+function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): ObjectTypesClient {
   return {
     async list(): Promise<DataListResult<ObjectType>> {
-      const { data: { user } } = await supabase.auth.getUser()
-
       let query = supabase
         .from('object_types')
         .select('*')
         .order('sort_order', { ascending: true })
 
-      if (user) {
-        query = query.or(`is_built_in.eq.true,owner_id.eq.${user.id}`)
+      if (spaceId) {
+        // Return built-in types (space_id is null) plus space-specific types
+        query = query.or(`is_built_in.eq.true,space_id.eq.${spaceId}`)
       } else {
         query = query.eq('is_built_in', true)
       }
@@ -74,6 +75,7 @@ function createObjectTypesClient(supabase: SupabaseClient): ObjectTypesClient {
         fields: input.fields ?? [],
         is_built_in: false,
         owner_id: user.id,
+        space_id: spaceId ?? null,
         created_at: now,
         updated_at: now,
       }
@@ -121,13 +123,17 @@ function createObjectTypesClient(supabase: SupabaseClient): ObjectTypesClient {
   }
 }
 
-function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
+function createObjectsClient(supabase: SupabaseClient, spaceId?: string): ObjectsClient {
   return {
     async list(options: ListObjectsOptions = {}): Promise<DataListResult<DataObject>> {
       let query = supabase
         .from('objects')
         .select('*')
         .order('updated_at', { ascending: false })
+
+      if (spaceId) {
+        query = query.eq('space_id', spaceId)
+      }
 
       if (options.parentId !== undefined) {
         query = options.parentId === null
@@ -179,6 +185,9 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
       if (!user) {
         return { data: null, error: { message: 'Must be logged in to create objects' } }
       }
+      if (!spaceId) {
+        return { data: null, error: { message: 'No space selected' } }
+      }
 
       const now = new Date().toISOString()
       const objectData = {
@@ -186,6 +195,7 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
         properties: input.properties || {},
         is_deleted: input.is_deleted ?? false,
         owner_id: user.id,
+        space_id: spaceId,
         created_at: now,
         updated_at: now,
       }
@@ -266,13 +276,19 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
     },
 
     async search(query: string): Promise<DataListResult<DataObject>> {
-      const { data, error } = await supabase
+      let searchQuery = supabase
         .from('objects')
         .select('*')
         .ilike('title', `%${query}%`)
         .eq('is_deleted', false)
         .order('updated_at', { ascending: false })
         .limit(50)
+
+      if (spaceId) {
+        searchQuery = searchQuery.eq('space_id', spaceId)
+      }
+
+      const { data, error } = await searchQuery
 
       if (error) {
         return { data: [], error: { message: error.message, code: error.code } }
@@ -283,13 +299,17 @@ function createObjectsClient(supabase: SupabaseClient): ObjectsClient {
   }
 }
 
-function createTemplatesClient(supabase: SupabaseClient): TemplatesClient {
+function createTemplatesClient(supabase: SupabaseClient, spaceId?: string): TemplatesClient {
   return {
     async list(options: ListTemplatesOptions = {}): Promise<DataListResult<Template>> {
       let query = supabase
         .from('templates')
         .select('*')
         .order('updated_at', { ascending: false })
+
+      if (spaceId) {
+        query = query.eq('space_id', spaceId)
+      }
 
       if (options.typeId) {
         query = query.eq('type_id', options.typeId)
@@ -323,12 +343,16 @@ function createTemplatesClient(supabase: SupabaseClient): TemplatesClient {
       if (!user) {
         return { data: null, error: { message: 'Must be logged in to create templates' } }
       }
+      if (!spaceId) {
+        return { data: null, error: { message: 'No space selected' } }
+      }
 
       const now = new Date().toISOString()
       const templateData = {
         ...input,
         properties: input.properties || {},
         owner_id: user.id,
+        space_id: spaceId,
         created_at: now,
         updated_at: now,
       }
@@ -511,12 +535,98 @@ function createRelationsClient(supabase: SupabaseClient): RelationsClient {
   }
 }
 
-export function createSupabaseDataClient(supabase: SupabaseClient): DataClient {
+function createSpacesClient(supabase: SupabaseClient): SpacesClient {
   return {
-    objects: createObjectsClient(supabase),
-    objectTypes: createObjectTypesClient(supabase),
-    templates: createTemplatesClient(supabase),
+    async list(): Promise<DataListResult<Space>> {
+      const { data, error } = await supabase
+        .from('spaces')
+        .select('*')
+        .order('created_at', { ascending: true })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Space[], error: null }
+    },
+
+    async get(id: string): Promise<DataResult<Space>> {
+      const { data, error } = await supabase
+        .from('spaces')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Space, error: null }
+    },
+
+    async create(input: { name: string; icon?: string }): Promise<DataResult<Space>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Must be logged in to create spaces' } }
+      }
+
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('spaces')
+        .insert({
+          name: input.name,
+          icon: input.icon ?? '📁',
+          owner_id: user.id,
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Space, error: null }
+    },
+
+    async update(id: string, input: { name?: string; icon?: string }): Promise<DataResult<Space>> {
+      const { data, error } = await supabase
+        .from('spaces')
+        .update({ ...input, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Space, error: null }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('spaces')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+  }
+}
+
+export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: string): DataClient {
+  return {
+    objects: createObjectsClient(supabase, spaceId),
+    objectTypes: createObjectTypesClient(supabase, spaceId),
+    templates: createTemplatesClient(supabase, spaceId),
     relations: createRelationsClient(supabase),
+    spaces: createSpacesClient(supabase),
     isLocal: false,
   }
 }

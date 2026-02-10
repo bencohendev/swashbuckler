@@ -14,6 +14,7 @@ import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { Button } from "@/shared/components/ui/Button"
 import { TypeSection } from "./TypeSection"
+import { SpaceSwitcher } from "./SpaceSwitcher"
 
 const DRAG_TYPE = "OBJECT_TYPE"
 
@@ -183,12 +184,10 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-muted/30">
-      <div className="flex h-14 items-center justify-between border-b px-4">
-        <Link href="/" className="font-semibold">
-          Swashbuckler
-        </Link>
+      <div className="flex h-14 items-center border-b px-2">
+        <SpaceSwitcher />
         {isGuest && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+          <span className="ml-1 shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
             Guest
           </span>
         )}

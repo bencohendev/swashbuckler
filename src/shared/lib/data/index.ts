@@ -4,6 +4,8 @@ export type {
   ObjectTypesClient,
   TemplatesClient,
   RelationsClient,
+  SpacesClient,
+  Space,
   DataObject,
   CreateObjectInput,
   UpdateObjectInput,
@@ -28,6 +30,7 @@ export type {
 
 export {
   BUILT_IN_TYPE_IDS,
+  spaceSchema,
   objectSchema,
   createObjectSchema,
   updateObjectSchema,
@@ -44,7 +47,7 @@ export {
 } from './types'
 
 export { createSupabaseDataClient } from './supabase'
-export { createLocalDataClient, clearLocalData, exportLocalData } from './local'
+export { createLocalDataClient, clearLocalData, exportLocalData, ensureLocalDefaultSpace, LOCAL_DEFAULT_SPACE_ID } from './local'
 export {
   DataProvider,
   useDataClient,
@@ -52,3 +55,4 @@ export {
   useAuth,
   useMigrateData,
 } from './DataProvider'
+export { SpaceProvider, useCurrentSpace, useSpaces } from './SpaceProvider'

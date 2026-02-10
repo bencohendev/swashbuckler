@@ -19,9 +19,10 @@ const DataContext = createContext<DataContextValue | null>(null)
 
 interface DataProviderProps {
   children: ReactNode
+  spaceId?: string | null
 }
 
-export function DataProvider({ children }: DataProviderProps) {
+export function DataProvider({ children, spaceId }: DataProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const supabase = useMemo(() => createClient(), [])
@@ -44,11 +45,12 @@ export function DataProvider({ children }: DataProviderProps) {
   const storageMode: StorageMode = user ? 'supabase' : 'local'
 
   const dataClient = useMemo(() => {
+    const effectiveSpaceId = spaceId ?? undefined
     if (user) {
-      return createSupabaseDataClient(supabase)
+      return createSupabaseDataClient(supabase, effectiveSpaceId)
     }
-    return createLocalDataClient()
-  }, [user, supabase])
+    return createLocalDataClient(effectiveSpaceId)
+  }, [user, supabase, spaceId])
 
   const migrateToSupabase = async () => {
     if (!user) {
@@ -58,7 +60,7 @@ export function DataProvider({ children }: DataProviderProps) {
     const localData = await exportLocalData()
     if (localData.objects.length === 0 && localData.objectTypes.length === 0) return
 
-    const supabaseClient = createSupabaseDataClient(supabase)
+    const supabaseClient = createSupabaseDataClient(supabase, spaceId ?? undefined)
 
     // Migrate custom object types first (skip built-in types)
     for (const objectType of localData.objectTypes) {

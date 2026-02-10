@@ -6,6 +6,19 @@ export const BUILT_IN_TYPE_IDS = {
   note: '00000000-0000-0000-0000-000000000002',
 } as const
 
+// --- Space schemas ---
+
+export const spaceSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  icon: z.string(),
+  owner_id: z.string().uuid(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+})
+
+export type Space = z.infer<typeof spaceSchema>
+
 // --- Object Type schemas ---
 
 export const fieldTypeEnum = z.enum([
@@ -42,6 +55,7 @@ export const objectTypeSchema = z.object({
   fields: z.array(fieldDefinitionSchema),
   is_built_in: z.boolean(),
   owner_id: z.string().uuid().nullable(),
+  space_id: z.string().uuid().nullable(),
   sort_order: z.number().int(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
@@ -88,6 +102,7 @@ export const objectSchema = z.object({
   title: z.string().min(1).max(255),
   type_id: z.string().uuid(),
   owner_id: z.string().uuid().nullable(),
+  space_id: z.string().uuid(),
   parent_id: z.string().uuid().nullable(),
   icon: z.string().nullable(),
   cover_image: z.string().url().nullable(),
@@ -145,6 +160,7 @@ export const templateSchema = z.object({
   name: z.string().min(1).max(255),
   type_id: z.string().uuid(),
   owner_id: z.string().uuid().nullable(),
+  space_id: z.string().uuid(),
   icon: z.string().nullable(),
   cover_image: z.string().url().nullable(),
   properties: z.record(z.string(), z.any()),
@@ -205,12 +221,21 @@ export interface DataError {
   code?: string
 }
 
+export interface SpacesClient {
+  list(): Promise<DataListResult<Space>>
+  get(id: string): Promise<DataResult<Space>>
+  create(input: { name: string; icon?: string }): Promise<DataResult<Space>>
+  update(id: string, input: { name?: string; icon?: string }): Promise<DataResult<Space>>
+  delete(id: string): Promise<DataResult<void>>
+}
+
 // Data client interface
 export interface DataClient {
   objects: ObjectsClient
   objectTypes: ObjectTypesClient
   templates: TemplatesClient
   relations: RelationsClient
+  spaces: SpacesClient
   isLocal: boolean
 }
 
