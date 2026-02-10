@@ -64,8 +64,8 @@ export const editorPlugins = [
   SlashInputPlugin,
   MentionPlugin.configure({
     options: {
-      trigger: '[',
-      triggerPreviousCharPattern: /^\[$/,
+      trigger: '@',
+      triggerPreviousCharPattern: /^\s?$/,
     },
   }),
   MentionInputPlugin,

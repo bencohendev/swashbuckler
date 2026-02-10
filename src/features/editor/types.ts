@@ -96,14 +96,14 @@ export interface LinkNode extends BaseNode {
   url: string;
 }
 
-// Mention node (for [[object]] links)
+// Mention node (for @object links)
 export interface MentionNode extends BaseNode {
   type: 'mention';
   objectId: string;
   objectTitle: string;
 }
 
-// Mention input node (while typing [[)
+// Mention input node (while typing @)
 export interface MentionInputNode extends BaseNode {
   type: 'mention_input';
   trigger: string;

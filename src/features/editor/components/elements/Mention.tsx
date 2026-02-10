@@ -63,29 +63,8 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   // Total selectable items = search results + create-new items (one per type)
   const totalItems = results.length + types.length
 
-  // Remove the leftover first '[' from the '[[' trigger on mount
-  useEffect(() => {
-    const mentionInputEntry = editor.api.node({
-      match: (n) => 'type' in n && n.type === 'mention_input',
-    })
-    if (!mentionInputEntry) return
+  // No cleanup needed for single-char '@' trigger
 
-    const [, path] = mentionInputEntry
-    const startPoint = editor.api.start(path)
-    if (!startPoint) return
-
-    const before = editor.api.before(startPoint)
-    if (!before) return
-
-    const beforeBefore = editor.api.before(before)
-    if (!beforeBefore) return
-
-    const charBefore = editor.api.string({ anchor: beforeBefore, focus: before })
-    if (charBefore === '[') {
-      editor.tf.delete({ at: { anchor: beforeBefore, focus: before } })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount
-  }, [])
 
   // Get query from element text content
   useEffect(() => {
@@ -158,7 +137,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
       const [, path] = mentionInputEntry
       editor.tf.removeNodes({ at: path })
       editor.tf.insertNodes(
-        { text: '[[' + query },
+        { text: '@' + query },
         { at: path }
       )
     }
@@ -252,7 +231,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   return (
     <PlateElement {...props} element={element} as="span" className="inline">
       <span ref={triggerRef} className="rounded bg-blue-100 px-1 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-        [[{children}
+        @{children}
       </span>
 
       {/* Dropdown portaled to body to escape overflow:auto ancestors */}
