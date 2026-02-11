@@ -12,20 +12,21 @@ interface GraphCanvasProps {
   edges: GraphEdgeType[]
   width: number
   height: number
+  onNavigate: (id: string) => void
 }
 
 type Mode =
   | { type: 'idle' }
-  | { type: 'drag'; nodeId: string }
+  | { type: 'drag'; nodeId: string; didMove: boolean }
   | { type: 'pan'; startX: number; startY: number; startTx: number; startTy: number }
 
-export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
+export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const gRef = useRef<SVGGElement>(null)
   const modeRef = useRef<Mode>({ type: 'idle' })
   const transformRef = useRef({ x: 0, y: 0, k: 1 })
 
-  const { disabledTypeIds } = useGraphStore()
+  const { disabledTypeIds, selectedNodeId, setSelectedNodeId, highlightedNodeIds } = useGraphStore()
 
   const filteredNodes = useMemo(
     () => nodes.filter(n => !disabledTypeIds.has(n.typeId)),
@@ -43,6 +44,20 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
     width,
     height,
   })
+
+  const connectedNodeIds = useMemo(() => {
+    if (!selectedNodeId) return new Set<string>()
+    const s = new Set<string>([selectedNodeId])
+    for (const e of simulatedEdges) {
+      const src = typeof e.source === 'object' ? (e.source as GraphNodeType).id : e.source as string
+      const tgt = typeof e.target === 'object' ? (e.target as GraphNodeType).id : e.target as string
+      if (src === selectedNodeId) s.add(tgt)
+      if (tgt === selectedNodeId) s.add(src)
+    }
+    return s
+  }, [selectedNodeId, simulatedEdges])
+
+  const hasSelection = selectedNodeId !== null
 
   // Apply transform to <g>
   const applyTransform = useCallback(() => {
@@ -88,7 +103,7 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
 
   // Node drag start — called from GraphNode's onPointerDown (stopPropagation prevents SVG handler)
   const handleNodeDragStart = useCallback((nodeId: string, pointerId: number) => {
-    modeRef.current = { type: 'drag', nodeId }
+    modeRef.current = { type: 'drag', nodeId, didMove: false }
     svgRef.current?.setPointerCapture(pointerId)
     const node = findSimNode(nodeId)
     if (node) { node.fx = node.x; node.fy = node.y }
@@ -104,6 +119,7 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
   const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     const m = modeRef.current
     if (m.type === 'drag') {
+      m.didMove = true
       const pt = toSimCoords(e.clientX, e.clientY)
       const node = findSimNode(m.nodeId)
       if (node) { node.fx = pt.x; node.fy = pt.y }
@@ -120,13 +136,21 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
   const handlePointerUp = useCallback(() => {
     const m = modeRef.current
     modeRef.current = { type: 'idle' }
+
     if (m.type === 'drag') {
       const node = findSimNode(m.nodeId)
       if (node) { node.fx = null; node.fy = null }
       const sim = getSimulation()
       if (sim) sim.alphaTarget(0)
+      // Click (no movement) → select node
+      if (!m.didMove) setSelectedNodeId(m.nodeId)
+    } else if (m.type === 'pan') {
+      // nothing
+    } else {
+      // Click on background → deselect
+      setSelectedNodeId(null)
     }
-  }, [findSimNode, getSimulation])
+  }, [findSimNode, getSimulation, setSelectedNodeId])
 
   return (
     <svg
@@ -139,16 +163,28 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
       onPointerUp={handlePointerUp}
     >
       <g ref={gRef}>
-        {simulatedEdges.map(edge => (
-          <GraphEdge key={edge.id} edge={edge} />
-        ))}
-        {simulatedNodes.map(node => (
-          <GraphNode
-            key={node.id}
-            node={node}
-            onDragStart={handleNodeDragStart}
-          />
-        ))}
+        {simulatedEdges.map(edge => {
+          const srcId = typeof edge.source === 'object' ? (edge.source as GraphNodeType).id : edge.source as string
+          const tgtId = typeof edge.target === 'object' ? (edge.target as GraphNodeType).id : edge.target as string
+          const isDimmed = hasSelection && (!connectedNodeIds.has(srcId) || !connectedNodeIds.has(tgtId))
+          return <GraphEdge key={edge.id} edge={edge} isDimmed={isDimmed} />
+        })}
+        {simulatedNodes.map(node => {
+          const isSelected = node.id === selectedNodeId
+          const isConnected = connectedNodeIds.has(node.id)
+          const isHighlighted = highlightedNodeIds.has(node.id)
+          const isDimmed = hasSelection && !isConnected
+          return (
+            <GraphNode
+              key={node.id}
+              node={node}
+              isSelected={isSelected}
+              isHighlighted={isHighlighted}
+              isDimmed={isDimmed}
+              onDragStart={handleNodeDragStart}
+            />
+          )
+        })}
       </g>
     </svg>
   )

@@ -5,9 +5,10 @@ import type { GraphNode, GraphEdge as GraphEdgeType } from '../lib/types'
 
 interface GraphEdgeProps {
   edge: GraphEdgeType
+  isDimmed: boolean
 }
 
-export const GraphEdge = memo(function GraphEdge({ edge }: GraphEdgeProps) {
+export const GraphEdge = memo(function GraphEdge({ edge, isDimmed }: GraphEdgeProps) {
   const source = edge.source as GraphNode
   const target = edge.target as GraphNode
 
@@ -24,7 +25,7 @@ export const GraphEdge = memo(function GraphEdge({ edge }: GraphEdgeProps) {
       y2={y2}
       stroke="var(--muted-foreground)"
       strokeWidth={1}
-      strokeOpacity={0.4}
+      strokeOpacity={isDimmed ? 0.05 : 0.4}
     />
   )
 })

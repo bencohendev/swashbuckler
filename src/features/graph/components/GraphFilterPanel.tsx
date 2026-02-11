@@ -55,7 +55,7 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
   const hasDisabled = disabledTypeIds.size > 0
 
   return (
-    <Card className="absolute top-3 left-3 w-56 shadow-lg bg-background/95 backdrop-blur-sm">
+    <Card className="absolute top-9 right-9 w-56 shadow-lg bg-background/95 backdrop-blur-sm">
       <CardHeader className="pb-2 px-3 pt-3">
         <CardTitle className="text-sm font-medium">Filters</CardTitle>
       </CardHeader>

@@ -1,12 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useGraphData } from '../hooks/useGraphData'
 import { useGraphStore } from '../lib/store'
 import { GraphCanvas } from './GraphCanvas'
 import { GraphFilterPanel } from './GraphFilterPanel'
+import { GraphNodeDetail } from './GraphNodeDetail'
 
 export function GraphView() {
+  const router = useRouter()
   const { graphData, types, isLoading } = useGraphData()
   const reset = useGraphStore(s => s.reset)
 
@@ -37,6 +40,11 @@ export function GraphView() {
     return () => observer.disconnect()
   }, [])
 
+  const handleNavigate = useCallback(
+    (id: string) => router.push(`/objects/${id}`),
+    [router],
+  )
+
   const showGraph = !isLoading && graphData.nodes.length > 0
 
   return (
@@ -61,8 +69,10 @@ export function GraphView() {
             edges={graphData.edges}
             width={dimensions.width}
             height={dimensions.height}
+            onNavigate={handleNavigate}
           />
           <GraphFilterPanel types={types} nodes={graphData.nodes} />
+          <GraphNodeDetail nodes={graphData.nodes} onNavigate={handleNavigate} />
         </>
       )}
     </div>
