@@ -1,6 +1,6 @@
 # Theme
 
-**Status: Partial**
+**Status: Implemented**
 
 ## Overview
 
@@ -11,16 +11,14 @@ Light / Dark / System theme support.
 | Area | Decision |
 |------|----------|
 | Modes | Light / Dark / System detect |
-| Toggle | UI toggle in settings or header |
+| Toggle | Cycle button in header (light → dark → system) |
+| Library | `next-themes` |
 
 ## What's Done
 
 - [x] Dark mode CSS variables defined in `globals.css` (`.dark` class)
 - [x] Dark mode Tailwind classes used throughout components (`dark:bg-*`, `dark:text-*`)
-
-## What's Left
-
-- [ ] Theme toggle UI (button/dropdown)
-- [ ] ThemeProvider integration (e.g., `next-themes`)
-- [ ] System preference detection
-- [ ] Theme persistence (localStorage)
+- [x] `next-themes` installed and `ThemeProvider` wired in `providers.tsx`
+- [x] Theme toggle button in header (Sun / Moon / Monitor icons)
+- [x] System preference detection via `next-themes`
+- [x] Theme persistence via localStorage (automatic)

@@ -13,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback } from "@/shared/components/ui/Avatar"
-import { LogInIcon, LogOutIcon, PlusIcon, SearchIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, MonitorIcon, MoonIcon, PlusIcon, SearchIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
 import { QuickCaptureDialog, QuickCaptureButton } from "@/features/quick-capture"
 
@@ -22,6 +23,12 @@ export function Header({ email }: { email?: string }) {
   const isGuest = !email
   const [searchOpen, setSearchOpen] = useState(false)
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -79,6 +86,25 @@ export function Header({ email }: { email?: string }) {
               ⌘K
             </kbd>
           </span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground"
+          onClick={() => {
+            if (theme === 'light') setTheme('dark')
+            else if (theme === 'dark') setTheme('system')
+            else setTheme('light')
+          }}
+          title={`Theme: ${theme}`}
+        >
+          {mounted ? (
+            theme === 'system' ? <MonitorIcon className="size-4" /> :
+            resolvedTheme === 'dark' ? <MoonIcon className="size-4" /> :
+            <SunIcon className="size-4" />
+          ) : (
+            <SunIcon className="size-4" />
+          )}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

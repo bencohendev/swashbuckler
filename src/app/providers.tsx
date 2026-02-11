@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ThemeProvider } from 'next-themes'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import { DataProvider, SpaceProvider, useCurrentSpace } from '@/shared/lib/data'
@@ -43,10 +44,12 @@ export function Providers({ children }: ProvidersProps) {
   }, [supabase])
 
   return (
-    <SpaceProvider user={user} isAuthLoading={isAuthLoading}>
-      <DataProviderWithSpace>
-        {children}
-      </DataProviderWithSpace>
-    </SpaceProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <SpaceProvider user={user} isAuthLoading={isAuthLoading}>
+        <DataProviderWithSpace>
+          {children}
+        </DataProviderWithSpace>
+      </SpaceProvider>
+    </ThemeProvider>
   )
 }
