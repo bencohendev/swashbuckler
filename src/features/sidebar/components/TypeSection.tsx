@@ -2,14 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronRightIcon, EyeIcon, PencilIcon, PlusIcon, TrashIcon } from 'lucide-react'
+import { ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { ContextMenu } from 'radix-ui'
 import { cn } from '@/shared/lib/utils'
 import type { DataObject, ObjectType, Template } from '@/shared/lib/data'
 import { ObjectList } from '@/features/objects/components'
-import { TemplateSelector } from '@/features/templates'
+import { useTemplates } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { Button } from '@/shared/components/ui/Button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/DropdownMenu'
 
 interface TypeSectionProps {
   type: ObjectType
@@ -28,6 +38,44 @@ function getStorageKey(typeId: string) {
 
 const menuItemClass =
   'relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*=size-])]:size-4'
+
+function TemplateSubMenu({ typeId, onSelectTemplate }: { typeId: string; onSelectTemplate: (template: Template) => Promise<void> }) {
+  const { templates, isLoading } = useTemplates({ typeId })
+
+  if (isLoading) {
+    return (
+      <DropdownMenuItem disabled>
+        <CopyIcon />
+        Create from template
+      </DropdownMenuItem>
+    )
+  }
+
+  if (templates.length === 0) {
+    return (
+      <DropdownMenuItem disabled>
+        <CopyIcon />
+        Create from template
+      </DropdownMenuItem>
+    )
+  }
+
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <CopyIcon />
+        Create from template
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent>
+        {templates.map((template) => (
+          <DropdownMenuItem key={template.id} onSelect={() => onSelectTemplate(template)}>
+            {template.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  )
+}
 
 export function TypeSection({
   type,
@@ -84,22 +132,37 @@ export function TypeSection({
                 <span className="ml-1 text-muted-foreground/60">{objects.length}</span>
               </button>
             </div>
-            {!hideCreateButton && (
-              <TemplateSelector
-                typeId={type.id}
-                trigger={
-                  <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    title={`Create new ${type.name}`}
-                  >
-                    <PlusIcon className="size-3" />
-                  </Button>
-                }
-                onCreateBlank={onCreateBlank}
-                onSelectTemplate={onSelectTemplate}
-              />
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  title={`${type.name} options`}
+                >
+                  <EllipsisIcon className="size-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onSelect={() => router.push(`/types/${type.slug}`)}>
+                  <EyeIcon />
+                  Open
+                </DropdownMenuItem>
+                {!hideCreateButton && (
+                  <>
+                    <DropdownMenuItem onSelect={() => onCreateBlank(type.id)}>
+                      <PlusIcon />
+                      Create
+                    </DropdownMenuItem>
+                    <TemplateSubMenu typeId={type.id} onSelectTemplate={onSelectTemplate} />
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => router.push('/settings/types')}>
+                  <SettingsIcon />
+                  Object settings
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </ContextMenu.Trigger>
         <ContextMenu.Portal>
