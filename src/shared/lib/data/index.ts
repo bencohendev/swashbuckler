@@ -19,6 +19,7 @@ export type {
   ObjectRelation,
   CreateObjectRelationInput,
   ListRelationsOptions,
+  ListAllRelationsOptions,
   Template,
   CreateTemplateInput,
   UpdateTemplateInput,

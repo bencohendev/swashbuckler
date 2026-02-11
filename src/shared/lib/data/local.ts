@@ -21,6 +21,7 @@ import type {
   UpdateTemplateInput,
   ListObjectsOptions,
   ListRelationsOptions,
+  ListAllRelationsOptions,
   ListTemplatesOptions,
   DataResult,
   DataListResult,
@@ -687,8 +688,45 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
   }
 }
 
-function createRelationsClient(): RelationsClient {
+function createRelationsClient(spaceId?: string): RelationsClient {
   return {
+    async listAll(options: ListAllRelationsOptions = {}): Promise<DataListResult<ObjectRelation>> {
+      try {
+        const database = getDB()
+
+        // Get non-deleted object IDs in this space
+        let objects = await database.objects.filter(o => !o.is_deleted).toArray()
+        if (spaceId) {
+          objects = objects.filter(o => o.space_id === spaceId)
+        }
+        const objectIds = new Set(objects.map(o => o.id))
+
+        if (objectIds.size === 0) {
+          return { data: [], error: null }
+        }
+
+        let results = await database.objectRelations.toArray()
+
+        if (options.relationType) {
+          results = results.filter(r => r.relation_type === options.relationType)
+        }
+
+        // Filter to relations where both endpoints exist in the space
+        results = results.filter(r => objectIds.has(r.source_id) && objectIds.has(r.target_id))
+
+        results.sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+
+        return { data: results, error: null }
+      } catch (error) {
+        return {
+          data: [],
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
     async list(options: ListRelationsOptions): Promise<DataListResult<ObjectRelation>> {
       try {
         const database = getDB()
@@ -971,7 +1009,7 @@ export function createLocalDataClient(spaceId?: string): DataClient {
     objects: createObjectsClient(spaceId),
     objectTypes: createObjectTypesClient(spaceId),
     templates: createTemplatesClient(spaceId),
-    relations: createRelationsClient(),
+    relations: createRelationsClient(spaceId),
     spaces: createLocalSpacesClient(),
     sharing: createNoOpSharingClient(),
     isLocal: true,

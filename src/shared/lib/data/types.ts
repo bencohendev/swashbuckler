@@ -268,8 +268,13 @@ export interface ListRelationsOptions {
   relationType?: string
 }
 
+export interface ListAllRelationsOptions {
+  relationType?: string
+}
+
 export interface RelationsClient {
   list(options: ListRelationsOptions): Promise<DataListResult<ObjectRelation>>
+  listAll(options?: ListAllRelationsOptions): Promise<DataListResult<ObjectRelation>>
   create(input: CreateObjectRelationInput): Promise<DataResult<ObjectRelation>>
   delete(id: string): Promise<DataResult<void>>
   deleteBySourceAndTarget(sourceId: string, targetId: string, relationType?: string): Promise<DataResult<void>>

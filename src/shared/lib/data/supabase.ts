@@ -26,6 +26,7 @@ import type {
   SpaceSharePermission,
   ListObjectsOptions,
   ListRelationsOptions,
+  ListAllRelationsOptions,
   ListTemplatesOptions,
   DataResult,
   DataListResult,
@@ -406,8 +407,55 @@ function createTemplatesClient(supabase: SupabaseClient, spaceId?: string): Temp
   }
 }
 
-function createRelationsClient(supabase: SupabaseClient): RelationsClient {
+function createRelationsClient(supabase: SupabaseClient, spaceId?: string): RelationsClient {
   return {
+    async listAll(options: ListAllRelationsOptions = {}): Promise<DataListResult<ObjectRelation>> {
+      // First get the set of non-deleted object IDs in the current space
+      let objectsQuery = supabase
+        .from('objects')
+        .select('id')
+        .eq('is_deleted', false)
+
+      if (spaceId) {
+        objectsQuery = objectsQuery.eq('space_id', spaceId)
+      }
+
+      const { data: objectRows, error: objectsError } = await objectsQuery
+
+      if (objectsError) {
+        return { data: [], error: { message: objectsError.message, code: objectsError.code } }
+      }
+
+      const objectIds = new Set((objectRows ?? []).map((r: { id: string }) => r.id))
+
+      if (objectIds.size === 0) {
+        return { data: [], error: null }
+      }
+
+      // Fetch all relations
+      let relationsQuery = supabase
+        .from('object_relations')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (options.relationType) {
+        relationsQuery = relationsQuery.eq('relation_type', options.relationType)
+      }
+
+      const { data: relations, error: relationsError } = await relationsQuery
+
+      if (relationsError) {
+        return { data: [], error: { message: relationsError.message, code: relationsError.code } }
+      }
+
+      // Filter to relations where both endpoints are in the space
+      const filtered = (relations ?? []).filter(
+        (r: ObjectRelation) => objectIds.has(r.source_id) && objectIds.has(r.target_id)
+      )
+
+      return { data: filtered, error: null }
+    },
+
     async list(options: ListRelationsOptions): Promise<DataListResult<ObjectRelation>> {
       let query = supabase
         .from('object_relations')
@@ -840,7 +888,7 @@ export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: str
     objects: createObjectsClient(supabase, spaceId),
     objectTypes: createObjectTypesClient(supabase, spaceId),
     templates: createTemplatesClient(supabase, spaceId),
-    relations: createRelationsClient(supabase),
+    relations: createRelationsClient(supabase, spaceId),
     spaces: createSpacesClient(supabase),
     sharing: createSharingClient(supabase),
     isLocal: false,

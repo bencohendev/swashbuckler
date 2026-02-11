@@ -15,7 +15,7 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
       <div className="flex flex-1 flex-col overflow-hidden">
         <GuestBanner />
         <Header email={user?.email} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="relative flex-1 overflow-auto p-6">{children}</main>
       </div>
       <ObjectEditorModal />
     </div>
