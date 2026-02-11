@@ -29,6 +29,7 @@ src/
 │   │   ├── objects/          # Object list and editor
 │   │   ├── graph/            # Knowledge graph
 │   │   ├── trash/            # Deleted objects
+│   │   ├── types/[slug]/     # Type table pages
 │   │   └── settings/         # Types, templates, sharing
 │   └── auth/callback/        # OAuth callback
 ├── features/
@@ -40,6 +41,7 @@ src/
 │   ├── search/
 │   ├── sharing/
 │   ├── sidebar/
+│   ├── table-view/
 │   └── templates/
 └── shared/
     ├── components/ui/        # shadcn components
@@ -76,7 +78,7 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|------|--------|
 | [Auth](auth.md) | Authentication & authorization | Done |
 | [Objects](objects.md) | Object system, types, properties | Done |
-| [Sidebar](sidebar.md) | Hierarchical sidebar + context menu | Partial |
+| [Sidebar](sidebar.md) | Hierarchical sidebar + context menu | Done |
 | [Editor](editor.md) | Block editor (Plate.js) | Done |
 | [Templates](templates.md) | Template system | Done |
 | [Sharing](sharing.md) | Workspace sharing & exclusions | Done |
@@ -90,7 +92,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Quick Capture](quick-capture.md) | Floating button / hotkey | Not started |
 | [Emoji](emoji.md) | Emoji picker for type & space icons | Not started |
 | [Tags](tags.md) | Global cross-type tagging | Not started |
-| [Type Pages](type-pages.md) | Table view per object type | Not started |
+| [Type Pages](type-pages.md) | Table view per object type | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
 ## Post-MVP Features (Deferred)

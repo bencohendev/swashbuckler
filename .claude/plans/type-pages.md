@@ -1,6 +1,6 @@
 # Type Table Pages
 
-**Status: Not started**
+**Status: Done** (tags column deferred until tags feature is implemented)
 
 ## Overview
 
@@ -12,7 +12,7 @@ Dedicated pages for each object type at `/types/[slug]` showing all instances in
 |------|----------|
 | Route | `/types/[slug]` under `(main)` layout |
 | View | Sortable data table (not cards or simple list) |
-| Columns | Title + one per type field (by sort_order) + Tags |
+| Columns | Title + one per type field (by sort_order) + Updated (tags deferred) |
 | Sorting | Client-side, click column headers |
 | Navigation | Click row to go to `/objects/[id]` |
 
@@ -26,14 +26,13 @@ Dedicated pages for each object type at `/types/[slug]` showing all instances in
 **`TypeTableView.tsx`** — container
 - Resolves type by slug via `useObjectTypes()` + `.find(t => t.slug === slug)`
 - Loads objects via `useObjects({ typeId: type.id, isDeleted: false })`
-- Batch-loads tags via `dataClient.tags.getTagsForObjects(objectIds)`
 - Passes data to `TypeDataTable`
 
 **`TypeDataTable.tsx`** — sortable table
-- Columns: Title + one per `type.fields` (sorted by `sort_order`) + Tags
+- Columns: Title + one per `type.fields` (sorted by `sort_order`) + Updated
 - Client-side sorting via `useState<{ column: string, direction: 'asc' | 'desc' } | null>`
 - Rows are clickable via `router.push(/objects/${obj.id})`
-- Uses shadcn-style `<table>` with Tailwind classes
+- Semantic `<table>` with Tailwind classes
 
 **`PropertyCell.tsx`** — renders a single property value based on field type
 - `text` — truncated string
@@ -48,11 +47,11 @@ Dedicated pages for each object type at `/types/[slug]` showing all instances in
 
 ## Verification
 
-- [ ] Navigate to `/types/page` and see all Page objects
-- [ ] Custom type slugs work (e.g. `/types/task`)
-- [ ] Property columns render correct values for each field type
-- [ ] Sorting works on title, property columns, and tags
-- [ ] Click row navigates to `/objects/[id]`
-- [ ] Tags column shows tag badges
-- [ ] Unknown slug shows "Type not found" error state
-- [ ] `npm run build` passes
+- [x] Navigate to `/types/page` and see all Page objects
+- [x] Custom type slugs work (e.g. `/types/task`)
+- [x] Property columns render correct values for each field type
+- [x] Sorting works on title and property columns
+- [x] Click row navigates to `/objects/[id]`
+- [ ] Tags column shows tag badges (deferred — tags feature not yet implemented)
+- [x] Unknown slug shows "Type not found" error state
+- [x] `npm run build` passes

@@ -37,6 +37,7 @@ function DraggableTypeSection({
   hideCreateButton,
   onCreateBlank,
   onSelectTemplate,
+  onDelete,
   onMove,
   onDrop,
 }: {
@@ -46,6 +47,7 @@ function DraggableTypeSection({
   hideCreateButton?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
+  onDelete: (typeId: string) => Promise<void>
   onMove: (from: number, to: number) => void
   onDrop: () => void
 }) {
@@ -101,6 +103,7 @@ function DraggableTypeSection({
         hideCreateButton={hideCreateButton}
         onCreateBlank={onCreateBlank}
         onSelectTemplate={onSelectTemplate}
+        onDelete={onDelete}
       />
     </div>
   )
@@ -116,7 +119,7 @@ export function Sidebar() {
     parentId: null,
     isDeleted: false,
   })
-  const { types, isLoading: typesLoading, create: createType, update: updateType } = useObjectTypes()
+  const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
   const { createFromTemplate } = useTemplates()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
@@ -240,6 +243,7 @@ export function Sidebar() {
                   hideCreateButton={!canEditSpace}
                   onCreateBlank={handleCreateBlank}
                   onSelectTemplate={handleSelectTemplate}
+                  onDelete={removeType}
                   onMove={handleMoveType}
                   onDrop={handleDropType}
                 />
