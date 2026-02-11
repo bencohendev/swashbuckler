@@ -6,6 +6,7 @@ import type {
   TemplatesClient,
   RelationsClient,
   SpacesClient,
+  SharingClient,
   Space,
   DataObject,
   ObjectType,
@@ -949,6 +950,22 @@ function createLocalSpacesClient(): SpacesClient {
   }
 }
 
+function createNoOpSharingClient(): SharingClient {
+  const notAvailable = { message: 'Sharing is not available in guest mode' }
+  return {
+    async listShares() { return { data: [], error: notAvailable } },
+    async getShare() { return { data: null, error: notAvailable } },
+    async createShare() { return { data: null, error: notAvailable } },
+    async updateShare() { return { data: null, error: notAvailable } },
+    async deleteShare() { return { data: null, error: notAvailable } },
+    async listExclusions() { return { data: [], error: notAvailable } },
+    async addExclusion() { return { data: null, error: notAvailable } },
+    async removeExclusion() { return { data: null, error: notAvailable } },
+    async findUserByEmail() { return { data: null, error: notAvailable } },
+    async getSharedSpaces() { return { data: [], error: notAvailable } },
+  }
+}
+
 export function createLocalDataClient(spaceId?: string): DataClient {
   return {
     objects: createObjectsClient(spaceId),
@@ -956,6 +973,7 @@ export function createLocalDataClient(spaceId?: string): DataClient {
     templates: createTemplatesClient(spaceId),
     relations: createRelationsClient(),
     spaces: createLocalSpacesClient(),
+    sharing: createNoOpSharingClient(),
     isLocal: true,
   }
 }

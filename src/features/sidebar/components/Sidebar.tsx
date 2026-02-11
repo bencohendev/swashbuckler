@@ -12,6 +12,7 @@ import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
+import { useSpacePermission } from "@/features/sharing"
 import { Button } from "@/shared/components/ui/Button"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
@@ -33,6 +34,7 @@ function DraggableTypeSection({
   index,
   type,
   objects,
+  hideCreateButton,
   onCreateBlank,
   onSelectTemplate,
   onMove,
@@ -41,6 +43,7 @@ function DraggableTypeSection({
   index: number
   type: ObjectType
   objects: DataObject[]
+  hideCreateButton?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
   onMove: (from: number, to: number) => void
@@ -95,6 +98,7 @@ function DraggableTypeSection({
         objects={objects}
         isLoading={false}
         isDragging={isDragging}
+        hideCreateButton={hideCreateButton}
         onCreateBlank={onCreateBlank}
         onSelectTemplate={onSelectTemplate}
       />
@@ -106,6 +110,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { isGuest } = useAuth()
+  const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
@@ -228,21 +233,24 @@ export function Sidebar() {
                   index={index}
                   type={type}
                   objects={objectsByType.get(type.id) ?? []}
+                  hideCreateButton={!canEditSpace}
                   onCreateBlank={handleCreateBlank}
                   onSelectTemplate={handleSelectTemplate}
                   onMove={handleMoveType}
                   onDrop={handleDropType}
                 />
               ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start gap-1 text-xs text-muted-foreground"
-                onClick={() => setCreateTypeOpen(true)}
-              >
-                <PlusIcon className="size-3" />
-                New Type
-              </Button>
+              {isSpaceOwner && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                  onClick={() => setCreateTypeOpen(true)}
+                >
+                  <PlusIcon className="size-3" />
+                  New Type
+                </Button>
+              )}
             </>
           )}
         </div>

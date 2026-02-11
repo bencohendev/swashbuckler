@@ -5,6 +5,7 @@ export type {
   TemplatesClient,
   RelationsClient,
   SpacesClient,
+  SharingClient,
   Space,
   DataObject,
   CreateObjectInput,
@@ -22,6 +23,12 @@ export type {
   CreateTemplateInput,
   UpdateTemplateInput,
   ListTemplatesOptions,
+  SpaceShare,
+  ShareExclusion,
+  CreateShareExclusionInput,
+  SharedSpace,
+  SpaceSharePermission,
+  SpacePermission,
   DataResult,
   DataListResult,
   DataError,
@@ -44,6 +51,8 @@ export {
   updateTemplateSchema,
   fieldDefinitionSchema,
   fieldTypeEnum,
+  spaceShareSchema,
+  shareExclusionSchema,
 } from './types'
 
 export { createSupabaseDataClient } from './supabase'

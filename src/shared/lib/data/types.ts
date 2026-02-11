@@ -229,16 +229,6 @@ export interface SpacesClient {
   delete(id: string): Promise<DataResult<void>>
 }
 
-// Data client interface
-export interface DataClient {
-  objects: ObjectsClient
-  objectTypes: ObjectTypesClient
-  templates: TemplatesClient
-  relations: RelationsClient
-  spaces: SpacesClient
-  isLocal: boolean
-}
-
 export interface ObjectsClient {
   list(options?: ListObjectsOptions): Promise<DataListResult<DataObject>>
   get(id: string): Promise<DataResult<DataObject>>
@@ -284,6 +274,68 @@ export interface RelationsClient {
   delete(id: string): Promise<DataResult<void>>
   deleteBySourceAndTarget(sourceId: string, targetId: string, relationType?: string): Promise<DataResult<void>>
   syncMentions(sourceId: string, mentionTargetIds: string[]): Promise<DataResult<void>>
+}
+
+// --- Sharing schemas ---
+
+export type SpaceSharePermission = 'view' | 'edit'
+export type SpacePermission = 'owner' | 'edit' | 'view'
+
+export const spaceShareSchema = z.object({
+  id: z.string().uuid(),
+  space_id: z.string().uuid(),
+  owner_id: z.string().uuid(),
+  shared_with_id: z.string().uuid(),
+  shared_with_email: z.string(),
+  permission: z.enum(['view', 'edit']),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+})
+
+export type SpaceShare = z.infer<typeof spaceShareSchema>
+
+export const shareExclusionSchema = z.object({
+  id: z.string().uuid(),
+  space_share_id: z.string().uuid(),
+  excluded_type_id: z.string().uuid().nullable(),
+  excluded_object_id: z.string().uuid().nullable(),
+  excluded_field: z.string().nullable(),
+  created_at: z.string().datetime(),
+})
+
+export type ShareExclusion = z.infer<typeof shareExclusionSchema>
+
+export type CreateShareExclusionInput =
+  | { excluded_type_id: string }
+  | { excluded_object_id: string }
+  | { excluded_type_id: string; excluded_field: string }
+
+export interface SharedSpace extends Space {
+  permission: SpaceSharePermission
+}
+
+export interface SharingClient {
+  listShares(spaceId: string): Promise<DataListResult<SpaceShare>>
+  getShare(id: string): Promise<DataResult<SpaceShare>>
+  createShare(input: { space_id: string; shared_with_email: string; permission: SpaceSharePermission }): Promise<DataResult<SpaceShare>>
+  updateShare(id: string, input: { permission: SpaceSharePermission }): Promise<DataResult<SpaceShare>>
+  deleteShare(id: string): Promise<DataResult<void>>
+  listExclusions(shareId: string): Promise<DataListResult<ShareExclusion>>
+  addExclusion(shareId: string, input: CreateShareExclusionInput): Promise<DataResult<ShareExclusion>>
+  removeExclusion(id: string): Promise<DataResult<void>>
+  findUserByEmail(email: string): Promise<DataResult<{ id: string; email: string }>>
+  getSharedSpaces(): Promise<DataListResult<SharedSpace>>
+}
+
+// Data client interface (with sharing)
+export interface DataClient {
+  objects: ObjectsClient
+  objectTypes: ObjectTypesClient
+  templates: TemplatesClient
+  relations: RelationsClient
+  spaces: SpacesClient
+  sharing: SharingClient
+  isLocal: boolean
 }
 
 // Storage mode

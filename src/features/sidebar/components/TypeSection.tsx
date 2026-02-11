@@ -14,6 +14,7 @@ interface TypeSectionProps {
   objects: DataObject[]
   isLoading: boolean
   isDragging?: boolean
+  hideCreateButton?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
 }
@@ -27,6 +28,7 @@ export function TypeSection({
   objects,
   isLoading,
   isDragging,
+  hideCreateButton,
   onCreateBlank,
   onSelectTemplate,
 }: TypeSectionProps) {
@@ -56,20 +58,22 @@ export function TypeSection({
           <span>{type.plural_name}</span>
           <span className="ml-1 text-muted-foreground/60">{objects.length}</span>
         </button>
-        <TemplateSelector
-          typeId={type.id}
-          trigger={
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              title={`Create new ${type.name}`}
-            >
-              <PlusIcon className="size-3" />
-            </Button>
-          }
-          onCreateBlank={onCreateBlank}
-          onSelectTemplate={onSelectTemplate}
-        />
+        {!hideCreateButton && (
+          <TemplateSelector
+            typeId={type.id}
+            trigger={
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                title={`Create new ${type.name}`}
+              >
+                <PlusIcon className="size-3" />
+              </Button>
+            }
+            onCreateBlank={onCreateBlank}
+            onSelectTemplate={onSelectTemplate}
+          />
+        )}
       </div>
       {!collapsed && (
         <div className="pl-8">

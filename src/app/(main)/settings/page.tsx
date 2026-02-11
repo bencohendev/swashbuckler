@@ -17,7 +17,7 @@ const settingsItems = [
   {
     href: '/settings/sharing',
     label: 'Sharing',
-    description: 'Manage workspace sharing and permissions',
+    description: 'Manage space sharing and permissions',
     icon: UsersIcon,
   },
 ]
@@ -28,7 +28,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
         <p className="text-muted-foreground">
-          Manage your workspace settings and preferences.
+          Manage your space settings and preferences.
         </p>
       </div>
 

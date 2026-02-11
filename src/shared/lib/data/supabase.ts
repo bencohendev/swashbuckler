@@ -6,11 +6,15 @@ import type {
   TemplatesClient,
   RelationsClient,
   SpacesClient,
+  SharingClient,
   Space,
   DataObject,
   ObjectType,
   ObjectRelation,
   Template,
+  SpaceShare,
+  ShareExclusion,
+  SharedSpace,
   CreateObjectInput,
   UpdateObjectInput,
   CreateObjectTypeInput,
@@ -18,6 +22,8 @@ import type {
   CreateObjectRelationInput,
   CreateTemplateInput,
   UpdateTemplateInput,
+  CreateShareExclusionInput,
+  SpaceSharePermission,
   ListObjectsOptions,
   ListRelationsOptions,
   ListTemplatesOptions,
@@ -620,6 +626,215 @@ function createSpacesClient(supabase: SupabaseClient): SpacesClient {
   }
 }
 
+function createSharingClient(supabase: SupabaseClient): SharingClient {
+  return {
+    async listShares(spaceId: string): Promise<DataListResult<SpaceShare>> {
+      const { data, error } = await supabase
+        .from('space_shares')
+        .select('*')
+        .eq('space_id', spaceId)
+        .order('created_at', { ascending: true })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as SpaceShare[], error: null }
+    },
+
+    async getShare(id: string): Promise<DataResult<SpaceShare>> {
+      const { data, error } = await supabase
+        .from('space_shares')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as SpaceShare, error: null }
+    },
+
+    async createShare(input: { space_id: string; shared_with_email: string; permission: SpaceSharePermission }): Promise<DataResult<SpaceShare>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Must be logged in to share spaces' } }
+      }
+
+      // Look up the target user by email
+      const { data: targetUsers, error: lookupError } = await supabase
+        .rpc('find_user_by_email', { p_email: input.shared_with_email })
+
+      if (lookupError) {
+        return { data: null, error: { message: lookupError.message, code: lookupError.code } }
+      }
+
+      if (!targetUsers || targetUsers.length === 0) {
+        return { data: null, error: { message: 'User not found with that email', code: 'NOT_FOUND' } }
+      }
+
+      const targetUser = targetUsers[0]
+
+      if (targetUser.id === user.id) {
+        return { data: null, error: { message: 'Cannot share a space with yourself' } }
+      }
+
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('space_shares')
+        .insert({
+          space_id: input.space_id,
+          owner_id: user.id,
+          shared_with_id: targetUser.id,
+          shared_with_email: input.shared_with_email,
+          permission: input.permission,
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'Space is already shared with this user', code: 'DUPLICATE' } }
+        }
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as SpaceShare, error: null }
+    },
+
+    async updateShare(id: string, input: { permission: SpaceSharePermission }): Promise<DataResult<SpaceShare>> {
+      const { data, error } = await supabase
+        .from('space_shares')
+        .update({ permission: input.permission, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as SpaceShare, error: null }
+    },
+
+    async deleteShare(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('space_shares')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async listExclusions(shareId: string): Promise<DataListResult<ShareExclusion>> {
+      const { data, error } = await supabase
+        .from('share_exclusions')
+        .select('*')
+        .eq('space_share_id', shareId)
+        .order('created_at', { ascending: true })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ShareExclusion[], error: null }
+    },
+
+    async addExclusion(shareId: string, input: CreateShareExclusionInput): Promise<DataResult<ShareExclusion>> {
+      const exclusionData = {
+        space_share_id: shareId,
+        excluded_type_id: 'excluded_type_id' in input ? input.excluded_type_id : null,
+        excluded_object_id: 'excluded_object_id' in input ? input.excluded_object_id : null,
+        excluded_field: 'excluded_field' in input ? input.excluded_field : null,
+      }
+
+      const { data, error } = await supabase
+        .from('share_exclusions')
+        .insert(exclusionData)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ShareExclusion, error: null }
+    },
+
+    async removeExclusion(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('share_exclusions')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async findUserByEmail(email: string): Promise<DataResult<{ id: string; email: string }>> {
+      const { data, error } = await supabase
+        .rpc('find_user_by_email', { p_email: email })
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      if (!data || data.length === 0) {
+        return { data: null, error: { message: 'User not found', code: 'NOT_FOUND' } }
+      }
+
+      return { data: data[0], error: null }
+    },
+
+    async getSharedSpaces(): Promise<DataListResult<SharedSpace>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: [], error: { message: 'Not authenticated' } }
+      }
+
+      // Get shares where the current user is the recipient
+      const { data: shares, error: sharesError } = await supabase
+        .from('space_shares')
+        .select('space_id, permission')
+        .eq('shared_with_id', user.id)
+
+      if (sharesError || !shares || shares.length === 0) {
+        return { data: [], error: sharesError ? { message: sharesError.message, code: sharesError.code } : null }
+      }
+
+      // Fetch the actual space data separately
+      const spaceIds = shares.map(s => s.space_id)
+      const { data: spacesData, error: spacesError } = await supabase
+        .from('spaces')
+        .select('*')
+        .in('id', spaceIds)
+
+      if (spacesError || !spacesData) {
+        return { data: [], error: spacesError ? { message: spacesError.message, code: spacesError.code } : null }
+      }
+
+      // Merge space data with permission
+      const permissionBySpaceId = new Map(shares.map(s => [s.space_id, s.permission]))
+      const sharedSpaces: SharedSpace[] = spacesData.map(space => ({
+        ...space,
+        permission: (permissionBySpaceId.get(space.id) ?? 'view') as SpaceSharePermission,
+      }))
+
+      return { data: sharedSpaces, error: null }
+    },
+  }
+}
+
 export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: string): DataClient {
   return {
     objects: createObjectsClient(supabase, spaceId),
@@ -627,6 +842,7 @@ export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: str
     templates: createTemplatesClient(supabase, spaceId),
     relations: createRelationsClient(supabase),
     spaces: createSpacesClient(supabase),
+    sharing: createSharingClient(supabase),
     isLocal: false,
   }
 }

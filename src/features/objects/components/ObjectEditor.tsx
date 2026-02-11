@@ -10,6 +10,7 @@ import { useTemplates } from '@/features/templates'
 import { extractMentionIds, LinkedObjects } from '@/features/relations'
 import { useDataClient } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
+import { useSpacePermission, useExclusionFilter } from '@/features/sharing'
 import { Button } from '@/shared/components/ui/Button'
 import {
   DropdownMenu,
@@ -33,6 +34,8 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const { object, isLoading, error, update, remove } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
   const { saveObjectAsTemplate } = useTemplates({ enabled: false })
+  const { canEdit } = useSpacePermission()
+  const { filterFields } = useExclusionFilter()
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
@@ -117,32 +120,39 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
         <div className="flex items-center gap-2">
           {object.icon && <span className="text-2xl">{object.icon}</span>}
           <span className="text-sm text-muted-foreground">{objectType?.name ?? 'Object'}</span>
+          {!canEdit && (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">View only</span>
+          )}
           {isSaving && (
             <span className="text-xs text-muted-foreground">Saving...</span>
           )}
         </div>
         <div className="flex items-center gap-1">
-          <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash">
-            <TrashIcon className="size-4" />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon-sm" variant="ghost" title="More options">
-                <MoreHorizontalIcon className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleSaveAsTemplate}>
-                <CopyIcon className="size-4" />
-                Save as Template
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+          {canEdit && (
+            <>
+              <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash">
                 <TrashIcon className="size-4" />
-                Move to Trash
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon-sm" variant="ghost" title="More options">
+                    <MoreHorizontalIcon className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                    <CopyIcon className="size-4" />
+                    Save as Template
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                    <TrashIcon className="size-4" />
+                    Move to Trash
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </header>
 
@@ -152,14 +162,16 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           placeholder="Untitled"
+          readOnly={!canEdit}
           className="mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground"
         />
 
         {objectType && objectType.fields.length > 0 && (
           <PropertyFields
-            fields={objectType.fields}
+            fields={objectType ? filterFields(objectType.id, objectType.fields) : []}
             values={object.properties}
             onChange={handlePropertyChange}
+            readOnly={!canEdit}
           />
         )}
 
@@ -167,9 +179,10 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           initialContent={object.content ?? undefined}
           onSave={handleContentSave}
           placeholder="Start writing..."
+          readOnly={!canEdit}
         />
 
-        <LinkedObjects objectId={id} />
+        <LinkedObjects objectId={id} readOnly={!canEdit} />
       </main>
     </div>
   )

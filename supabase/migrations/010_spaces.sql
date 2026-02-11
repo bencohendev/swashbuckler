@@ -51,12 +51,15 @@ CREATE INDEX templates_space_id_idx ON templates(space_id);
 
 -- Auto-create default space on new user signup
 CREATE OR REPLACE FUNCTION handle_new_user_space()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO spaces (name, owner_id) VALUES ('My Space', NEW.id);
+  INSERT INTO public.spaces (name, owner_id) VALUES ('My Space', NEW.id);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE TRIGGER on_auth_user_created_space
   AFTER INSERT ON auth.users

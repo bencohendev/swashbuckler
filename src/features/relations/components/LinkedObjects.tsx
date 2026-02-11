@@ -8,9 +8,10 @@ import { useDataClient, type DataObject } from '@/shared/lib/data'
 
 interface LinkedObjectsProps {
   objectId: string
+  readOnly?: boolean
 }
 
-export function LinkedObjects({ objectId }: LinkedObjectsProps) {
+export function LinkedObjects({ objectId, readOnly }: LinkedObjectsProps) {
   const { relations, isLoading, createLink, removeLink } = useObjectRelations(objectId)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
@@ -42,14 +43,16 @@ export function LinkedObjects({ objectId }: LinkedObjectsProps) {
                 {relation.linkedObject?.title || 'Untitled'}
               </Link>
               {relation.relation_type === 'link' ? (
-                <button
-                  type="button"
-                  onClick={() => removeLink(relation.id)}
-                  className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                  title="Remove link"
-                >
-                  <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
-                </button>
+                !readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => removeLink(relation.id)}
+                    className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                    title="Remove link"
+                  >
+                    <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
+                  </button>
+                )
               ) : (
                 <span className="shrink-0 text-xs text-muted-foreground">mention</span>
               )}
@@ -58,25 +61,27 @@ export function LinkedObjects({ objectId }: LinkedObjectsProps) {
         </div>
       )}
 
-      {isSearchOpen ? (
-        <LinkSearch
-          objectId={objectId}
-          existingTargetIds={new Set(relations.map(r => r.target_id))}
-          onSelect={async (targetId) => {
-            await createLink(targetId)
-            setIsSearchOpen(false)
-          }}
-          onClose={() => setIsSearchOpen(false)}
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setIsSearchOpen(true)}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-        >
-          <PlusIcon className="size-3.5" />
-          Add link
-        </button>
+      {!readOnly && (
+        isSearchOpen ? (
+          <LinkSearch
+            objectId={objectId}
+            existingTargetIds={new Set(relations.map(r => r.target_id))}
+            onSelect={async (targetId) => {
+              await createLink(targetId)
+              setIsSearchOpen(false)
+            }}
+            onClose={() => setIsSearchOpen(false)}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+          >
+            <PlusIcon className="size-3.5" />
+            Add link
+          </button>
+        )
       )}
     </div>
   )

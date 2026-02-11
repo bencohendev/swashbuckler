@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { Space, SpacesClient } from './types'
+import type { Space, SpacesClient, SharingClient, SpaceSharePermission } from './types'
 import { createSupabaseDataClient } from './supabase'
 import { createLocalDataClient, ensureLocalDefaultSpace } from './local'
 import { createClient } from '@/shared/lib/supabase/client'
@@ -15,6 +15,7 @@ interface SpaceContextValue {
   spaces: Space[]
   switchSpace: (id: string) => void
   isLoading: boolean
+  sharedPermission: SpaceSharePermission | null
 }
 
 interface SpacesContextValue {
@@ -34,17 +35,27 @@ interface SpaceProviderProps {
 }
 
 export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderProps) {
-  const [spaces, setSpaces] = useState<Space[]>([])
+  const [ownedSpaces, setOwnedSpaces] = useState<Space[]>([])
+  const [sharedSpaces, setSharedSpaces] = useState<Space[]>([])
+  const [permissionMap, setPermissionMap] = useState<Map<string, SpaceSharePermission>>(new Map())
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const supabase = useMemo(() => createClient(), [])
+
   const spacesClient: SpacesClient = useMemo(() => {
     if (user) {
-      const supabase = createClient()
       return createSupabaseDataClient(supabase).spaces
     }
     return createLocalDataClient().spaces
-  }, [user])
+  }, [user, supabase])
+
+  const sharingClient: SharingClient = useMemo(() => {
+    if (user) {
+      return createSupabaseDataClient(supabase).sharing
+    }
+    return createLocalDataClient().sharing
+  }, [user, supabase])
 
   const loadSpaces = useCallback(async () => {
     const result = await spacesClient.list()
@@ -68,29 +79,52 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       }
     }
 
-    setSpaces(loadedSpaces)
+    // Load shared spaces for authenticated users
+    let loadedShared: Space[] = []
+    const newPermissionMap = new Map<string, SpaceSharePermission>()
+    if (user) {
+      const sharedResult = await sharingClient.getSharedSpaces()
+      if (!sharedResult.error && sharedResult.data.length > 0) {
+        loadedShared = sharedResult.data.map(({ permission, ...space }) => {
+          newPermissionMap.set(space.id, permission)
+          return space
+        })
+      }
+
+      // Filter list() results to owned-only since updated RLS also returns shared spaces
+      const sharedIds = new Set(loadedShared.map(s => s.id))
+      loadedSpaces = loadedSpaces.filter(s => !sharedIds.has(s.id))
+    }
+
+    setOwnedSpaces(loadedSpaces)
+    setSharedSpaces(loadedShared)
+    setPermissionMap(newPermissionMap)
+
+    const allSpaces = [...loadedSpaces, ...loadedShared]
 
     // Restore last selected space from localStorage
     const savedId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
-    const savedSpace = savedId ? loadedSpaces.find(s => s.id === savedId) : null
+    const savedSpace = savedId ? allSpaces.find(s => s.id === savedId) : null
 
     if (savedSpace) {
       setCurrentSpaceId(savedSpace.id)
-    } else if (loadedSpaces.length > 0) {
-      setCurrentSpaceId(loadedSpaces[0].id)
+    } else if (allSpaces.length > 0) {
+      setCurrentSpaceId(allSpaces[0].id)
     }
 
     setIsLoading(false)
-  }, [spacesClient, user])
+  }, [spacesClient, sharingClient, user])
 
   useEffect(() => {
     if (isAuthLoading) return
     loadSpaces()
   }, [isAuthLoading, loadSpaces])
 
-  // Listen for spaces events to refresh
+  // Listen for spaces and spaceShares events to refresh
   useEffect(() => {
-    return subscribe('spaces', loadSpaces)
+    const unsub1 = subscribe('spaces', loadSpaces)
+    const unsub2 = subscribe('spaceShares', loadSpaces)
+    return () => { unsub1(); unsub2() }
   }, [loadSpaces])
 
   const switchSpace = useCallback((id: string) => {
@@ -100,16 +134,24 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     }
   }, [])
 
+  const spaces = useMemo(() => [...ownedSpaces, ...sharedSpaces], [ownedSpaces, sharedSpaces])
+
   const currentSpace = useMemo(() => {
     return spaces.find(s => s.id === currentSpaceId) ?? null
   }, [spaces, currentSpaceId])
+
+  const sharedPermission = useMemo(() => {
+    if (!currentSpaceId) return null
+    return permissionMap.get(currentSpaceId) ?? null
+  }, [currentSpaceId, permissionMap])
 
   const spaceContextValue: SpaceContextValue = useMemo(() => ({
     space: currentSpace,
     spaces,
     switchSpace,
     isLoading,
-  }), [currentSpace, spaces, switchSpace, isLoading])
+    sharedPermission,
+  }), [currentSpace, spaces, switchSpace, isLoading, sharedPermission])
 
   const spacesContextValue: SpacesContextValue = useMemo(() => ({
     spaces,

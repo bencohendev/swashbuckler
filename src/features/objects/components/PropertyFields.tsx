@@ -6,9 +6,10 @@ interface PropertyFieldsProps {
   fields: FieldDefinition[]
   values: Record<string, unknown>
   onChange: (fieldId: string, value: unknown) => void
+  readOnly?: boolean
 }
 
-export function PropertyFields({ fields, values, onChange }: PropertyFieldsProps) {
+export function PropertyFields({ fields, values, onChange, readOnly }: PropertyFieldsProps) {
   if (fields.length === 0) return null
 
   const sortedFields = [...fields].sort((a, b) => a.sort_order - b.sort_order)
@@ -21,6 +22,7 @@ export function PropertyFields({ fields, values, onChange }: PropertyFieldsProps
           field={field}
           value={values[field.id]}
           onChange={(value) => onChange(field.id, value)}
+          readOnly={readOnly}
         />
       ))}
     </div>
@@ -31,9 +33,10 @@ interface FieldInputProps {
   field: FieldDefinition
   value: unknown
   onChange: (value: unknown) => void
+  readOnly?: boolean
 }
 
-function FieldInput({ field, value, onChange }: FieldInputProps) {
+function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
   const label = (
     <label className="block text-xs font-medium text-muted-foreground">
       {field.name}
@@ -50,6 +53,7 @@ function FieldInput({ field, value, onChange }: FieldInputProps) {
             type="text"
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value)}
+            readOnly={readOnly}
             className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
@@ -63,6 +67,7 @@ function FieldInput({ field, value, onChange }: FieldInputProps) {
             type="number"
             value={(value as number) ?? ''}
             onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+            readOnly={readOnly}
             className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
@@ -76,6 +81,7 @@ function FieldInput({ field, value, onChange }: FieldInputProps) {
             type="date"
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value || null)}
+            readOnly={readOnly}
             className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
@@ -88,6 +94,7 @@ function FieldInput({ field, value, onChange }: FieldInputProps) {
             type="checkbox"
             checked={Boolean(value)}
             onChange={(e) => onChange(e.target.checked)}
+            disabled={readOnly}
             className="size-4 rounded border"
           />
           <label className="text-sm">{field.name}</label>
@@ -101,6 +108,7 @@ function FieldInput({ field, value, onChange }: FieldInputProps) {
           <select
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value || null)}
+            disabled={readOnly}
             className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">Select...</option>
@@ -125,6 +133,7 @@ function FieldInput({ field, value, onChange }: FieldInputProps) {
                 <button
                   key={option}
                   type="button"
+                  disabled={readOnly}
                   onClick={() => {
                     if (isSelected) {
                       onChange(selected.filter(s => s !== option))
@@ -155,6 +164,7 @@ function FieldInput({ field, value, onChange }: FieldInputProps) {
             type="url"
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value || null)}
+            readOnly={readOnly}
             placeholder="https://..."
             className="mt-1 w-full rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
