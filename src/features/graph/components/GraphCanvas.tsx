@@ -26,11 +26,11 @@ export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCa
   const modeRef = useRef<Mode>({ type: 'idle' })
   const transformRef = useRef({ x: 0, y: 0, k: 1 })
 
-  const { disabledTypeIds, selectedNodeId, setSelectedNodeId, highlightedNodeIds } = useGraphStore()
+  const { enabledTypeIds, selectedNodeId, setSelectedNodeId, highlightedNodeIds } = useGraphStore()
 
   const filteredNodes = useMemo(
-    () => nodes.filter(n => !disabledTypeIds.has(n.typeId)),
-    [nodes, disabledTypeIds],
+    () => enabledTypeIds.size === 0 ? nodes : nodes.filter(n => enabledTypeIds.has(n.typeId)),
+    [nodes, enabledTypeIds],
   )
   const filteredNodeIds = useMemo(() => new Set(filteredNodes.map(n => n.id)), [filteredNodes])
   const filteredEdges = useMemo(

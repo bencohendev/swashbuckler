@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 
 interface GraphStore {
-  disabledTypeIds: Set<string>
+  enabledTypeIds: Set<string>
   toggleType: (typeId: string) => void
-  enableAllTypes: () => void
+  showAllTypes: () => void
 
   searchQuery: string
   setSearchQuery: (query: string) => void
@@ -18,18 +18,18 @@ interface GraphStore {
 }
 
 export const useGraphStore = create<GraphStore>((set) => ({
-  disabledTypeIds: new Set(),
+  enabledTypeIds: new Set(),
   toggleType: (typeId) =>
     set((state) => {
-      const next = new Set(state.disabledTypeIds)
+      const next = new Set(state.enabledTypeIds)
       if (next.has(typeId)) {
         next.delete(typeId)
       } else {
         next.add(typeId)
       }
-      return { disabledTypeIds: next }
+      return { enabledTypeIds: next }
     }),
-  enableAllTypes: () => set({ disabledTypeIds: new Set() }),
+  showAllTypes: () => set({ enabledTypeIds: new Set() }),
 
   searchQuery: '',
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -42,7 +42,7 @@ export const useGraphStore = create<GraphStore>((set) => ({
 
   reset: () =>
     set({
-      disabledTypeIds: new Set(),
+      enabledTypeIds: new Set(),
       searchQuery: '',
       selectedNodeId: null,
       highlightedNodeIds: new Set(),

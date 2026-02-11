@@ -1,11 +1,13 @@
 import type { DataObject, ObjectType, ObjectRelation } from '@/shared/lib/data'
 import type { GraphData, GraphNode, GraphEdge } from './types'
+import { buildTypeColorMap } from './colors'
 
 export function buildGraphData(
   objects: DataObject[],
   relations: ObjectRelation[],
   typeMap: Map<string, ObjectType>,
 ): GraphData {
+  const typeColorMap = buildTypeColorMap(typeMap.values())
   const objectIds = new Set(objects.map(o => o.id))
 
   // Filter relations to only include pairs where both endpoints exist
@@ -26,8 +28,8 @@ export function buildGraphData(
       id: obj.id,
       title: obj.title,
       typeId: obj.type_id,
-      typeName: objectType?.name ?? 'Unknown',
-      typeColor: objectType?.color ?? null,
+      typeName: objectType?.plural_name ?? 'Unknown',
+      typeColor: typeColorMap.get(obj.type_id) ?? null,
       typeIcon: objectType?.icon ?? 'file',
       connectionCount: connectionCounts.get(obj.id) ?? 0,
     }

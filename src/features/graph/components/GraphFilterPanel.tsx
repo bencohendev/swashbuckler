@@ -1,14 +1,14 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/Card'
 import { Input } from '@/shared/components/ui/Input'
 import { Button } from '@/shared/components/ui/Button'
-import { TypeIcon } from '@/features/object-types'
 import { cn } from '@/shared/lib/utils'
 import type { ObjectType } from '@/shared/lib/data'
 import type { GraphNode } from '../lib/types'
 import { useGraphStore } from '../lib/store'
+import { buildTypeColorMap } from '../lib/colors'
 
 interface GraphFilterPanelProps {
   types: ObjectType[]
@@ -17,13 +17,15 @@ interface GraphFilterPanelProps {
 
 export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
   const {
-    disabledTypeIds,
+    enabledTypeIds,
     toggleType,
-    enableAllTypes,
+    showAllTypes,
     searchQuery,
     setSearchQuery,
     setHighlightedNodeIds,
   } = useGraphStore()
+
+  const typeColorMap = useMemo(() => buildTypeColorMap(types), [types])
 
   // Count nodes per type
   const countByType = new Map<string, number>()
@@ -52,7 +54,7 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
     [setSearchQuery],
   )
 
-  const hasDisabled = disabledTypeIds.size > 0
+  const hasFilter = enabledTypeIds.size > 0
 
   return (
     <Card className="absolute top-9 right-9 w-56 shadow-lg bg-background/95 backdrop-blur-sm">
@@ -68,25 +70,28 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
         />
         <div className="space-y-1">
           {typesWithNodes.map(t => {
-            const isDisabled = disabledTypeIds.has(t.id)
+            const isActive = enabledTypeIds.size === 0 || enabledTypeIds.has(t.id)
             return (
               <button
                 key={t.id}
                 onClick={() => toggleType(t.id)}
                 className={cn(
                   'flex items-center gap-2 w-full px-2 py-1 rounded text-xs hover:bg-accent transition-colors',
-                  isDisabled && 'opacity-40',
+                  !isActive && 'opacity-40',
                 )}
               >
-                <TypeIcon icon={t.icon} className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate flex-1 text-left">{t.name}</span>
+                <span
+                  className="inline-block size-3 rounded-full shrink-0"
+                  style={{ backgroundColor: typeColorMap.get(t.id) ?? 'var(--primary)' }}
+                />
+                <span className="truncate flex-1 text-left">{t.plural_name}</span>
                 <span className="text-muted-foreground tabular-nums">{countByType.get(t.id) ?? 0}</span>
               </button>
             )
           })}
         </div>
-        {hasDisabled && (
-          <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={enableAllTypes}>
+        {hasFilter && (
+          <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={showAllTypes}>
             Show all
           </Button>
         )}
