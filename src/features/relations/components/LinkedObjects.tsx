@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { LinkIcon, XIcon, PlusIcon } from 'lucide-react'
+import { ChevronRightIcon, LinkIcon, XIcon, PlusIcon } from 'lucide-react'
 import { useObjectRelations } from '../hooks/useObjectRelations'
 import { useDataClient, type DataObject } from '@/shared/lib/data'
 
@@ -14,74 +14,84 @@ interface LinkedObjectsProps {
 export function LinkedObjects({ objectId, readOnly }: LinkedObjectsProps) {
   const { relations, isLoading, createLink, removeLink } = useObjectRelations(objectId)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   if (isLoading && relations.length === 0) return null
 
   return (
     <div className="mt-8 border-t pt-6">
-      <div className="mb-3 flex items-center gap-2">
-        <LinkIcon className="size-4 text-muted-foreground" />
-        <h3 className="text-sm font-medium text-muted-foreground">
+      <button
+        type="button"
+        onClick={() => setIsExpanded(prev => !prev)}
+        className="mb-3 flex items-center gap-2 text-muted-foreground hover:text-foreground"
+      >
+        <ChevronRightIcon className={`size-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+        <LinkIcon className="size-4" />
+        <h3 className="text-sm font-medium">
           Links{relations.length > 0 && ` (${relations.length})`}
         </h3>
-      </div>
+      </button>
 
-      {relations.length > 0 && (
-        <div className="mb-3 space-y-1">
-          {relations.map(relation => (
-            <div
-              key={relation.id}
-              className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent/50"
-            >
-              {relation.linkedObject?.icon && (
-                <span className="shrink-0 text-sm">{relation.linkedObject.icon}</span>
-              )}
-              <Link
-                href={`/objects/${relation.linkedObject?.id ?? relation.target_id}`}
-                className="flex-1 truncate text-sm hover:underline"
-              >
-                {relation.linkedObject?.title || 'Untitled'}
-              </Link>
-              {relation.relation_type === 'link' ? (
-                !readOnly && (
-                  <button
-                    type="button"
-                    onClick={() => removeLink(relation.id)}
-                    className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                    title="Remove link"
+      {isExpanded && (
+        <>
+          {relations.length > 0 && (
+            <div className="mb-3 space-y-1">
+              {relations.map(relation => (
+                <div
+                  key={relation.id}
+                  className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent/50"
+                >
+                  {relation.linkedObject?.icon && (
+                    <span className="shrink-0 text-sm">{relation.linkedObject.icon}</span>
+                  )}
+                  <Link
+                    href={`/objects/${relation.linkedObject?.id ?? relation.target_id}`}
+                    className="flex-1 truncate text-sm hover:underline"
                   >
-                    <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
-                  </button>
-                )
-              ) : (
-                <span className="shrink-0 text-xs text-muted-foreground">mention</span>
-              )}
+                    {relation.linkedObject?.title || 'Untitled'}
+                  </Link>
+                  {relation.relation_type === 'link' ? (
+                    !readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => removeLink(relation.id)}
+                        className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                        title="Remove link"
+                      >
+                        <XIcon className="size-3.5 text-muted-foreground hover:text-foreground" />
+                      </button>
+                    )
+                  ) : (
+                    <span className="shrink-0 text-xs text-muted-foreground">mention</span>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {!readOnly && (
-        isSearchOpen ? (
-          <LinkSearch
-            objectId={objectId}
-            existingTargetIds={new Set(relations.map(r => r.target_id))}
-            onSelect={async (targetId) => {
-              await createLink(targetId)
-              setIsSearchOpen(false)
-            }}
-            onClose={() => setIsSearchOpen(false)}
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-          >
-            <PlusIcon className="size-3.5" />
-            Add link
-          </button>
-        )
+          {!readOnly && (
+            isSearchOpen ? (
+              <LinkSearch
+                objectId={objectId}
+                existingTargetIds={new Set(relations.map(r => r.target_id))}
+                onSelect={async (targetId) => {
+                  await createLink(targetId)
+                  setIsSearchOpen(false)
+                }}
+                onClose={() => setIsSearchOpen(false)}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+              >
+                <PlusIcon className="size-3.5" />
+                Add link
+              </button>
+            )
+          )}
+        </>
       )}
     </div>
   )
