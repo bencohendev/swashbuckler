@@ -1,0 +1,58 @@
+# Editor
+
+**Status: Done**
+
+## Overview
+
+Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, spoiler text, and auto-save.
+
+## Decisions
+
+| Area | Decision |
+|------|----------|
+| Framework | Plate.js (Slate.js) |
+| Slash menu | `/` trigger with categorized blocks |
+| Mention trigger | `@` (changed from `[[`) |
+| Inline create | Via `/` menu + `@` "Create new" option |
+| Spoiler | Click to reveal |
+| Auto-save | Debounced (1000ms) |
+| Code highlighting | Full stack (JS, TS, HTML, CSS, JSON, Python, SQL, Go, Rust) |
+| Inline formatting | Bold, italic, code, link, strikethrough, underline, highlight, spoiler |
+
+## Block Types
+
+- Paragraph, Headings (H1-H3), Blockquote
+- Bulleted list, Numbered list, Toggle list
+- Code block (with syntax highlighting)
+- Callout, Table, Image
+- Link, Mention
+
+## Implementation
+
+- `src/features/editor/components/Editor.tsx` — Plate.js integration
+- `src/features/editor/components/SlashMenu.tsx` — slash menu with block categories
+- `src/features/editor/components/MentionInput.tsx` — mention with search and inline creation
+- `src/features/editor/plugins/spoiler-plugin.tsx` — custom spoiler mark plugin
+- `src/features/editor/hooks/useAutoSave.ts` — debounced auto-save
+- `src/features/editor/components/elements/` — block element components (Image, CodeBlock, etc.)
+- `src/features/editor/store.ts` — Zustand editor state
+
+## Mention System
+
+- Triggered by `@`
+- Search results grouped by type
+- "Create new" option opens CreateObjectModal
+- Created object auto-inserted as mention
+- Mention IDs extracted on save to sync `object_relations`
+
+## Verification
+
+- [x] All block types render
+- [x] Slash menu inserts blocks
+- [x] Slash menu "Create New..." opens modal
+- [x] @ mention shows grouped results
+- [x] @ mention "Create new" opens modal
+- [x] Created object links inline
+- [x] Spoiler hides text, click reveals
+- [x] Auto-save after 1s idle
+- [x] Image support
