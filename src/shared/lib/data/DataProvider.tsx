@@ -72,18 +72,33 @@ export function DataProvider({ children, spaceId }: DataProviderProps) {
 
     const supabaseClient = createSupabaseDataClient(supabase, spaceId ?? undefined)
 
-    // Migrate custom object types first (skip built-in types)
+    // Build type ID mapping: check for existing types with matching slugs
+    const typeIdMap = new Map<string, string>()
+    const existingTypes = await supabaseClient.objectTypes.list()
+    const existingBySlug = new Map(
+      (existingTypes.data ?? []).map(t => [t.slug, t.id])
+    )
+
+    // Migrate object types (map local IDs to Supabase IDs)
     for (const objectType of localData.objectTypes) {
-      if (objectType.is_built_in) continue
-      await supabaseClient.objectTypes.create({
-        name: objectType.name,
-        plural_name: objectType.plural_name,
-        slug: objectType.slug,
-        icon: objectType.icon,
-        color: objectType.color,
-        fields: objectType.fields,
-        sort_order: objectType.sort_order,
-      })
+      const existingId = existingBySlug.get(objectType.slug)
+      if (existingId) {
+        // Type with same slug already exists — map to it
+        typeIdMap.set(objectType.id, existingId)
+      } else {
+        const result = await supabaseClient.objectTypes.create({
+          name: objectType.name,
+          plural_name: objectType.plural_name,
+          slug: objectType.slug,
+          icon: objectType.icon,
+          color: objectType.color,
+          fields: objectType.fields,
+          sort_order: objectType.sort_order,
+        })
+        if (result.data) {
+          typeIdMap.set(objectType.id, result.data.id)
+        }
+      }
     }
 
     // Migrate objects (track old→new ID mapping for relations)
@@ -91,7 +106,7 @@ export function DataProvider({ children, spaceId }: DataProviderProps) {
     for (const obj of localData.objects) {
       const result = await supabaseClient.objects.create({
         title: obj.title,
-        type_id: obj.type_id,
+        type_id: typeIdMap.get(obj.type_id) ?? obj.type_id,
         parent_id: obj.parent_id,
         icon: obj.icon,
         cover_image: obj.cover_image,
@@ -107,7 +122,7 @@ export function DataProvider({ children, spaceId }: DataProviderProps) {
     for (const template of localData.templates) {
       await supabaseClient.templates.create({
         name: template.name,
-        type_id: template.type_id,
+        type_id: typeIdMap.get(template.type_id) ?? template.type_id,
         icon: template.icon,
         cover_image: template.cover_image,
         properties: template.properties,

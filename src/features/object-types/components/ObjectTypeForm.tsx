@@ -36,7 +36,6 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
   const [pluralManuallyEdited, setPluralManuallyEdited] = useState(false)
 
   const isEditing = !!objectType
-  const isBuiltIn = objectType?.is_built_in ?? false
 
   const handleNameChange = (value: string) => {
     setName(value)
@@ -56,12 +55,10 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
 
     if (isEditing) {
       const updates: UpdateObjectTypeInput = {}
-      if (!isBuiltIn) {
-        if (name !== objectType.name) updates.name = name.trim()
-        if (pluralName !== objectType.plural_name) updates.plural_name = pluralName.trim()
-        if (slug !== objectType.slug) updates.slug = slug
-        if (icon !== objectType.icon) updates.icon = icon
-      }
+      if (name !== objectType.name) updates.name = name.trim()
+      if (pluralName !== objectType.plural_name) updates.plural_name = pluralName.trim()
+      if (slug !== objectType.slug) updates.slug = slug
+      if (icon !== objectType.icon) updates.icon = icon
       if (color !== (objectType.color ?? '')) updates.color = color || null
       updates.fields = fields
       await onSave(updates)
@@ -84,15 +81,14 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label className="block text-sm font-medium">
-            Name {!isBuiltIn && <span className="text-destructive">*</span>}
+            Name <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="e.g., Task"
-            disabled={isBuiltIn}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
 
@@ -106,8 +102,7 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
               setPluralManuallyEdited(true)
             }}
             placeholder="e.g., Tasks"
-            disabled={isBuiltIn}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
 
@@ -121,8 +116,7 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
               setSlugManuallyEdited(true)
             }}
             placeholder="auto-generated"
-            disabled={isBuiltIn}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
       </div>
@@ -134,12 +128,11 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
             <button
               key={iconOption}
               type="button"
-              onClick={() => !isBuiltIn && setIcon(iconOption)}
-              disabled={isBuiltIn}
+              onClick={() => setIcon(iconOption)}
               className={`flex size-10 items-center justify-center rounded-lg border transition-colors ${
                 icon === iconOption
                   ? 'border-primary bg-primary/10'
-                  : 'hover:bg-muted disabled:opacity-50'
+                  : 'hover:bg-muted'
               }`}
             >
               <TypeIcon icon={iconOption} />
@@ -183,7 +176,7 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSaving || (!isBuiltIn && !name.trim())}>
+        <Button type="submit" disabled={isSaving || !name.trim()}>
           {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Type'}
         </Button>
       </div>

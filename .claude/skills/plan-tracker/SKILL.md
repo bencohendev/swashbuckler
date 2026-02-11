@@ -1,6 +1,6 @@
 ---
 name: plan-tracker
-description: Tracks feature plans and keeps them up to date. Use when discussing features, planning new features, or when the implementation of a feature changes from what was originally planned.
+description: Tracks feature plans and keeps them up to date. IMPORTANT - invoke this skill proactively after completing any implementation that adds, changes, or removes features. Also use when discussing features or planning new features.
 ---
 
 ## Plan Tracking

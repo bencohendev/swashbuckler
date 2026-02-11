@@ -43,10 +43,10 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
         .order('sort_order', { ascending: true })
 
       if (spaceId) {
-        // Return built-in types (space_id is null) plus space-specific types
-        query = query.or(`is_built_in.eq.true,space_id.eq.${spaceId}`)
+        query = query.eq('space_id', spaceId)
       } else {
-        query = query.eq('is_built_in', true)
+        // No space selected — return empty
+        return { data: [], error: null }
       }
 
       const { data, error } = await query

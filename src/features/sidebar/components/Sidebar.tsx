@@ -7,7 +7,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { HomeIcon, NetworkIcon, PlusIcon, SettingsIcon, TrashIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
-import { useAuth, BUILT_IN_TYPE_IDS } from "@/shared/lib/data"
+import { useAuth } from "@/shared/lib/data"
 import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
@@ -175,9 +175,8 @@ export function Sidebar() {
 
   const handleCreateBlank = async (typeId: string) => {
     const typeDef = types.find(t => t.id === typeId)
-    const defaultTitle = typeId === BUILT_IN_TYPE_IDS.note ? 'Untitled Note' : 'Untitled'
     const result = await create({
-      title: typeDef ? `Untitled ${typeDef.name}` : defaultTitle,
+      title: typeDef ? `Untitled ${typeDef.name}` : 'Untitled',
       type_id: typeId,
     })
     if (result) {

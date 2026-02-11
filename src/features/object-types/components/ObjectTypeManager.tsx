@@ -101,14 +101,7 @@ export function ObjectTypeManager() {
                 <TypeIcon icon={type.icon} className="size-5" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">{type.name}</h3>
-                  {type.is_built_in && (
-                    <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                      Built-in
-                    </span>
-                  )}
-                </div>
+                <h3 className="font-medium">{type.name}</h3>
                 <p className="text-sm text-muted-foreground">
                   {type.fields.length} field{type.fields.length !== 1 ? 's' : ''}
                   {' \u00b7 '}
@@ -126,17 +119,15 @@ export function ObjectTypeManager() {
               >
                 <EditIcon className="size-4" />
               </Button>
-              {!type.is_built_in && (
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  onClick={() => handleDelete(type)}
-                  title="Delete type"
-                  className="text-destructive hover:text-destructive"
-                >
-                  <TrashIcon className="size-4" />
-                </Button>
-              )}
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => handleDelete(type)}
+                title="Delete type"
+                className="text-destructive hover:text-destructive"
+              >
+                <TrashIcon className="size-4" />
+              </Button>
             </div>
           </div>
         ))}

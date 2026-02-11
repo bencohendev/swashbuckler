@@ -32,7 +32,29 @@ import { BUILT_IN_TYPE_IDS } from './types'
 
 const LOCAL_DEFAULT_SPACE_ID = '00000000-0000-0000-0000-000000000099'
 
-const BUILT_IN_TYPES: ObjectType[] = [
+// Default Page type ID for fresh local databases
+const LOCAL_DEFAULT_PAGE_TYPE_ID = '00000000-0000-0000-0000-000000000101'
+
+const DEFAULT_TYPES: ObjectType[] = [
+  {
+    id: LOCAL_DEFAULT_PAGE_TYPE_ID,
+    name: 'Page',
+    plural_name: 'Pages',
+    slug: 'page',
+    icon: 'file-text',
+    color: null,
+    fields: [],
+    is_built_in: false,
+    owner_id: null,
+    space_id: LOCAL_DEFAULT_SPACE_ID,
+    sort_order: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+]
+
+// Legacy built-in types for Dexie v2 migration (upgrading from v1)
+const LEGACY_BUILT_IN_TYPES: ObjectType[] = [
   {
     id: BUILT_IN_TYPE_IDS.page,
     name: 'Page',
@@ -84,8 +106,8 @@ class SwashbucklerDB extends Dexie {
       objects: 'id, title, type_id, parent_id, is_deleted, updated_at',
       objectTypes: 'id, name, slug, owner_id, sort_order',
     }).upgrade(async (tx) => {
-      // Seed built-in types
-      await tx.table('objectTypes').bulkAdd(BUILT_IN_TYPES)
+      // Seed built-in types (legacy, converted to regular types in v7)
+      await tx.table('objectTypes').bulkAdd(LEGACY_BUILT_IN_TYPES)
 
       // Migrate existing objects: type -> type_id
       await tx.table('objects').toCollection().modify((obj: Record<string, unknown>) => {
@@ -195,6 +217,39 @@ class SwashbucklerDB extends Dexie {
         template.space_id = LOCAL_DEFAULT_SPACE_ID
       })
     })
+
+    // Version 7: Convert built-in types to regular space-scoped types
+    this.version(7).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+    }).upgrade(async (tx) => {
+      // Convert built-in types to regular types with space_id
+      await tx.table('objectTypes').toCollection().modify((type: Record<string, unknown>) => {
+        if (type.is_built_in) {
+          type.is_built_in = false
+          type.space_id = LOCAL_DEFAULT_SPACE_ID
+        }
+      })
+
+      // Check if Note type has any objects referencing it
+      const noteTypeId = BUILT_IN_TYPE_IDS.note
+      const noteObjects = await tx.table('objects')
+        .filter((obj: Record<string, unknown>) => obj.type_id === noteTypeId)
+        .count()
+
+      // Also check templates
+      const noteTemplates = await tx.table('templates')
+        .filter((t: Record<string, unknown>) => t.type_id === noteTypeId)
+        .count()
+
+      // If no objects or templates reference Note type, delete it
+      if (noteObjects === 0 && noteTemplates === 0) {
+        await tx.table('objectTypes').delete(noteTypeId)
+      }
+    })
   }
 }
 
@@ -217,9 +272,8 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
       try {
         const database = getDB()
         let results = await database.objectTypes.toArray()
-        // Return built-in types plus space-specific types
         if (spaceId) {
-          results = results.filter(t => t.is_built_in || t.space_id === spaceId)
+          results = results.filter(t => t.space_id === spaceId)
         }
         results.sort((a, b) => a.sort_order - b.sort_order)
         return { data: results, error: null }
@@ -296,18 +350,6 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
         }
 
-        if (existing.is_built_in) {
-          // Allow updating fields on built-in types but not name/slug/icon
-          const allowed: UpdateObjectTypeInput = { fields: input.fields, sort_order: input.sort_order }
-          const updated: ObjectType = {
-            ...existing,
-            ...allowed,
-            updated_at: new Date().toISOString(),
-          }
-          await database.objectTypes.put(updated)
-          return { data: updated, error: null }
-        }
-
         const updated: ObjectType = {
           ...existing,
           ...input,
@@ -331,10 +373,6 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
 
         if (!existing) {
           return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
-        }
-
-        if (existing.is_built_in) {
-          return { data: null, error: { message: 'Cannot delete built-in types' } }
         }
 
         await database.objectTypes.delete(id)
@@ -1066,8 +1104,8 @@ export async function clearLocalData(): Promise<void> {
   await database.templates.clear()
   await database.objectRelations.clear()
   await database.spaces.clear()
-  // Re-seed built-in types
-  await database.objectTypes.bulkAdd(BUILT_IN_TYPES)
+  // Re-seed default types (Page only)
+  await database.objectTypes.bulkAdd(DEFAULT_TYPES)
 }
 
 export async function exportLocalData(): Promise<{

@@ -174,25 +174,21 @@ export function TypeSection({
               <EyeIcon />
               View all {type.plural_name.toLowerCase()}
             </ContextMenu.Item>
-            {!type.is_built_in && (
-              <>
-                <ContextMenu.Item
-                  className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
-                  onSelect={() => router.push('/settings/types')}
-                >
-                  <PencilIcon />
-                  Edit type
-                </ContextMenu.Item>
-                <ContextMenu.Separator className="bg-border -mx-1 my-1 h-px" />
-                <ContextMenu.Item
-                  className={cn(menuItemClass, 'text-destructive focus:bg-destructive/10 focus:text-destructive')}
-                  onSelect={handleDelete}
-                >
-                  <TrashIcon />
-                  Delete type
-                </ContextMenu.Item>
-              </>
-            )}
+            <ContextMenu.Item
+              className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
+              onSelect={() => router.push('/settings/types')}
+            >
+              <PencilIcon />
+              Edit type
+            </ContextMenu.Item>
+            <ContextMenu.Separator className="bg-border -mx-1 my-1 h-px" />
+            <ContextMenu.Item
+              className={cn(menuItemClass, 'text-destructive focus:bg-destructive/10 focus:text-destructive')}
+              onSelect={handleDelete}
+            >
+              <TrashIcon />
+              Delete type
+            </ContextMenu.Item>
           </ContextMenu.Content>
         </ContextMenu.Portal>
       </ContextMenu.Root>

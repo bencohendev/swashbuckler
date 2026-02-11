@@ -12,7 +12,7 @@ Core object system with customizable types, properties, and CRUD operations. Obj
 |------|----------|
 | Type system | Fully customizable by users |
 | Type identity | UUID FK to `object_types` table (not string enum) |
-| Built-in types | Well-known UUIDs: Page=`...001`, Note=`...002` |
+| Default types | Page seeded per-space on account creation (no built-in types) |
 | Properties | JSONB schema on object_types, JSONB values on objects |
 | Nesting | 3 levels max via `parent_id` |
 | Relations | Bi-directional via `object_relations` table |
@@ -26,13 +26,18 @@ CREATE TABLE object_types (
   name TEXT NOT NULL,
   plural_name TEXT,
   icon TEXT DEFAULT '📄',
-  color TEXT DEFAULT 'gray',
-  property_schema JSONB NOT NULL DEFAULT '{}',
-  is_built_in BOOLEAN DEFAULT false,
-  space_id UUID REFERENCES spaces(id), -- nullable for built-ins
+  color TEXT,
+  fields JSONB NOT NULL DEFAULT '[]',
+  is_built_in BOOLEAN DEFAULT false, -- legacy column, always false
+  owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  space_id UUID REFERENCES spaces(id) ON DELETE CASCADE,
+  sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+-- Unique slug per space
+CREATE UNIQUE INDEX object_types_space_slug_idx
+  ON object_types(COALESCE(space_id, '00000000-0000-0000-0000-000000000000'), slug);
 
 CREATE TABLE objects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -75,16 +80,17 @@ CREATE TABLE object_relations (
 | email | `{type: "email", value: "user@example.com"}` |
 | phone | `{type: "phone", value: "+1234567890"}` |
 
-## Default Object Types (seeded on user creation)
+## Default Object Types (seeded on account/space creation)
 
-1. **Page** — basic document (icon: 📄)
-2. **Note** — quick notes (icon: 📝)
+1. **Page** — basic document (icon: file-text)
+
+All types are regular user-owned, per-space records. There are no global built-in types — Page is seeded as a normal type that can be renamed, edited, or deleted. Migration 012 converted existing built-in Page/Note types to per-space user-owned copies.
 
 ## Implementation
 
 - `src/features/objects/` — ObjectEditor, PropertyFields, hooks
 - `src/features/object-types/` — type management, creation, custom fields
-- `src/shared/lib/data/types.ts` — `DataClient` interface, `BUILT_IN_TYPE_IDS`
+- `src/shared/lib/data/types.ts` — `DataClient` interface
 - `src/shared/lib/data/supabase.ts` + `local.ts` — dual storage implementations
 
 ## Linking / Relations
@@ -103,3 +109,4 @@ CREATE TABLE object_relations (
 - [x] Delete moves to trash
 - [x] Object relations (mention + link) work
 - [x] Custom object types with plural names
+- [x] All types fully editable and deletable (no built-in restrictions)
