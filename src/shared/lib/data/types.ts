@@ -229,6 +229,10 @@ export interface SpacesClient {
   delete(id: string): Promise<DataResult<void>>
 }
 
+export interface SearchOptions {
+  typeIds?: string[]
+}
+
 export interface ObjectsClient {
   list(options?: ListObjectsOptions): Promise<DataListResult<DataObject>>
   get(id: string): Promise<DataResult<DataObject>>
@@ -236,7 +240,7 @@ export interface ObjectsClient {
   update(id: string, input: UpdateObjectInput): Promise<DataResult<DataObject>>
   delete(id: string, permanent?: boolean): Promise<DataResult<void>>
   restore(id: string): Promise<DataResult<DataObject>>
-  search(query: string): Promise<DataListResult<DataObject>>
+  search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>>
 }
 
 // --- Object Relation schemas ---

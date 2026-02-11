@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/shared/lib/supabase/client"
@@ -12,11 +13,25 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback } from "@/shared/components/ui/Avatar"
-import { LogInIcon, LogOutIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, SearchIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { GlobalSearchDialog } from "@/features/search"
 
 export function Header({ email }: { email?: string }) {
   const router = useRouter()
   const isGuest = !email
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -32,50 +47,66 @@ export function Header({ email }: { email?: string }) {
   return (
     <header className="flex h-14 items-center justify-between border-b px-4">
       <div />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Avatar size="sm">
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {isGuest ? (
-            <>
-              <DropdownMenuItem disabled>
-                <UserIcon className="size-4" />
-                Guest
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/signup">
-                  <UserPlusIcon className="size-4" />
-                  Sign up
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/login">
-                  <LogInIcon className="size-4" />
-                  Sign in
-                </Link>
-              </DropdownMenuItem>
-            </>
-          ) : (
-            <>
-              <DropdownMenuItem disabled>
-                <UserIcon className="size-4" />
-                {email}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOutIcon className="size-4" />
-                Sign out
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2 text-muted-foreground"
+          onClick={() => setSearchOpen(true)}
+        >
+          <SearchIcon className="size-4" />
+          <span className="hidden text-xs sm:inline-flex">
+            <kbd className="pointer-events-none rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium">
+              ⌘K
+            </kbd>
+          </span>
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Avatar size="sm">
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {isGuest ? (
+              <>
+                <DropdownMenuItem disabled>
+                  <UserIcon className="size-4" />
+                  Guest
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/signup">
+                    <UserPlusIcon className="size-4" />
+                    Sign up
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/login">
+                    <LogInIcon className="size-4" />
+                    Sign in
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem disabled>
+                  <UserIcon className="size-4" />
+                  {email}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOutIcon className="size-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </header>
   )
 }

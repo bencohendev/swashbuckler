@@ -32,6 +32,7 @@ export type {
   SpacePermission,
   DataResult,
   DataListResult,
+  SearchOptions,
   DataError,
   StorageMode,
 } from './types'

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { extractTextFromContent } from '@/features/search/lib/extractText'
 import type {
   DataClient,
   ObjectsClient,
@@ -28,6 +29,7 @@ import type {
   ListRelationsOptions,
   ListAllRelationsOptions,
   ListTemplatesOptions,
+  SearchOptions,
   DataResult,
   DataListResult,
 } from './types'
@@ -282,17 +284,21 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
       return { data: data as DataObject, error: null }
     },
 
-    async search(query: string): Promise<DataListResult<DataObject>> {
+    async search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>> {
+      // Fetch recent non-deleted objects to search across title + content
       let searchQuery = supabase
         .from('objects')
         .select('*')
-        .ilike('title', `%${query}%`)
         .eq('is_deleted', false)
         .order('updated_at', { ascending: false })
-        .limit(50)
+        .limit(200)
 
       if (spaceId) {
         searchQuery = searchQuery.eq('space_id', spaceId)
+      }
+
+      if (options?.typeIds && options.typeIds.length > 0) {
+        searchQuery = searchQuery.in('type_id', options.typeIds)
       }
 
       const { data, error } = await searchQuery
@@ -301,7 +307,15 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
         return { data: [], error: { message: error.message, code: error.code } }
       }
 
-      return { data: data as DataObject[], error: null }
+      // Filter client-side for both title and content matches
+      const lowerQuery = query.toLowerCase()
+      const results = (data ?? []).filter((obj: DataObject) => {
+        if (obj.title.toLowerCase().includes(lowerQuery)) return true
+        const contentText = extractTextFromContent(obj.content)
+        return contentText.toLowerCase().includes(lowerQuery)
+      })
+
+      return { data: results.slice(0, 50) as DataObject[], error: null }
     },
   }
 }

@@ -23,9 +23,11 @@ import type {
   ListRelationsOptions,
   ListAllRelationsOptions,
   ListTemplatesOptions,
+  SearchOptions,
   DataResult,
   DataListResult,
 } from './types'
+import { extractTextFromContent } from '@/features/search/lib/extractText'
 import { BUILT_IN_TYPE_IDS } from './types'
 
 const LOCAL_DEFAULT_SPACE_ID = '00000000-0000-0000-0000-000000000099'
@@ -542,17 +544,23 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       }
     },
 
-    async search(query: string): Promise<DataListResult<DataObject>> {
+    async search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>> {
       try {
         const database = getDB()
         const lowerQuery = query.toLowerCase()
 
         const results = await database.objects
-          .filter(obj =>
-            !obj.is_deleted &&
-            (!spaceId || obj.space_id === spaceId) &&
-            obj.title.toLowerCase().includes(lowerQuery)
-          )
+          .filter(obj => {
+            if (obj.is_deleted) return false
+            if (spaceId && obj.space_id !== spaceId) return false
+            if (options?.typeIds && options.typeIds.length > 0 && !options.typeIds.includes(obj.type_id)) return false
+
+            const titleMatch = obj.title.toLowerCase().includes(lowerQuery)
+            if (titleMatch) return true
+
+            const contentText = extractTextFromContent(obj.content)
+            return contentText.toLowerCase().includes(lowerQuery)
+          })
           .limit(50)
           .toArray()
 
