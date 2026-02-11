@@ -12,7 +12,7 @@ import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
-import { useSpacePermission } from "@/features/sharing"
+import { useSpacePermission, useExclusionFilter } from "@/features/sharing"
 import { Button } from "@/shared/components/ui/Button"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
@@ -111,6 +111,7 @@ export function Sidebar() {
   const router = useRouter()
   const { isGuest } = useAuth()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
+  const { filterTypes, filterObjects } = useExclusionFilter()
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
@@ -156,15 +157,18 @@ export function Sidebar() {
     })
   }, [updateType])
 
+  const filteredOrderedTypes = useMemo(() => filterTypes(orderedTypes), [filterTypes, orderedTypes])
+
   const objectsByType = useMemo(() => {
+    const filtered = filterObjects(objects)
     const grouped = new Map<string, DataObject[]>()
-    for (const obj of objects) {
+    for (const obj of filtered) {
       const existing = grouped.get(obj.type_id) ?? []
       existing.push(obj)
       grouped.set(obj.type_id, existing)
     }
     return grouped
-  }, [objects])
+  }, [objects, filterObjects])
 
   const handleCreateBlank = async (typeId: string) => {
     const typeDef = types.find(t => t.id === typeId)
@@ -227,7 +231,7 @@ export function Sidebar() {
             </div>
           ) : (
             <>
-              {orderedTypes.map((type, index) => (
+              {filteredOrderedTypes.map((type, index) => (
                 <DraggableTypeSection
                   key={type.id}
                   index={index}

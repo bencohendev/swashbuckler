@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { ChevronRightIcon } from 'lucide-react'
 import type { ShareExclusion, CreateShareExclusionInput, ObjectType } from '@/shared/lib/data'
-import { useObjectTypes } from '@/features/object-types'
+import { useObjectTypes, TypeIcon } from '@/features/object-types'
+import { useObjects } from '@/features/objects'
+import { cn } from '@/shared/lib/utils'
 
 interface ExclusionManagerProps {
   shareId: string
@@ -13,8 +16,10 @@ interface ExclusionManagerProps {
 
 export function ExclusionManager({ shareId, loadExclusions, addExclusion, removeExclusion }: ExclusionManagerProps) {
   const { types } = useObjectTypes()
+  const { objects } = useObjects({ isDeleted: false })
   const [exclusions, setExclusions] = useState<ShareExclusion[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [collapsedTypes, setCollapsedTypes] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function load() {
@@ -28,10 +33,21 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
 
   const typeExclusions = exclusions.filter(e => e.excluded_type_id && !e.excluded_field && !e.excluded_object_id)
   const fieldExclusions = exclusions.filter(e => e.excluded_type_id && e.excluded_field)
+  const objectExclusions = exclusions.filter(e => e.excluded_object_id)
   const excludedTypeIds = new Set(typeExclusions.map(e => e.excluded_type_id))
+  const excludedObjectIds = new Set(objectExclusions.map(e => e.excluded_object_id))
 
-  // Only show non-built-in types for exclusion
-  const customTypes = types.filter(t => !t.is_built_in)
+  const objectsByType = useMemo(() => {
+    const grouped = new Map<string, typeof objects>()
+    for (const obj of objects) {
+      if (excludedTypeIds.has(obj.type_id)) continue
+      const existing = grouped.get(obj.type_id) ?? []
+      existing.push(obj)
+      grouped.set(obj.type_id, existing)
+    }
+    return grouped
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- excludedTypeIds derived from exclusions
+  }, [objects, exclusions])
 
   const handleToggleType = async (type: ObjectType) => {
     const existing = typeExclusions.find(e => e.excluded_type_id === type.id)
@@ -59,19 +75,46 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
     }
   }
 
+  const handleToggleObject = async (objectId: string) => {
+    const existing = objectExclusions.find(e => e.excluded_object_id === objectId)
+    if (existing) {
+      await removeExclusion(existing.id)
+      setExclusions(prev => prev.filter(e => e.id !== existing.id))
+    } else {
+      const result = await addExclusion(shareId, { excluded_object_id: objectId })
+      if (result) {
+        setExclusions(prev => [...prev, result])
+      }
+    }
+  }
+
+  const toggleCollapsed = (typeId: string) => {
+    setCollapsedTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(typeId)) {
+        next.delete(typeId)
+      } else {
+        next.add(typeId)
+      }
+      return next
+    })
+  }
+
   if (isLoading) {
     return <div className="text-xs text-muted-foreground">Loading exclusions...</div>
   }
+
+  const visibleTypes = types.filter(t => !excludedTypeIds.has(t.id))
 
   return (
     <div className="space-y-4 rounded-md border p-3">
       <h4 className="text-xs font-medium uppercase text-muted-foreground">Exclusions</h4>
 
-      {customTypes.length > 0 && (
+      {types.length > 0 && (
         <div className="space-y-2">
           <h5 className="text-xs font-medium text-muted-foreground">Hide entire types</h5>
           <div className="space-y-1">
-            {customTypes.map(type => (
+            {types.map(type => (
               <label key={type.id} className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -79,21 +122,66 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
                   onChange={() => handleToggleType(type)}
                   className="rounded border-muted-foreground"
                 />
-                <span>{type.icon}</span>
-                <span>{type.name}</span>
+                <TypeIcon icon={type.icon} className="size-4" />
+                <span>{type.plural_name}</span>
               </label>
             ))}
           </div>
         </div>
       )}
 
+      {/* Object exclusions — expandable type sections */}
+      {visibleTypes.length > 0 && (
+        <div className="space-y-2">
+          <h5 className="text-xs font-medium text-muted-foreground">Hide specific objects</h5>
+          <div className="space-y-1">
+            {visibleTypes.map(type => {
+              const typeObjects = objectsByType.get(type.id) ?? []
+              if (typeObjects.length === 0) return null
+              const isCollapsed = collapsedTypes.has(type.id)
+              return (
+                <div key={type.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapsed(type.id)}
+                    className="flex w-full items-center gap-1.5 rounded px-1 py-1 text-sm hover:bg-accent"
+                  >
+                    <ChevronRightIcon
+                      className={cn('size-3.5 shrink-0 transition-transform', !isCollapsed && 'rotate-90')}
+                    />
+                    <TypeIcon icon={type.icon} className="size-4 shrink-0" />
+                    <span className="font-medium">{type.plural_name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">{typeObjects.length}</span>
+                  </button>
+                  {!isCollapsed && (
+                    <div className="ml-5 space-y-0.5 py-0.5">
+                      {typeObjects.map(obj => (
+                        <label key={obj.id} className="flex items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-accent">
+                          <input
+                            type="checkbox"
+                            checked={excludedObjectIds.has(obj.id)}
+                            onChange={() => handleToggleObject(obj.id)}
+                            className="rounded border-muted-foreground"
+                          />
+                          <span className="truncate">{obj.title || 'Untitled'}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Field exclusions — show fields for types that have fields */}
-      {types.filter(t => t.fields.length > 0 && !excludedTypeIds.has(t.id)).length > 0 && (
+      {visibleTypes.filter(t => t.fields.length > 0).length > 0 && (
         <div className="space-y-2">
           <h5 className="text-xs font-medium text-muted-foreground">Hide specific fields</h5>
-          {types.filter(t => t.fields.length > 0 && !excludedTypeIds.has(t.id)).map(type => (
+          {visibleTypes.filter(t => t.fields.length > 0).map(type => (
             <div key={type.id} className="space-y-1">
-              <p className="text-xs font-medium">{type.icon} {type.name}</p>
+              <p className="flex items-center gap-1 text-xs font-medium"><TypeIcon icon={type.icon} className="size-3.5" /> {type.plural_name}</p>
               <div className="ml-4 space-y-1">
                 {type.fields.map(field => {
                   const isExcluded = fieldExclusions.some(
@@ -115,10 +203,6 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
             </div>
           ))}
         </div>
-      )}
-
-      {customTypes.length === 0 && types.every(t => t.fields.length === 0) && (
-        <p className="text-xs text-muted-foreground">No custom types or fields to exclude.</p>
       )}
     </div>
   )

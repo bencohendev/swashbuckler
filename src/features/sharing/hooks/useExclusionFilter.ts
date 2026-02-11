@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useDataClient, useAuth, useCurrentSpace, type ShareExclusion, type FieldDefinition } from '@/shared/lib/data'
+import { useDataClient, useAuth, useCurrentSpace, type ShareExclusion, type FieldDefinition, type ObjectType, type DataObject } from '@/shared/lib/data'
 
 export function useExclusionFilter() {
   const dataClient = useDataClient()
@@ -34,6 +34,42 @@ export function useExclusionFilter() {
     loadExclusions()
   }, [dataClient, space, user?.id, isSharedUser])
 
+  const excludedTypeIds = useMemo(() => {
+    return new Set(
+      exclusions
+        .filter(e => e.excluded_type_id && !e.excluded_field && !e.excluded_object_id)
+        .map(e => e.excluded_type_id)
+    )
+  }, [exclusions])
+
+  const excludedObjectIds = useMemo(() => {
+    return new Set(
+      exclusions
+        .filter(e => e.excluded_object_id)
+        .map(e => e.excluded_object_id)
+    )
+  }, [exclusions])
+
+  const isTypeExcluded = useCallback((typeId: string): boolean => {
+    if (!isSharedUser) return false
+    return excludedTypeIds.has(typeId)
+  }, [isSharedUser, excludedTypeIds])
+
+  const isObjectExcluded = useCallback((objectId: string): boolean => {
+    if (!isSharedUser) return false
+    return excludedObjectIds.has(objectId)
+  }, [isSharedUser, excludedObjectIds])
+
+  const filterTypes = useCallback((types: ObjectType[]): ObjectType[] => {
+    if (!isSharedUser) return types
+    return types.filter(t => !excludedTypeIds.has(t.id))
+  }, [isSharedUser, excludedTypeIds])
+
+  const filterObjects = useCallback((objects: DataObject[]): DataObject[] => {
+    if (!isSharedUser) return objects
+    return objects.filter(o => !excludedTypeIds.has(o.type_id) && !excludedObjectIds.has(o.id))
+  }, [isSharedUser, excludedTypeIds, excludedObjectIds])
+
   const isFieldExcluded = useCallback((typeId: string, fieldId: string): boolean => {
     return exclusions.some(
       e => e.excluded_type_id === typeId && e.excluded_field === fieldId
@@ -59,9 +95,13 @@ export function useExclusionFilter() {
   }, [isSharedUser, filterFields])
 
   return useMemo(() => ({
+    isTypeExcluded,
+    isObjectExcluded,
+    filterTypes,
+    filterObjects,
     isFieldExcluded,
     filterFields,
     filterProperties,
     isSharedUser,
-  }), [isFieldExcluded, filterFields, filterProperties, isSharedUser])
+  }), [isTypeExcluded, isObjectExcluded, filterTypes, filterObjects, isFieldExcluded, filterFields, filterProperties, isSharedUser])
 }

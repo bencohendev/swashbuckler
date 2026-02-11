@@ -35,7 +35,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const { objectType } = useObjectType(object?.type_id ?? null)
   const { saveObjectAsTemplate } = useTemplates({ enabled: false })
   const { canEdit } = useSpacePermission()
-  const { filterFields } = useExclusionFilter()
+  const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
@@ -107,6 +107,17 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     return (
       <div className="p-6">
         <p className="text-destructive">{error || 'Object not found'}</p>
+        <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/'))} className="mt-4">
+          Go back
+        </Button>
+      </div>
+    )
+  }
+
+  if (isTypeExcluded(object.type_id) || isObjectExcluded(object.id)) {
+    return (
+      <div className="p-6">
+        <p className="text-muted-foreground">This content is not available.</p>
         <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/'))} className="mt-4">
           Go back
         </Button>
