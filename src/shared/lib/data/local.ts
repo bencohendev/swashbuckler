@@ -544,6 +544,41 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       }
     },
 
+    async purgeExpired(): Promise<DataResult<number>> {
+      try {
+        const database = getDB()
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).getTime()
+
+        const expired = await database.objects
+          .filter(obj => obj.is_deleted && obj.deleted_at != null && new Date(obj.deleted_at).getTime() < thirtyDaysAgo)
+          .toArray()
+
+        if (expired.length === 0) {
+          return { data: 0, error: null }
+        }
+
+        const expiredIds = expired.map(obj => obj.id)
+
+        // Cascade: delete relations referencing expired objects
+        const expiredIdSet = new Set(expiredIds)
+        const relatedRelations = await database.objectRelations
+          .filter(r => expiredIdSet.has(r.source_id) || expiredIdSet.has(r.target_id))
+          .toArray()
+        if (relatedRelations.length > 0) {
+          await database.objectRelations.bulkDelete(relatedRelations.map(r => r.id))
+        }
+
+        await database.objects.bulkDelete(expiredIds)
+
+        return { data: expiredIds.length, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
     async search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>> {
       try {
         const database = getDB()

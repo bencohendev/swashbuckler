@@ -284,6 +284,23 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
       return { data: data as DataObject, error: null }
     },
 
+    async purgeExpired(): Promise<DataResult<number>> {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+      const { data, error } = await supabase
+        .from('objects')
+        .delete()
+        .eq('is_deleted', true)
+        .lt('deleted_at', thirtyDaysAgo)
+        .select('id')
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data?.length ?? 0, error: null }
+    },
+
     async search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>> {
       // Fetch recent non-deleted objects to search across title + content
       let searchQuery = supabase

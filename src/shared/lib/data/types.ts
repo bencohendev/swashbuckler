@@ -241,6 +241,7 @@ export interface ObjectsClient {
   delete(id: string, permanent?: boolean): Promise<DataResult<void>>
   restore(id: string): Promise<DataResult<DataObject>>
   search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>>
+  purgeExpired(): Promise<DataResult<number>>
 }
 
 // --- Object Relation schemas ---

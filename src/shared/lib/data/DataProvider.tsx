@@ -52,6 +52,16 @@ export function DataProvider({ children, spaceId }: DataProviderProps) {
     return createLocalDataClient(effectiveSpaceId)
   }, [user, supabase, spaceId])
 
+  // Purge expired trash items on mount
+  useEffect(() => {
+    if (isLoading) return
+    dataClient.objects.purgeExpired().then(result => {
+      if (result.error) {
+        console.error('Failed to purge expired trash items:', result.error.message)
+      }
+    })
+  }, [dataClient, isLoading])
+
   const migrateToSupabase = async () => {
     if (!user) {
       throw new Error('Must be logged in to migrate data')

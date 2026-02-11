@@ -27,4 +27,4 @@ Soft delete with restore and permanent delete functionality.
 - [x] Trash page shows deleted items
 - [x] Restore from trash works
 - [x] Permanent delete works
-- [ ] Auto-purge after 30 days
+- [x] Auto-purge after 30 days
