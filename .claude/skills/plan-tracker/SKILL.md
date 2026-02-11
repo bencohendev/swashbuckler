@@ -5,12 +5,12 @@ description: Tracks feature plans and keeps them up to date. Use when discussing
 
 ## Plan Tracking
 
-Plan documents are stored in the `/planning/` directory at the project root, organized as **separate per-feature documents** with an index file.
+Plan documents are stored in the `/.claude/plans/` directory, organized as **separate per-feature documents** with an index file.
 
 ### File Structure
 
 ```
-planning/
+.claude/plans/
 ├── index.md          # High-level overview linking to all feature plans
 ├── v1.md             # Original monolithic plan (legacy reference)
 ├── auth.md           # Authentication & authorization
@@ -29,7 +29,7 @@ planning/
 
 Update plan documents whenever any of the following occur:
 
-1. **A new feature is discussed** — check `/planning/` for an existing plan. If one exists, update it. If none exists and the feature is substantial, create a new document and add it to `index.md`.
+1. **A new feature is discussed** — check `/.claude/plans/` for an existing plan. If one exists, update it. If none exists and the feature is substantial, create a new document and add it to `index.md`.
 
 2. **Implementation changes** from what was originally planned — update the relevant plan document to reflect actual implementation. This includes:
    - Tech choices (libraries, patterns, approaches)

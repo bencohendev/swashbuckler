@@ -66,6 +66,8 @@ Dual-storage architecture with a `DataClient` interface:
 009_built_in_types.sql      # well-known UUIDs for Page, Note
 010_spaces.sql              # multi-space support
 011_sharing.sql             # per-space sharing model
+012_tags.sql                # tags + object_tags tables (planned)
+013_realtime.sql            # enable realtime publication (planned)
 ```
 
 ## Feature Plans
@@ -74,7 +76,7 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|------|--------|
 | [Auth](auth.md) | Authentication & authorization | Done |
 | [Objects](objects.md) | Object system, types, properties | Done |
-| [Sidebar](sidebar.md) | Hierarchical sidebar navigation | Done |
+| [Sidebar](sidebar.md) | Hierarchical sidebar + context menu | Partial |
 | [Editor](editor.md) | Block editor (Plate.js) | Done |
 | [Templates](templates.md) | Template system | Done |
 | [Sharing](sharing.md) | Workspace sharing & exclusions | Done |
@@ -86,10 +88,14 @@ Dual-storage architecture with a `DataClient` interface:
 | [Favorites](favorites.md) | Star individual objects | Not started |
 | [Theme](theme.md) | Light / Dark / System | Partial |
 | [Quick Capture](quick-capture.md) | Floating button / hotkey | Not started |
+| [Emoji](emoji.md) | Emoji picker for type & space icons | Not started |
+| [Tags](tags.md) | Global cross-type tagging | Not started |
+| [Type Pages](type-pages.md) | Table view per object type | Not started |
+| [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
 ## Post-MVP Features (Deferred)
 
-1. Real-time collaboration — block-level locking
+1. Real-time collaboration — block-level locking (collaborative editing)
 2. Export/Import — JSON + Markdown
 3. Template variables — {{date}}, {{user}}, custom prompts
 4. Template bundles — create multiple linked objects
