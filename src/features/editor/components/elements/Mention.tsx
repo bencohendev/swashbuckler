@@ -52,6 +52,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   const { types } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
   const triggerRef = useRef<HTMLSpanElement>(null)
+  const filterInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
@@ -63,16 +64,10 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   // Total selectable items = search results + create-new items (one per type)
   const totalItems = results.length + types.length
 
-  // No cleanup needed for single-char '@' trigger
-
-
-  // Get query from element text content
+  // Auto-focus the filter input on mount
   useEffect(() => {
-    const text = element.children?.[0]
-    if (text && typeof text === 'object' && 'text' in text) {
-      setQuery((text as { text: string }).text || '')
-    }
-  }, [element.children])
+    filterInputRef.current?.focus()
+  }, [])
 
   // Search objects when query changes
   useEffect(() => {
@@ -143,9 +138,9 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
     }
   }, [editor, query])
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+  // Keyboard navigation handler for the filter input
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
         setIsKeyboardMode(true)
@@ -174,12 +169,13 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
       } else if (e.key === 'Escape') {
         e.preventDefault()
         closeMenu()
+      } else if (e.key === 'Backspace' && query === '') {
+        e.preventDefault()
+        closeMenu()
       }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [results, types, totalItems, selectedIndex, selectObject, createAndInsert, closeMenu])
+    },
+    [results, types, totalItems, selectedIndex, selectObject, createAndInsert, closeMenu, query]
+  )
 
   // Scroll selected item into view
   useEffect(() => {
@@ -230,9 +226,22 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
   return (
     <PlateElement {...props} element={element} as="span" className="inline">
-      <span ref={triggerRef} className="rounded bg-blue-100 px-1 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-        @{children}
+      <span
+        ref={triggerRef}
+        className="rounded bg-blue-100 px-1 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        contentEditable={false}
+      >
+        @
+        <input
+          ref={filterInputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+          className="bg-transparent outline-none border-none p-0 text-blue-800 dark:text-blue-200"
+          style={{ width: `${Math.max(query.length, 1)}ch` }}
+        />
       </span>
+      <span className="hidden">{children}</span>
 
       {/* Dropdown portaled to body to escape overflow:auto ancestors */}
       {dropdownPos && createPortal(

@@ -134,6 +134,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   const { types } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
   const inputRef = useRef<HTMLSpanElement>(null)
+  const filterInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
@@ -141,13 +142,10 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   const [isKeyboardMode, setIsKeyboardMode] = useState(false)
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
 
-  // Get query from element text content
+  // Auto-focus the filter input on mount
   useEffect(() => {
-    const text = element.children?.[0]
-    if (text && typeof text === 'object' && 'text' in text) {
-      setQuery((text as { text: string }).text || '')
-    }
-  }, [element.children])
+    filterInputRef.current?.focus()
+  }, [])
 
   // Filter items based on query
   const filteredItems = menuItems.filter(
@@ -299,9 +297,9 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
     }
   }, [editor, query])
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+  // Keyboard navigation handler for the filter input
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
         setIsKeyboardMode(true)
@@ -330,12 +328,13 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
       } else if (e.key === 'Escape') {
         e.preventDefault()
         closeMenu()
+      } else if (e.key === 'Backspace' && query === '') {
+        e.preventDefault()
+        closeMenu()
       }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [filteredItems, filteredCreateTypes, totalItems, selectedIndex, selectItem, createAndInsertMention, closeMenu])
+    },
+    [filteredItems, filteredCreateTypes, totalItems, selectedIndex, selectItem, createAndInsertMention, closeMenu, query]
+  )
 
   // Scroll selected item into view (only for keyboard navigation)
   useEffect(() => {
@@ -389,9 +388,19 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
       <span
         ref={inputRef}
         className="rounded bg-muted px-1 text-muted-foreground"
+        contentEditable={false}
       >
-        /{children}
+        /
+        <input
+          ref={filterInputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+          className="bg-transparent outline-none border-none p-0 text-muted-foreground"
+          style={{ width: `${Math.max(query.length, 1)}ch` }}
+        />
       </span>
+      <span className="hidden">{children}</span>
 
       {/* Dropdown portaled to body to escape overflow:auto ancestors */}
       {dropdownPos && createPortal(
