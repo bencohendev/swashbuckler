@@ -8,6 +8,9 @@ import type {
   RelationsClient,
   SpacesClient,
   SharingClient,
+  TagsClient,
+  Tag,
+  ObjectTag,
   Space,
   DataObject,
   ObjectType,
@@ -24,6 +27,8 @@ import type {
   CreateTemplateInput,
   UpdateTemplateInput,
   CreateShareExclusionInput,
+  CreateTagInput,
+  UpdateTagInput,
   SpaceSharePermission,
   ListObjectsOptions,
   ListRelationsOptions,
@@ -914,6 +919,167 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
   }
 }
 
+function createTagsClient(supabase: SupabaseClient, spaceId?: string): TagsClient {
+  return {
+    async list(): Promise<DataListResult<Tag>> {
+      if (!spaceId) return { data: [], error: null }
+
+      const { data, error } = await supabase
+        .from('tags')
+        .select('*')
+        .eq('space_id', spaceId)
+        .order('name', { ascending: true })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Tag[], error: null }
+    },
+
+    async get(id: string): Promise<DataResult<Tag>> {
+      const { data, error } = await supabase
+        .from('tags')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Tag, error: null }
+    },
+
+    async create(input: CreateTagInput): Promise<DataResult<Tag>> {
+      if (!spaceId) {
+        return { data: null, error: { message: 'No space selected' } }
+      }
+
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('tags')
+        .insert({
+          space_id: spaceId,
+          name: input.name,
+          color: input.color ?? null,
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A tag with this name already exists', code: 'DUPLICATE' } }
+        }
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Tag, error: null }
+    },
+
+    async update(id: string, input: UpdateTagInput): Promise<DataResult<Tag>> {
+      const { data, error } = await supabase
+        .from('tags')
+        .update({ ...input, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Tag, error: null }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('tags')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async getObjectTags(objectId: string): Promise<DataListResult<Tag>> {
+      const { data, error } = await supabase
+        .from('object_tags')
+        .select('tag_id, tags(*)')
+        .eq('object_id', objectId)
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      const tags = (data ?? []).map((row: Record<string, unknown>) => row.tags as Tag)
+      return { data: tags, error: null }
+    },
+
+    async addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>> {
+      const { data, error } = await supabase
+        .from('object_tags')
+        .upsert({ object_id: objectId, tag_id: tagId }, { onConflict: 'object_id,tag_id' })
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectTag, error: null }
+    },
+
+    async removeTagFromObject(objectId: string, tagId: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('object_tags')
+        .delete()
+        .eq('object_id', objectId)
+        .eq('tag_id', tagId)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>> {
+      const { data: objectTagRows, error: otError } = await supabase
+        .from('object_tags')
+        .select('object_id')
+        .eq('tag_id', tagId)
+
+      if (otError) {
+        return { data: [], error: { message: otError.message, code: otError.code } }
+      }
+
+      const objectIds = (objectTagRows ?? []).map((r: { object_id: string }) => r.object_id)
+      if (objectIds.length === 0) {
+        return { data: [], error: null }
+      }
+
+      const { data, error } = await supabase
+        .from('objects')
+        .select('*')
+        .in('id', objectIds)
+        .eq('is_deleted', false)
+        .order('updated_at', { ascending: false })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as DataObject[], error: null }
+    },
+  }
+}
+
 export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: string): DataClient {
   return {
     objects: createObjectsClient(supabase, spaceId),
@@ -922,6 +1088,7 @@ export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: str
     relations: createRelationsClient(supabase, spaceId),
     spaces: createSpacesClient(supabase),
     sharing: createSharingClient(supabase),
+    tags: createTagsClient(supabase, spaceId),
     isLocal: false,
   }
 }

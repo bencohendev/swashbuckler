@@ -1,0 +1,106 @@
+'use client'
+
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { TagIcon, TrashIcon } from 'lucide-react'
+import { useTags } from '../hooks/useTags'
+import { useDataClient, type DataObject } from '@/shared/lib/data'
+import { subscribe } from '@/shared/lib/data/events'
+import { ObjectItem } from '@/features/objects/components/ObjectItem'
+import { useObjectTypes } from '@/features/object-types'
+import { Button } from '@/shared/components/ui/Button'
+
+interface TagPageViewProps {
+  name: string
+}
+
+export function TagPageView({ name }: TagPageViewProps) {
+  const router = useRouter()
+  const dataClient = useDataClient()
+  const { tags, remove } = useTags()
+  const { types } = useObjectTypes()
+  const [objects, setObjects] = useState<DataObject[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const isMounted = useRef(true)
+
+  const tag = tags.find(t => t.name === name)
+  const typeMap = new Map(types.map(t => [t.id, t]))
+
+  const fetchObjects = useCallback(async () => {
+    if (!tag) return
+    setIsLoading(true)
+    const result = await dataClient.tags.getObjectsByTag(tag.id)
+    if (!isMounted.current) return
+    setObjects(result.data)
+    setIsLoading(false)
+  }, [dataClient, tag])
+
+  useEffect(() => {
+    isMounted.current = true
+    fetchObjects()
+    const unsubscribe = subscribe('tags', fetchObjects)
+    return () => { isMounted.current = false; unsubscribe() }
+  }, [fetchObjects])
+
+  const handleDelete = async () => {
+    if (!tag) return
+    const confirmed = window.confirm(`Delete tag "${tag.name}"? It will be removed from all objects.`)
+    if (!confirmed) return
+    await remove(tag.id)
+    router.push('/')
+  }
+
+  if (!tag && !isLoading) {
+    return (
+      <div className="p-6">
+        <p className="text-muted-foreground">Tag &ldquo;{name}&rdquo; not found.</p>
+        <Button variant="outline" onClick={() => router.push('/')} className="mt-4">
+          Go back
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <header className="flex items-center justify-between border-b px-6 py-3">
+        <div className="flex items-center gap-2">
+          <TagIcon className="size-5 text-muted-foreground" />
+          <h1
+            className="text-lg font-semibold"
+            style={tag?.color ? { color: tag.color } : undefined}
+          >
+            {name}
+          </h1>
+          <span className="text-sm text-muted-foreground">
+            {objects.length} object{objects.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Delete tag">
+          <TrashIcon className="size-4" />
+        </Button>
+      </header>
+      <main className="flex-1 overflow-auto p-4">
+        {isLoading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+            ))}
+          </div>
+        ) : objects.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No objects with this tag.</p>
+        ) : (
+          <div className="space-y-2">
+            {objects.map(obj => (
+              <ObjectItem
+                key={obj.id}
+                object={obj}
+                objectType={typeMap.get(obj.type_id)}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}

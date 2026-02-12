@@ -286,6 +286,54 @@ export interface RelationsClient {
   syncMentions(sourceId: string, mentionTargetIds: string[]): Promise<DataResult<void>>
 }
 
+// --- Tag schemas ---
+
+export const tagSchema = z.object({
+  id: z.string().uuid(),
+  space_id: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  color: z.string().nullable(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+})
+
+export type Tag = z.infer<typeof tagSchema>
+
+export const createTagSchema = z.object({
+  name: z.string().min(1).max(100),
+  color: z.string().nullable().optional(),
+})
+
+export type CreateTagInput = z.infer<typeof createTagSchema>
+
+export const updateTagSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  color: z.string().nullable().optional(),
+})
+
+export type UpdateTagInput = z.infer<typeof updateTagSchema>
+
+export const objectTagSchema = z.object({
+  id: z.string().uuid(),
+  object_id: z.string().uuid(),
+  tag_id: z.string().uuid(),
+  created_at: z.string().datetime(),
+})
+
+export type ObjectTag = z.infer<typeof objectTagSchema>
+
+export interface TagsClient {
+  list(): Promise<DataListResult<Tag>>
+  get(id: string): Promise<DataResult<Tag>>
+  create(input: CreateTagInput): Promise<DataResult<Tag>>
+  update(id: string, input: UpdateTagInput): Promise<DataResult<Tag>>
+  delete(id: string): Promise<DataResult<void>>
+  getObjectTags(objectId: string): Promise<DataListResult<Tag>>
+  addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>>
+  removeTagFromObject(objectId: string, tagId: string): Promise<DataResult<void>>
+  getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>>
+}
+
 // --- Sharing schemas ---
 
 export type SpaceSharePermission = 'view' | 'edit'
@@ -345,6 +393,7 @@ export interface DataClient {
   relations: RelationsClient
   spaces: SpacesClient
   sharing: SharingClient
+  tags: TagsClient
   isLocal: boolean
 }
 

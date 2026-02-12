@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { SearchIcon } from 'lucide-react'
+import { SearchIcon, TagIcon } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -21,10 +21,12 @@ interface GlobalSearchDialogProps {
 export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogProps) {
   const router = useRouter()
   const { types } = useObjectTypes()
-  const { query, setQuery, typeIds, setTypeIds, results, isLoading } = useGlobalSearch()
+  const { query, setQuery, typeIds, setTypeIds, results, tagResults, isLoading } = useGlobalSearch()
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+
+  const totalItems = tagResults.length + results.length
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -38,7 +40,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
   // Reset selected index when results change
   useEffect(() => {
     setSelectedIndex(0)
-  }, [results])
+  }, [results, tagResults])
 
   // Scroll selected item into view
   useEffect(() => {
@@ -49,21 +51,28 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
     }
   }, [selectedIndex])
 
-  const navigateToResult = useCallback((id: string) => {
+  const navigateTo = useCallback((path: string) => {
     onOpenChange(false)
-    router.push(`/objects/${id}`)
+    router.push(path)
   }, [onOpenChange, router])
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex(i => Math.min(i + 1, results.length - 1))
+      setSelectedIndex(i => Math.min(i + 1, totalItems - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setSelectedIndex(i => Math.max(i - 1, 0))
-    } else if (e.key === 'Enter' && results[selectedIndex]) {
+    } else if (e.key === 'Enter') {
       e.preventDefault()
-      navigateToResult(results[selectedIndex].id)
+      // Tags come first, then objects
+      if (selectedIndex < tagResults.length) {
+        const tag = tagResults[selectedIndex]
+        navigateTo(`/tags/${encodeURIComponent(tag.name)}`)
+      } else {
+        const obj = results[selectedIndex - tagResults.length]
+        if (obj) navigateTo(`/objects/${obj.id}`)
+      }
     }
   }
 
@@ -121,7 +130,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
         )}
 
         <div ref={listRef} className="max-h-72 overflow-y-auto">
-          {query.trim() && results.length === 0 && !isLoading && (
+          {query.trim() && totalItems === 0 && !isLoading && (
             <div className="px-3 py-8 text-center text-sm text-muted-foreground">
               No results found
             </div>
@@ -133,29 +142,63 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             </div>
           )}
 
-          {results.map((obj, index) => {
-            const objType = typeMap.get(obj.type_id)
-            return (
-              <button
-                key={obj.id}
-                data-selected={index === selectedIndex}
-                onClick={() => navigateToResult(obj.id)}
-                onMouseEnter={() => setSelectedIndex(index)}
-                className={cn(
-                  'flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
-                  index === selectedIndex ? 'bg-accent' : 'hover:bg-accent/50'
-                )}
-              >
-                {objType && (
-                  <TypeIcon icon={objType.icon} className="size-4 shrink-0 text-muted-foreground" />
-                )}
-                <span className="min-w-0 flex-1 truncate">{obj.title}</span>
-                {objType && (
-                  <span className="shrink-0 text-xs text-muted-foreground">{objType.name}</span>
-                )}
-              </button>
-            )
-          })}
+          {tagResults.length > 0 && (
+            <>
+              <div className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">Tags</div>
+              {tagResults.map((tag, index) => (
+                <button
+                  key={tag.id}
+                  data-selected={index === selectedIndex}
+                  onClick={() => navigateTo(`/tags/${encodeURIComponent(tag.name)}`)}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  className={cn(
+                    'flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
+                    index === selectedIndex ? 'bg-accent' : 'hover:bg-accent/50'
+                  )}
+                >
+                  <TagIcon className="size-4 shrink-0 text-muted-foreground" />
+                  <span
+                    className="min-w-0 flex-1 truncate"
+                    style={tag.color ? { color: tag.color } : undefined}
+                  >
+                    {tag.name}
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
+
+          {results.length > 0 && (
+            <>
+              {tagResults.length > 0 && (
+                <div className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">Objects</div>
+              )}
+              {results.map((obj, index) => {
+                const objType = typeMap.get(obj.type_id)
+                const globalIndex = tagResults.length + index
+                return (
+                  <button
+                    key={obj.id}
+                    data-selected={globalIndex === selectedIndex}
+                    onClick={() => navigateTo(`/objects/${obj.id}`)}
+                    onMouseEnter={() => setSelectedIndex(globalIndex)}
+                    className={cn(
+                      'flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
+                      globalIndex === selectedIndex ? 'bg-accent' : 'hover:bg-accent/50'
+                    )}
+                  >
+                    {objType && (
+                      <TypeIcon icon={objType.icon} className="size-4 shrink-0 text-muted-foreground" />
+                    )}
+                    <span className="min-w-0 flex-1 truncate">{obj.title}</span>
+                    {objType && (
+                      <span className="shrink-0 text-xs text-muted-foreground">{objType.name}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -7,11 +7,14 @@ import type {
   RelationsClient,
   SpacesClient,
   SharingClient,
+  TagsClient,
   Space,
   DataObject,
   ObjectType,
   ObjectRelation,
   Template,
+  Tag,
+  ObjectTag,
   CreateObjectInput,
   UpdateObjectInput,
   CreateObjectTypeInput,
@@ -19,6 +22,8 @@ import type {
   CreateObjectRelationInput,
   CreateTemplateInput,
   UpdateTemplateInput,
+  CreateTagInput,
+  UpdateTagInput,
   ListObjectsOptions,
   ListRelationsOptions,
   ListAllRelationsOptions,
@@ -94,6 +99,8 @@ class SwashbucklerDB extends Dexie {
   templates!: EntityTable<Template, 'id'>
   objectRelations!: EntityTable<ObjectRelation, 'id'>
   spaces!: EntityTable<Space, 'id'>
+  tags!: EntityTable<Tag, 'id'>
+  objectTags!: EntityTable<ObjectTag, 'id'>
 
   constructor() {
     super('swashbuckler')
@@ -249,6 +256,17 @@ class SwashbucklerDB extends Dexie {
       if (noteObjects === 0 && noteTemplates === 0) {
         await tx.table('objectTypes').delete(noteTypeId)
       }
+    })
+
+    // Version 8: Add tags and objectTags tables
+    this.version(8).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id',
     })
   }
 }
@@ -534,6 +552,13 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           if (relatedRelations.length > 0) {
             await database.objectRelations.bulkDelete(relatedRelations.map(r => r.id))
           }
+          // Cascade: delete object_tags referencing this object
+          const relatedTags = await database.objectTags
+            .filter(ot => ot.object_id === id)
+            .toArray()
+          if (relatedTags.length > 0) {
+            await database.objectTags.bulkDelete(relatedTags.map(ot => ot.id))
+          }
         } else {
           const existing = await database.objects.get(id)
           if (existing) {
@@ -604,6 +629,13 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           .toArray()
         if (relatedRelations.length > 0) {
           await database.objectRelations.bulkDelete(relatedRelations.map(r => r.id))
+        }
+        // Cascade: delete object_tags referencing expired objects
+        const relatedTags = await database.objectTags
+          .filter(ot => expiredIdSet.has(ot.object_id))
+          .toArray()
+        if (relatedTags.length > 0) {
+          await database.objectTags.bulkDelete(relatedTags.map(ot => ot.id))
         }
 
         await database.objects.bulkDelete(expiredIds)
@@ -1057,6 +1089,18 @@ function createLocalSpacesClient(): SpacesClient {
         if (templatesInSpace.length > 0) {
           await database.templates.bulkDelete(templatesInSpace.map(t => t.id))
         }
+        // Delete tags and object_tags in this space
+        const tagsInSpace = await database.tags.filter(t => t.space_id === id).toArray()
+        if (tagsInSpace.length > 0) {
+          const tagIds = new Set(tagsInSpace.map(t => t.id))
+          const relatedObjectTags = await database.objectTags
+            .filter(ot => tagIds.has(ot.tag_id))
+            .toArray()
+          if (relatedObjectTags.length > 0) {
+            await database.objectTags.bulkDelete(relatedObjectTags.map(ot => ot.id))
+          }
+          await database.tags.bulkDelete(tagsInSpace.map(t => t.id))
+        }
         await database.spaces.delete(id)
         return { data: null, error: null }
       } catch (error) {
@@ -1064,6 +1108,171 @@ function createLocalSpacesClient(): SpacesClient {
           data: null,
           error: { message: error instanceof Error ? error.message : 'Unknown error' },
         }
+      }
+    },
+  }
+}
+
+function createLocalTagsClient(spaceId?: string): TagsClient {
+  const effectiveSpaceId = spaceId ?? LOCAL_DEFAULT_SPACE_ID
+  return {
+    async list(): Promise<DataListResult<Tag>> {
+      try {
+        const database = getDB()
+        const results = await database.tags
+          .filter(t => t.space_id === effectiveSpaceId)
+          .toArray()
+        results.sort((a, b) => a.name.localeCompare(b.name))
+        return { data: results, error: null }
+      } catch (error) {
+        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async get(id: string): Promise<DataResult<Tag>> {
+      try {
+        const database = getDB()
+        const tag = await database.tags.get(id)
+        if (!tag) {
+          return { data: null, error: { message: 'Tag not found', code: 'NOT_FOUND' } }
+        }
+        return { data: tag, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async create(input: CreateTagInput): Promise<DataResult<Tag>> {
+      try {
+        const database = getDB()
+        // Check for duplicate name in space
+        const existing = await database.tags
+          .filter(t => t.space_id === effectiveSpaceId && t.name === input.name)
+          .first()
+        if (existing) {
+          return { data: null, error: { message: 'A tag with this name already exists', code: 'DUPLICATE' } }
+        }
+
+        const now = new Date().toISOString()
+        const tag: Tag = {
+          id: generateUUID(),
+          space_id: effectiveSpaceId,
+          name: input.name,
+          color: input.color ?? null,
+          created_at: now,
+          updated_at: now,
+        }
+        await database.tags.add(tag)
+        return { data: tag, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async update(id: string, input: UpdateTagInput): Promise<DataResult<Tag>> {
+      try {
+        const database = getDB()
+        const existing = await database.tags.get(id)
+        if (!existing) {
+          return { data: null, error: { message: 'Tag not found', code: 'NOT_FOUND' } }
+        }
+        const updated: Tag = {
+          ...existing,
+          ...input,
+          updated_at: new Date().toISOString(),
+        }
+        await database.tags.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        // Cascade: remove all object_tags for this tag
+        const relatedObjectTags = await database.objectTags
+          .filter(ot => ot.tag_id === id)
+          .toArray()
+        if (relatedObjectTags.length > 0) {
+          await database.objectTags.bulkDelete(relatedObjectTags.map(ot => ot.id))
+        }
+        await database.tags.delete(id)
+        return { data: null, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async getObjectTags(objectId: string): Promise<DataListResult<Tag>> {
+      try {
+        const database = getDB()
+        const objectTags = await database.objectTags
+          .filter(ot => ot.object_id === objectId)
+          .toArray()
+        const tagIds = objectTags.map(ot => ot.tag_id)
+        if (tagIds.length === 0) return { data: [], error: null }
+        const tags = await database.tags.bulkGet(tagIds)
+        return { data: tags.filter((t): t is Tag => t !== undefined), error: null }
+      } catch (error) {
+        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>> {
+      try {
+        const database = getDB()
+        // Check for duplicate
+        const existing = await database.objectTags
+          .filter(ot => ot.object_id === objectId && ot.tag_id === tagId)
+          .first()
+        if (existing) return { data: existing, error: null }
+
+        const objectTag: ObjectTag = {
+          id: generateUUID(),
+          object_id: objectId,
+          tag_id: tagId,
+          created_at: new Date().toISOString(),
+        }
+        await database.objectTags.add(objectTag)
+        return { data: objectTag, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async removeTagFromObject(objectId: string, tagId: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        const match = await database.objectTags
+          .filter(ot => ot.object_id === objectId && ot.tag_id === tagId)
+          .first()
+        if (match) {
+          await database.objectTags.delete(match.id)
+        }
+        return { data: null, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>> {
+      try {
+        const database = getDB()
+        const objectTags = await database.objectTags
+          .filter(ot => ot.tag_id === tagId)
+          .toArray()
+        const objectIds = objectTags.map(ot => ot.object_id)
+        if (objectIds.length === 0) return { data: [], error: null }
+
+        const objects = await database.objects.bulkGet(objectIds)
+        const results = objects
+          .filter((o): o is DataObject => o !== undefined && !o.is_deleted)
+          .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+        return { data: results, error: null }
+      } catch (error) {
+        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
       }
     },
   }
@@ -1093,6 +1302,7 @@ export function createLocalDataClient(spaceId?: string): DataClient {
     relations: createRelationsClient(spaceId),
     spaces: createLocalSpacesClient(),
     sharing: createNoOpSharingClient(),
+    tags: createLocalTagsClient(spaceId),
     isLocal: true,
   }
 }
@@ -1104,6 +1314,8 @@ export async function clearLocalData(): Promise<void> {
   await database.templates.clear()
   await database.objectRelations.clear()
   await database.spaces.clear()
+  await database.tags.clear()
+  await database.objectTags.clear()
   // Re-seed default types (Page only)
   await database.objectTypes.bulkAdd(DEFAULT_TYPES)
 }
@@ -1114,6 +1326,8 @@ export async function exportLocalData(): Promise<{
   templates: Template[]
   objectRelations: ObjectRelation[]
   spaces: Space[]
+  tags: Tag[]
+  objectTags: ObjectTag[]
 }> {
   const database = getDB()
   const objects = await database.objects.toArray()
@@ -1121,7 +1335,9 @@ export async function exportLocalData(): Promise<{
   const templates = await database.templates.toArray()
   const objectRelations = await database.objectRelations.toArray()
   const spaces = await database.spaces.toArray()
-  return { objects, objectTypes, templates, objectRelations, spaces }
+  const tags = await database.tags.toArray()
+  const objectTags = await database.objectTags.toArray()
+  return { objects, objectTypes, templates, objectRelations, spaces, tags, objectTags }
 }
 
 export async function ensureLocalDefaultSpace(): Promise<Space> {

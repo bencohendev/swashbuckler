@@ -29,6 +29,7 @@ src/
 │   │   ├── objects/          # Object list and editor
 │   │   ├── graph/            # Knowledge graph
 │   │   ├── trash/            # Deleted objects
+│   │   ├── tags/[name]/      # Tag pages
 │   │   ├── types/[slug]/     # Type table pages
 │   │   └── settings/         # Types, templates, sharing
 │   └── auth/callback/        # OAuth callback
@@ -40,6 +41,7 @@ src/
 │   ├── objects/
 │   ├── search/
 │   ├── sharing/
+│   ├── tags/
 │   ├── sidebar/
 │   ├── table-view/
 │   └── templates/
@@ -68,8 +70,9 @@ Dual-storage architecture with a `DataClient` interface:
 009_built_in_types.sql      # well-known UUIDs for Page, Note
 010_spaces.sql              # multi-space support
 011_sharing.sql             # per-space sharing model
-012_tags.sql                # tags + object_tags tables (planned)
-013_realtime.sql            # enable realtime publication (planned)
+012_remove_builtins.sql     # remove built-in types, Page/Note as regular types
+013_tags.sql                # tags + object_tags tables
+014_realtime.sql            # enable realtime publication (planned)
 ```
 
 ## Feature Plans
@@ -91,7 +94,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Theme](theme.md) | Light / Dark / System | Done |
 | [Quick Capture](quick-capture.md) | Floating button / hotkey | Done |
 | [Emoji](emoji.md) | Emoji picker for types, spaces, and objects | Done |
-| [Tags](tags.md) | Global cross-type tagging | Not started |
+| [Tags](tags.md) | Global cross-type tagging | Done |
 | [Type Pages](type-pages.md) | Table view per object type | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 

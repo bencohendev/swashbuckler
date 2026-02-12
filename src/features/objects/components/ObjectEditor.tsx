@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
 import { Editor } from '@/features/editor'
+import { TagPicker } from '@/features/tags'
 import { PropertyFields } from './PropertyFields'
 
 interface ObjectEditorProps {
@@ -202,6 +203,8 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
             readOnly={!canEdit}
           />
         )}
+
+        <TagPicker objectId={id} readOnly={!canEdit} />
 
         <Editor
           initialContent={object.content ?? undefined}

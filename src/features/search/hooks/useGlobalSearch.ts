@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useDataClient, type DataObject } from '@/shared/lib/data'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useDataClient, type DataObject, type Tag } from '@/shared/lib/data'
+import { useTags } from '@/features/tags'
 
 interface UseGlobalSearchReturn {
   query: string
@@ -9,11 +10,13 @@ interface UseGlobalSearchReturn {
   typeIds: string[]
   setTypeIds: (typeIds: string[]) => void
   results: DataObject[]
+  tagResults: Tag[]
   isLoading: boolean
 }
 
 export function useGlobalSearch(): UseGlobalSearchReturn {
   const dataClient = useDataClient()
+  const { tags } = useTags()
   const [query, setQuery] = useState('')
   const [typeIds, setTypeIds] = useState<string[]>([])
   const [results, setResults] = useState<DataObject[]>([])
@@ -57,5 +60,12 @@ export function useGlobalSearch(): UseGlobalSearchReturn {
     return () => clearTimeout(timer)
   }, [query, typeIds, performSearch])
 
-  return { query, setQuery, typeIds, setTypeIds, results, isLoading }
+  // Client-side tag filtering — instant, no debounce needed
+  const tagResults = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return []
+    return tags.filter(t => t.name.toLowerCase().includes(q))
+  }, [query, tags])
+
+  return { query, setQuery, typeIds, setTypeIds, results, tagResults, isLoading }
 }

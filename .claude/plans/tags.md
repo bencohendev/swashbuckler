@@ -1,6 +1,6 @@
 # Global Tags
 
-**Status: Not started**
+**Status: Done**
 
 ## Overview
 
@@ -14,8 +14,9 @@ Cross-type tagging system with a shared tag pool per space. Any object can have 
 | Storage | Dedicated `tags` + `object_tags` tables (not a property field) |
 | Cascade | ON DELETE CASCADE for both tag and object deletion |
 | UI location | Tag picker in ObjectEditor, below PropertyFields |
+| Filtering | Global search (Cmd+K), sidebar tag section, dedicated `/tags/[name]` pages |
 
-## Database — `supabase/migrations/012_tags.sql`
+## Database — `supabase/migrations/013_tags.sql`
 
 ```sql
 CREATE TABLE tags (
@@ -51,7 +52,7 @@ ALTER TABLE object_tags ENABLE ROW LEVEL SECURITY;
 ## Dexie — `src/shared/lib/data/local.ts`
 
 - Add `tags` and `objectTags` entity tables to `SwashbucklerDB`
-- Version 7 — `tags: 'id, name, space_id'`, `objectTags: 'id, object_id, tag_id'`
+- Version 8 — `tags: 'id, name, space_id'`, `objectTags: 'id, object_id, tag_id'`
 - Update cascade deletion in `createObjectsClient` (permanent delete) and `createLocalSpacesClient`
 - Update `exportLocalData()` and `clearLocalData()`
 
@@ -69,7 +70,7 @@ interface TagsClient {
   getObjectTags(objectId: string): Promise<DataListResult<Tag>>
   addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>>
   removeTagFromObject(objectId: string, tagId: string): Promise<DataResult<void>>
-  getTagsForObjects(objectIds: string[]): Promise<DataResult<Map<string, Tag[]>>>
+  getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>>
 }
 ```
 
@@ -103,17 +104,41 @@ Add `tags: TagsClient` to `DataClient` interface.
 - "Create [query]" option when no exact match
 - Uses `useObjectTags(objectId)` + `useTags()`
 
+## Filtering & Search
+
+### Global search (Cmd+K)
+- Tag names filtered client-side from `useTags()` — instant, no server round-trip
+- Tag results shown as a separate "Tags" group above object results
+- Clicking a tag result navigates to `/tags/[name]`
+- Keyboard navigation works across both tag and object result groups
+
+### Sidebar tag section
+- Collapsible "Tags" section in sidebar listing all tags in the space
+- Each tag shows as a clickable item with `TagBadge` styling + object count
+- Clicking a tag navigates to `/tags/[name]`
+
+### Dedicated tag pages — `/tags/[name]`
+- Route: `src/app/(main)/tags/[name]/page.tsx`
+- Shows all objects with that tag, cross-type
+- Reuse `ObjectList` component
+- Header with tag name, color, object count, and edit/delete actions
+
 ## Integration
 - `src/features/objects/components/ObjectEditor.tsx` — add `<TagPicker objectId={id} />`
 - `src/shared/lib/data/DataProvider.tsx` — update `migrateToSupabase` for tags + objectTags
+- `src/features/sidebar/components/Sidebar.tsx` — add tags section
+- `src/features/search/` — update search to include tag matching
 
 ## Verification
 
-- [ ] Create tags in a space
-- [ ] Assign tags to objects of different types
-- [ ] Tags appear in editor and persist across reload
-- [ ] Remove tags from objects
-- [ ] Delete a tag removes it from all objects
-- [ ] Permanently deleting an object removes its tag assignments
-- [ ] Local/guest mode works identically
-- [ ] `npm run build` passes
+- [x] Create tags in a space
+- [x] Assign tags to objects of different types
+- [x] Tags appear in editor and persist across reload
+- [x] Remove tags from objects
+- [x] Delete a tag removes it from all objects
+- [x] Permanently deleting an object removes its tag assignments
+- [x] Local/guest mode works identically
+- [x] Cmd+K search finds tags by name
+- [x] Tags section appears in sidebar with counts
+- [x] Tag pages show all objects with that tag cross-type
+- [x] `npm run build` passes

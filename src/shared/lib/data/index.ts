@@ -30,6 +30,11 @@ export type {
   SharedSpace,
   SpaceSharePermission,
   SpacePermission,
+  Tag,
+  CreateTagInput,
+  UpdateTagInput,
+  ObjectTag,
+  TagsClient,
   DataResult,
   DataListResult,
   SearchOptions,
@@ -55,6 +60,10 @@ export {
   fieldTypeEnum,
   spaceShareSchema,
   shareExclusionSchema,
+  tagSchema,
+  createTagSchema,
+  updateTagSchema,
+  objectTagSchema,
 } from './types'
 
 export { createSupabaseDataClient } from './supabase'
