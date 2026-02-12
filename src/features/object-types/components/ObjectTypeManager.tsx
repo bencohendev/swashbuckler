@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { PlusIcon, EditIcon, TrashIcon } from 'lucide-react'
 import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
@@ -101,7 +102,11 @@ export function ObjectTypeManager() {
                 <TypeIcon icon={type.icon} className="size-5" />
               </div>
               <div>
-                <h3 className="font-medium">{type.name}</h3>
+                <h3 className="font-medium">
+                  <Link href={`/types/${type.slug}`} className="hover:underline">
+                    {type.name}
+                  </Link>
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   {type.fields.length} field{type.fields.length !== 1 ? 's' : ''}
                   {' \u00b7 '}
