@@ -28,6 +28,7 @@ export function useAccountExport() {
       const allTemplates: unknown[] = []
       const allRelations: unknown[] = []
       const allTags: unknown[] = []
+      const allObjectTags: unknown[] = []
 
       for (const space of spaces) {
         const client = createSupabaseDataClient(supabase, space.id)
@@ -40,12 +41,26 @@ export function useAccountExport() {
           client.tags.list(),
         ])
 
-        allObjects.push(...(objects.data ?? []))
+        const spaceObjects = objects.data ?? []
+        allObjects.push(...spaceObjects)
         allObjectTypes.push(...(types.data ?? []))
         allTemplates.push(...(templates.data ?? []))
         allRelations.push(...(relations.data ?? []))
         allTags.push(...(tags.data ?? []))
+
+        // Fetch object_tags for objects in this space
+        const objectIds = spaceObjects.map((o: { id: string }) => o.id)
+        if (objectIds.length > 0) {
+          const { data: objectTags } = await supabase
+            .from('object_tags')
+            .select('*')
+            .in('object_id', objectIds)
+          allObjectTags.push(...(objectTags ?? []))
+        }
       }
+
+      // Fetch pins (user-scoped, not space-scoped)
+      const pinsResult = await unscoped.pins.list()
 
       const exportPayload = {
         exportedAt: new Date().toISOString(),
@@ -55,6 +70,8 @@ export function useAccountExport() {
         templates: allTemplates,
         objectRelations: allRelations,
         tags: allTags,
+        objectTags: allObjectTags,
+        pins: pinsResult.data ?? [],
       }
 
       const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {

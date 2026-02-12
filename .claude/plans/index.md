@@ -103,17 +103,12 @@ Dual-storage architecture with a `DataClient` interface:
 | [Account](account.md) | Account settings & management | Done |
 | [Image Upload](image-upload.md) | Image uploads for editor, covers, avatars | Done |
 | [UI Terminology](ui-terminology.md) | Rename "object" → "entry", "Object Type" → "Type" in UI | Done |
+| [Export](export.md) | JSON data export (account settings) | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
 ## Post-MVP Features (Deferred)
 
 1. Real-time collaboration — block-level locking (collaborative editing)
-2. Export/Import — JSON + Markdown
-3. Template variables — {{date}}, {{user}}, custom prompts
-4. Template bundles — create multiple linked entries
-5. Advanced graph layouts — hierarchical, radial, clustered
-6. Calendar view — for date-based entries
-7. Board view — Kanban for status-based entries
-8. Comments — inline commenting
-9. Version history — track changes over time
-10. API access — public API for integrations
+2. Template variables — {{date}}, {{user}}, custom prompts
+3. Advanced graph layouts — hierarchical, radial, clustered
+4. Board view — Kanban for status-based entries
