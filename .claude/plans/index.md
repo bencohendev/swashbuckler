@@ -76,6 +76,7 @@ Dual-storage architecture with a `DataClient` interface:
 013_tags.sql                # tags + object_tags tables
 014_pins.sql                # per-user object pins
 015_realtime.sql            # enable realtime publication (planned)
+016_storage.sql             # uploads bucket + RLS policies
 ```
 
 ## Feature Plans
@@ -100,6 +101,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Tags](tags.md) | Global cross-type tagging | Done |
 | [Type Pages](type-pages.md) | Table view per object type | Done |
 | [Account](account.md) | Account settings & management | Done |
+| [Image Upload](image-upload.md) | Image uploads for editor, covers, avatars | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
 ## Post-MVP Features (Deferred)

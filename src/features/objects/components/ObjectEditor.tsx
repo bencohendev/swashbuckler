@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon } from 'lucide-react'
+import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
@@ -24,6 +24,7 @@ import { Editor } from '@/features/editor'
 import { TagPicker } from '@/features/tags'
 import { PinButton } from '@/features/pins'
 import { PropertyFields } from './PropertyFields'
+import { CoverImage } from './CoverImage'
 
 interface ObjectEditorProps {
   id: string
@@ -77,6 +78,10 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     const updatedProperties = { ...object.properties, [fieldId]: value }
     await update({ properties: updatedProperties })
   }, [object, update])
+
+  const handleCoverChange = useCallback(async (url: string | null) => {
+    await update({ cover_image: url })
+  }, [update])
 
   const handleDelete = async () => {
     if (!object) return
@@ -171,6 +176,29 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {!object.cover_image && (
+                    <DropdownMenuItem onClick={() => {
+                      const input = document.createElement('input')
+                      input.type = 'file'
+                      input.accept = 'image/*'
+                      input.onchange = async (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0]
+                        if (file) {
+                          const { uploadImage } = await import('@/shared/lib/supabase/upload')
+                          try {
+                            const result = await uploadImage(file, 'covers')
+                            await update({ cover_image: result.url })
+                          } catch {
+                            // CoverImage component handles errors visually
+                          }
+                        }
+                      }
+                      input.click()
+                    }}>
+                      <ImageIcon className="size-4" />
+                      Add cover
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={handleSaveAsTemplate}>
                     <CopyIcon className="size-4" />
                     Save as Template
@@ -188,6 +216,11 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
       </header>
 
       <main className="flex-1 overflow-auto p-6">
+        <CoverImage
+          coverImage={object.cover_image}
+          onChange={handleCoverChange}
+          readOnly={!canEdit}
+        />
         <input
           type="text"
           value={title}

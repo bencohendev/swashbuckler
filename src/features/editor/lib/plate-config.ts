@@ -48,7 +48,14 @@ export const editorPlugins = [
   TogglePlugin,
   CalloutPlugin,
   TablePlugin,
-  ImagePlugin,
+  ImagePlugin.configure({
+    options: {
+      uploadImage: async (dataUrl: ArrayBuffer | string) => {
+        const { uploadImageFromDataUrl } = await import('@/shared/lib/supabase/upload')
+        return uploadImageFromDataUrl(dataUrl)
+      },
+    },
+  }),
   LinkPlugin,
 
   // Indentation
