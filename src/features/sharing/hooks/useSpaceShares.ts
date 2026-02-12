@@ -79,6 +79,23 @@ export function useSpaceShares(spaceId: string | null) {
     await dataClient.sharing.removeExclusion(exclusionId)
   }, [dataClient])
 
+  // Space-wide exclusions
+  const loadSpaceExclusions = useCallback(async (id: string) => {
+    const result = await dataClient.sharing.listSpaceExclusions(id)
+    if (!result.error) {
+      return result.data
+    }
+    return []
+  }, [dataClient])
+
+  const addSpaceExclusion = useCallback(async (id: string, input: CreateShareExclusionInput): Promise<ShareExclusion | null> => {
+    const result = await dataClient.sharing.addSpaceExclusion(id, input)
+    if (!result.error && result.data) {
+      return result.data
+    }
+    return null
+  }, [dataClient])
+
   return {
     shares,
     isLoading,
@@ -88,5 +105,7 @@ export function useSpaceShares(spaceId: string | null) {
     loadExclusions,
     addExclusion,
     removeExclusion,
+    loadSpaceExclusions,
+    addSpaceExclusion,
   }
 }

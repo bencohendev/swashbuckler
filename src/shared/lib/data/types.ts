@@ -354,7 +354,8 @@ export type SpaceShare = z.infer<typeof spaceShareSchema>
 
 export const shareExclusionSchema = z.object({
   id: z.string().uuid(),
-  space_share_id: z.string().uuid(),
+  space_share_id: z.string().uuid().nullable(),
+  space_id: z.string().uuid().nullable(),
   excluded_type_id: z.string().uuid().nullable(),
   excluded_object_id: z.string().uuid().nullable(),
   excluded_field: z.string().nullable(),
@@ -381,6 +382,8 @@ export interface SharingClient {
   listExclusions(shareId: string): Promise<DataListResult<ShareExclusion>>
   addExclusion(shareId: string, input: CreateShareExclusionInput): Promise<DataResult<ShareExclusion>>
   removeExclusion(id: string): Promise<DataResult<void>>
+  listSpaceExclusions(spaceId: string): Promise<DataListResult<ShareExclusion>>
+  addSpaceExclusion(spaceId: string, input: CreateShareExclusionInput): Promise<DataResult<ShareExclusion>>
   findUserByEmail(email: string): Promise<DataResult<{ id: string; email: string }>>
   getSharedSpaces(): Promise<DataListResult<SharedSpace>>
 }

@@ -17,18 +17,27 @@ export function useExclusionFilter() {
     }
 
     async function loadExclusions() {
-      // Get the share for the current space
+      const allExclusions: ShareExclusion[] = []
+
+      // Load per-user exclusions
       const sharesResult = await dataClient.sharing.listShares(space!.id)
-      if (sharesResult.error || sharesResult.data.length === 0) return
-
-      // Find the share for the current user
-      const myShare = sharesResult.data.find(s => s.shared_with_id === user?.id)
-      if (!myShare) return
-
-      const result = await dataClient.sharing.listExclusions(myShare.id)
-      if (!result.error) {
-        setExclusions(result.data)
+      if (!sharesResult.error && sharesResult.data.length > 0) {
+        const myShare = sharesResult.data.find(s => s.shared_with_id === user?.id)
+        if (myShare) {
+          const result = await dataClient.sharing.listExclusions(myShare.id)
+          if (!result.error) {
+            allExclusions.push(...result.data)
+          }
+        }
       }
+
+      // Load space-wide exclusions
+      const spaceResult = await dataClient.sharing.listSpaceExclusions(space!.id)
+      if (!spaceResult.error) {
+        allExclusions.push(...spaceResult.data)
+      }
+
+      setExclusions(allExclusions)
     }
 
     loadExclusions()

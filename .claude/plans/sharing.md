@@ -4,7 +4,7 @@
 
 ## Overview
 
-Per-space sharing with view/edit permissions and granular exclusions at three levels: object types, specific objects, and fields per type.
+Per-space sharing with view/edit permissions and granular exclusions at three levels: object types, specific objects, and fields per type. Exclusions can be set per-user or space-wide (applying to all shared users at once).
 
 ## Decisions
 
@@ -13,8 +13,10 @@ Per-space sharing with view/edit permissions and granular exclusions at three le
 | Scope | Per-space (not per-workspace) |
 | Permissions | View / Edit |
 | Exclusion levels | Object types, object instances, and fields (per type) |
+| Exclusion scopes | Per-user (via `space_share_id`) or space-wide (via `space_id`) |
 | Hidden content | Excluded content completely invisible to viewers |
 | Mention visibility | Mentions of excluded objects hidden |
+| Owner immunity | Owner is never affected by any exclusions |
 
 ## Database Schema
 
@@ -31,21 +33,36 @@ CREATE TABLE space_shares (
 
 CREATE TABLE share_exclusions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  space_share_id UUID NOT NULL REFERENCES space_shares(id) ON DELETE CASCADE,
+  space_share_id UUID REFERENCES space_shares(id) ON DELETE CASCADE,  -- per-user scope
+  space_id UUID REFERENCES spaces(id) ON DELETE CASCADE,              -- space-wide scope
   excluded_type_id UUID REFERENCES object_types(id),
   excluded_object_id UUID REFERENCES objects(id),
-  excluded_field_name TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
+  excluded_field TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+
+  -- Exactly one scope must be set
+  CONSTRAINT share_exclusions_scope_check CHECK (
+    (space_share_id IS NOT NULL AND space_id IS NULL) OR
+    (space_share_id IS NULL AND space_id IS NOT NULL)
+  ),
+  -- Exactly one exclusion kind
+  CONSTRAINT share_exclusions_kind_check CHECK (
+    (excluded_type_id IS NOT NULL AND excluded_object_id IS NULL AND excluded_field IS NULL) OR
+    (excluded_type_id IS NULL AND excluded_object_id IS NOT NULL AND excluded_field IS NULL) OR
+    (excluded_type_id IS NOT NULL AND excluded_object_id IS NULL AND excluded_field IS NOT NULL)
+  )
 );
 ```
 
 ## Implementation
 
-- `src/features/sharing/components/ShareSpaceDialog.tsx` — share UI
-- `src/features/sharing/components/ExclusionManager.tsx` — expandable type sections with nested checkboxes
-- `src/features/sharing/hooks/useSpaceShares.ts` — share management
+- `src/app/(main)/settings/sharing/page.tsx` — sharing settings page with space-wide exclusions section above per-user shares list
+- `src/features/sharing/components/ShareSpaceDialog.tsx` — share dialog (legacy, no longer used by settings page)
+- `src/features/sharing/components/ExclusionManager.tsx` — expandable type sections with nested checkboxes (reused for both per-user and space-wide exclusions)
+- `src/features/sharing/hooks/useSpaceShares.ts` — share management, including `loadSpaceExclusions` and `addSpaceExclusion`
 - `src/features/sharing/hooks/useSpacePermission.ts` — permission checking
-- `src/features/sharing/hooks/useExclusionFilter.ts` — exclusion filtering for sidebar/editor
+- `src/features/sharing/hooks/useExclusionFilter.ts` — exclusion filtering for sidebar/editor; merges both per-user and space-wide exclusions
+- `supabase/migrations/015_space_wide_exclusions.sql` — adds `space_id` column, updates `is_object_excluded()` and RLS policies
 - Exclusions enforced in sidebar and editor for shared users
 
 ## Verification
@@ -58,3 +75,7 @@ CREATE TABLE share_exclusions (
 - [x] Exclude object: specific object hidden
 - [x] Exclude field: field doesn't appear on shared objects
 - [ ] Mentions to excluded objects are invisible
+- [ ] Space-wide exclusions section visible on settings page when shares exist
+- [ ] Space-wide type exclusion hides objects from all shared users
+- [ ] Per-user exclusions still work independently alongside space-wide ones
+- [ ] Owner is never affected by exclusions

@@ -1392,6 +1392,8 @@ function createNoOpSharingClient(): SharingClient {
     async listExclusions() { return { data: [], error: notAvailable } },
     async addExclusion() { return { data: null, error: notAvailable } },
     async removeExclusion() { return { data: null, error: notAvailable } },
+    async listSpaceExclusions() { return { data: [], error: notAvailable } },
+    async addSpaceExclusion() { return { data: null, error: notAvailable } },
     async findUserByEmail() { return { data: null, error: notAvailable } },
     async getSharedSpaces() { return { data: [], error: notAvailable } },
   }

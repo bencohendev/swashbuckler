@@ -867,6 +867,43 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
       return { data: null, error: null }
     },
 
+    async listSpaceExclusions(spaceId: string): Promise<DataListResult<ShareExclusion>> {
+      const { data, error } = await supabase
+        .from('share_exclusions')
+        .select('*')
+        .eq('space_id', spaceId)
+        .is('space_share_id', null)
+        .order('created_at', { ascending: true })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ShareExclusion[], error: null }
+    },
+
+    async addSpaceExclusion(spaceId: string, input: CreateShareExclusionInput): Promise<DataResult<ShareExclusion>> {
+      const exclusionData = {
+        space_id: spaceId,
+        space_share_id: null,
+        excluded_type_id: 'excluded_type_id' in input ? input.excluded_type_id : null,
+        excluded_object_id: 'excluded_object_id' in input ? input.excluded_object_id : null,
+        excluded_field: 'excluded_field' in input ? input.excluded_field : null,
+      }
+
+      const { data, error } = await supabase
+        .from('share_exclusions')
+        .insert(exclusionData)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ShareExclusion, error: null }
+    },
+
     async findUserByEmail(email: string): Promise<DataResult<{ id: string; email: string }>> {
       const { data, error } = await supabase
         .rpc('find_user_by_email', { p_email: email })

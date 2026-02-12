@@ -12,9 +12,11 @@ interface ExclusionManagerProps {
   loadExclusions: (shareId: string) => Promise<ShareExclusion[]>
   addExclusion: (shareId: string, input: CreateShareExclusionInput) => Promise<ShareExclusion | null>
   removeExclusion: (exclusionId: string) => Promise<void>
+  spaceExclusions?: ShareExclusion[]
+  onExclusionsChange?: () => void
 }
 
-export function ExclusionManager({ shareId, loadExclusions, addExclusion, removeExclusion }: ExclusionManagerProps) {
+export function ExclusionManager({ shareId, loadExclusions, addExclusion, removeExclusion, spaceExclusions = [], onExclusionsChange }: ExclusionManagerProps) {
   const { types } = useObjectTypes()
   const { objects } = useObjects({ isDeleted: false })
   const [exclusions, setExclusions] = useState<ShareExclusion[]>([])
@@ -37,17 +39,35 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
   const excludedTypeIds = new Set(typeExclusions.map(e => e.excluded_type_id))
   const excludedObjectIds = new Set(objectExclusions.map(e => e.excluded_object_id))
 
+  // Space-wide exclusion sets (shown as disabled in per-user lists)
+  const spaceTypeIds = useMemo(() => new Set(
+    spaceExclusions
+      .filter(e => e.excluded_type_id && !e.excluded_field && !e.excluded_object_id)
+      .map(e => e.excluded_type_id)
+  ), [spaceExclusions])
+  const spaceObjectIds = useMemo(() => new Set(
+    spaceExclusions.filter(e => e.excluded_object_id).map(e => e.excluded_object_id)
+  ), [spaceExclusions])
+  const spaceFieldKeys = useMemo(() => new Set(
+    spaceExclusions
+      .filter(e => e.excluded_type_id && e.excluded_field)
+      .map(e => `${e.excluded_type_id}:${e.excluded_field}`)
+  ), [spaceExclusions])
+
+  // Combined sets (for filtering visible types / objects)
+  const allExcludedTypeIds = useMemo(() => new Set([...excludedTypeIds, ...spaceTypeIds]), [excludedTypeIds, spaceTypeIds])
+
   const objectsByType = useMemo(() => {
     const grouped = new Map<string, typeof objects>()
     for (const obj of objects) {
-      if (excludedTypeIds.has(obj.type_id)) continue
+      if (allExcludedTypeIds.has(obj.type_id)) continue
       const existing = grouped.get(obj.type_id) ?? []
       existing.push(obj)
       grouped.set(obj.type_id, existing)
     }
     return grouped
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- excludedTypeIds derived from exclusions
-  }, [objects, exclusions])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- allExcludedTypeIds derived from exclusions + spaceExclusions
+  }, [objects, exclusions, spaceExclusions])
 
   const handleToggleType = async (type: ObjectType) => {
     const existing = typeExclusions.find(e => e.excluded_type_id === type.id)
@@ -60,6 +80,7 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
         setExclusions(prev => [...prev, result])
       }
     }
+    onExclusionsChange?.()
   }
 
   const handleToggleField = async (typeId: string, fieldId: string) => {
@@ -73,6 +94,7 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
         setExclusions(prev => [...prev, result])
       }
     }
+    onExclusionsChange?.()
   }
 
   const handleToggleObject = async (objectId: string) => {
@@ -86,6 +108,7 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
         setExclusions(prev => [...prev, result])
       }
     }
+    onExclusionsChange?.()
   }
 
   const toggleCollapsed = (typeId: string) => {
@@ -104,7 +127,7 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
     return <div className="text-xs text-muted-foreground">Loading exclusions...</div>
   }
 
-  const visibleTypes = types.filter(t => !excludedTypeIds.has(t.id))
+  const visibleTypes = types.filter(t => !allExcludedTypeIds.has(t.id))
 
   return (
     <div className="space-y-4 rounded-md border p-3">
@@ -114,18 +137,23 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
         <div className="space-y-2">
           <h5 className="text-xs font-medium text-muted-foreground">Hide entire types</h5>
           <div className="space-y-1">
-            {types.map(type => (
-              <label key={type.id} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={excludedTypeIds.has(type.id)}
-                  onChange={() => handleToggleType(type)}
-                  className="rounded border-muted-foreground"
-                />
-                <TypeIcon icon={type.icon} className="size-4" />
-                <span>{type.plural_name}</span>
-              </label>
-            ))}
+            {types.map(type => {
+              const isSpaceWide = spaceTypeIds.has(type.id)
+              return (
+                <label key={type.id} className={cn('flex items-center gap-2 text-sm', isSpaceWide && 'opacity-60')}>
+                  <input
+                    type="checkbox"
+                    checked={excludedTypeIds.has(type.id) || isSpaceWide}
+                    onChange={() => handleToggleType(type)}
+                    disabled={isSpaceWide}
+                    className="rounded border-muted-foreground"
+                  />
+                  <TypeIcon icon={type.icon} className="size-4" />
+                  <span>{type.plural_name}</span>
+                  {isSpaceWide && <span className="text-xs text-muted-foreground">(space-wide)</span>}
+                </label>
+              )
+            })}
           </div>
         </div>
       )}
@@ -155,17 +183,22 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
                   </button>
                   {!isCollapsed && (
                     <div className="ml-5 space-y-0.5 py-0.5">
-                      {typeObjects.map(obj => (
-                        <label key={obj.id} className="flex items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-accent">
-                          <input
-                            type="checkbox"
-                            checked={excludedObjectIds.has(obj.id)}
-                            onChange={() => handleToggleObject(obj.id)}
-                            className="rounded border-muted-foreground"
-                          />
-                          <span className="truncate">{obj.title || 'Untitled'}</span>
-                        </label>
-                      ))}
+                      {typeObjects.map(obj => {
+                        const isSpaceWide = spaceObjectIds.has(obj.id)
+                        return (
+                          <label key={obj.id} className={cn('flex items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-accent', isSpaceWide && 'opacity-60')}>
+                            <input
+                              type="checkbox"
+                              checked={excludedObjectIds.has(obj.id) || isSpaceWide}
+                              onChange={() => handleToggleObject(obj.id)}
+                              disabled={isSpaceWide}
+                              className="rounded border-muted-foreground"
+                            />
+                            <span className="truncate">{obj.title || 'Untitled'}</span>
+                            {isSpaceWide && <span className="shrink-0 text-xs text-muted-foreground">(space-wide)</span>}
+                          </label>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -187,15 +220,18 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
                   const isExcluded = fieldExclusions.some(
                     e => e.excluded_type_id === type.id && e.excluded_field === field.id
                   )
+                  const isSpaceWide = spaceFieldKeys.has(`${type.id}:${field.id}`)
                   return (
-                    <label key={field.id} className="flex items-center gap-2 text-sm">
+                    <label key={field.id} className={cn('flex items-center gap-2 text-sm', isSpaceWide && 'opacity-60')}>
                       <input
                         type="checkbox"
-                        checked={isExcluded}
+                        checked={isExcluded || isSpaceWide}
                         onChange={() => handleToggleField(type.id, field.id)}
+                        disabled={isSpaceWide}
                         className="rounded border-muted-foreground"
                       />
                       <span>{field.name}</span>
+                      {isSpaceWide && <span className="text-xs text-muted-foreground">(space-wide)</span>}
                     </label>
                   )
                 })}
