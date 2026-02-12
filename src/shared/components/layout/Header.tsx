@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback } from "@/shared/components/ui/Avatar"
-import { LogInIcon, LogOutIcon, MonitorIcon, MoonIcon, PlusIcon, SearchIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, MonitorIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
 import { QuickCaptureDialog, QuickCaptureButton } from "@/features/quick-capture"
@@ -142,6 +142,12 @@ export function Header({ email }: { email?: string }) {
                   {email}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/account">
+                    <SettingsIcon className="size-4" />
+                    Account settings
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOutIcon className="size-4" />
                   Sign out

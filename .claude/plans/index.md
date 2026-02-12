@@ -41,6 +41,7 @@ src/
 │   ├── objects/
 │   ├── pins/
 │   ├── search/
+│   ├── account/
 │   ├── sharing/
 │   ├── tags/
 │   ├── sidebar/
@@ -98,6 +99,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Emoji](emoji.md) | Emoji picker for types, spaces, and objects | Done |
 | [Tags](tags.md) | Global cross-type tagging | Done |
 | [Type Pages](type-pages.md) | Table view per object type | Done |
+| [Account](account.md) | Account settings & management | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
 ## Post-MVP Features (Deferred)

@@ -1,7 +1,13 @@
 import Link from 'next/link'
-import { FileStackIcon, UsersIcon, LayersIcon } from 'lucide-react'
+import { FileStackIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
 
 const settingsItems = [
+  {
+    href: '/settings/account',
+    label: 'Account',
+    description: 'Profile, security, and preferences',
+    icon: UserIcon,
+  },
   {
     href: '/settings/templates',
     label: 'Templates',
