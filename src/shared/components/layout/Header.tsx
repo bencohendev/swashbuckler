@@ -12,15 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
-import { Avatar, AvatarFallback } from "@/shared/components/ui/Avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
 import { LogInIcon, LogOutIcon, MonitorIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { useAuth } from "@/shared/lib/data"
 import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
 import { QuickCaptureDialog, QuickCaptureButton } from "@/features/quick-capture"
 
 export function Header({ email }: { email?: string }) {
   const router = useRouter()
+  const { user } = useAuth()
   const isGuest = !email
+  const avatarUrl: string | undefined = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture
   const [searchOpen, setSearchOpen] = useState(false)
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -110,6 +113,7 @@ export function Header({ email }: { email?: string }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar size="sm">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={email || "User"} />}
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </Button>
