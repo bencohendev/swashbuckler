@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
-import { LogInIcon, LogOutIcon, MonitorIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, MonitorIcon, MoonIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
 import { useAuth } from "@/shared/lib/data"
 import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
@@ -66,29 +66,12 @@ export function Header({ email }: { email?: string }) {
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
-          size="sm"
-          className="gap-2 text-muted-foreground"
-          onClick={() => setQuickCaptureOpen(true)}
-        >
-          <PlusIcon className="size-4" />
-          <span className="hidden text-xs sm:inline-flex">
-            <kbd className="pointer-events-none rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium">
-              ⌘E
-            </kbd>
-          </span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 text-muted-foreground"
+          size="icon"
+          className="text-muted-foreground"
           onClick={() => setSearchOpen(true)}
+          title="Search"
         >
           <SearchIcon className="size-4" />
-          <span className="hidden text-xs sm:inline-flex">
-            <kbd className="pointer-events-none rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium">
-              ⌘K
-            </kbd>
-          </span>
         </Button>
         <Button
           variant="ghost"
