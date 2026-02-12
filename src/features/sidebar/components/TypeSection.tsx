@@ -157,7 +157,7 @@ export function TypeSection({
                   </>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => router.push('/settings/types')}>
+                <DropdownMenuItem onSelect={() => router.push(`/settings/types?edit=${type.id}`)}>
                   <SettingsIcon />
                   Type settings
                 </DropdownMenuItem>
@@ -176,7 +176,7 @@ export function TypeSection({
             </ContextMenu.Item>
             <ContextMenu.Item
               className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
-              onSelect={() => router.push('/settings/types')}
+              onSelect={() => router.push(`/settings/types?edit=${type.id}`)}
             >
               <PencilIcon />
               Edit type

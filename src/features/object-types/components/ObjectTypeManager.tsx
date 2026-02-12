@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { PlusIcon, EditIcon, TrashIcon } from 'lucide-react'
 import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
@@ -11,8 +12,18 @@ import type { ObjectType, CreateObjectTypeInput, UpdateObjectTypeInput } from '@
 
 export function ObjectTypeManager() {
   const { types, isLoading, error, create, update, remove } = useObjectTypes()
+  const searchParams = useSearchParams()
   const [editingType, setEditingType] = useState<ObjectType | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+
+  // Auto-open edit form when ?edit=<typeId> is in the URL
+  const editTypeId = searchParams.get('edit')
+  useEffect(() => {
+    if (editTypeId && types.length > 0) {
+      const type = types.find(t => t.id === editTypeId)
+      if (type) setEditingType(type)
+    }
+  }, [editTypeId, types])
 
   const handleCreate = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
     await create(input as CreateObjectTypeInput)
