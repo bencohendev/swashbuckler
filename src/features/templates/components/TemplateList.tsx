@@ -42,7 +42,7 @@ function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
         )}
         <div>
           <h3 className="font-medium">{template.name}</h3>
-          <p className="text-sm text-muted-foreground">{objectType?.name ?? 'Object'}</p>
+          <p className="text-sm text-muted-foreground">{objectType?.name ?? 'Entry'}</p>
         </div>
       </div>
 

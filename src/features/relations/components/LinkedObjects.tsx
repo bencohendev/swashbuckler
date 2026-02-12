@@ -175,7 +175,7 @@ function LinkSearch({ objectId, existingTargetIds, onSelect, onClose }: LinkSear
         value={query}
         onChange={e => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Search objects..."
+        placeholder="Search entries..."
         className="w-full rounded-t-lg border-b bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
       />
       <div className="max-h-48 overflow-y-auto p-1">
@@ -199,7 +199,7 @@ function LinkSearch({ objectId, existingTargetIds, onSelect, onClose }: LinkSear
           ))
         ) : (
           <div className="px-2 py-3 text-center text-sm text-muted-foreground">
-            {query ? 'No objects found' : 'Type to search...'}
+            {query ? 'No entries found' : 'Type to search...'}
           </div>
         )}
       </div>

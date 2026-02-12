@@ -42,7 +42,7 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 - Triggered by `@`
 - Search results grouped by type
 - "Create new" option opens CreateObjectModal
-- Created object auto-inserted as mention
+- Created entry auto-inserted as mention
 - Mention IDs extracted on save to sync `object_relations`
 
 ## Verification
@@ -52,7 +52,7 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 - [x] Slash menu "Create New..." opens modal
 - [x] @ mention shows grouped results
 - [x] @ mention "Create new" opens modal
-- [x] Created object links inline
+- [x] Created entry links inline
 - [x] Spoiler hides text, click reveals
 - [x] Auto-save after 1s idle
 - [x] Image support

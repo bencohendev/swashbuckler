@@ -6,7 +6,7 @@ export default function TemplatesSettingsPage() {
       <div>
         <h1 className="text-2xl font-semibold">Templates</h1>
         <p className="text-muted-foreground">
-          Manage your templates. Templates can be used as starting points when creating new objects.
+          Manage your templates. Templates can be used as starting points when creating new entries.
         </p>
       </div>
 

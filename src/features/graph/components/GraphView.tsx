@@ -57,8 +57,8 @@ export function GraphView() {
       {!isLoading && graphData.nodes.length === 0 && (
         <div className="flex items-center justify-center h-full text-muted-foreground">
           <div className="text-center space-y-2">
-            <p className="text-lg font-medium">No objects to display</p>
-            <p className="text-sm">Create some objects and link them to see the graph.</p>
+            <p className="text-lg font-medium">No entries to display</p>
+            <p className="text-sm">Create some entries and link them to see the graph.</p>
           </div>
         </div>
       )}

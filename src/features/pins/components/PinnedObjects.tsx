@@ -18,7 +18,7 @@ export function PinnedObjects() {
     <ObjectList
       objects={pinnedObjects}
       isLoading={pinsLoading || objectsLoading}
-      emptyMessage="No pinned objects yet. Pin objects for quick access."
+      emptyMessage="No pinned entries yet. Pin entries for quick access."
     />
   )
 }

@@ -4,14 +4,14 @@
 
 ## Overview
 
-Floating button and keyboard shortcut (Cmd+Shift+N) for quickly creating a new object without navigating away from the current view. User picks an object type from a dialog, and the new object opens in the object editor modal.
+Floating button and keyboard shortcut for quickly creating a new entry without navigating away from the current view. User picks a type from a dialog, and the new entry opens in the editor modal.
 
 ## Decisions
 
 | Area | Decision |
 |------|----------|
 | Trigger | Floating button + header button + hotkey (⌘E) |
-| Flow | Pick type → create object → open in modal |
+| Flow | Pick type → create entry → open in modal |
 | Dialog style | Modeled after GlobalSearchDialog with keyboard navigation |
 
 ## Implementation

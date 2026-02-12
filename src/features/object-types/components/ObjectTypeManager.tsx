@@ -27,7 +27,7 @@ export function ObjectTypeManager() {
 
   const handleDelete = async (type: ObjectType) => {
     const confirmed = window.confirm(
-      `Delete "${type.name}" type? Objects of this type will not be deleted, but they will lose their type association.`
+      `Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`
     )
     if (!confirmed) return
     await remove(type.id)

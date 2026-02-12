@@ -16,7 +16,7 @@ export function ObjectList({
   objects,
   objectType,
   isLoading,
-  emptyMessage = 'No objects yet',
+  emptyMessage = 'No entries yet',
   compact,
 }: ObjectListProps) {
   const pathname = usePathname()

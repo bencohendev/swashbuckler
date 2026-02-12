@@ -4,7 +4,7 @@
 
 ## Overview
 
-Per-space sharing with view/edit permissions and granular exclusions at three levels: object types, specific objects, and fields per type. Exclusions can be set per-user or space-wide (applying to all shared users at once).
+Per-space sharing with view/edit permissions and granular exclusions at three levels: types, specific entries, and fields per type. Exclusions can be set per-user or space-wide (applying to all shared users at once).
 
 ## Decisions
 
@@ -12,10 +12,10 @@ Per-space sharing with view/edit permissions and granular exclusions at three le
 |------|----------|
 | Scope | Per-space (not per-workspace) |
 | Permissions | View / Edit |
-| Exclusion levels | Object types, object instances, and fields (per type) |
+| Exclusion levels | Types, specific entries, and fields (per type) |
 | Exclusion scopes | Per-user (via `space_share_id`) or space-wide (via `space_id`) |
 | Hidden content | Excluded content completely invisible to viewers |
-| Mention visibility | Mentions of excluded objects hidden |
+| Mention visibility | Mentions of excluded entries hidden |
 | Owner immunity | Owner is never affected by any exclusions |
 
 ## Database Schema
@@ -71,11 +71,11 @@ CREATE TABLE share_exclusions (
 - [x] Recipient sees shared space
 - [x] View permission: can read, cannot edit
 - [x] Edit permission: can edit
-- [x] Exclude type: all objects of type hidden
-- [x] Exclude object: specific object hidden
-- [x] Exclude field: field doesn't appear on shared objects
-- [ ] Mentions to excluded objects are invisible
+- [x] Exclude type: all entries of type hidden
+- [x] Exclude entry: specific entry hidden
+- [x] Exclude field: field doesn't appear on shared entries
+- [ ] Mentions to excluded entries are invisible
 - [ ] Space-wide exclusions section visible on settings page when shares exist
-- [ ] Space-wide type exclusion hides objects from all shared users
+- [ ] Space-wide type exclusion hides entries from all shared users
 - [ ] Per-user exclusions still work independently alongside space-wide ones
 - [ ] Owner is never affected by exclusions

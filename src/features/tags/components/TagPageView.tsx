@@ -47,7 +47,7 @@ export function TagPageView({ name }: TagPageViewProps) {
 
   const handleDelete = async () => {
     if (!tag) return
-    const confirmed = window.confirm(`Delete tag "${tag.name}"? It will be removed from all objects.`)
+    const confirmed = window.confirm(`Delete tag "${tag.name}"? It will be removed from all entries.`)
     if (!confirmed) return
     await remove(tag.id)
     router.push('/')
@@ -118,7 +118,7 @@ export function TagPageView({ name }: TagPageViewProps) {
             ))}
           </div>
         ) : objects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No objects with this tag.</p>
+          <p className="text-sm text-muted-foreground">No entries with this tag.</p>
         ) : (
           <div className="space-y-2">
             {objects.map(obj => (

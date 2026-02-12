@@ -253,7 +253,7 @@ export function SlashMenu({ query, onSelect, onCreateNew }: SlashMenuProps) {
               <div>
                 <div className="text-sm font-medium">Create new...</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Create a new linked object
+                  Create a new linked entry
                 </div>
               </div>
             </button>

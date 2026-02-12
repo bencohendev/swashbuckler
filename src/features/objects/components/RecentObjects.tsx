@@ -13,7 +13,7 @@ export function RecentObjects() {
     <ObjectList
       objects={objects}
       isLoading={isLoading}
-      emptyMessage="No recent objects. Create your first page to get started."
+      emptyMessage="No recent entries. Create your first page to get started."
     />
   )
 }

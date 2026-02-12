@@ -4,7 +4,7 @@
 
 ## Overview
 
-Dedicated pages for each object type at `/types/[slug]` showing all instances in a sortable data table with columns for title, property fields, and tags.
+Dedicated pages for each type at `/types/[slug]` showing all instances in a sortable data table with columns for title, property fields, and tags.
 
 ## Decisions
 
@@ -47,7 +47,7 @@ Dedicated pages for each object type at `/types/[slug]` showing all instances in
 
 ## Verification
 
-- [x] Navigate to `/types/page` and see all Page objects
+- [x] Navigate to `/types/page` and see all Page entries
 - [x] Custom type slugs work (e.g. `/types/task`)
 - [x] Property columns render correct values for each field type
 - [x] Sorting works on title and property columns

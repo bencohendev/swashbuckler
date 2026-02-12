@@ -4,7 +4,7 @@
 
 ## Overview
 
-Core object system with customizable types, properties, and CRUD operations. Objects are instances of user-defined types with flexible JSONB properties and Plate.js content.
+Core entry system with customizable types, properties, and CRUD operations. Entries are instances of user-defined types with flexible JSONB properties and Plate.js content. (UI shows "entry/entries"; internal code still uses "object".)
 
 ## Decisions
 
@@ -80,7 +80,7 @@ CREATE TABLE object_relations (
 | email | `{type: "email", value: "user@example.com"}` |
 | phone | `{type: "phone", value: "+1234567890"}` |
 
-## Default Object Types (seeded on account/space creation)
+## Default Types (seeded on account/space creation)
 
 1. **Page** — basic document (icon: file-text)
 
@@ -103,10 +103,10 @@ All types are regular user-owned, per-space records. There are no global built-i
 
 ## Verification
 
-- [x] Create object with any type
+- [x] Create entry with any type
 - [x] Edit property types
 - [x] 3-level nesting works
 - [x] Delete moves to trash
 - [x] Object relations (mention + link) work
-- [x] Custom object types with plural names
+- [x] Custom types with plural names
 - [x] All types fully editable and deletable (no built-in restrictions)

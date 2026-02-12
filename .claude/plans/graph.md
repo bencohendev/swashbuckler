@@ -31,10 +31,10 @@ Force-directed knowledge graph visualization using D3.js, with type filtering, n
 
 ## Verification
 
-- [x] All objects appear as nodes
+- [x] All entries appear as nodes
 - [x] Relations appear as edges
 - [x] Click to select node with dimming
-- [x] Double-click navigates to object
+- [x] Double-click navigates to entry
 - [x] Type filter works (inclusion mode)
 - [x] Zoom/pan works
 - [x] Nodes color-coded by type

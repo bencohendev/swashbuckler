@@ -100,7 +100,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search objects..."
+            placeholder="Search entries..."
             className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             autoFocus
           />
@@ -171,7 +171,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
           {results.length > 0 && (
             <>
               {tagResults.length > 0 && (
-                <div className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">Objects</div>
+                <div className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">Entries</div>
               )}
               {results.map((obj, index) => {
                 const objType = typeMap.get(obj.type_id)

@@ -14,7 +14,7 @@ export function ObjectEditorModal() {
   return (
     <Dialog open={!!objectId} onOpenChange={(open) => { if (!open) close() }}>
       <DialogContent className="max-h-[85vh] overflow-hidden p-0 sm:max-w-3xl" showCloseButton={false}>
-        <DialogTitle className="sr-only">Edit Object</DialogTitle>
+        <DialogTitle className="sr-only">Edit Entry</DialogTitle>
         {objectId && (
           <ObjectEditor
             id={objectId}

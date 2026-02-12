@@ -11,13 +11,13 @@ const settingsItems = [
   {
     href: '/settings/templates',
     label: 'Templates',
-    description: 'Manage your object templates',
+    description: 'Manage your templates',
     icon: FileStackIcon,
   },
   {
     href: '/settings/types',
-    label: 'Object Types',
-    description: 'Customize object types and properties',
+    label: 'Types',
+    description: 'Customize types and their properties',
     icon: LayersIcon,
   },
   {

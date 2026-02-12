@@ -4,16 +4,16 @@
 
 ## Overview
 
-Full emoji picker support across the app: object types, spaces, and individual objects.
+Full emoji picker support across the app: types, spaces, and individual entries.
 
 ## Decisions
 
 | Area | Decision |
 |------|----------|
 | Library | `emoji-picker-react` (searchable, categorized, skin tone support) |
-| Scope | Object type icons, space icons, and individual object icons |
+| Scope | Type icons, space icons, and individual entry icons |
 | Default icon | New custom types default to `📄` |
-| Object icons | Objects do NOT inherit type emoji — they have independent icons |
+| Entry icons | Entries do NOT inherit type emoji — they have independent icons |
 
 ## Implementation
 
@@ -31,7 +31,7 @@ Full emoji picker support across the app: object types, spaces, and individual o
 #### Space creation
 - [x] `src/features/sidebar/components/CreateSpaceDialog.tsx` — replace hardcoded 8-emoji grid with `EmojiPicker`
 
-### Phase 2: Object instance emoji (done)
+### Phase 2: Entry instance emoji (done)
 
 #### Object editor — add emoji picker to header
 - [x] `src/features/objects/components/ObjectEditor.tsx`
@@ -51,9 +51,9 @@ Full emoji picker support across the app: object types, spaces, and individual o
 ## Verification
 
 - [x] `npm install emoji-picker-react` succeeds
-- [x] Emoji picker opens in object type form and space dialog
+- [x] Emoji picker opens in type form and space dialog
 - [x] Emoji picker opens in object editor header
-- [x] Objects in sidebar show own emoji or generic icon (no type inheritance)
+- [x] Entries in sidebar show own emoji or generic icon (no type inheritance)
 - [x] Selected emoji persists and renders correctly in sidebar
 - [x] Dark mode renders correctly in picker
 - [x] `npm run build` passes

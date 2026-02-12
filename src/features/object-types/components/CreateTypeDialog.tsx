@@ -41,7 +41,7 @@ export function CreateTypeDialog({ open, onOpenChange, onCreate }: CreateTypeDia
         <DialogHeader>
           <DialogTitle>Create New Type</DialogTitle>
           <DialogDescription>
-            Define a new object type with custom fields.
+            Define a new type with custom fields.
           </DialogDescription>
         </DialogHeader>
         {error && (

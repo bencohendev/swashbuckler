@@ -4,7 +4,7 @@
 
 ## Overview
 
-Cross-type tagging system with a shared tag pool per space. Any object can have multiple tags regardless of its type. Tags have a name and optional color.
+Cross-type tagging system with a shared tag pool per space. Any entry can have multiple tags regardless of its type. Tags have a name and optional color.
 
 ## Decisions
 
@@ -108,20 +108,20 @@ Add `tags: TagsClient` to `DataClient` interface.
 
 ### Global search (Cmd+K)
 - Tag names filtered client-side from `useTags()` — instant, no server round-trip
-- Tag results shown as a separate "Tags" group above object results
+- Tag results shown as a separate "Tags" group above entry results
 - Clicking a tag result navigates to `/tags/[name]`
-- Keyboard navigation works across both tag and object result groups
+- Keyboard navigation works across both tag and entry result groups
 
 ### Sidebar tag section
 - Collapsible "Tags" section in sidebar listing all tags in the space
-- Each tag shows as a clickable item with `TagBadge` styling + object count
+- Each tag shows as a clickable item with `TagBadge` styling + entry count
 - Clicking a tag navigates to `/tags/[name]`
 
 ### Dedicated tag pages — `/tags/[name]`
 - Route: `src/app/(main)/tags/[name]/page.tsx`
-- Shows all objects with that tag, cross-type
+- Shows all entries with that tag, cross-type
 - Reuse `ObjectList` component
-- Header with tag name, color, object count, and edit/delete actions
+- Header with tag name, color, entry count, and edit/delete actions
 
 ## Integration
 - `src/features/objects/components/ObjectEditor.tsx` — add `<TagPicker objectId={id} />`
@@ -132,13 +132,13 @@ Add `tags: TagsClient` to `DataClient` interface.
 ## Verification
 
 - [x] Create tags in a space
-- [x] Assign tags to objects of different types
+- [x] Assign tags to entries of different types
 - [x] Tags appear in editor and persist across reload
-- [x] Remove tags from objects
-- [x] Delete a tag removes it from all objects
-- [x] Permanently deleting an object removes its tag assignments
+- [x] Remove tags from entries
+- [x] Delete a tag removes it from all entries
+- [x] Permanently deleting an entry removes its tag assignments
 - [x] Local/guest mode works identically
 - [x] Cmd+K search finds tags by name
 - [x] Tags section appears in sidebar with counts
-- [x] Tag pages show all objects with that tag cross-type
+- [x] Tag pages show all entries with that tag cross-type
 - [x] `npm run build` passes

@@ -4,15 +4,15 @@
 
 ## Overview
 
-Global full-text search with Cmd+K shortcut, searching object names and content with type filtering.
+Global full-text search with Cmd+K shortcut, searching entry names and content with type filtering.
 
 ## Decisions
 
 | Area | Decision |
 |------|----------|
 | Trigger | Cmd+K keyboard shortcut |
-| Scope | Object names + body content |
-| Filtering | By object type |
+| Scope | Entry names + body content |
+| Filtering | By type |
 | Navigation | Arrow keys + Enter |
 | UI | Dialog overlay |
 
@@ -26,8 +26,8 @@ Global full-text search with Cmd+K shortcut, searching object names and content 
 ## Verification
 
 - [x] Cmd+K opens search
-- [x] Search finds objects by name
+- [x] Search finds entries by name
 - [x] Search finds content in body
 - [x] Type filtering works
 - [x] Keyboard navigation (arrow keys, enter)
-- [x] Navigate to selected object
+- [x] Navigate to selected entry

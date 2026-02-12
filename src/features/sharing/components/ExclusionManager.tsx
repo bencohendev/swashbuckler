@@ -161,7 +161,7 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
       {/* Object exclusions — expandable type sections */}
       {visibleTypes.length > 0 && (
         <div className="space-y-2">
-          <h5 className="text-xs font-medium text-muted-foreground">Hide specific objects</h5>
+          <h5 className="text-xs font-medium text-muted-foreground">Hide specific entries</h5>
           <div className="space-y-1">
             {visibleTypes.map(type => {
               const typeObjects = objectsByType.get(type.id) ?? []

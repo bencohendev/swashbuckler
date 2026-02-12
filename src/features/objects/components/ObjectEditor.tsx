@@ -118,7 +118,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   if (error || !object) {
     return (
       <div className="p-6">
-        <p className="text-destructive">{error || 'Object not found'}</p>
+        <p className="text-destructive">{error || 'Entry not found'}</p>
         <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/'))} className="mt-4">
           Go back
         </Button>
@@ -154,7 +154,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           ) : (
             object.icon && <span className="text-2xl">{object.icon}</span>
           )}
-          <span className="text-sm text-muted-foreground">{objectType?.name ?? 'Object'}</span>
+          <span className="text-sm text-muted-foreground">{objectType?.name ?? 'Entry'}</span>
           {!canEdit && (
             <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">View only</span>
           )}

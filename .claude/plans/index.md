@@ -2,7 +2,7 @@
 
 ## Overview
 
-A knowledge management app with block-based editing, object types/relations, and a visual graph view.
+A knowledge management app with block-based editing, custom types/relations, and a visual graph view.
 
 ## Tech Stack
 
@@ -84,7 +84,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Plan | Status |
 |---------|------|--------|
 | [Auth](auth.md) | Authentication & authorization | Done |
-| [Objects](objects.md) | Object system, types, properties | Done |
+| [Objects](objects.md) | Entry system, types, properties | Done |
 | [Sidebar](sidebar.md) | Hierarchical sidebar + context menu | Done |
 | [Editor](editor.md) | Block editor (Plate.js) | Done |
 | [Templates](templates.md) | Template system | Done |
@@ -94,14 +94,15 @@ Dual-storage architecture with a `DataClient` interface:
 | [Spaces](spaces.md) | Multi-workspace support | Done |
 | [Trash](trash.md) | Soft delete with 30-day retention | Done |
 | [Dashboard](dashboard.md) | Pinned + Recent | Done |
-| [Pins](favorites.md) | Pin objects for quick access | Done |
+| [Pins](favorites.md) | Pin entries for quick access | Done |
 | [Theme](theme.md) | Light / Dark / System | Done |
 | [Quick Capture](quick-capture.md) | Floating button / hotkey | Done |
-| [Emoji](emoji.md) | Emoji picker for types, spaces, and objects | Done |
+| [Emoji](emoji.md) | Emoji picker for types, spaces, and entries | Done |
 | [Tags](tags.md) | Global cross-type tagging | Done |
-| [Type Pages](type-pages.md) | Table view per object type | Done |
+| [Type Pages](type-pages.md) | Table view per type | Done |
 | [Account](account.md) | Account settings & management | Done |
 | [Image Upload](image-upload.md) | Image uploads for editor, covers, avatars | Done |
+| [UI Terminology](ui-terminology.md) | Rename "object" → "entry", "Object Type" → "Type" in UI | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
 ## Post-MVP Features (Deferred)
@@ -109,10 +110,10 @@ Dual-storage architecture with a `DataClient` interface:
 1. Real-time collaboration — block-level locking (collaborative editing)
 2. Export/Import — JSON + Markdown
 3. Template variables — {{date}}, {{user}}, custom prompts
-4. Template bundles — create multiple linked objects
+4. Template bundles — create multiple linked entries
 5. Advanced graph layouts — hierarchical, radial, clustered
-6. Calendar view — for date-based objects
-7. Board view — Kanban for status-based objects
+6. Calendar view — for date-based entries
+7. Board view — Kanban for status-based entries
 8. Comments — inline commenting
 9. Version history — track changes over time
 10. API access — public API for integrations

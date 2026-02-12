@@ -99,7 +99,7 @@ export function TypeSection({
 
   const handleDelete = () => {
     const confirmed = window.confirm(
-      `Delete "${type.name}" type? Objects of this type will not be deleted, but they will lose their type association.`
+      `Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`
     )
     if (confirmed) {
       onDelete?.(type.id)
@@ -159,7 +159,7 @@ export function TypeSection({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => router.push('/settings/types')}>
                   <SettingsIcon />
-                  Object settings
+                  Type settings
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -58,7 +58,7 @@ export function ObjectItem({ object, objectType, isActive, compact }: ObjectItem
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-medium">{object.title}</h3>
-          <p className="text-xs text-muted-foreground">{objectType?.name ?? 'Object'}</p>
+          <p className="text-xs text-muted-foreground">{objectType?.name ?? 'Entry'}</p>
         </div>
       </div>
     </Link>

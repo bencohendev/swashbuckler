@@ -4,7 +4,7 @@
 
 ## Overview
 
-Pin individual objects for quick access. Pins are per-user (in shared spaces, each user has their own pins). Pinned objects appear in the dashboard and a dedicated sidebar section. Renamed from "Favorites" to "Pinned" throughout.
+Pin individual entries for quick access. Pins are per-user (in shared spaces, each user has their own pins). Pinned entries appear in the dashboard and a dedicated sidebar section. Renamed from "Favorites" to "Pinned" throughout.
 
 ## Decisions
 

@@ -26,7 +26,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
   const [isCreating, setIsCreating] = useState(false)
   const [showCreateType, setShowCreateType] = useState(false)
 
-  // Total items = object types + 1 for "Object Type" action
+  // Total items = object types + 1 for "New Type" action
   const totalItems = types.length + 1
 
   // Reset state when dialog opens
@@ -91,7 +91,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
           <div className="max-h-72 overflow-y-auto py-1">
             {types.length === 0 && (
               <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-                No object types available
+                No types available
               </div>
             )}
             {types.map((type, index) => (
@@ -122,7 +122,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
               )}
             >
               <LayersIcon className="size-4 shrink-0 text-muted-foreground" />
-              <span className="min-w-0 flex-1 truncate">Object Type</span>
+              <span className="min-w-0 flex-1 truncate">New Type</span>
             </button>
           </div>
         </DialogContent>
