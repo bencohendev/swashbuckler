@@ -3,13 +3,15 @@
 import type { PlateElementProps } from '@udecode/plate/react';
 import { PlateElement } from '@udecode/plate/react';
 
-export function TableElement(props: PlateElementProps) {
+export function TableElement({ children, ...props }: PlateElementProps) {
   return (
     <PlateElement
       {...props}
       as="table"
       className="my-4 w-full border-collapse border border-gray-200 dark:border-gray-700"
-    />
+    >
+      <tbody>{children}</tbody>
+    </PlateElement>
   );
 }
 
