@@ -88,8 +88,8 @@ Dual-storage architecture with a `DataClient` interface:
 | [Trash](trash.md) | Soft delete with 30-day retention | Done |
 | [Dashboard](dashboard.md) | Favorites + Recent | Partial |
 | [Favorites](favorites.md) | Star individual objects | Not started |
-| [Theme](theme.md) | Light / Dark / System | Partial |
-| [Quick Capture](quick-capture.md) | Floating button / hotkey | Not started |
+| [Theme](theme.md) | Light / Dark / System | Done |
+| [Quick Capture](quick-capture.md) | Floating button / hotkey | Done |
 | [Emoji](emoji.md) | Emoji picker for types, spaces, and objects | Done |
 | [Tags](tags.md) | Global cross-type tagging | Not started |
 | [Type Pages](type-pages.md) | Table view per object type | Done |
