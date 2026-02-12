@@ -18,6 +18,7 @@ import { PinnedSection } from "@/features/pins"
 import { Button } from "@/shared/components/ui/Button"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
+import { RecentSection } from "./RecentSection"
 
 const DRAG_TYPE = "OBJECT_TYPE"
 
@@ -28,7 +29,6 @@ interface DragItem {
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/graph", label: "Graph", icon: NetworkIcon },
-  { href: "/trash", label: "Trash", icon: TrashIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]
 
@@ -263,7 +263,22 @@ export function Sidebar() {
                 </Button>
               )}
               <hr className="border-border" />
+              <RecentSection />
+              <hr className="border-border" />
               <TagsSection />
+              <hr className="border-border" />
+              <Link
+                href="/trash"
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  pathname === "/trash"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <TrashIcon className="size-4" />
+                Trash
+              </Link>
             </>
           )}
         </div>
