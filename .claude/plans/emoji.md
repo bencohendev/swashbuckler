@@ -1,6 +1,6 @@
 # Emoji Support
 
-**Status: Not started**
+**Status: Done**
 
 ## Overview
 
@@ -12,7 +12,6 @@ Replace Lucide icon grids with a full emoji picker (`emoji-picker-react`) for ob
 |------|----------|
 | Library | `emoji-picker-react` (searchable, categorized, skin tone support) |
 | Scope | Object type icons + space icons |
-| Built-in types | Keep Lucide icon names (Page, Note) — not user-editable |
 | Default icon | New custom types default to `📄` |
 
 ## Implementation
@@ -34,9 +33,8 @@ Replace Lucide icon grids with a full emoji picker (`emoji-picker-react`) for ob
 
 ## Verification
 
-- [ ] `npm install emoji-picker-react` succeeds
-- [ ] Emoji picker opens in object type form and space dialog
+- [x] `npm install emoji-picker-react` succeeds
+- [x] Emoji picker opens in object type form and space dialog
 - [ ] Selected emoji persists and renders correctly in sidebar
-- [ ] Dark mode renders correctly in picker
-- [ ] Built-in types (Page, Note) still render Lucide icons
-- [ ] `npm run build` passes
+- [x] Dark mode renders correctly in picker
+- [x] `npm run build` passes

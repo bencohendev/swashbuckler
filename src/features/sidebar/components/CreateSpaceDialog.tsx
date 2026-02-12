@@ -12,14 +12,13 @@ import {
 import { Button } from "@/shared/components/ui/Button"
 import { Input } from "@/shared/components/ui/Input"
 import { Label } from "@/shared/components/ui/Label"
+import { EmojiPicker } from "@/shared/components/EmojiPicker"
 
 interface CreateSpaceDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCreate: (input: { name: string; icon?: string }) => Promise<unknown>
 }
-
-const DEFAULT_ICONS = ["📁", "🏠", "💼", "📚", "🎨", "🔬", "🎯", "💡"]
 
 export function CreateSpaceDialog({ open, onOpenChange, onCreate }: CreateSpaceDialogProps) {
   const [name, setName] = useState("")
@@ -60,22 +59,14 @@ export function CreateSpaceDialog({ open, onOpenChange, onCreate }: CreateSpaceD
           </div>
           <div className="space-y-2">
             <Label>Icon</Label>
-            <div className="flex gap-2 flex-wrap">
-              {DEFAULT_ICONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => setIcon(emoji)}
-                  className={`flex size-9 items-center justify-center rounded-md border text-lg transition-colors ${
-                    icon === emoji
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:bg-accent"
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+            <EmojiPicker value={icon} onChange={setIcon}>
+              <button
+                type="button"
+                className="flex size-9 items-center justify-center rounded-md border text-lg transition-colors hover:bg-accent"
+              >
+                {icon}
+              </button>
+            </EmojiPicker>
           </div>
           <DialogFooter>
             <Button

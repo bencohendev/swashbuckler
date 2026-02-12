@@ -2,14 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
+import { EmojiPicker } from '@/shared/components/EmojiPicker'
 import { FieldBuilder } from './FieldBuilder'
-import { TypeIcon } from './TypeIcon'
 import type { ObjectType, FieldDefinition, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
-
-const ICON_OPTIONS = [
-  'file-text', 'sticky-note', 'file', 'check-square', 'book-open',
-  'calendar', 'bookmark', 'list-todo', 'notebook', 'link', 'star', 'folder',
-]
 
 interface ObjectTypeFormProps {
   objectType?: ObjectType
@@ -28,7 +23,7 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
   const [name, setName] = useState(objectType?.name ?? '')
   const [pluralName, setPluralName] = useState(objectType?.plural_name ?? '')
   const [slug, setSlug] = useState(objectType?.slug ?? '')
-  const [icon, setIcon] = useState(objectType?.icon ?? 'file')
+  const [icon, setIcon] = useState(objectType?.icon ?? '📄')
   const [color, setColor] = useState(objectType?.color ?? '')
   const [fields, setFields] = useState<FieldDefinition[]>(objectType?.fields ?? [])
   const [isSaving, setIsSaving] = useState(false)
@@ -123,22 +118,14 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
 
       <div>
         <label className="mb-2 block text-sm font-medium">Icon</label>
-        <div className="flex flex-wrap gap-2">
-          {ICON_OPTIONS.map((iconOption) => (
-            <button
-              key={iconOption}
-              type="button"
-              onClick={() => setIcon(iconOption)}
-              className={`flex size-10 items-center justify-center rounded-lg border transition-colors ${
-                icon === iconOption
-                  ? 'border-primary bg-primary/10'
-                  : 'hover:bg-muted'
-              }`}
-            >
-              <TypeIcon icon={iconOption} />
-            </button>
-          ))}
-        </div>
+        <EmojiPicker value={icon} onChange={setIcon}>
+          <button
+            type="button"
+            className="flex size-10 items-center justify-center rounded-lg border text-lg transition-colors hover:bg-muted"
+          >
+            {icon}
+          </button>
+        </EmojiPicker>
       </div>
 
       <div>
