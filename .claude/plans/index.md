@@ -118,3 +118,4 @@ Dual-storage architecture with a `DataClient` interface:
 | Collapsible sidebar | Toggle sidebar open/closed | Not started |
 | Mobile design | Responsive layout for mobile devices | Not started |
 | Advanced documentation | In-depth user docs and help content | Not started |
+| Accessibility audit | Review and fix a11y across the app | Not started |
