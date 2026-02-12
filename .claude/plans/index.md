@@ -117,3 +117,4 @@ Dual-storage architecture with a `DataClient` interface:
 | First use tutorial | Onboarding walkthrough for new users | Not started |
 | Collapsible sidebar | Toggle sidebar open/closed | Not started |
 | Mobile design | Responsive layout for mobile devices | Not started |
+| Advanced documentation | In-depth user docs and help content | Not started |
