@@ -106,9 +106,14 @@ Dual-storage architecture with a `DataClient` interface:
 | [Export](export.md) | JSON data export (account settings) | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
-## Post-MVP Features (Deferred)
+## Unfinished Features
 
-1. Real-time collaboration — block-level locking (collaborative editing)
-2. Template variables — {{date}}, {{user}}, custom prompts
-3. Advanced graph layouts — hierarchical, radial, clustered
-4. Board view — Kanban for status-based entries
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Real-time collaboration | Block-level locking, collaborative editing | Not started |
+| Template variables | {{date}}, {{user}}, custom prompts | Not started |
+| Advanced graph layouts | Hierarchical, radial, clustered | Not started |
+| Board view | Kanban for status-based entries | Not started |
+| First use tutorial | Onboarding walkthrough for new users | Not started |
+| Collapsible sidebar | Toggle sidebar open/closed | Not started |
+| Mobile design | Responsive layout for mobile devices | Not started |
