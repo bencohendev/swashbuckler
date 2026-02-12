@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CheckIcon, ChevronsUpDownIcon, PlusIcon, ShareIcon } from "lucide-react"
+import { CheckIcon, ChevronsUpDownIcon, LogOutIcon, PlusIcon, ShareIcon } from "lucide-react"
 import { useCurrentSpace, useSpaces, useAuth } from "@/shared/lib/data"
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ import { CreateSpaceDialog } from "./CreateSpaceDialog"
 import { ShareSpaceDialog } from "@/features/sharing"
 
 export function SpaceSwitcher() {
-  const { space, spaces, switchSpace } = useCurrentSpace()
+  const { space, spaces, switchSpace, leaveSpace } = useCurrentSpace()
   const { create } = useSpaces()
   const { user } = useAuth()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -92,6 +92,20 @@ export function SpaceSwitcher() {
               >
                 <ShareIcon className="size-4" />
                 Share Space
+              </DropdownMenuItem>,
+            ] : []),
+            ...(space && !isOwned(space) ? [
+              <DropdownMenuItem
+                key="__leave"
+                onClick={() => {
+                  if (window.confirm(`Leave "${space.name}"? You will lose access.`)) {
+                    leaveSpace(space.id)
+                  }
+                }}
+                className="gap-2 text-destructive"
+              >
+                <LogOutIcon className="size-4" />
+                Leave Space
               </DropdownMenuItem>,
             ] : []),
             <DropdownMenuItem

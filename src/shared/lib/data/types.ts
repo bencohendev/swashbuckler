@@ -370,6 +370,7 @@ export type CreateShareExclusionInput =
   | { excluded_type_id: string; excluded_field: string }
 
 export interface SharedSpace extends Space {
+  share_id: string
   permission: SpaceSharePermission
 }
 

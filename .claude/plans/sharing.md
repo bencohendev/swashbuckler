@@ -65,6 +65,15 @@ CREATE TABLE share_exclusions (
 - `supabase/migrations/015_space_wide_exclusions.sql` — adds `space_id` column, updates `is_object_excluded()` and RLS policies
 - Exclusions enforced in sidebar and editor for shared users
 
+## Leave Space
+
+Recipients can leave a shared space via the space switcher dropdown:
+- "Leave Space" action appears in the dropdown when a shared space is selected
+- Confirmation dialog before leaving
+- Deletes the recipient's `space_shares` row (RLS allows both owner and recipient to delete)
+- Auto-switches to the first owned space after leaving
+- Migration: `supabase/migrations/017_leave_space.sql`
+
 ## Verification
 
 - [x] Share space with email
@@ -79,3 +88,6 @@ CREATE TABLE share_exclusions (
 - [ ] Space-wide type exclusion hides entries from all shared users
 - [ ] Per-user exclusions still work independently alongside space-wide ones
 - [ ] Owner is never affected by exclusions
+- [ ] Recipient can leave shared space via space switcher
+- [ ] After leaving, space is removed and user switches to owned space
+- [ ] Owner sees share removed from share dialog

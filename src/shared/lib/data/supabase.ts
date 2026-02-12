@@ -928,7 +928,7 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
       // Get shares where the current user is the recipient
       const { data: shares, error: sharesError } = await supabase
         .from('space_shares')
-        .select('space_id, permission')
+        .select('id, space_id, permission')
         .eq('shared_with_id', user.id)
 
       if (sharesError || !shares || shares.length === 0) {
@@ -946,12 +946,16 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
         return { data: [], error: spacesError ? { message: spacesError.message, code: spacesError.code } : null }
       }
 
-      // Merge space data with permission
-      const permissionBySpaceId = new Map(shares.map(s => [s.space_id, s.permission]))
-      const sharedSpaces: SharedSpace[] = spacesData.map(space => ({
-        ...space,
-        permission: (permissionBySpaceId.get(space.id) ?? 'view') as SpaceSharePermission,
-      }))
+      // Merge space data with share info
+      const shareInfoBySpaceId = new Map(shares.map(s => [s.space_id, { share_id: s.id, permission: s.permission }]))
+      const sharedSpaces: SharedSpace[] = spacesData.map(space => {
+        const info = shareInfoBySpaceId.get(space.id)
+        return {
+          ...space,
+          share_id: info?.share_id ?? '',
+          permission: (info?.permission ?? 'view') as SpaceSharePermission,
+        }
+      })
 
       return { data: sharedSpaces, error: null }
     },

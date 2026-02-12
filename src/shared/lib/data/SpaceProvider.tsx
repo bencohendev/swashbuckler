@@ -14,6 +14,7 @@ interface SpaceContextValue {
   space: Space | null
   spaces: Space[]
   switchSpace: (id: string) => void
+  leaveSpace: (spaceId: string) => Promise<void>
   isLoading: boolean
   sharedPermission: SpaceSharePermission | null
 }
@@ -37,7 +38,7 @@ interface SpaceProviderProps {
 export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderProps) {
   const [ownedSpaces, setOwnedSpaces] = useState<Space[]>([])
   const [sharedSpaces, setSharedSpaces] = useState<Space[]>([])
-  const [permissionMap, setPermissionMap] = useState<Map<string, SpaceSharePermission>>(new Map())
+  const [shareInfoMap, setShareInfoMap] = useState<Map<string, { shareId: string; permission: SpaceSharePermission }>>(new Map())
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -81,12 +82,12 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
     // Load shared spaces for authenticated users
     let loadedShared: Space[] = []
-    const newPermissionMap = new Map<string, SpaceSharePermission>()
+    const newShareInfoMap = new Map<string, { shareId: string; permission: SpaceSharePermission }>()
     if (user) {
       const sharedResult = await sharingClient.getSharedSpaces()
       if (!sharedResult.error && sharedResult.data.length > 0) {
-        loadedShared = sharedResult.data.map(({ permission, ...space }) => {
-          newPermissionMap.set(space.id, permission)
+        loadedShared = sharedResult.data.map(({ share_id, permission, ...space }) => {
+          newShareInfoMap.set(space.id, { shareId: share_id, permission })
           return space
         })
       }
@@ -98,7 +99,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
     setOwnedSpaces(loadedSpaces)
     setSharedSpaces(loadedShared)
-    setPermissionMap(newPermissionMap)
+    setShareInfoMap(newShareInfoMap)
 
     const allSpaces = [...loadedSpaces, ...loadedShared]
 
@@ -140,18 +141,30 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     return spaces.find(s => s.id === currentSpaceId) ?? null
   }, [spaces, currentSpaceId])
 
+  const leaveSpace = useCallback(async (spaceId: string) => {
+    const info = shareInfoMap.get(spaceId)
+    if (!info) return
+    await sharingClient.deleteShare(info.shareId)
+    emit('spaceShares')
+    // If leaving the current space, switch to first owned space
+    if (spaceId === currentSpaceId && ownedSpaces.length > 0) {
+      switchSpace(ownedSpaces[0].id)
+    }
+  }, [shareInfoMap, sharingClient, currentSpaceId, ownedSpaces, switchSpace])
+
   const sharedPermission = useMemo(() => {
     if (!currentSpaceId) return null
-    return permissionMap.get(currentSpaceId) ?? null
-  }, [currentSpaceId, permissionMap])
+    return shareInfoMap.get(currentSpaceId)?.permission ?? null
+  }, [currentSpaceId, shareInfoMap])
 
   const spaceContextValue: SpaceContextValue = useMemo(() => ({
     space: currentSpace,
     spaces,
     switchSpace,
+    leaveSpace,
     isLoading,
     sharedPermission,
-  }), [currentSpace, spaces, switchSpace, isLoading, sharedPermission])
+  }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission])
 
   const spacesContextValue: SpacesContextValue = useMemo(() => ({
     spaces,
