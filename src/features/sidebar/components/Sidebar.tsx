@@ -205,28 +205,30 @@ export function Sidebar() {
           </span>
         )}
       </div>
-      <nav className="space-y-1 p-2">
+      <div className="border-b">
+        <nav className="mx-auto flex max-w-40 items-center justify-between px-2 py-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
               key={item.href}
               href={item.href}
+              title={item.label}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "flex size-8 items-center justify-center rounded-md transition-colors",
                 isActive
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
               <item.icon className="size-4" />
-              {item.label}
             </Link>
           )
         })}
-      </nav>
+        </nav>
+      </div>
       <DndProvider backend={HTML5Backend}>
-        <div className="flex-1 space-y-3 overflow-auto border-t p-2">
+        <div className="flex-1 space-y-3 overflow-auto p-2">
           {isLoading ? (
             <div className="space-y-2 px-2">
               {[1, 2, 3].map((i) => (
