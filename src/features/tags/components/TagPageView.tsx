@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { TagIcon, TrashIcon } from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
 import { useTags } from '../hooks/useTags'
+import { TAG_COLORS } from './TagPicker'
 import { useDataClient, type DataObject } from '@/shared/lib/data'
 import { subscribe } from '@/shared/lib/data/events'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
@@ -17,7 +19,7 @@ interface TagPageViewProps {
 export function TagPageView({ name }: TagPageViewProps) {
   const router = useRouter()
   const dataClient = useDataClient()
-  const { tags, remove } = useTags()
+  const { tags, remove, update } = useTags()
   const { types } = useObjectTypes()
   const [objects, setObjects] = useState<DataObject[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -25,6 +27,7 @@ export function TagPageView({ name }: TagPageViewProps) {
 
   const tag = tags.find(t => t.name === name)
   const typeMap = new Map(types.map(t => [t.id, t]))
+  const [showColors, setShowColors] = useState(false)
 
   const fetchObjects = useCallback(async () => {
     if (!tag) return
@@ -63,22 +66,49 @@ export function TagPageView({ name }: TagPageViewProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b px-6 py-3">
-        <div className="flex items-center gap-2">
-          <TagIcon className="size-5 text-muted-foreground" />
-          <h1
-            className="text-lg font-semibold"
-            style={tag?.color ? { color: tag.color } : undefined}
-          >
-            {name}
-          </h1>
-          <span className="text-sm text-muted-foreground">
-            {objects.length} object{objects.length !== 1 ? 's' : ''}
-          </span>
+      <header className="border-b px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowColors(!showColors)}
+              className="rounded-md p-0.5 hover:bg-muted"
+              title="Change color"
+            >
+              <TagIcon
+                className="size-5"
+                style={{ color: tag?.color ?? 'var(--color-muted-foreground)' }}
+              />
+            </button>
+            <h1
+              className="text-lg font-semibold"
+              style={tag?.color ? { color: tag.color } : undefined}
+            >
+              {name}
+            </h1>
+            <span className="text-sm text-muted-foreground">
+              {objects.length} object{objects.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Delete tag">
+            <TrashIcon className="size-4" />
+          </Button>
         </div>
-        <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Delete tag">
-          <TrashIcon className="size-4" />
-        </Button>
+        {showColors && tag && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {TAG_COLORS.map(c => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => { update(tag.id, { color: c }); setShowColors(false) }}
+                className={cn(
+                  'size-6 rounded-full transition-transform hover:scale-110',
+                  tag.color === c && 'ring-2 ring-foreground ring-offset-1 ring-offset-background'
+                )}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+        )}
       </header>
       <main className="flex-1 overflow-auto p-4">
         {isLoading ? (

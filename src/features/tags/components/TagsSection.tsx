@@ -75,11 +75,17 @@ export function TagsSection() {
               href={`/tags/${encodeURIComponent(tag.name)}`}
               className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              <span
-                className="truncate"
-                style={tag.color ? { color: tag.color } : undefined}
-              >
-                {tag.name}
+              <span className="flex items-center gap-1.5 truncate">
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: tag.color ?? 'var(--color-muted-foreground)' }}
+                />
+                <span
+                  className="truncate"
+                  style={tag.color ? { color: tag.color } : undefined}
+                >
+                  {tag.name}
+                </span>
               </span>
               {tagCounts.has(tag.id) && (
                 <span className="text-xs text-muted-foreground/60">
