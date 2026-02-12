@@ -45,7 +45,7 @@ interface TypeIconProps {
 
 export function TypeIcon({ icon, className }: TypeIconProps) {
   if (isEmoji(icon)) {
-    return <span className={cn('text-base', className)}>{icon}</span>
+    return <span className="shrink-0 leading-none">{icon}</span>
   }
 
   const Icon = iconMap[icon] ?? FileIcon

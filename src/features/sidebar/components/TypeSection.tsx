@@ -125,7 +125,7 @@ export function TypeSection({
               </button>
               <button
                 onClick={() => router.push(`/types/${type.slug}`)}
-                className="flex items-center gap-1 hover:text-foreground"
+                className="flex items-center gap-1.5 hover:text-foreground"
               >
                 <TypeIcon icon={type.icon} className="size-3.5" />
                 <span>{type.plural_name}</span>
