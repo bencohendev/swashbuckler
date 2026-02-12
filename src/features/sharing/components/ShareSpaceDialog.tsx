@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { XIcon, UserPlusIcon, ShieldIcon, TrashIcon } from 'lucide-react'
+import { XIcon, UserPlusIcon, ShieldIcon, EyeOffIcon, ChevronDownIcon, TrashIcon } from 'lucide-react'
 import type { SpaceShare, SpaceSharePermission } from '@/shared/lib/data'
 import { useSpaceShares } from '../hooks/useSpaceShares'
 import { Button } from '@/shared/components/ui/Button'
@@ -122,10 +122,11 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                     <button
                       type="button"
                       onClick={() => setExpandedShareId(expandedShareId === share.id ? null : share.id)}
-                      className="text-muted-foreground hover:text-foreground"
-                      title="Manage exclusions"
+                      className="flex items-center gap-1 rounded border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
-                      <ShieldIcon className="size-4" />
+                      <EyeOffIcon className="size-3.5" />
+                      Exclusions
+                      <ChevronDownIcon className={`size-3.5 transition-transform ${expandedShareId === share.id ? 'rotate-180' : ''}`} />
                     </button>
                     <button
                       type="button"
