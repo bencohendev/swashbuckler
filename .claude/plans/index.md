@@ -39,6 +39,7 @@ src/
 │   ├── graph/
 │   ├── object-types/
 │   ├── objects/
+│   ├── pins/
 │   ├── search/
 │   ├── sharing/
 │   ├── tags/
@@ -72,7 +73,8 @@ Dual-storage architecture with a `DataClient` interface:
 011_sharing.sql             # per-space sharing model
 012_remove_builtins.sql     # remove built-in types, Page/Note as regular types
 013_tags.sql                # tags + object_tags tables
-014_realtime.sql            # enable realtime publication (planned)
+014_pins.sql                # per-user object pins
+015_realtime.sql            # enable realtime publication (planned)
 ```
 
 ## Feature Plans
@@ -89,8 +91,8 @@ Dual-storage architecture with a `DataClient` interface:
 | [Search](search.md) | Global search (Cmd+K) | Done |
 | [Spaces](spaces.md) | Multi-workspace support | Done |
 | [Trash](trash.md) | Soft delete with 30-day retention | Done |
-| [Dashboard](dashboard.md) | Favorites + Recent | Partial |
-| [Favorites](favorites.md) | Star individual objects | Not started |
+| [Dashboard](dashboard.md) | Pinned + Recent | Done |
+| [Pins](favorites.md) | Pin objects for quick access | Done |
 | [Theme](theme.md) | Light / Dark / System | Done |
 | [Quick Capture](quick-capture.md) | Floating button / hotkey | Done |
 | [Emoji](emoji.md) | Emoji picker for types, spaces, and objects | Done |

@@ -35,6 +35,8 @@ export type {
   UpdateTagInput,
   ObjectTag,
   TagsClient,
+  Pin,
+  PinsClient,
   DataResult,
   DataListResult,
   SearchOptions,
@@ -64,6 +66,7 @@ export {
   createTagSchema,
   updateTagSchema,
   objectTagSchema,
+  pinSchema,
 } from './types'
 
 export { createSupabaseDataClient } from './supabase'

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { FileIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { DataObject, ObjectType } from '@/shared/lib/data'
+import { PinButton } from '@/features/pins'
 
 interface ObjectItemProps {
   object: DataObject
@@ -18,7 +19,7 @@ export function ObjectItem({ object, objectType, isActive, compact }: ObjectItem
       <Link
         href={`/objects/${object.id}`}
         className={cn(
-          'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+          'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
           isActive
             ? 'bg-accent text-accent-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -29,7 +30,12 @@ export function ObjectItem({ object, objectType, isActive, compact }: ObjectItem
         ) : (
           <FileIcon className="size-4 shrink-0" />
         )}
-        <span className="truncate">{object.title}</span>
+        <span className="min-w-0 flex-1 truncate">{object.title}</span>
+        <PinButton
+          objectId={object.id}
+          size="sm"
+          className="shrink-0 opacity-0 group-hover:opacity-100"
+        />
       </Link>
     )
   }

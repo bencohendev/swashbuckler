@@ -9,6 +9,8 @@ import type {
   SpacesClient,
   SharingClient,
   TagsClient,
+  PinsClient,
+  Pin,
   Tag,
   ObjectTag,
   Space,
@@ -1080,6 +1082,81 @@ function createTagsClient(supabase: SupabaseClient, spaceId?: string): TagsClien
   }
 }
 
+function createPinsClient(supabase: SupabaseClient): PinsClient {
+  return {
+    async list(): Promise<DataListResult<Pin>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: [], error: { message: 'Not authenticated' } }
+      }
+
+      const { data, error } = await supabase
+        .from('pins')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Pin[], error: null }
+    },
+
+    async pin(objectId: string): Promise<DataResult<Pin>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Not authenticated' } }
+      }
+
+      const { data, error } = await supabase
+        .from('pins')
+        .upsert({ user_id: user.id, object_id: objectId }, { onConflict: 'user_id,object_id' })
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Pin, error: null }
+    },
+
+    async unpin(objectId: string): Promise<DataResult<void>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Not authenticated' } }
+      }
+
+      const { error } = await supabase
+        .from('pins')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('object_id', objectId)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async isPinned(objectId: string): Promise<boolean> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return false
+
+      const { data } = await supabase
+        .from('pins')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('object_id', objectId)
+        .maybeSingle()
+
+      return !!data
+    },
+  }
+}
+
 export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: string): DataClient {
   return {
     objects: createObjectsClient(supabase, spaceId),
@@ -1089,6 +1166,7 @@ export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: str
     spaces: createSpacesClient(supabase),
     sharing: createSharingClient(supabase),
     tags: createTagsClient(supabase, spaceId),
+    pins: createPinsClient(supabase),
     isLocal: false,
   }
 }

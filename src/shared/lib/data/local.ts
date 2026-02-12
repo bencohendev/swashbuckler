@@ -8,6 +8,8 @@ import type {
   SpacesClient,
   SharingClient,
   TagsClient,
+  PinsClient,
+  Pin,
   Space,
   DataObject,
   ObjectType,
@@ -101,6 +103,7 @@ class SwashbucklerDB extends Dexie {
   spaces!: EntityTable<Space, 'id'>
   tags!: EntityTable<Tag, 'id'>
   objectTags!: EntityTable<ObjectTag, 'id'>
+  pins!: EntityTable<Pin, 'id'>
 
   constructor() {
     super('swashbuckler')
@@ -267,6 +270,18 @@ class SwashbucklerDB extends Dexie {
       spaces: 'id, name, owner_id, created_at',
       tags: 'id, name, space_id',
       objectTags: 'id, object_id, tag_id',
+    })
+
+    // Version 9: Add pins table
+    this.version(9).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id',
+      pins: 'id, object_id',
     })
   }
 }
@@ -559,6 +574,13 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           if (relatedTags.length > 0) {
             await database.objectTags.bulkDelete(relatedTags.map(ot => ot.id))
           }
+          // Cascade: delete pins referencing this object
+          const relatedPins = await database.pins
+            .filter(p => p.object_id === id)
+            .toArray()
+          if (relatedPins.length > 0) {
+            await database.pins.bulkDelete(relatedPins.map(p => p.id))
+          }
         } else {
           const existing = await database.objects.get(id)
           if (existing) {
@@ -636,6 +658,13 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           .toArray()
         if (relatedTags.length > 0) {
           await database.objectTags.bulkDelete(relatedTags.map(ot => ot.id))
+        }
+        // Cascade: delete pins referencing expired objects
+        const relatedPins = await database.pins
+          .filter(p => expiredIdSet.has(p.object_id))
+          .toArray()
+        if (relatedPins.length > 0) {
+          await database.pins.bulkDelete(relatedPins.map(p => p.id))
         }
 
         await database.objects.bulkDelete(expiredIds)
@@ -1079,6 +1108,14 @@ function createLocalSpacesClient(): SpacesClient {
         // Delete all objects, types, and templates in this space
         const objectsInSpace = await database.objects.filter(o => o.space_id === id).toArray()
         if (objectsInSpace.length > 0) {
+          const objectIds = new Set(objectsInSpace.map(o => o.id))
+          // Cascade: delete pins referencing objects in this space
+          const relatedPins = await database.pins
+            .filter(p => objectIds.has(p.object_id))
+            .toArray()
+          if (relatedPins.length > 0) {
+            await database.pins.bulkDelete(relatedPins.map(p => p.id))
+          }
           await database.objects.bulkDelete(objectsInSpace.map(o => o.id))
         }
         const typesInSpace = await database.objectTypes.filter(t => t.space_id === id).toArray()
@@ -1278,6 +1315,72 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
   }
 }
 
+function createLocalPinsClient(): PinsClient {
+  return {
+    async list(): Promise<DataListResult<Pin>> {
+      try {
+        const database = getDB()
+        const results = await database.pins.toArray()
+        results.sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+        return { data: results, error: null }
+      } catch (error) {
+        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async pin(objectId: string): Promise<DataResult<Pin>> {
+      try {
+        const database = getDB()
+        // Check for duplicate
+        const existing = await database.pins
+          .filter(p => p.object_id === objectId)
+          .first()
+        if (existing) return { data: existing, error: null }
+
+        const pin: Pin = {
+          id: generateUUID(),
+          user_id: null,
+          object_id: objectId,
+          created_at: new Date().toISOString(),
+        }
+        await database.pins.add(pin)
+        return { data: pin, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async unpin(objectId: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        const match = await database.pins
+          .filter(p => p.object_id === objectId)
+          .first()
+        if (match) {
+          await database.pins.delete(match.id)
+        }
+        return { data: null, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async isPinned(objectId: string): Promise<boolean> {
+      try {
+        const database = getDB()
+        const match = await database.pins
+          .filter(p => p.object_id === objectId)
+          .first()
+        return !!match
+      } catch {
+        return false
+      }
+    },
+  }
+}
+
 function createNoOpSharingClient(): SharingClient {
   const notAvailable = { message: 'Sharing is not available in guest mode' }
   return {
@@ -1303,6 +1406,7 @@ export function createLocalDataClient(spaceId?: string): DataClient {
     spaces: createLocalSpacesClient(),
     sharing: createNoOpSharingClient(),
     tags: createLocalTagsClient(spaceId),
+    pins: createLocalPinsClient(),
     isLocal: true,
   }
 }
@@ -1316,6 +1420,7 @@ export async function clearLocalData(): Promise<void> {
   await database.spaces.clear()
   await database.tags.clear()
   await database.objectTags.clear()
+  await database.pins.clear()
   // Re-seed default types (Page only)
   await database.objectTypes.bulkAdd(DEFAULT_TYPES)
 }
@@ -1328,6 +1433,7 @@ export async function exportLocalData(): Promise<{
   spaces: Space[]
   tags: Tag[]
   objectTags: ObjectTag[]
+  pins: Pin[]
 }> {
   const database = getDB()
   const objects = await database.objects.toArray()
@@ -1337,7 +1443,8 @@ export async function exportLocalData(): Promise<{
   const spaces = await database.spaces.toArray()
   const tags = await database.tags.toArray()
   const objectTags = await database.objectTags.toArray()
-  return { objects, objectTypes, templates, objectRelations, spaces, tags, objectTags }
+  const pins = await database.pins.toArray()
+  return { objects, objectTypes, templates, objectRelations, spaces, tags, objectTags, pins }
 }
 
 export async function ensureLocalDefaultSpace(): Promise<Space> {

@@ -14,6 +14,7 @@ import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { useSpacePermission, useExclusionFilter } from "@/features/sharing"
 import { TagsSection } from "@/features/tags"
+import { PinnedSection } from "@/features/pins"
 import { Button } from "@/shared/components/ui/Button"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
@@ -234,6 +235,7 @@ export function Sidebar() {
             </div>
           ) : (
             <>
+              <PinnedSection />
               {filteredOrderedTypes.map((type, index) => (
                 <DraggableTypeSection
                   key={type.id}

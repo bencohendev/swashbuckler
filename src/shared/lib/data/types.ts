@@ -385,6 +385,24 @@ export interface SharingClient {
   getSharedSpaces(): Promise<DataListResult<SharedSpace>>
 }
 
+// --- Pin schemas ---
+
+export const pinSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid().nullable(),
+  object_id: z.string().uuid(),
+  created_at: z.string().datetime(),
+})
+
+export type Pin = z.infer<typeof pinSchema>
+
+export interface PinsClient {
+  list(): Promise<DataListResult<Pin>>
+  pin(objectId: string): Promise<DataResult<Pin>>
+  unpin(objectId: string): Promise<DataResult<void>>
+  isPinned(objectId: string): Promise<boolean>
+}
+
 // Data client interface (with sharing)
 export interface DataClient {
   objects: ObjectsClient
@@ -394,6 +412,7 @@ export interface DataClient {
   spaces: SpacesClient
   sharing: SharingClient
   tags: TagsClient
+  pins: PinsClient
   isLocal: boolean
 }
 

@@ -22,6 +22,7 @@ import {
 } from '@/shared/components/ui/DropdownMenu'
 import { Editor } from '@/features/editor'
 import { TagPicker } from '@/features/tags'
+import { PinButton } from '@/features/pins'
 import { PropertyFields } from './PropertyFields'
 
 interface ObjectEditorProps {
@@ -157,6 +158,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           )}
         </div>
         <div className="flex items-center gap-1">
+          <PinButton objectId={id} />
           {canEdit && (
             <>
               <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash">
