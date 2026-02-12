@@ -90,7 +90,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Favorites](favorites.md) | Star individual objects | Not started |
 | [Theme](theme.md) | Light / Dark / System | Partial |
 | [Quick Capture](quick-capture.md) | Floating button / hotkey | Not started |
-| [Emoji](emoji.md) | Emoji picker for type & space icons | Not started |
+| [Emoji](emoji.md) | Emoji picker for types, spaces, and objects | Done |
 | [Tags](tags.md) | Global cross-type tagging | Not started |
 | [Type Pages](type-pages.md) | Table view per object type | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |

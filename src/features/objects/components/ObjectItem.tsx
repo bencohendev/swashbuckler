@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { FileIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { DataObject, ObjectType } from '@/shared/lib/data'
-import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 
 interface ObjectItemProps {
   object: DataObject
@@ -27,8 +26,6 @@ export function ObjectItem({ object, objectType, isActive, compact }: ObjectItem
       >
         {object.icon ? (
           <span className="text-base">{object.icon}</span>
-        ) : objectType ? (
-          <TypeIcon icon={objectType.icon} className="size-4 shrink-0" />
         ) : (
           <FileIcon className="size-4 shrink-0" />
         )}
@@ -49,8 +46,6 @@ export function ObjectItem({ object, objectType, isActive, compact }: ObjectItem
         <div className="flex size-10 items-center justify-center rounded-lg bg-muted text-lg">
           {object.icon ? (
             <span>{object.icon}</span>
-          ) : objectType ? (
-            <TypeIcon icon={objectType.icon} className="size-5" />
           ) : (
             <FileIcon className="size-5" />
           )}

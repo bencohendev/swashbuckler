@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrashIcon, MoreHorizontalIcon, CopyIcon } from 'lucide-react'
+import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
@@ -11,6 +11,7 @@ import { extractMentionIds, LinkedObjects } from '@/features/relations'
 import { useDataClient } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { useSpacePermission, useExclusionFilter } from '@/features/sharing'
+import { EmojiPicker } from '@/shared/components/EmojiPicker'
 import { Button } from '@/shared/components/ui/Button'
 import {
   DropdownMenu,
@@ -64,6 +65,10 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     await dataClient.relations.syncMentions(id, mentionIds)
     emit('objectRelations')
   }, [update, dataClient, id])
+
+  const handleIconChange = useCallback(async (emoji: string) => {
+    await update({ icon: emoji })
+  }, [update])
 
   const handlePropertyChange = useCallback(async (fieldId: string, value: unknown) => {
     if (!object) return
@@ -129,7 +134,19 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-center gap-2">
-          {object.icon && <span className="text-2xl">{object.icon}</span>}
+          {canEdit ? (
+            <EmojiPicker value={object.icon ?? ''} onChange={handleIconChange}>
+              <button
+                type="button"
+                className="flex size-8 items-center justify-center rounded-md text-2xl transition-colors hover:bg-muted"
+                title="Change icon"
+              >
+                {object.icon ?? <SmilePlusIcon className="size-5 text-muted-foreground" />}
+              </button>
+            </EmojiPicker>
+          ) : (
+            object.icon && <span className="text-2xl">{object.icon}</span>
+          )}
           <span className="text-sm text-muted-foreground">{objectType?.name ?? 'Object'}</span>
           {!canEdit && (
             <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">View only</span>
