@@ -236,6 +236,7 @@ export function Sidebar() {
           ) : (
             <>
               <PinnedSection />
+              <hr className="border-border" />
               {filteredOrderedTypes.map((type, index) => (
                 <DraggableTypeSection
                   key={type.id}
@@ -250,7 +251,6 @@ export function Sidebar() {
                   onDrop={handleDropType}
                 />
               ))}
-              <TagsSection />
               {isSpaceOwner && (
                 <Button
                   variant="ghost"
@@ -262,6 +262,8 @@ export function Sidebar() {
                   New Type
                 </Button>
               )}
+              <hr className="border-border" />
+              <TagsSection />
             </>
           )}
         </div>
