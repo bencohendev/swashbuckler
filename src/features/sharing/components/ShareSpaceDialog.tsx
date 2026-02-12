@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { XIcon, UserPlusIcon, ShieldIcon, EyeOffIcon, ChevronDownIcon, TrashIcon } from 'lucide-react'
+import Link from 'next/link'
+import { XIcon, UserPlusIcon, ShieldIcon, EyeOffIcon, ChevronDownIcon, TrashIcon, SettingsIcon } from 'lucide-react'
 import type { SpaceShare, SpaceSharePermission } from '@/shared/lib/data'
 import { useSpaceShares } from '../hooks/useSpaceShares'
 import { Button } from '@/shared/components/ui/Button'
@@ -150,6 +151,17 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                 </div>
               ))
             )}
+          </div>
+
+          <div className="border-t pt-4">
+            <Link
+              href="/settings/sharing"
+              onClick={() => onOpenChange(false)}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <SettingsIcon className="size-4" />
+              Manage sharing settings
+            </Link>
           </div>
         </div>
       </div>

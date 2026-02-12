@@ -57,7 +57,7 @@ CREATE TABLE share_exclusions (
 ## Implementation
 
 - `src/app/(main)/settings/sharing/page.tsx` — sharing settings page with space-wide exclusions section above per-user shares list
-- `src/features/sharing/components/ShareSpaceDialog.tsx` — share dialog (legacy, no longer used by settings page)
+- `src/features/sharing/components/ShareSpaceDialog.tsx` — share dialog with invite form, per-user exclusions, and footer link to `/settings/sharing`
 - `src/features/sharing/components/ExclusionManager.tsx` — expandable type sections with nested checkboxes (reused for both per-user and space-wide exclusions)
 - `src/features/sharing/hooks/useSpaceShares.ts` — share management, including `loadSpaceExclusions` and `addSpaceExclusion`
 - `src/features/sharing/hooks/useSpacePermission.ts` — permission checking
