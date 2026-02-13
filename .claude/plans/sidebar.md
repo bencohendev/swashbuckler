@@ -50,10 +50,16 @@ Right-click context menu on type sections in the sidebar.
 
 ## Loading Behavior
 
-- No all-or-nothing skeleton gate — sections render progressively as their data arrives
-- TanStack Query caching means subsequent visits render instantly from cache
+- On initial load (before any TanStack Query cache), a `SidebarSkeleton` renders in place of the real content — skeleton mimics section headers + indented item rows to prevent content jumps
+- `sidebarLoading` is derived from `objectsLoading || typesLoading || pinsLoading || tagsLoading`
+- `DraggableTypeSection` passes `objectsLoading` through to `TypeSection.isLoading` for per-section ObjectList skeletons
+- TanStack Query caching means subsequent visits render instantly from cache (no skeleton)
 - `<hr>` separators only render when the preceding section has visible content (no stacked dividers)
 - Pinned, Recent, and Tags sections return `null` when empty (separators guard against layout jumps)
+
+## Empty State
+
+- When `filteredOrderedTypes.length === 0` and not loading, shows centered "No types yet" message with hint text above the "New Type" button
 
 ## Verification
 

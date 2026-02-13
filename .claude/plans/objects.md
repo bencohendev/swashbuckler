@@ -93,6 +93,11 @@ All types are regular user-owned, per-space records. There are no global built-i
 - `src/shared/lib/data/types.ts` — `DataClient` interface
 - `src/shared/lib/data/supabase.ts` + `local.ts` — dual storage implementations
 
+## Loading State
+
+- ObjectEditor shows a structural skeleton matching the real layout (header with icon/type placeholders + action button placeholders, main area with title + body text line placeholders) to prevent content jumps when data loads
+- `ObjectList` supports an `emptyState` prop for custom empty state JSX (used by PinnedObjects, RecentObjects)
+
 ## Linking / Relations
 
 - `extractMentionIds()` walks Plate content tree for mention nodes

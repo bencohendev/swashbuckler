@@ -122,6 +122,7 @@ Add `tags: TagsClient` to `DataClient` interface.
 - Shows all entries with that tag, cross-type
 - Reuse `ObjectList` component
 - Header with tag name, color, entry count, and edit/delete actions
+- Empty state: centered TagIcon + "No entries with this tag" + hint about tag picker
 
 ## Integration
 - `src/features/objects/components/ObjectEditor.tsx` — add `<TagPicker objectId={id} />`

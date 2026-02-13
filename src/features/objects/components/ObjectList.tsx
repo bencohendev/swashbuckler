@@ -9,6 +9,7 @@ interface ObjectListProps {
   objectType?: ObjectType
   isLoading?: boolean
   emptyMessage?: string
+  emptyState?: React.ReactNode
   compact?: boolean
 }
 
@@ -17,6 +18,7 @@ export function ObjectList({
   objectType,
   isLoading,
   emptyMessage = 'No entries yet',
+  emptyState,
   compact,
 }: ObjectListProps) {
   const pathname = usePathname()
@@ -38,6 +40,7 @@ export function ObjectList({
   }
 
   if (objects.length === 0) {
+    if (emptyState) return <>{emptyState}</>
     return (
       <p className="text-sm text-muted-foreground">{emptyMessage}</p>
     )

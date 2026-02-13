@@ -39,6 +39,7 @@ function DraggableTypeSection({
   index,
   type,
   objects,
+  isLoading,
   hideCreateButton,
   onCreateBlank,
   onSelectTemplate,
@@ -49,6 +50,7 @@ function DraggableTypeSection({
   index: number
   type: ObjectType
   objects: DataObject[]
+  isLoading: boolean
   hideCreateButton?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
@@ -103,7 +105,7 @@ function DraggableTypeSection({
       <TypeSection
         type={type}
         objects={objects}
-        isLoading={false}
+        isLoading={isLoading}
         isDragging={isDragging}
         hideCreateButton={hideCreateButton}
         onCreateBlank={onCreateBlank}
@@ -122,15 +124,16 @@ export function Sidebar() {
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects } = useExclusionFilter()
-  const { objects, create } = useObjects({
+  const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
   })
   // All non-deleted objects — shared with PinnedSection + RecentSection via props
   const { objects: allObjects } = useObjects({ isDeleted: false })
-  const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
-  const { pinnedIds } = usePins()
-  const { tags } = useTags()
+  const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
+  const { pinnedIds, isLoading: pinsLoading } = usePins()
+  const { tags, isLoading: tagsLoading } = useTags()
+  const sidebarLoading = objectsLoading || typesLoading || pinsLoading || tagsLoading
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
   const [variableDialogOpen, setVariableDialogOpen] = useState(false)
@@ -331,50 +334,106 @@ export function Sidebar() {
             "w-64 space-y-3 p-2 transition-transform duration-200",
             collapsed ? "-translate-x-full" : "translate-x-0"
           )}>
-            <PinnedSection pinnedIds={pinnedIds} objects={allObjects} />
-            {hasPinnedContent && <hr className="border-border" />}
-            {filteredOrderedTypes.map((type, index) => (
-              <DraggableTypeSection
-                key={type.id}
-                index={index}
-                type={type}
-                objects={objectsByType.get(type.id) ?? []}
-                hideCreateButton={!canEditSpace}
-                onCreateBlank={handleCreateBlank}
-                onSelectTemplate={handleSelectTemplate}
-                onDelete={removeType}
-                onMove={handleMoveType}
-                onDrop={handleDropType}
-              />
-            ))}
-            {isSpaceOwner && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start gap-1 text-xs text-muted-foreground"
-                onClick={() => setCreateTypeOpen(true)}
-              >
-                <PlusIcon className="size-3" />
-                New Type
-              </Button>
+            {sidebarLoading ? (
+              <>
+                {/* Skeleton section 1 */}
+                <div className="px-2">
+                  <div className="mb-1 flex items-center gap-1">
+                    <div className="size-3 animate-pulse rounded bg-muted" />
+                    <div className="size-3.5 animate-pulse rounded bg-muted" />
+                    <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+                  </div>
+                  <div className="space-y-0.5 pl-8">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
+                    ))}
+                  </div>
+                </div>
+                <hr className="border-border" />
+                {/* Skeleton section 2 */}
+                <div className="px-2">
+                  <div className="mb-1 flex items-center gap-1">
+                    <div className="size-3 animate-pulse rounded bg-muted" />
+                    <div className="size-3.5 animate-pulse rounded bg-muted" />
+                    <div className="h-3 w-12 animate-pulse rounded bg-muted" />
+                  </div>
+                  <div className="space-y-0.5 pl-8">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
+                    ))}
+                  </div>
+                </div>
+                <hr className="border-border" />
+                {/* Skeleton recent section */}
+                <div className="px-2">
+                  <div className="mb-1 flex items-center gap-1">
+                    <div className="size-3 animate-pulse rounded bg-muted" />
+                    <div className="size-3.5 animate-pulse rounded bg-muted" />
+                    <div className="h-3 w-14 animate-pulse rounded bg-muted" />
+                  </div>
+                  <div className="space-y-0.5 pl-8">
+                    {[1, 2].map(i => (
+                      <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <PinnedSection pinnedIds={pinnedIds} objects={allObjects} />
+                {hasPinnedContent && <hr className="border-border" />}
+                {filteredOrderedTypes.length === 0 ? (
+                  <div className="px-4 py-6 text-center">
+                    <p className="text-sm font-medium text-muted-foreground">No types yet</p>
+                    <p className="mt-1 text-xs text-muted-foreground/70">Create a type to start organizing your entries</p>
+                  </div>
+                ) : (
+                  filteredOrderedTypes.map((type, index) => (
+                    <DraggableTypeSection
+                      key={type.id}
+                      index={index}
+                      type={type}
+                      objects={objectsByType.get(type.id) ?? []}
+                      isLoading={objectsLoading}
+                      hideCreateButton={!canEditSpace}
+                      onCreateBlank={handleCreateBlank}
+                      onSelectTemplate={handleSelectTemplate}
+                      onDelete={removeType}
+                      onMove={handleMoveType}
+                      onDrop={handleDropType}
+                    />
+                  ))
+                )}
+                {isSpaceOwner && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                    onClick={() => setCreateTypeOpen(true)}
+                  >
+                    <PlusIcon className="size-3" />
+                    New Type
+                  </Button>
+                )}
+                {hasRecentContent && <hr className="border-border" />}
+                <RecentSection objects={allObjects} />
+                {hasTagsContent && <hr className="border-border" />}
+                <TagsSection tags={tags} />
+                <hr className="border-border" />
+                <Link
+                  href="/trash"
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    pathname === "/trash"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <TrashIcon className="size-4" />
+                  Trash
+                </Link>
+              </>
             )}
-            {hasRecentContent && <hr className="border-border" />}
-            <RecentSection objects={allObjects} />
-            {hasTagsContent && <hr className="border-border" />}
-            <TagsSection tags={tags} />
-            <hr className="border-border" />
-            <Link
-              href="/trash"
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                pathname === "/trash"
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <TrashIcon className="size-4" />
-              Trash
-            </Link>
           </div>
         </div>
       </DndProvider>

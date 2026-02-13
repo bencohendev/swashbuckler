@@ -109,9 +109,25 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
 
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-4 p-6">
-        <div className="h-10 w-2/3 rounded bg-muted" />
-        <div className="h-4 w-1/3 rounded bg-muted" />
+      <div className="flex h-full flex-col animate-pulse">
+        <header className="flex items-center justify-between border-b px-6 py-3">
+          <div className="flex items-center gap-2">
+            <div className="size-8 rounded-md bg-muted" />
+            <div className="h-4 w-16 rounded bg-muted" />
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="size-8 rounded-md bg-muted" />
+            <div className="size-8 rounded-md bg-muted" />
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto p-6">
+          <div className="h-9 w-2/3 rounded bg-muted" />
+          <div className="mt-6 space-y-3">
+            <div className="h-4 w-full rounded bg-muted" />
+            <div className="h-4 w-5/6 rounded bg-muted" />
+            <div className="h-4 w-4/6 rounded bg-muted" />
+          </div>
+        </main>
       </div>
     )
   }

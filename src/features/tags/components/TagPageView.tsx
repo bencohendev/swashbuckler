@@ -110,7 +110,11 @@ export function TagPageView({ name }: TagPageViewProps) {
             ))}
           </div>
         ) : objects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No entries with this tag.</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <TagIcon className="size-10 text-muted-foreground/40" />
+            <p className="mt-3 text-sm font-medium text-muted-foreground">No entries with this tag</p>
+            <p className="mt-1 text-xs text-muted-foreground/70">Use the tag picker on any entry to add this tag</p>
+          </div>
         ) : (
           <div className="space-y-2">
             {objects.map(obj => (

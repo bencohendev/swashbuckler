@@ -1,5 +1,6 @@
 'use client'
 
+import { FileTextIcon } from 'lucide-react'
 import { useObjects } from '../hooks/useObjects'
 import { ObjectList } from './ObjectList'
 
@@ -13,7 +14,13 @@ export function RecentObjects() {
     <ObjectList
       objects={objects}
       isLoading={isLoading}
-      emptyMessage="No recent entries. Create your first page to get started."
+      emptyState={
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <FileTextIcon className="size-8 text-muted-foreground/40" />
+          <p className="mt-2 text-sm font-medium text-muted-foreground">No entries yet</p>
+          <p className="mt-1 text-xs text-muted-foreground/70">Create your first page to get started</p>
+        </div>
+      }
     />
   )
 }
