@@ -48,6 +48,13 @@ Right-click context menu on type sections in the sidebar.
   - **Delete type** (destructive) → `window.confirm()` then `objectTypes.delete(id)`
 - For built-in types: only shows "View all"
 
+## Loading Behavior
+
+- No all-or-nothing skeleton gate — sections render progressively as their data arrives
+- TanStack Query caching means subsequent visits render instantly from cache
+- `<hr>` separators only render when the preceding section has visible content (no stacked dividers)
+- Pinned, Recent, and Tags sections return `null` when empty (separators guard against layout jumps)
+
 ## Verification
 
 - [x] Hierarchical tree renders entries by type

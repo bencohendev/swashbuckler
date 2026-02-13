@@ -14,8 +14,8 @@ import { useObjects } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { useSpacePermission, useExclusionFilter } from "@/features/sharing"
-import { TagsSection } from "@/features/tags"
-import { PinnedSection } from "@/features/pins"
+import { useTags, TagsSection } from "@/features/tags"
+import { usePins, PinnedSection } from "@/features/pins"
 import { VariablePromptDialog } from "@/features/templates/components/VariablePromptDialog"
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
@@ -122,11 +122,15 @@ export function Sidebar() {
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects } = useExclusionFilter()
-  const { objects, isLoading: objectsLoading, create } = useObjects({
+  const { objects, create } = useObjects({
     parentId: null,
     isDeleted: false,
   })
-  const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
+  // All non-deleted objects — shared with PinnedSection + RecentSection via props
+  const { objects: allObjects } = useObjects({ isDeleted: false })
+  const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
+  const { pinnedIds } = usePins()
+  const { tags } = useTags()
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
   const [variableDialogOpen, setVariableDialogOpen] = useState(false)
@@ -247,7 +251,10 @@ export function Sidebar() {
     }
   }
 
-  const isLoading = objectsLoading || typesLoading
+  // Determine which sections have visible content for conditional separators
+  const hasPinnedContent = pinnedIds.size > 0 && allObjects.some(obj => pinnedIds.has(obj.id))
+  const hasRecentContent = allObjects.length > 0
+  const hasTagsContent = tags.length > 0
 
   return (
     <aside
@@ -324,60 +331,50 @@ export function Sidebar() {
             "w-64 space-y-3 p-2 transition-transform duration-200",
             collapsed ? "-translate-x-full" : "translate-x-0"
           )}>
-            {isLoading ? (
-              <div className="space-y-2 px-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-8 animate-pulse rounded-md bg-muted" />
-                ))}
-              </div>
-            ) : (
-              <>
-                <PinnedSection />
-                <hr className="border-border" />
-                {filteredOrderedTypes.map((type, index) => (
-                  <DraggableTypeSection
-                    key={type.id}
-                    index={index}
-                    type={type}
-                    objects={objectsByType.get(type.id) ?? []}
-                    hideCreateButton={!canEditSpace}
-                    onCreateBlank={handleCreateBlank}
-                    onSelectTemplate={handleSelectTemplate}
-                    onDelete={removeType}
-                    onMove={handleMoveType}
-                    onDrop={handleDropType}
-                  />
-                ))}
-                {isSpaceOwner && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start gap-1 text-xs text-muted-foreground"
-                    onClick={() => setCreateTypeOpen(true)}
-                  >
-                    <PlusIcon className="size-3" />
-                    New Type
-                  </Button>
-                )}
-                <hr className="border-border" />
-                <RecentSection />
-                <hr className="border-border" />
-                <TagsSection />
-                <hr className="border-border" />
-                <Link
-                  href="/trash"
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                    pathname === "/trash"
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <TrashIcon className="size-4" />
-                  Trash
-                </Link>
-              </>
+            <PinnedSection pinnedIds={pinnedIds} objects={allObjects} />
+            {hasPinnedContent && <hr className="border-border" />}
+            {filteredOrderedTypes.map((type, index) => (
+              <DraggableTypeSection
+                key={type.id}
+                index={index}
+                type={type}
+                objects={objectsByType.get(type.id) ?? []}
+                hideCreateButton={!canEditSpace}
+                onCreateBlank={handleCreateBlank}
+                onSelectTemplate={handleSelectTemplate}
+                onDelete={removeType}
+                onMove={handleMoveType}
+                onDrop={handleDropType}
+              />
+            ))}
+            {isSpaceOwner && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                onClick={() => setCreateTypeOpen(true)}
+              >
+                <PlusIcon className="size-3" />
+                New Type
+              </Button>
             )}
+            {hasRecentContent && <hr className="border-border" />}
+            <RecentSection objects={allObjects} />
+            {hasTagsContent && <hr className="border-border" />}
+            <TagsSection tags={tags} />
+            <hr className="border-border" />
+            <Link
+              href="/trash"
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                pathname === "/trash"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              )}
+            >
+              <TrashIcon className="size-4" />
+              Trash
+            </Link>
           </div>
         </div>
       </DndProvider>

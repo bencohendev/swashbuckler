@@ -1,13 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   useDataClient,
+  useSpaceId,
   type ObjectType,
   type CreateObjectTypeInput,
   type UpdateObjectTypeInput,
 } from '@/shared/lib/data'
-import { emit, subscribe } from '@/shared/lib/data/events'
+import { emit } from '@/shared/lib/data/events'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
+
+const EMPTY_TYPES: ObjectType[] = []
 
 interface UseObjectTypesReturn {
   types: ObjectType[]
@@ -21,82 +26,47 @@ interface UseObjectTypesReturn {
 
 export function useObjectTypes(): UseObjectTypesReturn {
   const dataClient = useDataClient()
-  const [types, setTypes] = useState<ObjectType[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const isMounted = useRef(true)
+  const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
-  const hasFetched = useRef(false)
+  const { data, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.objectTypes.list(spaceId ?? undefined),
+    queryFn: async () => {
+      const result = await dataClient.objectTypes.list()
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+  })
 
-  const fetchTypes = useCallback(async () => {
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-    setError(null)
-
-    const result = await dataClient.objectTypes.list()
-
-    if (!isMounted.current) return
-
-    if (result.error) {
-      setError(result.error.message)
-      setTypes([])
-    } else {
-      setTypes(result.data)
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    fetchTypes()
-    const unsubscribe = subscribe('objectTypes', fetchTypes)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchTypes])
+  const refetch = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.objectTypes.all(spaceId ?? undefined) })
+  }, [queryClient, spaceId])
 
   const create = useCallback(async (input: CreateObjectTypeInput): Promise<ObjectType | null> => {
     const result = await dataClient.objectTypes.create(input)
-
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
+    if (result.error) return null
     emit('objectTypes')
     return result.data
   }, [dataClient])
 
   const update = useCallback(async (id: string, input: UpdateObjectTypeInput): Promise<ObjectType | null> => {
     const result = await dataClient.objectTypes.update(id, input)
-
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
+    if (result.error) return null
     emit('objectTypes')
     return result.data
   }, [dataClient])
 
   const remove = useCallback(async (id: string): Promise<void> => {
     const result = await dataClient.objectTypes.delete(id)
-
-    if (result.error) {
-      setError(result.error.message)
-      return
-    }
-
+    if (result.error) return
     emit('objectTypes')
   }, [dataClient])
 
   return {
-    types,
+    types: data ?? EMPTY_TYPES,
     isLoading,
-    error,
-    refetch: fetchTypes,
+    error: queryError?.message ?? null,
+    refetch,
     create,
     update,
     remove,
@@ -105,52 +75,28 @@ export function useObjectTypes(): UseObjectTypesReturn {
 
 export function useObjectType(id: string | null) {
   const dataClient = useDataClient()
-  const [objectType, setObjectType] = useState<ObjectType | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const isMounted = useRef(true)
+  const queryClient = useQueryClient()
 
-  const hasFetched = useRef(false)
+  const { data: objectType, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.objectTypes.detail(id!),
+    queryFn: async () => {
+      const result = await dataClient.objectTypes.get(id!)
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+    enabled: !!id,
+  })
 
-  const fetchType = useCallback(async () => {
-    if (!id) {
-      setObjectType(null)
-      setIsLoading(false)
-      return
+  const refetch = useCallback(async () => {
+    if (id) {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.objectTypes.detail(id) })
     }
-
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-    setError(null)
-
-    const result = await dataClient.objectTypes.get(id)
-
-    if (!isMounted.current) return
-
-    if (result.error) {
-      setError(result.error.message)
-      setObjectType(null)
-    } else {
-      setObjectType(result.data)
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient, id])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    fetchType()
-    const unsubscribe = subscribe('objectTypes', fetchType)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchType])
+  }, [queryClient, id])
 
   return {
-    objectType,
+    objectType: objectType ?? null,
     isLoading,
-    error,
-    refetch: fetchType,
+    error: queryError?.message ?? null,
+    refetch,
   }
 }

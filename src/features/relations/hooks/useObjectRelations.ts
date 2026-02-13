@@ -1,13 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDataClient } from '@/shared/lib/data'
 import type { ObjectRelation, DataObject } from '@/shared/lib/data'
-import { emit, subscribe } from '@/shared/lib/data/events'
+import { emit } from '@/shared/lib/data/events'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
 
 export interface EnrichedRelation extends ObjectRelation {
   linkedObject: Pick<DataObject, 'id' | 'title' | 'icon' | 'type_id'> | null
 }
+
+const EMPTY_RELATIONS: EnrichedRelation[] = []
 
 interface UseObjectRelationsReturn {
   relations: EnrichedRelation[]
@@ -20,83 +24,55 @@ interface UseObjectRelationsReturn {
 
 export function useObjectRelations(objectId: string | null): UseObjectRelationsReturn {
   const dataClient = useDataClient()
-  const [relations, setRelations] = useState<EnrichedRelation[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const isMounted = useRef(true)
-  const hasFetched = useRef(false)
+  const queryClient = useQueryClient()
 
-  const fetchRelations = useCallback(async () => {
-    if (!objectId) {
-      setRelations([])
-      setIsLoading(false)
-      return
-    }
+  const { data, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.relations.list(objectId!),
+    queryFn: async () => {
+      const result = await dataClient.relations.list({ objectId: objectId! })
+      if (result.error) throw new Error(result.error.message)
 
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-    setError(null)
+      // Only include outgoing relations from this object
+      const outgoing = result.data.filter(r => r.source_id === objectId)
 
-    // Fetch all outgoing relations (links and mentions)
-    const result = await dataClient.relations.list({
-      objectId,
-    })
-
-    if (!isMounted.current) return
-
-    if (result.error) {
-      setError(result.error.message)
-      setRelations([])
-      setIsLoading(false)
-      return
-    }
-
-    // Only include outgoing relations from this object
-    const outgoing = result.data.filter(r => r.source_id === objectId)
-
-    // Deduplicate by target_id, preferring 'link' over 'mention'
-    const byTarget = new Map<string, typeof outgoing[number]>()
-    for (const r of outgoing) {
-      const existing = byTarget.get(r.target_id)
-      if (!existing || r.relation_type === 'link') {
-        byTarget.set(r.target_id, r)
-      }
-    }
-    const deduplicated = Array.from(byTarget.values())
-
-    // Enrich with object data
-    const enriched: EnrichedRelation[] = await Promise.all(
-      deduplicated.map(async (relation) => {
-        const targetResult = await dataClient.objects.get(relation.target_id)
-        return {
-          ...relation,
-          linkedObject: targetResult.data
-            ? {
-                id: targetResult.data.id,
-                title: targetResult.data.title,
-                icon: targetResult.data.icon,
-                type_id: targetResult.data.type_id,
-              }
-            : null,
+      // Deduplicate by target_id, preferring 'link' over 'mention'
+      const byTarget = new Map<string, typeof outgoing[number]>()
+      for (const r of outgoing) {
+        const existing = byTarget.get(r.target_id)
+        if (!existing || r.relation_type === 'link') {
+          byTarget.set(r.target_id, r)
         }
-      })
-    )
+      }
+      const deduplicated = Array.from(byTarget.values())
 
-    if (!isMounted.current) return
+      // Enrich with object data
+      const enriched: EnrichedRelation[] = await Promise.all(
+        deduplicated.map(async (relation) => {
+          const targetResult = await dataClient.objects.get(relation.target_id)
+          return {
+            ...relation,
+            linkedObject: targetResult.data
+              ? {
+                  id: targetResult.data.id,
+                  title: targetResult.data.title,
+                  icon: targetResult.data.icon,
+                  type_id: targetResult.data.type_id,
+                }
+              : null,
+          }
+        })
+      )
 
-    setRelations(enriched)
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient, objectId])
+      return enriched
+    },
+    enabled: !!objectId,
+  })
 
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    fetchRelations()
-    const unsubscribe = subscribe('objectRelations', fetchRelations)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchRelations])
+  const refetch = useCallback(async () => {
+    if (objectId) {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.relations.list(objectId) })
+    }
+  }, [queryClient, objectId])
 
   const createLink = useCallback(async (targetId: string): Promise<ObjectRelation | null> => {
     if (!objectId) return null
@@ -107,31 +83,22 @@ export function useObjectRelations(objectId: string | null): UseObjectRelationsR
       relation_type: 'link',
     })
 
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
+    if (result.error) return null
     emit('objectRelations')
     return result.data
   }, [dataClient, objectId])
 
   const removeLink = useCallback(async (relationId: string): Promise<void> => {
     const result = await dataClient.relations.delete(relationId)
-
-    if (result.error) {
-      setError(result.error.message)
-      return
-    }
-
+    if (result.error) return
     emit('objectRelations')
   }, [dataClient])
 
   return {
-    relations,
+    relations: data ?? EMPTY_RELATIONS,
     isLoading,
-    error,
-    refetch: fetchRelations,
+    error: queryError?.message ?? null,
+    refetch,
     createLink,
     removeLink,
   }

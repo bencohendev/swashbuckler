@@ -3,13 +3,16 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ChevronRightIcon, ClockIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { useObjects } from '@/features/objects/hooks'
+import type { DataObject } from '@/shared/lib/data'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
 
 const RECENT_LIMIT = 5
 
-export function RecentSection() {
-  const { objects, isLoading } = useObjects({ isDeleted: false })
+interface RecentSectionProps {
+  objects: DataObject[]
+}
+
+export function RecentSection({ objects }: RecentSectionProps) {
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('sidebar-collapsed-recent') === 'true'
@@ -25,7 +28,7 @@ export function RecentSection() {
       .slice(0, RECENT_LIMIT)
   }, [objects])
 
-  if (isLoading || recentObjects.length === 0) return null
+  if (recentObjects.length === 0) return null
 
   return (
     <div>

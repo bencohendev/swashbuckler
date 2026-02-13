@@ -1,9 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useDataClient } from '@/shared/lib/data'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDataClient, useSpaceId } from '@/shared/lib/data'
 import type { Template, CreateTemplateInput, DataObject, CreateObjectInput } from '@/shared/lib/data'
-import { emit, subscribe } from '@/shared/lib/data/events'
+import { emit } from '@/shared/lib/data/events'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
+
+const EMPTY_TEMPLATES: Template[] = []
 import {
   extractContentVariables,
   extractPropertyVariables,
@@ -44,47 +48,22 @@ interface UseTemplatesReturn {
 export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesReturn {
   const { typeId, enabled = true } = options
   const dataClient = useDataClient()
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const isMounted = useRef(true)
+  const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
-  const hasFetched = useRef(false)
+  const { data, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.templates.list(spaceId ?? undefined, typeId),
+    queryFn: async () => {
+      const result = await dataClient.templates.list({ typeId })
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+    enabled,
+  })
 
-  const fetchTemplates = useCallback(async () => {
-    if (!enabled) {
-      setIsLoading(false)
-      return
-    }
-
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-    setError(null)
-
-    const result = await dataClient.templates.list({ typeId })
-
-    if (!isMounted.current) return
-
-    if (result.error) {
-      setError(result.error.message)
-      setTemplates([])
-    } else {
-      setTemplates(result.data)
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient, enabled, typeId])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
-    fetchTemplates()
-    const unsubscribe = subscribe('templates', fetchTemplates)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchTemplates])
+  const refetch = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.templates.all(spaceId ?? undefined) })
+  }, [queryClient, spaceId])
 
   const saveObjectAsTemplate = useCallback(async (
     object: DataObject,
@@ -100,11 +79,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     }
 
     const result = await dataClient.templates.create(input)
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
+    if (result.error) return null
     emit('templates')
     return result.data
   }, [dataClient])
@@ -115,9 +90,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     parentId?: string | null
   ): Promise<DataObject | null> => {
     const templateResult = await dataClient.templates.get(templateId)
-    if (templateResult.error || !templateResult.data) {
-      return null
-    }
+    if (templateResult.error || !templateResult.data) return null
 
     const template = templateResult.data
 
@@ -132,19 +105,14 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     }
 
     const result = await dataClient.objects.create(input)
-    if (result.error) {
-      return null
-    }
-
+    if (result.error) return null
     emit('objects')
     return result.data
   }, [dataClient])
 
   const getTemplateVariables = useCallback(async (templateId: string): Promise<TemplateVariableInfo | null> => {
     const templateResult = await dataClient.templates.get(templateId)
-    if (templateResult.error || !templateResult.data) {
-      return null
-    }
+    if (templateResult.error || !templateResult.data) return null
 
     const template = templateResult.data
     const contentVars = template.content ? extractContentVariables(template.content) : { builtIn: [], custom: [] }
@@ -169,9 +137,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     parentId?: string | null
   ): Promise<DataObject | null> => {
     const templateResult = await dataClient.templates.get(templateId)
-    if (templateResult.error || !templateResult.data) {
-      return null
-    }
+    if (templateResult.error || !templateResult.data) return null
 
     const template = templateResult.data
 
@@ -194,28 +160,22 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     }
 
     const result = await dataClient.objects.create(input)
-    if (result.error) {
-      return null
-    }
-
+    if (result.error) return null
     emit('objects')
     return result.data
   }, [dataClient])
 
   const deleteTemplate = useCallback(async (id: string): Promise<void> => {
     const result = await dataClient.templates.delete(id)
-    if (result.error) {
-      setError(result.error.message)
-      return
-    }
+    if (result.error) return
     emit('templates')
   }, [dataClient])
 
   return {
-    templates,
+    templates: data ?? EMPTY_TEMPLATES,
     isLoading,
-    error,
-    refetch: fetchTemplates,
+    error: queryError?.message ?? null,
+    refetch,
     createFromTemplate,
     createFromTemplateWithVariables,
     getTemplateVariables,

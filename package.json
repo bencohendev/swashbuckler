@@ -17,6 +17,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.94.1",
+    "@tanstack/react-query": "^5.90.21",
     "@udecode/plate": "^48.0.5",
     "@udecode/plate-autoformat": "^48.0.0",
     "@udecode/plate-basic-marks": "^48.0.0",

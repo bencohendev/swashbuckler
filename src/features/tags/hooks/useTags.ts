@@ -1,13 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   useDataClient,
+  useSpaceId,
   type Tag,
   type CreateTagInput,
   type UpdateTagInput,
 } from '@/shared/lib/data'
-import { emit, subscribe } from '@/shared/lib/data/events'
+import { emit } from '@/shared/lib/data/events'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
+
+const EMPTY_TAGS: Tag[] = []
 
 interface UseTagsReturn {
   tags: Tag[]
@@ -21,71 +26,51 @@ interface UseTagsReturn {
 
 export function useTags(): UseTagsReturn {
   const dataClient = useDataClient()
-  const [tags, setTags] = useState<Tag[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const isMounted = useRef(true)
-  const hasFetched = useRef(false)
+  const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
-  const fetchTags = useCallback(async () => {
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-    setError(null)
+  const { data, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.tags.list(spaceId ?? undefined),
+    queryFn: async () => {
+      const result = await dataClient.tags.list()
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+  })
 
-    const result = await dataClient.tags.list()
-
-    if (!isMounted.current) return
-
-    if (result.error) {
-      setError(result.error.message)
-      setTags([])
-    } else {
-      setTags(result.data)
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    fetchTags()
-    const unsubscribe = subscribe('tags', fetchTags)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchTags])
+  const refetch = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
+  }, [queryClient, spaceId])
 
   const create = useCallback(async (input: CreateTagInput): Promise<Tag | null> => {
     const result = await dataClient.tags.create(input)
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
+    if (result.error) return null
     emit('tags')
     return result.data
   }, [dataClient])
 
   const update = useCallback(async (id: string, input: UpdateTagInput): Promise<Tag | null> => {
     const result = await dataClient.tags.update(id, input)
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
+    if (result.error) return null
     emit('tags')
     return result.data
   }, [dataClient])
 
   const remove = useCallback(async (id: string): Promise<void> => {
     const result = await dataClient.tags.delete(id)
-    if (result.error) {
-      setError(result.error.message)
-      return
-    }
+    if (result.error) return
     emit('tags')
   }, [dataClient])
 
-  return { tags, isLoading, error, refetch: fetchTags, create, update, remove }
+  return {
+    tags: data ?? EMPTY_TAGS,
+    isLoading,
+    error: queryError?.message ?? null,
+    refetch,
+    create,
+    update,
+    remove,
+  }
 }
 
 interface UseObjectTagsReturn {
@@ -97,45 +82,31 @@ interface UseObjectTagsReturn {
 
 export function useObjectTags(objectId: string): UseObjectTagsReturn {
   const dataClient = useDataClient()
-  const [tags, setTags] = useState<Tag[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const isMounted = useRef(true)
-  const hasFetched = useRef(false)
+  const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
-  const fetchTags = useCallback(async () => {
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-
-    const result = await dataClient.tags.getObjectTags(objectId)
-
-    if (!isMounted.current) return
-
-    if (!result.error) {
-      setTags(result.data)
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient, objectId])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    fetchTags()
-    const unsubscribe = subscribe('tags', fetchTags)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchTags])
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.tags.objectTags(objectId),
+    queryFn: async () => {
+      const result = await dataClient.tags.getObjectTags(objectId)
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+  })
 
   const addTag = useCallback(async (tagId: string) => {
     await dataClient.tags.addTagToObject(objectId, tagId)
+    queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
     emit('tags')
-  }, [dataClient, objectId])
+  }, [dataClient, objectId, queryClient, spaceId])
 
   const removeTag = useCallback(async (tagId: string) => {
     await dataClient.tags.removeTagFromObject(objectId, tagId)
+    queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
     emit('tags')
-  }, [dataClient, objectId])
+  }, [dataClient, objectId, queryClient, spaceId])
 
-  return { tags, isLoading, addTag, removeTag }
+  return { tags: data ?? EMPTY_TAGS, isLoading, addTag, removeTag }
 }

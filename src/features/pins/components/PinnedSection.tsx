@@ -3,13 +3,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ChevronRightIcon, PinIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { useObjects } from '@/features/objects/hooks'
+import type { DataObject } from '@/shared/lib/data'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
-import { usePins } from '../hooks/usePins'
 
-export function PinnedSection() {
-  const { pinnedIds, isLoading: pinsLoading } = usePins()
-  const { objects, isLoading: objectsLoading } = useObjects({ isDeleted: false })
+interface PinnedSectionProps {
+  pinnedIds: Set<string>
+  objects: DataObject[]
+}
+
+export function PinnedSection({ pinnedIds, objects }: PinnedSectionProps) {
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('sidebar-collapsed-pinned') === 'true'
@@ -24,7 +26,7 @@ export function PinnedSection() {
     return objects.filter(obj => pinnedIds.has(obj.id))
   }, [objects, pinnedIds])
 
-  if (pinsLoading || objectsLoading || pinnedObjects.length === 0) return null
+  if (pinnedObjects.length === 0) return null
 
   return (
     <div>

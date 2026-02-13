@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import { TagIcon, TrashIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useTags } from '../hooks/useTags'
 import { TAG_COLORS } from './TagPicker'
-import { useDataClient, type DataObject } from '@/shared/lib/data'
-import { subscribe } from '@/shared/lib/data/events'
+import { useDataClient } from '@/shared/lib/data'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
 import { useObjectTypes } from '@/features/object-types'
 import { Button } from '@/shared/components/ui/Button'
@@ -21,29 +22,20 @@ export function TagPageView({ name }: TagPageViewProps) {
   const dataClient = useDataClient()
   const { tags, remove, update } = useTags()
   const { types } = useObjectTypes()
-  const [objects, setObjects] = useState<DataObject[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const isMounted = useRef(true)
+  const [showColors, setShowColors] = useState(false)
 
   const tag = tags.find(t => t.name === name)
   const typeMap = new Map(types.map(t => [t.id, t]))
-  const [showColors, setShowColors] = useState(false)
 
-  const fetchObjects = useCallback(async () => {
-    if (!tag) return
-    setIsLoading(true)
-    const result = await dataClient.tags.getObjectsByTag(tag.id)
-    if (!isMounted.current) return
-    setObjects(result.data)
-    setIsLoading(false)
-  }, [dataClient, tag])
-
-  useEffect(() => {
-    isMounted.current = true
-    fetchObjects()
-    const unsubscribe = subscribe('tags', fetchObjects)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchObjects])
+  const { data: objects = [], isLoading } = useQuery({
+    queryKey: queryKeys.tags.objectsByTag(tag?.id ?? ''),
+    queryFn: async () => {
+      const result = await dataClient.tags.getObjectsByTag(tag!.id)
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+    enabled: !!tag,
+  })
 
   const handleDelete = async () => {
     if (!tag) return

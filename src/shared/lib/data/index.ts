@@ -76,6 +76,7 @@ export {
   useDataClient,
   useStorageMode,
   useAuth,
+  useSpaceId,
   useMigrateData,
 } from './DataProvider'
 export { SpaceProvider, useCurrentSpace, useSpaces } from './SpaceProvider'

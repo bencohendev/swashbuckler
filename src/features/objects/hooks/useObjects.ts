@@ -1,8 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useDataClient, type DataObject, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
-import { emit, subscribe } from '@/shared/lib/data/events'
+import { useCallback, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDataClient, useSpaceId, type DataObject, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
+import { emit } from '@/shared/lib/data/events'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
+
+const EMPTY_OBJECTS: DataObject[] = []
 
 interface UseObjectsOptions extends ListObjectsOptions {
   enabled?: boolean
@@ -22,10 +26,8 @@ interface UseObjectsReturn {
 export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
   const { enabled = true, parentId, typeId, isDeleted, limit, offset } = options
   const dataClient = useDataClient()
-  const [objects, setObjects] = useState<DataObject[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const isMounted = useRef(true)
+  const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
   const queryOptions = useMemo<ListObjectsOptions>(() => ({
     parentId,
@@ -35,95 +37,52 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
     offset,
   }), [parentId, typeId, isDeleted, limit, offset])
 
-  const hasFetched = useRef(false)
+  const { data, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.objects.list(spaceId ?? undefined, queryOptions),
+    queryFn: async () => {
+      const result = await dataClient.objects.list(queryOptions)
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+    enabled,
+  })
 
-  const fetchObjects = useCallback(async () => {
-    if (!enabled) {
-      setIsLoading(false)
-      return
-    }
-
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-    setError(null)
-
-    const result = await dataClient.objects.list(queryOptions)
-
-    if (!isMounted.current) return
-
-    if (result.error) {
-      setError(result.error.message)
-      setObjects([])
-    } else {
-      setObjects(result.data)
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient, enabled, queryOptions])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
-    fetchObjects()
-    const unsubscribe = subscribe('objects', fetchObjects)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchObjects])
+  const refetch = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.objects.all(spaceId ?? undefined) })
+  }, [queryClient, spaceId])
 
   const create = useCallback(async (input: CreateObjectInput): Promise<DataObject | null> => {
     const result = await dataClient.objects.create(input)
-
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
+    if (result.error) return null
     emit('objects')
     return result.data
   }, [dataClient])
 
   const update = useCallback(async (id: string, input: UpdateObjectInput): Promise<DataObject | null> => {
     const result = await dataClient.objects.update(id, input)
-
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
+    if (result.error) return null
     emit('objects')
     return result.data
   }, [dataClient])
 
   const remove = useCallback(async (id: string, permanent = false): Promise<void> => {
     const result = await dataClient.objects.delete(id, permanent)
-
-    if (result.error) {
-      setError(result.error.message)
-      return
-    }
-
+    if (result.error) return
     emit('objects')
   }, [dataClient])
 
   const restore = useCallback(async (id: string): Promise<DataObject | null> => {
     const result = await dataClient.objects.restore(id)
-
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
+    if (result.error) return null
     emit('objects')
     return result.data
   }, [dataClient])
 
   return {
-    objects,
+    objects: data ?? EMPTY_OBJECTS,
     isLoading,
-    error,
-    refetch: fetchObjects,
+    error: queryError?.message ?? null,
+    refetch,
     create,
     update,
     remove,
@@ -133,82 +92,47 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
 
 export function useObject(id: string | null) {
   const dataClient = useDataClient()
-  const [object, setObject] = useState<DataObject | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const isMounted = useRef(true)
+  const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
-  const hasFetched = useRef(false)
+  const { data: object, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.objects.detail(id!),
+    queryFn: async () => {
+      const result = await dataClient.objects.get(id!)
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+    enabled: !!id,
+  })
 
-  const fetchObject = useCallback(async () => {
-    if (!id) {
-      setObject(null)
-      setIsLoading(false)
-      return
+  const refetch = useCallback(async () => {
+    if (id) {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.objects.detail(id) })
     }
-
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
-    setError(null)
-
-    const result = await dataClient.objects.get(id)
-
-    if (!isMounted.current) return
-
-    if (result.error) {
-      setError(result.error.message)
-      setObject(null)
-    } else {
-      setObject(result.data)
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient, id])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching pattern
-    fetchObject()
-    const unsubscribe = subscribe('objects', fetchObject)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchObject])
+  }, [queryClient, id])
 
   const update = useCallback(async (input: UpdateObjectInput): Promise<DataObject | null> => {
     if (!id) return null
-
     const result = await dataClient.objects.update(id, input)
-
-    if (result.error) {
-      setError(result.error.message)
-      return null
-    }
-
-    setObject(result.data)
+    if (result.error) return null
+    // Optimistically update the detail cache
+    queryClient.setQueryData(queryKeys.objects.detail(id), result.data)
     emit('objects')
     return result.data
-  }, [dataClient, id])
+  }, [dataClient, id, queryClient])
 
   const remove = useCallback(async (permanent = false): Promise<void> => {
     if (!id) return
-
     const result = await dataClient.objects.delete(id, permanent)
-
-    if (result.error) {
-      setError(result.error.message)
-      return
-    }
-
+    if (result.error) return
     emit('objects')
   }, [dataClient, id])
 
   return {
-    object,
+    object: object ?? null,
     isLoading,
-    error,
-    refetch: fetchObject,
+    error: queryError?.message ?? null,
+    refetch,
     update,
     remove,
   }

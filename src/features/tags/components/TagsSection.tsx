@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronRightIcon, TagIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { useTags } from '../hooks/useTags'
+import type { Tag } from '@/shared/lib/data'
 import { useDataClient } from '@/shared/lib/data'
-import type { ObjectTag } from '@/shared/lib/data'
-import { subscribe } from '@/shared/lib/data/events'
 
-export function TagsSection() {
-  const { tags, isLoading } = useTags()
+interface TagsSectionProps {
+  tags: Tag[]
+}
+
+export function TagsSection({ tags }: TagsSectionProps) {
   const dataClient = useDataClient()
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -22,28 +23,24 @@ export function TagsSection() {
     localStorage.setItem('sidebar-collapsed-tags', String(collapsed))
   }, [collapsed])
 
-  // Fetch tag counts
+  // Fetch tag counts in parallel
   useEffect(() => {
     if (tags.length === 0) return
 
     async function fetchCounts() {
-      // For local mode, we need to count object_tags per tag
-      // For both modes, use getObjectsByTag and count results
-      const counts = new Map<string, number>()
-      for (const tag of tags) {
-        const result = await dataClient.tags.getObjectsByTag(tag.id)
-        counts.set(tag.id, result.data.length)
-      }
-      setTagCounts(counts)
+      const entries = await Promise.all(
+        tags.map(async (tag) => {
+          const result = await dataClient.tags.getObjectsByTag(tag.id)
+          return [tag.id, result.data.length] as const
+        })
+      )
+      setTagCounts(new Map(entries))
     }
 
     fetchCounts()
-
-    const unsubscribe = subscribe('tags', fetchCounts)
-    return () => unsubscribe()
   }, [tags, dataClient])
 
-  if (isLoading || tags.length === 0) return null
+  if (tags.length === 0) return null
 
   return (
     <div>

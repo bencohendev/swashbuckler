@@ -82,7 +82,7 @@ export function Header({ email }: { email?: string }) {
             else if (theme === 'dark') setTheme('system')
             else setTheme('light')
           }}
-          title={`Theme: ${theme}`}
+          title={mounted ? `Theme: ${theme}` : "Theme"}
         >
           {mounted ? (
             theme === 'system' ? <MonitorIcon className="size-4" /> :

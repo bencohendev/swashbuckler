@@ -104,6 +104,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Image Upload](image-upload.md) | Image uploads for editor, covers, avatars | Done |
 | [UI Terminology](ui-terminology.md) | Rename "object" → "entry", "Object Type" → "Type" in UI | Done |
 | [Export](export.md) | JSON data export (account settings) | Done |
+| [Data Caching](data-caching.md) | TanStack Query migration for SWR caching | Done |
 | [Realtime](realtime.md) | Supabase Realtime + cross-tab sync | Not started |
 
 ## Unfinished Features

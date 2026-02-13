@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import type { DataClient, StorageMode } from './types'
@@ -12,6 +12,7 @@ interface DataContextValue {
   storageMode: StorageMode
   user: User | null
   isLoading: boolean
+  spaceId: string | null
   migrateToSupabase: () => Promise<void>
 }
 
@@ -20,27 +21,12 @@ const DataContext = createContext<DataContextValue | null>(null)
 interface DataProviderProps {
   children: ReactNode
   spaceId?: string | null
+  user: User | null
+  isAuthLoading: boolean
 }
 
-export function DataProvider({ children, spaceId }: DataProviderProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export function DataProvider({ children, spaceId, user, isAuthLoading }: DataProviderProps) {
   const supabase = useMemo(() => createClient(), [])
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      setIsLoading(false)
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
 
   const storageMode: StorageMode = user ? 'supabase' : 'local'
 
@@ -54,13 +40,13 @@ export function DataProvider({ children, spaceId }: DataProviderProps) {
 
   // Purge expired trash items on mount
   useEffect(() => {
-    if (isLoading) return
+    if (isAuthLoading) return
     dataClient.objects.purgeExpired().then(result => {
       if (result.error) {
         console.error('Failed to purge expired trash items:', result.error.message)
       }
     })
-  }, [dataClient, isLoading])
+  }, [dataClient, isAuthLoading])
 
   const migrateToSupabase = async () => {
     if (!user) {
@@ -153,7 +139,8 @@ export function DataProvider({ children, spaceId }: DataProviderProps) {
     dataClient,
     storageMode,
     user,
-    isLoading,
+    isLoading: isAuthLoading,
+    spaceId: spaceId ?? null,
     migrateToSupabase,
   }
 
@@ -190,6 +177,14 @@ export function useAuth() {
     isLoading: context.isLoading,
     isGuest: !context.user,
   }
+}
+
+export function useSpaceId(): string | null {
+  const context = useContext(DataContext)
+  if (!context) {
+    throw new Error('useSpaceId must be used within a DataProvider')
+  }
+  return context.spaceId
 }
 
 export function useMigrateData() {

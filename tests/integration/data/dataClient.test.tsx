@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { DataProvider, useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
 import { clearLocalData } from '@/shared/lib/data/local'
 
@@ -18,7 +19,16 @@ vi.mock('@/shared/lib/supabase/client', () => ({
 }))
 
 function Wrapper({ children }: { children: ReactNode }) {
-  return <DataProvider>{children}</DataProvider>
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  }))
+  return (
+    <QueryClientProvider client={queryClient}>
+      <DataProvider user={null} isAuthLoading={false}>{children}</DataProvider>
+    </QueryClientProvider>
+  )
 }
 
 describe('Data Client Integration', () => {

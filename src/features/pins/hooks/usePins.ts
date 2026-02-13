@@ -1,8 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useDataClient } from '@/shared/lib/data'
-import { emit, subscribe } from '@/shared/lib/data/events'
+import { useCallback, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useDataClient, useSpaceId } from '@/shared/lib/data'
+import { emit } from '@/shared/lib/data/events'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
+
+const EMPTY_IDS: string[] = []
 
 interface UsePinsReturn {
   pinnedIds: Set<string>
@@ -14,35 +18,19 @@ interface UsePinsReturn {
 
 export function usePins(): UsePinsReturn {
   const dataClient = useDataClient()
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
-  const [isLoading, setIsLoading] = useState(true)
-  const isMounted = useRef(true)
-  const hasFetched = useRef(false)
+  const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
-  const fetchPins = useCallback(async () => {
-    if (!hasFetched.current) {
-      setIsLoading(true)
-    }
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.pins.list(spaceId ?? undefined),
+    queryFn: async () => {
+      const result = await dataClient.pins.list()
+      if (result.error) throw new Error(result.error.message)
+      return result.data.map(p => p.object_id)
+    },
+  })
 
-    const result = await dataClient.pins.list()
-
-    if (!isMounted.current) return
-
-    if (!result.error) {
-      setPinnedIds(new Set(result.data.map(p => p.object_id)))
-    }
-
-    hasFetched.current = true
-    setIsLoading(false)
-  }, [dataClient])
-
-  useEffect(() => {
-    isMounted.current = true
-    hasFetched.current = false
-    fetchPins()
-    const unsubscribe = subscribe('pins', fetchPins)
-    return () => { isMounted.current = false; unsubscribe() }
-  }, [fetchPins])
+  const pinnedIds = useMemo(() => new Set(data ?? EMPTY_IDS), [data])
 
   const pin = useCallback(async (objectId: string) => {
     await dataClient.pins.pin(objectId)
