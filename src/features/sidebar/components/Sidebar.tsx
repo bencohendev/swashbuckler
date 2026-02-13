@@ -7,7 +7,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { HomeIcon, NetworkIcon, PlusIcon, SettingsIcon, TrashIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
-import { useAuth } from "@/shared/lib/data"
+import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
@@ -15,6 +15,8 @@ import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { useSpacePermission, useExclusionFilter } from "@/features/sharing"
 import { TagsSection } from "@/features/tags"
 import { PinnedSection } from "@/features/pins"
+import { VariablePromptDialog } from "@/features/templates/components/VariablePromptDialog"
+import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
@@ -114,7 +116,8 @@ function DraggableTypeSection({
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { isGuest } = useAuth()
+  const { user, isGuest } = useAuth()
+  const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects } = useExclusionFilter()
   const { objects, isLoading: objectsLoading, create } = useObjects({
@@ -122,8 +125,10 @@ export function Sidebar() {
     isDeleted: false,
   })
   const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
-  const { createFromTemplate } = useTemplates()
+  const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
+  const [variableDialogOpen, setVariableDialogOpen] = useState(false)
+  const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
@@ -186,8 +191,43 @@ export function Sidebar() {
     }
   }
 
+  const buildResolutionContext = useCallback((): VariableResolutionContext => ({
+    userName: user?.email ?? null,
+    spaceName: space?.name ?? null,
+  }), [user, space])
+
   const handleSelectTemplate = async (template: Template) => {
-    const result = await createFromTemplate(template.id)
+    const info = await getTemplateVariables(template.id)
+
+    if (info && info.customVariables.length > 0) {
+      setPendingTemplate({ id: template.id, customVariables: info.customVariables })
+      setVariableDialogOpen(true)
+      return
+    }
+
+    // No custom variables — resolve built-ins inline if any, otherwise plain copy
+    if (info && info.hasVariables) {
+      const result = await createFromTemplateWithVariables(template.id, {}, buildResolutionContext())
+      if (result) {
+        router.push(`/objects/${result.id}`)
+      }
+    } else {
+      const result = await createFromTemplate(template.id)
+      if (result) {
+        router.push(`/objects/${result.id}`)
+      }
+    }
+  }
+
+  const handleVariableSubmit = async (values: Record<string, string>) => {
+    if (!pendingTemplate) return
+    setVariableDialogOpen(false)
+    const result = await createFromTemplateWithVariables(
+      pendingTemplate.id,
+      values,
+      buildResolutionContext(),
+    )
+    setPendingTemplate(null)
     if (result) {
       router.push(`/objects/${result.id}`)
     }
@@ -290,6 +330,17 @@ export function Sidebar() {
         onOpenChange={setCreateTypeOpen}
         onCreate={createType}
       />
+      {pendingTemplate && (
+        <VariablePromptDialog
+          open={variableDialogOpen}
+          onOpenChange={(open) => {
+            setVariableDialogOpen(open)
+            if (!open) setPendingTemplate(null)
+          }}
+          variableNames={pendingTemplate.customVariables}
+          onSubmit={handleVariableSubmit}
+        />
+      )}
     </aside>
   )
 }

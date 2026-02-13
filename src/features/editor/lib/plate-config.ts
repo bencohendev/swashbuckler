@@ -22,6 +22,7 @@ import { AutoformatPlugin } from '@udecode/plate-autoformat/react';
 import { IndentPlugin } from '@udecode/plate-indent/react';
 import { NodeIdPlugin } from '@udecode/plate-node-id';
 import { SpoilerPlugin } from '../plugins/spoiler-plugin';
+import { TemplateVariablePlugin } from '../plugins/template-variable-plugin';
 
 // Plugin configuration for the editor
 export const editorPlugins = [
@@ -76,6 +77,9 @@ export const editorPlugins = [
     },
   }),
   MentionInputPlugin,
+
+  // Template variables
+  TemplateVariablePlugin,
 
   // Drag and drop
   DndPlugin.configure({

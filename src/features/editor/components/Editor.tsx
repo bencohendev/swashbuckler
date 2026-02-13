@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { createContext, useCallback } from 'react';
 import { Plate, PlateContent, usePlateEditor } from '@udecode/plate/react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -28,15 +28,19 @@ import {
   MentionElement,
   MentionInputElement,
   SlashInputElement,
+  TemplateVariableElement,
 } from './elements';
 import { useEditorStore } from '../store';
 import { useAutoSave } from '../hooks/useAutoSave';
+
+export const EditorModeContext = createContext<{ isTemplateMode: boolean }>({ isTemplateMode: false });
 
 interface EditorProps {
   initialContent?: Value;
   onSave?: (content: Value) => Promise<void>;
   readOnly?: boolean;
   placeholder?: string;
+  isTemplateMode?: boolean;
 }
 
 export function Editor({
@@ -44,6 +48,7 @@ export function Editor({
   onSave,
   readOnly = false,
   placeholder = 'Start writing...',
+  isTemplateMode = false,
 }: EditorProps) {
   const { setContent, isSaving, lastSaved } = useEditorStore();
 
@@ -76,6 +81,7 @@ export function Editor({
         mention: MentionElement,
         mention_input: MentionInputElement,
         slash_input: SlashInputElement,
+        template_variable: TemplateVariableElement,
       },
     },
   });
@@ -95,30 +101,32 @@ export function Editor({
   });
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="relative min-h-[200px]">
-        <Plate
-          editor={editor}
-          onChange={handleChange}
-        >
-          <PlateContent
-            readOnly={readOnly}
-            placeholder={placeholder}
-            className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
-          />
-        </Plate>
+    <EditorModeContext value={{ isTemplateMode }}>
+      <DndProvider backend={HTML5Backend}>
+        <div className="relative min-h-[200px]">
+          <Plate
+            editor={editor}
+            onChange={handleChange}
+          >
+            <PlateContent
+              readOnly={readOnly}
+              placeholder={placeholder}
+              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
+            />
+          </Plate>
 
-        {/* Save status indicator */}
-        {onSave && (
-          <div className="absolute right-2 top-2 text-xs text-gray-400">
-            {isSaving ? (
-              'Saving...'
-            ) : lastSaved ? (
-              `Saved ${lastSaved.toLocaleTimeString()}`
-            ) : null}
-          </div>
-        )}
-      </div>
-    </DndProvider>
+          {/* Save status indicator */}
+          {onSave && (
+            <div className="absolute right-2 top-2 text-xs text-gray-400">
+              {isSaving ? (
+                'Saving...'
+              ) : lastSaved ? (
+                `Saved ${lastSaved.toLocaleTimeString()}`
+              ) : null}
+            </div>
+          )}
+        </div>
+      </DndProvider>
+    </EditorModeContext>
   );
 }

@@ -3,6 +3,7 @@ export { editorPlugins, initialEditorValue } from './lib/plate-config';
 
 // Plugins
 export { SpoilerPlugin, SpoilerMark } from './plugins/spoiler-plugin';
+export { TemplateVariablePlugin } from './plugins/template-variable-plugin';
 
 // Store
 export { useEditorStore } from './store';
@@ -32,6 +33,7 @@ export {
   LinkElement,
   MentionElement,
   MentionInputElement,
+  TemplateVariableElement,
 } from './components/elements';
 
 // Mark components
@@ -49,6 +51,7 @@ export { MentionInput } from './components/MentionInput';
 
 // Main editor component
 export { Editor } from './components/Editor';
+export { EditorModeContext } from './components/Editor';
 
 // Types
 export type {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { useEditorRef, PlateElement, type PlateElementProps } from '@udecode/plate/react'
 import {
@@ -16,10 +16,13 @@ import {
   AlertCircle,
   Table,
   Image as ImageIcon,
+  BracesIcon,
 } from 'lucide-react'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
 import { useObjects } from '@/features/objects'
 import { useObjectModal } from '@/shared/stores/objectModal'
+import { EditorModeContext } from '../Editor'
+import { BUILT_IN_VARIABLES } from '@/features/templates/lib/variables'
 
 interface SlashMenuItem {
   key: string
@@ -131,6 +134,7 @@ const menuItems: SlashMenuItem[] = [
 
 export function SlashInputElement({ children, element, ...props }: PlateElementProps) {
   const editor = useEditorRef()
+  const { isTemplateMode } = useContext(EditorModeContext)
   const { types } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
   const inputRef = useRef<HTMLSpanElement>(null)
@@ -147,8 +151,31 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
     filterInputRef.current?.focus()
   }, [])
 
+  // Build variable items when in template mode
+  const variableItems: SlashMenuItem[] = isTemplateMode
+    ? [
+        ...BUILT_IN_VARIABLES.map(v => ({
+          key: `var_${v.name}`,
+          label: `{{${v.name}}}`,
+          description: v.description,
+          icon: <BracesIcon className="size-4" />,
+          type: `template_variable:builtin:${v.name}`,
+          category: 'Variables',
+        })),
+        {
+          key: 'var_custom',
+          label: 'Custom variable',
+          description: 'Prompt user for a value',
+          icon: <BracesIcon className="size-4" />,
+          type: 'template_variable:custom',
+          category: 'Variables',
+        },
+      ]
+    : []
+
   // Filter items based on query
-  const filteredItems = menuItems.filter(
+  const allMenuItems = [...menuItems, ...variableItems]
+  const filteredItems = allMenuItems.filter(
     item =>
       item.label.toLowerCase().includes(query.toLowerCase()) ||
       item.description.toLowerCase().includes(query.toLowerCase())
@@ -179,6 +206,39 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   // Select item and insert block
   const selectItem = useCallback(
     (type: string) => {
+      // Handle template variable insertion
+      if (type.startsWith('template_variable:')) {
+        const parts = type.split(':')
+        if (parts[1] === 'custom') {
+          const name = window.prompt('Variable name:')
+          if (!name) return
+          editor.tf.removeNodes({
+            match: (n) => 'type' in n && n.type === 'slash_input',
+          })
+          editor.tf.insertNodes({
+            type: 'template_variable',
+            variableType: 'custom',
+            variableName: name.trim(),
+            children: [{ text: '' }],
+          })
+          editor.tf.move()
+          return
+        }
+        // Built-in variable
+        const variableName = parts[2]
+        editor.tf.removeNodes({
+          match: (n) => 'type' in n && n.type === 'slash_input',
+        })
+        editor.tf.insertNodes({
+          type: 'template_variable',
+          variableType: 'builtin',
+          variableName,
+          children: [{ text: '' }],
+        })
+        editor.tf.move()
+        return
+      }
+
       // Remove the slash input node
       editor.tf.removeNodes({
         match: (n) => 'type' in n && n.type === 'slash_input',

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon } from 'lucide-react'
+import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
@@ -42,6 +42,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isTemplateMode, setIsTemplateMode] = useState(false)
 
   // Sync title when object changes (e.g., on initial load or navigation)
   useEffect(() => {
@@ -166,6 +167,14 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           <PinButton objectId={id} />
           {canEdit && (
             <>
+              <Button
+                size="icon-sm"
+                variant={isTemplateMode ? 'default' : 'ghost'}
+                onClick={() => setIsTemplateMode(prev => !prev)}
+                title={isTemplateMode ? 'Exit template mode' : 'Template mode'}
+              >
+                <BracesIcon className="size-4" />
+              </Button>
               <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash">
                 <TrashIcon className="size-4" />
               </Button>
@@ -216,6 +225,11 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
       </header>
 
       <main className="flex-1 overflow-auto p-6">
+        {isTemplateMode && (
+          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+            Template mode — variable insertion enabled
+          </div>
+        )}
         <CoverImage
           coverImage={object.cover_image}
           onChange={handleCoverChange}
@@ -246,6 +260,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           onSave={handleContentSave}
           placeholder="Start writing..."
           readOnly={!canEdit}
+          isTemplateMode={isTemplateMode}
         />
 
         <LinkedObjects objectId={id} readOnly={!canEdit} />

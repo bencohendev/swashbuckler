@@ -87,7 +87,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Objects](objects.md) | Entry system, types, properties | Done |
 | [Sidebar](sidebar.md) | Hierarchical sidebar + context menu | Done |
 | [Editor](editor.md) | Block editor (Plate.js) | Done |
-| [Templates](templates.md) | Template system | Done |
+| [Templates](templates.md) | Template system + variables | Done |
 | [Sharing](sharing.md) | Workspace sharing & exclusions | Done |
 | [Graph](graph.md) | Knowledge graph visualization | Done |
 | [Search](search.md) | Global search (Cmd+K) | Done |
@@ -111,7 +111,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description | Status |
 |---------|-------------|--------|
 | Real-time collaboration | Block-level locking, collaborative editing | Not started |
-| Template variables | {{date}}, {{user}}, custom prompts | Not started |
+| Template variables | {{date}}, {{user}}, custom prompts | Done |
 | Advanced graph layouts | Hierarchical, radial, clustered | Not started |
 | Board view | Kanban for status-based entries | Not started |
 | First use tutorial | Onboarding walkthrough for new users | Not started |
