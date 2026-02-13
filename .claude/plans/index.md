@@ -115,7 +115,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Advanced graph layouts | Hierarchical, radial, clustered | Not started |
 | Board view | Kanban for status-based entries | Not started |
 | First use tutorial | Onboarding walkthrough for new users | Not started |
-| Collapsible sidebar | Toggle sidebar open/closed | Not started |
+| Collapsible sidebar | Toggle sidebar open/closed | Done |
 | Mobile design | Responsive layout for mobile devices | Not started |
 | Advanced documentation | In-depth user docs and help content | Not started |
 | Accessibility audit | Review and fix a11y across the app | Not started |

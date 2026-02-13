@@ -22,7 +22,18 @@ Notion-style hierarchical sidebar with collapsible type sections and drag-and-dr
 - `src/features/sidebar/components/TypeSection.tsx` — collapsible type sections with entries
 - `src/features/sidebar/components/SpaceSwitcher.tsx` — space switching dropdown
 - `src/features/sidebar/components/CreateSpaceDialog.tsx` — space creation modal
+- `src/shared/stores/sidebar.ts` — Zustand store for collapsed state with localStorage persistence
 - React DnD for drag-and-drop type reordering
+
+## Collapsible Sidebar
+
+- Toggle button in sidebar header: `PanelLeftClose` (expanded) / `PanelLeftOpen` (collapsed)
+- Collapsed width: `w-12` (48px); Expanded width: `w-64` (256px)
+- Collapsed view shows: expand button, nav icons (Home, Graph, Settings) stacked vertically, Trash icon
+- Expanded view: full sidebar content with collapse button in header
+- Width transition: `transition-[width] duration-200`
+- Keyboard shortcut: `Cmd/Ctrl + \`
+- State persisted in `localStorage('swashbuckler:sidebarCollapsed')`
 
 ## Context Menu
 
@@ -49,3 +60,8 @@ Right-click context menu on type sections in the sidebar.
 - [x] "View all" navigates to type table page
 - [x] Edit/delete actions work from context menu
 - [x] Built-in types only show "View all"
+- [x] Collapse button shrinks sidebar to icon rail
+- [x] Expand button restores full sidebar
+- [x] Collapsed state persists across page refresh
+- [x] Cmd/Ctrl+\ keyboard shortcut toggles sidebar
+- [x] Navigation icons work in collapsed mode
