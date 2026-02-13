@@ -5,6 +5,10 @@ import { useObjectTypes } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { TypeDataTable } from './TypeDataTable'
+import { TypeCardView } from './TypeCardView'
+import { TypeListView } from './TypeListView'
+import { ViewToggle } from './ViewToggle'
+import { useViewMode } from '../stores/viewMode'
 
 interface TypeTableViewProps {
   slug: string
@@ -12,6 +16,7 @@ interface TypeTableViewProps {
 
 export function TypeTableView({ slug }: TypeTableViewProps) {
   const { types, isLoading: typesLoading } = useObjectTypes()
+  const { mode } = useViewMode(slug)
 
   const type = useMemo(
     () => types.find((t) => t.slug === slug),
@@ -21,6 +26,13 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   const { objects, isLoading: objectsLoading } = useObjects(
     type ? { typeId: type.id, isDeleted: false } : { typeId: '__none__', isDeleted: false }
   )
+
+  const sortedObjects = useMemo(() => {
+    if (mode === 'table') return objectsLoading ? [] : objects
+    return [...(objectsLoading ? [] : objects)].sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    )
+  }, [objects, objectsLoading, mode])
 
   if (typesLoading) {
     return (
@@ -50,9 +62,18 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
         <span className="text-muted-foreground">
           {objectsLoading ? '…' : objects.length}
         </span>
+        <ViewToggle slug={slug} />
       </div>
 
-      <TypeDataTable type={type} objects={objectsLoading ? [] : objects} />
+      {mode === 'table' && (
+        <TypeDataTable type={type} objects={sortedObjects} />
+      )}
+      {mode === 'list' && (
+        <TypeListView type={type} objects={sortedObjects} />
+      )}
+      {mode === 'card' && (
+        <TypeCardView type={type} objects={sortedObjects} />
+      )}
     </div>
   )
 }

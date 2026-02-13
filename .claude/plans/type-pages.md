@@ -4,17 +4,18 @@
 
 ## Overview
 
-Dedicated pages for each type at `/types/[slug]` showing all instances in a sortable data table with columns for title, property fields, and tags.
+Dedicated pages for each type at `/types/[slug]` showing all instances in table, list, or card views with a persistent toggle. The table view has sortable columns for title, property fields, and tags.
 
 ## Decisions
 
 | Area | Decision |
 |------|----------|
 | Route | `/types/[slug]` under `(main)` layout |
-| View | Sortable data table (not cards or simple list) |
-| Columns | Title + one per type field (by sort_order) + Updated (tags deferred) |
-| Sorting | Client-side, click column headers |
-| Navigation | Click row to go to `/objects/[id]` |
+| Views | Table (default), list, and card — toggled via segmented control |
+| View persistence | Per-type slug in localStorage (`swashbuckler:typeViewMode`) via Zustand store |
+| Columns (table) | Title + one per type field (by sort_order) + Updated (tags deferred) |
+| Sorting | Table: client-side click column headers. List/card: `updated_at` descending |
+| Navigation | Click row/card to go to `/objects/[id]` |
 
 ## Implementation
 
@@ -26,7 +27,8 @@ Dedicated pages for each type at `/types/[slug]` showing all instances in a sort
 **`TypeTableView.tsx`** — container
 - Resolves type by slug via `useObjectTypes()` + `.find(t => t.slug === slug)`
 - Loads objects via `useObjects({ typeId: type.id, isDeleted: false })`
-- Passes data to `TypeDataTable`
+- Renders `ViewToggle` in header and conditionally renders `TypeDataTable`, `TypeListView`, or `TypeCardView`
+- List/card modes sort objects by `updated_at` descending
 
 **`TypeDataTable.tsx`** — sortable table
 - Columns: Title + one per `type.fields` (sorted by `sort_order`) + Updated
@@ -45,6 +47,35 @@ Dedicated pages for each type at `/types/[slug]` showing all instances in a sort
 
 **`SortableHeader.tsx`** — clickable column header with sort arrow indicator
 
+### View Modes — `src/features/table-view/`
+
+**`stores/viewMode.ts`** — Zustand store
+- Persists `Record<string, ViewMode>` in localStorage (`swashbuckler:typeViewMode`)
+- Each type slug has an independent mode: `'table' | 'list' | 'card'`
+- Default: `'table'`
+- `useViewMode(slug)` hook returns `{ mode, setMode }`
+
+**`lib/extractPlainText.ts`** — content preview utility
+- Walks Plate.js `Value` tree collecting text nodes
+- Skips `img`, `code_block`, `table` nodes
+- Adds spaces between top-level blocks
+- Early-exits at `maxLength` (default 120), appends `…` if truncated
+
+**`components/ViewToggle.tsx`** — segmented control
+- Three icon buttons: Table, List, Grid (lucide-react)
+- Active button gets `bg-background shadow-sm`, inactive gets muted styling
+
+**`components/TypeCardView.tsx`** — card grid
+- Responsive grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
+- Cards show: cover image (if set, `h-32 object-cover`), icon + title, content preview (`line-clamp-2`), updated date
+- Empty state: centered "No {plural_name} yet"
+
+**`components/TypeListView.tsx`** — list rows
+- Rows inside `rounded-lg border divide-y`
+- Each row: icon, title, content preview (80 chars), date
+- Preview hidden on small screens (`hidden sm:inline`)
+- Empty state same pattern as card view
+
 ## Verification
 
 - [x] Navigate to `/types/page` and see all Page entries
@@ -54,4 +85,9 @@ Dedicated pages for each type at `/types/[slug]` showing all instances in a sort
 - [x] Click row navigates to `/objects/[id]`
 - [ ] Tags column shows tag badges (deferred — tags feature not yet implemented)
 - [x] Unknown slug shows "Type not found" error state
+- [x] View toggle switches between table, list, and card views
+- [x] View mode persists per type slug in localStorage
+- [x] Card view shows cover image, icon, title, content preview, date
+- [x] List view shows icon, title, content preview, date
+- [x] Empty state shows "No X yet" in all three views
 - [x] `npm run build` passes

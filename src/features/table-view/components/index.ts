@@ -1,4 +1,7 @@
 export { TypeTableView } from './TypeTableView'
 export { TypeDataTable } from './TypeDataTable'
+export { TypeCardView } from './TypeCardView'
+export { TypeListView } from './TypeListView'
+export { ViewToggle } from './ViewToggle'
 export { PropertyCell } from './PropertyCell'
 export { SortableHeader } from './SortableHeader'
