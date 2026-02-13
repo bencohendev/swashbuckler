@@ -252,7 +252,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r bg-muted/30 transition-[width] duration-200",
+        "flex h-screen flex-col overflow-hidden border-r bg-muted/30 transition-[width] duration-200",
         collapsed ? "w-12" : "w-64"
       )}
     >
@@ -314,25 +314,16 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Scrollable content — hidden when collapsed */}
-      {collapsed ? (
-        <div className="flex flex-1 flex-col items-center gap-1 overflow-hidden py-2">
-          <Link
-            href="/trash"
-            title="Trash"
-            className={cn(
-              "flex size-8 items-center justify-center rounded-md transition-colors",
-              pathname === "/trash"
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            )}
-          >
-            <TrashIcon className="size-4" />
-          </Link>
-        </div>
-      ) : (
-        <DndProvider backend={HTML5Backend}>
-          <div className="flex-1 space-y-3 overflow-auto p-2">
+      {/* Scrollable content — always rendered, faded out when collapsed */}
+      <DndProvider backend={HTML5Backend}>
+        <div className={cn(
+          "flex-1",
+          collapsed ? "overflow-hidden" : "overflow-y-auto"
+        )}>
+          <div className={cn(
+            "w-64 space-y-3 p-2 transition-transform duration-200",
+            collapsed ? "-translate-x-full" : "translate-x-0"
+          )}>
             {isLoading ? (
               <div className="space-y-2 px-2">
                 {[1, 2, 3].map((i) => (
@@ -388,8 +379,8 @@ export function Sidebar() {
               </>
             )}
           </div>
-        </DndProvider>
-      )}
+        </div>
+      </DndProvider>
       <CreateTypeDialog
         open={createTypeOpen}
         onOpenChange={setCreateTypeOpen}
