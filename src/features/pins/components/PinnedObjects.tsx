@@ -2,11 +2,13 @@
 
 import { useMemo } from 'react'
 import { PinIcon } from 'lucide-react'
+import { useCurrentSpace } from '@/shared/lib/data'
 import { useObjects } from '@/features/objects/hooks'
 import { ObjectList } from '@/features/objects/components/ObjectList'
 import { usePins } from '../hooks/usePins'
 
 export function PinnedObjects() {
+  const { space } = useCurrentSpace()
   const { pinnedIds, isLoading: pinsLoading } = usePins()
   const { objects, isLoading: objectsLoading } = useObjects({ isDeleted: false })
 
@@ -18,7 +20,7 @@ export function PinnedObjects() {
   return (
     <ObjectList
       objects={pinnedObjects}
-      isLoading={pinsLoading || objectsLoading}
+      isLoading={!space || pinsLoading || objectsLoading}
       emptyState={
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <PinIcon className="size-8 text-muted-foreground/40" />

@@ -133,12 +133,12 @@ export function Sidebar() {
   const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
   const { pinnedIds, isLoading: pinsLoading } = usePins()
   const { tags, isLoading: tagsLoading } = useTags()
-  const sidebarLoading = objectsLoading || typesLoading || pinsLoading || tagsLoading
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
   const [variableDialogOpen, setVariableDialogOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
+  const sidebarLoading = !space || objectsLoading || typesLoading || pinsLoading || tagsLoading || (types.length > 0 && orderedTypes.length === 0)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
 

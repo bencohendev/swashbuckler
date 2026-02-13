@@ -1,10 +1,12 @@
 'use client'
 
 import { FileTextIcon } from 'lucide-react'
+import { useCurrentSpace } from '@/shared/lib/data'
 import { useObjects } from '../hooks/useObjects'
 import { ObjectList } from './ObjectList'
 
 export function RecentObjects() {
+  const { space } = useCurrentSpace()
   const { objects, isLoading } = useObjects({
     isDeleted: false,
     limit: 5,
@@ -13,7 +15,7 @@ export function RecentObjects() {
   return (
     <ObjectList
       objects={objects}
-      isLoading={isLoading}
+      isLoading={!space || isLoading}
       emptyState={
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <FileTextIcon className="size-8 text-muted-foreground/40" />
