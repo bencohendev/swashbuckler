@@ -146,6 +146,18 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   const [isKeyboardMode, setIsKeyboardMode] = useState(false)
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
 
+  // Focus the editor's contentEditable after node mutations.
+  // We can't use editor.tf.focus() because it calls toDOMNode(editor)
+  // which relies on EDITOR_TO_ELEMENT WeakMap that becomes stale after
+  // our node mutations. Direct DOM focus is the only reliable approach.
+  // Must be deferred so React can commit the new DOM first.
+  const focusEditor = useCallback(() => {
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
+      el?.focus()
+    }, 0)
+  }, [])
+
   // Auto-focus the filter input on mount
   useEffect(() => {
     filterInputRef.current?.focus()
@@ -206,7 +218,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   // Select item and insert block
   const selectItem = useCallback(
     (type: string) => {
-      // Handle template variable insertion
+      // Handle template variable insertion (inline elements)
       if (type.startsWith('template_variable:')) {
         const parts = type.split(':')
         if (parts[1] === 'custom') {
@@ -222,6 +234,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
             children: [{ text: '' }],
           })
           editor.tf.move()
+          focusEditor()
           return
         }
         // Built-in variable
@@ -236,30 +249,46 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
           children: [{ text: '' }],
         })
         editor.tf.move()
+        focusEditor()
         return
       }
 
-      // Remove the slash input node
-      editor.tf.removeNodes({
+      // Find the slash_input node and its parent block path
+      const slashEntry = editor.api.nodes({
         match: (n) => 'type' in n && n.type === 'slash_input',
-      })
+      }).next().value
+      if (!slashEntry) return
+      const [, slashPath] = slashEntry
+      const blockPath = slashPath.slice(0, -1)
 
-      // Insert the appropriate block type
+      // Remove the slash input inline node from its parent block
+      editor.tf.removeNodes({ at: slashPath })
+
+      // For simple block types, transform the parent block in place.
+      // The text node persists so the existing selection stays valid.
       if (type === 'p' || type === 'h1' || type === 'h2' || type === 'h3') {
-        editor.tf.insertNodes({ type, children: [{ text: '' }] })
-      } else if (type === 'blockquote') {
-        editor.tf.insertNodes({
+        editor.tf.setNodes({ type }, { at: blockPath })
+        focusEditor()
+        return
+      }
+
+      // For complex blocks, replace the parent block entirely
+      editor.tf.removeNodes({ at: blockPath })
+
+      let node
+      if (type === 'blockquote') {
+        node = {
           type: 'blockquote',
           children: [{ type: 'p', children: [{ text: '' }] }],
-        })
+        }
       } else if (type === 'code_block') {
-        editor.tf.insertNodes({
+        node = {
           type: 'code_block',
           lang: 'javascript',
           children: [{ type: 'code_line', children: [{ text: '' }] }],
-        })
+        }
       } else if (type === 'ul' || type === 'ol') {
-        editor.tf.insertNodes({
+        node = {
           type,
           children: [
             {
@@ -267,20 +296,20 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
               children: [{ type: 'lic', children: [{ text: '' }] }],
             },
           ],
-        })
+        }
       } else if (type === 'toggle') {
-        editor.tf.insertNodes({
+        node = {
           type: 'toggle',
           children: [{ text: '' }],
-        })
+        }
       } else if (type === 'callout') {
-        editor.tf.insertNodes({
+        node = {
           type: 'callout',
           variant: 'info',
           children: [{ text: '' }],
-        })
+        }
       } else if (type === 'table') {
-        editor.tf.insertNodes({
+        node = {
           type: 'table',
           children: [
             {
@@ -298,18 +327,29 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
               ],
             },
           ],
-        })
+        }
       } else if (type === 'img') {
-        editor.tf.insertNodes({
+        node = {
           type: 'img',
           url: '',
           children: [{ text: '' }],
-        })
+        }
       } else {
-        editor.tf.insertNodes({ type, children: [{ text: '' }] })
+        node = { type, children: [{ text: '' }] }
       }
+
+      editor.tf.insertNodes(node, { at: blockPath })
+
+      // Select the first text position in the newly inserted block
+      // so the cursor lands inside the deepest editable node
+      const start = editor.api.start(blockPath)
+      if (start) {
+        editor.tf.select(start)
+      }
+
+      focusEditor()
     },
-    [editor]
+    [editor, focusEditor]
   )
 
   // Create a new object and insert a mention node
@@ -329,10 +369,11 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
           children: [{ text: '' }],
         })
         editor.tf.move()
+        focusEditor()
         useObjectModal.getState().open(obj.id)
       }
     },
-    [editor, create]
+    [editor, create, focusEditor]
   )
 
   // Reset selection when query changes
