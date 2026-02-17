@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { GraphLayoutMode } from './types'
 
 interface GraphStore {
   enabledTypeIds: Set<string>
@@ -13,6 +14,9 @@ interface GraphStore {
 
   highlightedNodeIds: Set<string>
   setHighlightedNodeIds: (ids: Set<string>) => void
+
+  layoutMode: GraphLayoutMode
+  setLayoutMode: (mode: GraphLayoutMode) => void
 
   reset: () => void
 }
@@ -40,11 +44,15 @@ export const useGraphStore = create<GraphStore>((set) => ({
   highlightedNodeIds: new Set(),
   setHighlightedNodeIds: (ids) => set({ highlightedNodeIds: ids }),
 
+  layoutMode: 'force',
+  setLayoutMode: (mode) => set({ layoutMode: mode }),
+
   reset: () =>
     set({
       enabledTypeIds: new Set(),
       searchQuery: '',
       selectedNodeId: null,
       highlightedNodeIds: new Set(),
+      layoutMode: 'force',
     }),
 }))

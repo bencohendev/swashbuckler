@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useMemo, useCallback } from 'react'
-import { useForceSimulation } from '../lib/useForceSimulation'
+import { useGraphLayout } from '../lib/layouts/useGraphLayout'
 import { useGraphStore } from '../lib/store'
 import type { GraphNode as GraphNodeType, GraphEdge as GraphEdgeType } from '../lib/types'
 import { GraphNode } from './GraphNode'
@@ -38,7 +38,7 @@ export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCa
     [edges, filteredNodeIds],
   )
 
-  const { simulatedNodes, simulatedEdges, getSimulation } = useForceSimulation({
+  const { simulatedNodes, simulatedEdges, getSimulation, moveNode } = useGraphLayout({
     nodes: filteredNodes,
     edges: filteredEdges,
     width,
@@ -105,9 +105,13 @@ export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCa
   const handleNodeDragStart = useCallback((nodeId: string, pointerId: number) => {
     modeRef.current = { type: 'drag', nodeId, didMove: false }
     svgRef.current?.setPointerCapture(pointerId)
-    const node = findSimNode(nodeId)
-    if (node) { node.fx = node.x; node.fy = node.y }
-  }, [findSimNode])
+    const sim = getSimulation()
+    if (sim) {
+      // Force layout: pin node
+      const node = findSimNode(nodeId)
+      if (node) { node.fx = node.x; node.fy = node.y }
+    }
+  }, [findSimNode, getSimulation])
 
   // Background pan start (only fires when node didn't stopPropagation)
   const handlePointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
@@ -121,27 +125,36 @@ export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCa
     if (m.type === 'drag') {
       m.didMove = true
       const pt = toSimCoords(e.clientX, e.clientY)
-      const node = findSimNode(m.nodeId)
-      if (node) { node.fx = pt.x; node.fy = pt.y }
       const sim = getSimulation()
-      if (sim && sim.alpha() < 0.1) sim.alphaTarget(0.3).restart()
+      if (sim) {
+        // Force layout: update fixed position
+        const node = findSimNode(m.nodeId)
+        if (node) { node.fx = pt.x; node.fy = pt.y }
+        if (sim.alpha() < 0.1) sim.alphaTarget(0.3).restart()
+      } else {
+        // Static layout: directly move node
+        moveNode(m.nodeId, pt.x, pt.y)
+      }
     } else if (m.type === 'pan') {
       const t = transformRef.current
       t.x = m.startTx + (e.clientX - m.startX)
       t.y = m.startTy + (e.clientY - m.startY)
       applyTransform()
     }
-  }, [toSimCoords, findSimNode, getSimulation, applyTransform])
+  }, [toSimCoords, findSimNode, getSimulation, moveNode, applyTransform])
 
   const handlePointerUp = useCallback(() => {
     const m = modeRef.current
     modeRef.current = { type: 'idle' }
 
     if (m.type === 'drag') {
-      const node = findSimNode(m.nodeId)
-      if (node) { node.fx = null; node.fy = null }
       const sim = getSimulation()
-      if (sim) sim.alphaTarget(0)
+      if (sim) {
+        // Force layout: release pinned node
+        const node = findSimNode(m.nodeId)
+        if (node) { node.fx = null; node.fy = null }
+        sim.alphaTarget(0)
+      }
       // Click (no movement) → select node
       if (!m.didMove) setSelectedNodeId(m.nodeId)
     } else if (m.type === 'pan') {

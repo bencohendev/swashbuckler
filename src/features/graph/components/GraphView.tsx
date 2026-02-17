@@ -6,6 +6,7 @@ import { useGraphData } from '../hooks/useGraphData'
 import { useGraphStore } from '../lib/store'
 import { GraphCanvas } from './GraphCanvas'
 import { GraphFilterPanel } from './GraphFilterPanel'
+import { GraphLayoutToggle } from './GraphLayoutToggle'
 import { GraphNodeDetail } from './GraphNodeDetail'
 
 export function GraphView() {
@@ -71,6 +72,7 @@ export function GraphView() {
             height={dimensions.height}
             onNavigate={handleNavigate}
           />
+          <GraphLayoutToggle />
           <GraphFilterPanel types={types} nodes={graphData.nodes} />
           <GraphNodeDetail nodes={graphData.nodes} onNavigate={handleNavigate} />
         </>

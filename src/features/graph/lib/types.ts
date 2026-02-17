@@ -21,3 +21,5 @@ export interface GraphData {
   nodes: GraphNode[]
   edges: GraphEdge[]
 }
+
+export type GraphLayoutMode = 'force' | 'hierarchical' | 'radial' | 'clustered'
