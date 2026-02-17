@@ -4,6 +4,11 @@ import { memo } from 'react'
 import type { GraphNode as GraphNodeType } from '../lib/types'
 import { getNodeRadius } from '../lib/useForceSimulation'
 
+function isEmoji(str: string): boolean {
+  const codePoint = str.codePointAt(0)
+  return codePoint !== undefined && codePoint > 255
+}
+
 interface GraphNodeProps {
   node: GraphNodeType
   isSelected: boolean
@@ -22,6 +27,11 @@ export const GraphNode = memo(function GraphNode({
   const radius = getNodeRadius(node.connectionCount)
   const fill = node.typeColor ?? 'var(--primary)'
 
+  // Entry emoji > type emoji > colored circle
+  const emoji = (node.icon && isEmoji(node.icon)) ? node.icon
+    : isEmoji(node.typeIcon) ? node.typeIcon
+    : null
+
   return (
     <g
       className="graph-node"
@@ -33,12 +43,23 @@ export const GraphNode = memo(function GraphNode({
       }}
       style={{ cursor: 'grab', opacity: isDimmed ? 0.15 : 1, touchAction: 'none' }}
     >
-      <circle
-        r={radius}
-        fill={fill}
-        stroke={isSelected ? 'var(--foreground)' : isHighlighted ? 'var(--primary)' : 'transparent'}
-        strokeWidth={isSelected ? 2.5 : isHighlighted ? 2 : 0}
-      />
+      {emoji ? (
+        <text
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={radius * 1.8}
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {emoji}
+        </text>
+      ) : (
+        <circle
+          r={radius}
+          fill={fill}
+          stroke={isSelected ? 'var(--foreground)' : isHighlighted ? 'var(--primary)' : 'transparent'}
+          strokeWidth={isSelected ? 2.5 : isHighlighted ? 2 : 0}
+        />
+      )}
       {/* Invisible hit area for easier grabbing */}
       <circle r={Math.max(radius + 8, 16)} fill="transparent" />
       <text

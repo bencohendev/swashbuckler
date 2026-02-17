@@ -31,6 +31,7 @@ export function buildGraphData(
       typeName: objectType?.plural_name ?? 'Unknown',
       typeColor: typeColorMap.get(obj.type_id) ?? null,
       typeIcon: objectType?.icon ?? 'file',
+      icon: obj.icon,
       connectionCount: connectionCounts.get(obj.id) ?? 0,
     }
   })

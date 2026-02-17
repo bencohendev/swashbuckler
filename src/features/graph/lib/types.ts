@@ -7,6 +7,7 @@ export interface GraphNode extends SimulationNodeDatum {
   typeName: string
   typeColor: string | null
   typeIcon: string
+  icon: string | null
   connectionCount: number
 }
 

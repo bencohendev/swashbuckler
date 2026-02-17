@@ -10,6 +10,11 @@ import type { GraphNode } from '../lib/types'
 import { useGraphStore } from '../lib/store'
 import { buildTypeColorMap } from '../lib/colors'
 
+function isEmoji(str: string): boolean {
+  const codePoint = str.codePointAt(0)
+  return codePoint !== undefined && codePoint > 255
+}
+
 interface GraphFilterPanelProps {
   types: ObjectType[]
   nodes: GraphNode[]
@@ -80,10 +85,14 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
                   !isActive && 'opacity-40',
                 )}
               >
-                <span
-                  className="inline-block size-3 rounded-full shrink-0"
-                  style={{ backgroundColor: typeColorMap.get(t.id) ?? 'var(--primary)' }}
-                />
+                {isEmoji(t.icon) ? (
+                  <span className="shrink-0 text-sm leading-none">{t.icon}</span>
+                ) : (
+                  <span
+                    className="inline-block size-3 rounded-full shrink-0"
+                    style={{ backgroundColor: typeColorMap.get(t.id) ?? 'var(--primary)' }}
+                  />
+                )}
                 <span className="truncate flex-1 text-left">{t.plural_name}</span>
                 <span className="text-muted-foreground tabular-nums">{countByType.get(t.id) ?? 0}</span>
               </button>
