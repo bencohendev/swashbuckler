@@ -40,6 +40,16 @@ The app has no mobile support — sidebar is always visible at fixed width, no h
 | `src/shared/components/ui/Dialog.tsx` | Content padding `p-4 md:p-6` |
 | `src/features/search/components/GlobalSearchDialog.tsx` | Top position `top-[10%] md:top-[20%]` |
 
+### Touch targets & component-specific fixes
+
+| File | Changes |
+|------|---------|
+| `src/features/quick-capture/components/QuickCaptureButton.tsx` | Adjust floating button position to avoid overlap with mobile UI (e.g. `bottom-4 right-4 md:bottom-6 md:right-6`) |
+| `src/features/table-view/stores/viewMode.ts` | Default to card view on mobile (use `useIsMobile` or responsive initial value) |
+| `src/features/table-view/components/TypeTableView.tsx` | Add horizontal scroll wrapper (`overflow-x-auto`) for table on narrow screens |
+| `src/features/sidebar/components/SpaceSwitcher.tsx` | Ensure dropdown doesn't clip inside the mobile drawer (check `z-index`, use portal or `side="bottom"` positioning) |
+| Various interactive elements | Audit small icon buttons for 44px minimum touch target (`min-h-11 min-w-11` or `p-2.5` on mobile) |
+
 ## Design Details
 
 ### Sidebar Drawer (mobile)
@@ -76,6 +86,10 @@ A `MenuIcon` button with `md:hidden` in the left slot of the header (currently a
 6. Layout + editor padding adjustments
 7. Graph page positioning (filter panel, layout toggle, node detail)
 8. Dialog + search dialog adjustments
+9. Quick capture button positioning
+10. Type pages — default to card view on mobile, horizontal scroll on table view
+11. SpaceSwitcher dropdown clipping fix
+12. Touch target audit — ensure 44px minimum on interactive elements
 
 ## Verification
 
@@ -87,3 +101,7 @@ A `MenuIcon` button with `md:hidden` in the left slot of the header (currently a
 - Graph page — filter/toggle/detail panels positioned closer to edges
 - Resize above 768px — everything returns to normal desktop behavior
 - `Cmd/Ctrl + \` toggles drawer on mobile, sidebar collapse on desktop
+- Quick capture button doesn't overlap with other mobile UI elements
+- Type page defaults to card view on mobile; table view scrolls horizontally
+- SpaceSwitcher dropdown opens fully inside the mobile sidebar drawer
+- Icon buttons and interactive elements are comfortably tappable (44px+)

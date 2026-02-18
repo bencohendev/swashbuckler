@@ -110,7 +110,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   if (isLoading) {
     return (
       <div className="flex h-full flex-col animate-pulse">
-        <header className="flex items-center justify-between border-b px-6 py-3">
+        <header className="flex items-center justify-between border-b px-4 py-3 md:px-6">
           <div className="flex items-center gap-2">
             <div className="size-8 rounded-md bg-muted" />
             <div className="h-4 w-16 rounded bg-muted" />
@@ -120,7 +120,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
             <div className="size-8 rounded-md bg-muted" />
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-4 md:p-6">
           <div className="h-9 w-2/3 rounded bg-muted" />
           <div className="mt-6 space-y-3">
             <div className="h-4 w-full rounded bg-muted" />
@@ -156,7 +156,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b px-6 py-3">
+      <header className="flex items-center justify-between border-b px-4 py-3 md:px-6">
         <div className="flex items-center gap-2">
           {canEdit ? (
             <EmojiPicker value={object.icon ?? ''} onChange={handleIconChange}>
@@ -240,7 +240,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-6">
+      <main className="flex-1 overflow-auto p-4 md:p-6">
         {isTemplateMode && (
           <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
             Template mode — variable insertion enabled

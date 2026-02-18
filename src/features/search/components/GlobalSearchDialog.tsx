@@ -90,7 +90,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="top-[20%] translate-y-0 gap-0 p-0 sm:max-w-lg"
+        className="top-[10%] translate-y-0 gap-0 p-0 sm:max-w-lg md:top-[20%]"
         onKeyDown={handleKeyDown}
       >
         <DialogTitle className="sr-only">Search</DialogTitle>

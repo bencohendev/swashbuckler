@@ -25,7 +25,7 @@ export function ViewToggle({ slug }: ViewToggleProps) {
           onClick={() => setMode(value)}
           aria-label={label}
           className={cn(
-            'rounded-md p-1.5 transition-colors',
+            'rounded-md p-2.5 transition-colors md:p-1.5',
             mode === value
               ? 'bg-background shadow-sm text-foreground'
               : 'text-muted-foreground hover:text-foreground'

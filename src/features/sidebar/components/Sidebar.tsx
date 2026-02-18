@@ -5,9 +5,10 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon } from "lucide-react"
+import { HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
-import { useSidebar } from "@/shared/stores/sidebar"
+import { useSidebar, useSidebarHydration } from "@/shared/stores/sidebar"
+import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects } from "@/features/objects/hooks"
@@ -119,7 +120,9 @@ function DraggableTypeSection({
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { collapsed, toggle } = useSidebar()
+  useSidebarHydration()
+  const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar()
+  const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
@@ -147,12 +150,32 @@ export function Sidebar() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '\\' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        toggle()
+        if (isMobile) {
+          setMobileOpen(!mobileOpen)
+        } else {
+          toggle()
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [toggle])
+  }, [toggle, isMobile, mobileOpen, setMobileOpen])
+
+  // Close mobile drawer on navigation
+  useEffect(() => {
+    if (isMobile && mobileOpen) {
+      setMobileOpen(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on pathname change
+  }, [pathname])
+
+  // Body scroll lock when mobile drawer is open
+  useEffect(() => {
+    if (isMobile && mobileOpen) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [isMobile, mobileOpen])
 
   // Sync orderedTypes when upstream types change.
   // Only reset order when types are added/removed — not when sort_order updates
@@ -259,16 +282,11 @@ export function Sidebar() {
   const hasRecentContent = allObjects.length > 0
   const hasTagsContent = tags.length > 0
 
-  return (
-    <aside
-      className={cn(
-        "flex h-screen flex-col overflow-hidden border-r bg-muted/30 transition-[width] duration-200",
-        collapsed ? "w-12" : "w-64"
-      )}
-    >
+  const sidebarContent = (
+    <>
       {/* Header */}
       <div className="flex h-14 items-center border-b px-2">
-        {collapsed ? (
+        {!isMobile && collapsed ? (
           <button
             onClick={toggle}
             title="Expand sidebar"
@@ -284,13 +302,23 @@ export function Sidebar() {
                 Guest
               </span>
             )}
-            <button
-              onClick={toggle}
-              title="Collapse sidebar"
-              className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-            >
-              <PanelLeftCloseIcon className="size-4" />
-            </button>
+            {isMobile ? (
+              <button
+                onClick={() => setMobileOpen(false)}
+                title="Close sidebar"
+                className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <XIcon className="size-5" />
+              </button>
+            ) : (
+              <button
+                onClick={toggle}
+                title="Collapse sidebar"
+                className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <PanelLeftCloseIcon className="size-4" />
+              </button>
+            )}
           </>
         )}
       </div>
@@ -300,7 +328,7 @@ export function Sidebar() {
         <nav
           className={cn(
             "flex items-center px-2 py-2",
-            collapsed ? "flex-col gap-1" : "mx-auto max-w-40 justify-between"
+            !isMobile && collapsed ? "flex-col gap-1" : "mx-auto max-w-40 justify-between"
           )}
         >
           {navItems.map((item) => {
@@ -311,28 +339,28 @@ export function Sidebar() {
                 href={item.href}
                 title={item.label}
                 className={cn(
-                  "flex size-8 items-center justify-center rounded-md transition-colors",
+                  "flex size-10 items-center justify-center rounded-md transition-colors md:size-8",
                   isActive
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                <item.icon className="size-4" />
+                <item.icon className="size-5 md:size-4" />
               </Link>
             )
           })}
         </nav>
       </div>
 
-      {/* Scrollable content — always rendered, faded out when collapsed */}
+      {/* Scrollable content — always rendered, faded out when collapsed (desktop only) */}
       <DndProvider backend={HTML5Backend}>
         <div className={cn(
           "flex-1",
-          collapsed ? "overflow-hidden" : "overflow-y-auto"
+          !isMobile && collapsed ? "overflow-hidden" : "overflow-y-auto"
         )}>
           <div className={cn(
             "w-64 space-y-3 p-2 transition-transform duration-200",
-            collapsed ? "-translate-x-full" : "translate-x-0"
+            !isMobile && collapsed ? "-translate-x-full" : "translate-x-0"
           )}>
             {sidebarLoading ? (
               <>
@@ -460,6 +488,42 @@ export function Sidebar() {
           onSubmit={handleVariableSubmit}
         />
       )}
+    </>
+  )
+
+  // Mobile: drawer overlay
+  if (isMobile) {
+    return (
+      <>
+        {/* Backdrop */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+        {/* Drawer */}
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-muted/30 backdrop-blur-sm transition-transform duration-200",
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          {sidebarContent}
+        </aside>
+      </>
+    )
+  }
+
+  // Desktop: standard sidebar
+  return (
+    <aside
+      className={cn(
+        "flex h-screen flex-col overflow-hidden border-r bg-muted/30 transition-[width] duration-200",
+        collapsed ? "w-12" : "w-64"
+      )}
+    >
+      {sidebarContent}
     </aside>
   )
 }

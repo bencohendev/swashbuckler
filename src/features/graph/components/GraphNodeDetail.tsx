@@ -20,7 +20,7 @@ export function GraphNodeDetail({ nodes, onNavigate }: GraphNodeDetailProps) {
   if (!node) return null
 
   return (
-    <Card className="absolute bottom-9 right-9 w-64 shadow-lg bg-background/95 backdrop-blur-sm">
+    <Card className="absolute bottom-2 left-2 right-2 w-auto shadow-lg bg-background/95 backdrop-blur-sm md:bottom-9 md:left-auto md:right-9 md:w-64">
       <CardContent className="px-3 py-3 space-y-2">
         <div className="flex items-center gap-2">
           <TypeIcon icon={node.typeIcon} className="h-4 w-4 shrink-0" />

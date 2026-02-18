@@ -12,10 +12,10 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <GuestBanner />
         <Header email={user?.email} />
-        <main className="relative flex-1 overflow-auto p-6">{children}</main>
+        <main className="relative flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
       <ObjectEditorModal />
     </div>

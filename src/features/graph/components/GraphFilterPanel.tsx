@@ -62,7 +62,7 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
   const hasFilter = enabledTypeIds.size > 0
 
   return (
-    <Card className="absolute top-9 right-9 w-56 shadow-lg bg-background/95 backdrop-blur-sm">
+    <Card className="absolute top-2 right-2 w-56 shadow-lg bg-background/95 backdrop-blur-sm md:top-9 md:right-9">
       <CardHeader className="pb-2 px-3 pt-3">
         <CardTitle className="text-sm font-medium">Filters</CardTitle>
       </CardHeader>

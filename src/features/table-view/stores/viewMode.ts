@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useIsMobile } from '@/shared/hooks/useIsMobile'
 
 export type ViewMode = 'table' | 'list' | 'card'
 
@@ -32,7 +33,11 @@ export const useViewModeStore = create<ViewModeState>((set, get) => ({
 }))
 
 export function useViewMode(slug: string) {
-  const mode = useViewModeStore((s) => s.getMode(slug))
+  const isMobile = useIsMobile()
+  const storedMode = useViewModeStore((s) => s.getMode(slug))
   const setMode = useViewModeStore((s) => s.setMode)
+  // Default to card view on mobile if user hasn't explicitly chosen a mode
+  const hasExplicitMode = useViewModeStore((s) => slug in s.modes)
+  const mode = isMobile && !hasExplicitMode ? 'card' : storedMode
   return { mode, setMode: (m: ViewMode) => setMode(slug, m) }
 }

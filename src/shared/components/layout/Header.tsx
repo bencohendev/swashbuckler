@@ -13,8 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
-import { LogInIcon, LogOutIcon, MonitorIcon, MoonIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
 import { useAuth } from "@/shared/lib/data"
+import { useSidebar } from "@/shared/stores/sidebar"
 import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
 import { QuickCaptureDialog, QuickCaptureButton } from "@/features/quick-capture"
@@ -22,6 +23,7 @@ import { QuickCaptureDialog, QuickCaptureButton } from "@/features/quick-capture
 export function Header({ email }: { email?: string }) {
   const router = useRouter()
   const { user } = useAuth()
+  const { setMobileOpen } = useSidebar()
   const isGuest = !email
   const avatarUrl: string | undefined = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture
   const [searchOpen, setSearchOpen] = useState(false)
@@ -62,7 +64,16 @@ export function Header({ email }: { email?: string }) {
 
   return (
     <header className="flex h-14 items-center justify-between border-b px-4">
-      <div />
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-muted-foreground md:hidden"
+        onClick={() => setMobileOpen(true)}
+        title="Open sidebar"
+      >
+        <MenuIcon className="size-5" />
+      </Button>
+      <div className="hidden md:block" />
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
