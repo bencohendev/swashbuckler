@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { TagIcon, TrashIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useTags } from '../hooks/useTags'
-import { TAG_COLORS } from './TagPicker'
+import { TAG_COLORS, COLOR_NAMES } from './TagPicker'
 import { useDataClient } from '@/shared/lib/data'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
@@ -65,6 +65,7 @@ export function TagPageView({ name }: TagPageViewProps) {
               onClick={() => setShowColors(!showColors)}
               className="rounded-md p-0.5 hover:bg-muted"
               title="Change color"
+              aria-label="Change tag color"
             >
               <TagIcon
                 className="size-5"
@@ -81,7 +82,7 @@ export function TagPageView({ name }: TagPageViewProps) {
               {objects.length} object{objects.length !== 1 ? 's' : ''}
             </span>
           </div>
-          <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Delete tag">
+          <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Delete tag" aria-label="Delete tag">
             <TrashIcon className="size-4" />
           </Button>
         </div>
@@ -92,6 +93,8 @@ export function TagPageView({ name }: TagPageViewProps) {
                 key={c}
                 type="button"
                 onClick={() => { update(tag.id, { color: c }); setShowColors(false) }}
+                aria-label={COLOR_NAMES[c] ?? c}
+                aria-pressed={tag.color === c}
                 className={cn(
                   'size-6 rounded-full transition-transform hover:scale-110',
                   tag.color === c && 'ring-2 ring-foreground ring-offset-1 ring-offset-background'

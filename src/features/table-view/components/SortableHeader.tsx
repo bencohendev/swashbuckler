@@ -20,10 +20,15 @@ export function SortableHeader({ column, label, sort, onSort, className }: Sorta
 
   return (
     <th
-      className={`cursor-pointer select-none px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:text-foreground ${className ?? ''}`}
-      onClick={() => onSort(column)}
+      scope="col"
+      aria-sort={isActive ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}
+      className={`px-3 py-2 text-left text-xs font-medium text-muted-foreground ${className ?? ''}`}
     >
-      <span className="inline-flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className="inline-flex cursor-pointer select-none items-center gap-1 hover:text-foreground"
+      >
         {label}
         {isActive ? (
           sort.direction === 'asc' ? (
@@ -34,7 +39,7 @@ export function SortableHeader({ column, label, sort, onSort, className }: Sorta
         ) : (
           <ArrowUpDownIcon className="size-3 opacity-0 group-hover:opacity-50" />
         )}
-      </span>
+      </button>
     </th>
   )
 }

@@ -115,6 +115,9 @@ export function TypeSection({
               <button
                 onClick={() => setCollapsed(!collapsed)}
                 className="hover:text-foreground"
+                aria-expanded={!collapsed}
+                aria-controls={`type-section-${type.id}`}
+                aria-label={`Toggle ${type.plural_name}`}
               >
                 <ChevronRightIcon
                   className={cn(
@@ -138,6 +141,7 @@ export function TypeSection({
                   size="icon-xs"
                   variant="ghost"
                   title={`${type.name} options`}
+                  aria-label={`${type.name} options`}
                 >
                   <EllipsisIcon className="size-3" />
                 </Button>
@@ -193,7 +197,7 @@ export function TypeSection({
         </ContextMenu.Portal>
       </ContextMenu.Root>
       {!collapsed && (
-        <div className="pl-8">
+        <div id={`type-section-${type.id}`} className="pl-8">
           <ObjectList
             objects={objects}
             objectType={type}

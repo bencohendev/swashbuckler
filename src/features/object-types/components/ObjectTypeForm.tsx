@@ -75,10 +75,11 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label className="block text-sm font-medium">
+          <label htmlFor="type-name" className="block text-sm font-medium">
             Name <span className="text-destructive">*</span>
           </label>
           <input
+            id="type-name"
             type="text"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
@@ -88,8 +89,9 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Plural</label>
+          <label htmlFor="type-plural" className="block text-sm font-medium">Plural</label>
           <input
+            id="type-plural"
             type="text"
             value={pluralName}
             onChange={(e) => {
@@ -102,8 +104,9 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Slug</label>
+          <label htmlFor="type-slug" className="block text-sm font-medium">Slug</label>
           <input
+            id="type-slug"
             type="text"
             value={slug}
             onChange={(e) => {
@@ -121,6 +124,7 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
         <EmojiPicker value={icon} onChange={setIcon}>
           <button
             type="button"
+            aria-label="Choose icon"
             className="flex size-10 items-center justify-center rounded-lg border text-lg transition-colors hover:bg-muted"
           >
             {icon}
@@ -129,15 +133,17 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
       </div>
 
       <div>
-        <label className="block text-sm font-medium">Color (optional)</label>
+        <label htmlFor="type-color-hex" className="block text-sm font-medium">Color (optional)</label>
         <div className="mt-1 flex items-center gap-2">
           <input
             type="color"
             value={color || '#6b7280'}
             onChange={(e) => setColor(e.target.value)}
+            aria-label="Color picker"
             className="size-8 cursor-pointer rounded border"
           />
           <input
+            id="type-color-hex"
             type="text"
             value={color}
             onChange={(e) => setColor(e.target.value)}

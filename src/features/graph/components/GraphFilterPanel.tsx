@@ -108,6 +108,7 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
                   <button
                     key={t.id}
                     onClick={() => toggleType(t.id)}
+                    aria-pressed={isActive}
                     className={cn(
                       'flex items-center gap-1.5 w-full px-1 py-0.5 rounded text-xs hover:bg-accent transition-colors',
                       !isActive && 'opacity-40',
@@ -155,6 +156,7 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
               <button
                 key={t.id}
                 onClick={() => toggleType(t.id)}
+                aria-pressed={isActive}
                 className={cn(
                   'flex items-center gap-1.5 w-full px-1.5 py-0.5 rounded text-xs hover:bg-accent transition-colors',
                   !isActive && 'opacity-40',

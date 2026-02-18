@@ -107,6 +107,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Data Caching](data-caching.md) | TanStack Query migration for SWR caching | Done |
 | [Custom Themes](custom-themes.md) | User-built themes with color pickers | Not started |
 | [Mobile](mobile.md) | Responsive layout for mobile devices | Not started |
+| [Accessibility](accessibility.md) | Accessibility audit and remediation | Done |
 | [Realtime Collaboration](realtime.md) | Supabase Realtime, presence, collaborative editing | Not started |
 
 ## Unfinished Features
@@ -116,4 +117,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Board view | Kanban for status-based entries | Not started |
 | First use tutorial | Onboarding walkthrough for new users | Not started |
 | Advanced documentation | In-depth user docs and help content | Not started |
-| Accessibility audit | Review and fix a11y across the app | Not started |
+| Graph keyboard navigation | Tab/arrow-key navigation through graph nodes | Not started |
+| Custom confirm dialogs | Replace `window.confirm()` with Radix AlertDialog | Not started |
+| Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop | Not started |

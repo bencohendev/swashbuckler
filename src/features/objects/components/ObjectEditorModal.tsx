@@ -5,6 +5,7 @@ import { useObjectModal } from '@/shared/stores/objectModal'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
 } from '@/shared/components/ui/Dialog'
@@ -17,42 +18,38 @@ export function ObjectEditorModal() {
 
   if (!objectId) return null
 
-  // Mobile: full-screen takeover
-  if (isMobile) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background">
-        <div className="flex h-14 items-center border-b px-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1 text-muted-foreground"
-            onClick={close}
-          >
-            <ArrowLeftIcon className="size-4" />
-            Back
-          </Button>
-        </div>
-        <div className="h-[calc(100%-3.5rem)] overflow-auto">
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) close() }}>
+      <DialogContent
+        className={
+          isMobile
+            ? "fixed inset-0 max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0"
+            : "max-h-[85vh] overflow-hidden p-0 sm:max-w-3xl"
+        }
+        showCloseButton={false}
+      >
+        <DialogTitle className="sr-only">Edit Entry</DialogTitle>
+        {isMobile && (
+          <div className="flex h-14 items-center border-b px-2">
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-muted-foreground"
+              >
+                <ArrowLeftIcon className="size-4" />
+                Back
+              </Button>
+            </DialogClose>
+          </div>
+        )}
+        <div className={isMobile ? "h-[calc(100%-3.5rem)] overflow-auto" : undefined}>
           <ObjectEditor
             id={objectId}
             onDelete={close}
             onNavigateAway={close}
           />
         </div>
-      </div>
-    )
-  }
-
-  // Desktop: dialog
-  return (
-    <Dialog open onOpenChange={(open) => { if (!open) close() }}>
-      <DialogContent className="max-h-[85vh] overflow-hidden p-0 sm:max-w-3xl" showCloseButton={false}>
-        <DialogTitle className="sr-only">Edit Entry</DialogTitle>
-        <ObjectEditor
-          id={objectId}
-          onDelete={close}
-          onNavigateAway={close}
-        />
       </DialogContent>
     </Dialog>
   )

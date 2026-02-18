@@ -290,6 +290,7 @@ export function Sidebar() {
           <button
             onClick={toggle}
             title="Expand sidebar"
+            aria-label="Expand sidebar"
             className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors mx-auto"
           >
             <PanelLeftOpenIcon className="size-4" />
@@ -306,6 +307,7 @@ export function Sidebar() {
               <button
                 onClick={() => setMobileOpen(false)}
                 title="Close sidebar"
+                aria-label="Close sidebar"
                 className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <XIcon className="size-5" />
@@ -314,6 +316,7 @@ export function Sidebar() {
               <button
                 onClick={toggle}
                 title="Collapse sidebar"
+                aria-label="Collapse sidebar"
                 className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <PanelLeftCloseIcon className="size-4" />
@@ -338,6 +341,8 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 title={item.label}
+                aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex size-10 items-center justify-center rounded-md transition-colors md:size-8",
                   isActive
@@ -354,16 +359,19 @@ export function Sidebar() {
 
       {/* Scrollable content — always rendered, faded out when collapsed (desktop only) */}
       <DndProvider backend={HTML5Backend}>
-        <div className={cn(
-          "flex-1",
-          !isMobile && collapsed ? "overflow-hidden" : "overflow-y-auto"
-        )}>
+        <div
+          {...(!isMobile && collapsed ? { inert: true } : {})}
+          className={cn(
+            "flex-1",
+            !isMobile && collapsed ? "overflow-hidden" : "overflow-y-auto"
+          )}
+        >
           <div className={cn(
             "w-64 space-y-3 p-2 transition-transform duration-200",
             !isMobile && collapsed ? "-translate-x-full" : "translate-x-0"
           )}>
             {sidebarLoading ? (
-              <>
+              <div aria-busy="true" aria-label="Loading sidebar content" role="status">
                 {/* Skeleton section 1 */}
                 <div className="px-2">
                   <div className="mb-1 flex items-center gap-1">
@@ -405,7 +413,7 @@ export function Sidebar() {
                     ))}
                   </div>
                 </div>
-              </>
+              </div>
             ) : (
               <>
                 <PinnedSection pinnedIds={pinnedIds} objects={allObjects} />
@@ -457,6 +465,7 @@ export function Sidebar() {
                 <hr className="border-border" />
                 <Link
                   href="/trash"
+                  aria-current={pathname === "/trash" ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     pathname === "/trash"
@@ -497,10 +506,12 @@ export function Sidebar() {
       {isMobile && mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50"
+          aria-hidden="true"
           onClick={() => setMobileOpen(false)}
         />
       )}
       <aside
+        {...(isMobile ? { role: "dialog", "aria-modal": true, "aria-label": "Navigation sidebar" } : {})}
         className={cn(
           "flex flex-col border-r bg-muted/30 transition-all duration-200",
           // Mobile: fixed drawer

@@ -85,6 +85,7 @@ export function PasswordSection({ user }: { user: User }) {
             type="password"
             value={currentPassword}
             onChange={e => setCurrentPassword(e.target.value)}
+            aria-describedby={error ? "password-error" : undefined}
             className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             required
           />
@@ -117,8 +118,8 @@ export function PasswordSection({ user }: { user: User }) {
             minLength={6}
           />
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {success && <p className="text-sm text-green-600">Password updated.</p>}
+        {error && <p id="password-error" role="alert" className="text-sm text-destructive">{error}</p>}
+        {success && <p role="status" className="text-sm text-green-600">Password updated.</p>}
         <Button type="submit" size="sm" disabled={isSaving}>
           {isSaving ? 'Saving...' : 'Change password'}
         </Button>

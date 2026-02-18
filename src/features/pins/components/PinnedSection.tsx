@@ -35,6 +35,9 @@ export function PinnedSection({ pinnedIds, objects }: PinnedSectionProps) {
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hover:text-foreground"
+            aria-expanded={!collapsed}
+            aria-controls="pinned-section-content"
+            aria-label="Toggle pinned items"
           >
             <ChevronRightIcon
               className={cn(
@@ -51,7 +54,7 @@ export function PinnedSection({ pinnedIds, objects }: PinnedSectionProps) {
         </div>
       </div>
       {!collapsed && (
-        <div className="pl-4">
+        <div id="pinned-section-content" className="pl-4">
           {pinnedObjects.map(obj => (
             <ObjectItem
               key={obj.id}

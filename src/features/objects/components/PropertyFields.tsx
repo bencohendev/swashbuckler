@@ -37,8 +37,9 @@ interface FieldInputProps {
 }
 
 function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
+  const inputId = `field-${field.id}`
   const label = (
-    <label className="block text-xs font-medium text-muted-foreground">
+    <label htmlFor={inputId} className="block text-xs font-medium text-muted-foreground">
       {field.name}
       {field.required && <span className="text-destructive"> *</span>}
     </label>
@@ -50,6 +51,7 @@ function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
         <div>
           {label}
           <input
+            id={inputId}
             type="text"
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value)}
@@ -64,6 +66,7 @@ function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
         <div>
           {label}
           <input
+            id={inputId}
             type="number"
             value={(value as number) ?? ''}
             onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
@@ -78,6 +81,7 @@ function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
         <div>
           {label}
           <input
+            id={inputId}
             type="date"
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value || null)}
@@ -91,13 +95,14 @@ function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
       return (
         <div className="flex items-center gap-2">
           <input
+            id={inputId}
             type="checkbox"
             checked={Boolean(value)}
             onChange={(e) => onChange(e.target.checked)}
             disabled={readOnly}
             className="size-4 rounded border"
           />
-          <label className="text-sm">{field.name}</label>
+          <label htmlFor={inputId} className="text-sm">{field.name}</label>
         </div>
       )
 
@@ -106,6 +111,7 @@ function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
         <div>
           {label}
           <select
+            id={inputId}
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value || null)}
             disabled={readOnly}
@@ -134,6 +140,7 @@ function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
                   key={option}
                   type="button"
                   disabled={readOnly}
+                  aria-pressed={isSelected}
                   onClick={() => {
                     if (isSelected) {
                       onChange(selected.filter(s => s !== option))
@@ -161,6 +168,7 @@ function FieldInput({ field, value, onChange, readOnly }: FieldInputProps) {
         <div>
           {label}
           <input
+            id={inputId}
             type="url"
             value={(value as string) ?? ''}
             onChange={(e) => onChange(e.target.value || null)}

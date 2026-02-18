@@ -70,6 +70,7 @@ export function Header({ email }: { email?: string }) {
         className="text-muted-foreground md:hidden"
         onClick={() => setMobileOpen(true)}
         title="Open sidebar"
+        aria-label="Open sidebar"
       >
         <MenuIcon className="size-5" />
       </Button>
@@ -81,6 +82,7 @@ export function Header({ email }: { email?: string }) {
           className="text-muted-foreground"
           onClick={() => setSearchOpen(true)}
           title="Search"
+          aria-label="Search"
         >
           <SearchIcon className="size-4" />
         </Button>
@@ -94,6 +96,7 @@ export function Header({ email }: { email?: string }) {
             else setTheme('light')
           }}
           title={mounted ? `Theme: ${theme}` : "Theme"}
+          aria-label={mounted ? `Theme: ${theme}` : "Toggle theme"}
         >
           {mounted ? (
             theme === 'system' ? <MonitorIcon className="size-4" /> :
@@ -105,7 +108,7 @@ export function Header({ email }: { email?: string }) {
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full" aria-label="Account menu">
               <Avatar size="sm">
                 {avatarUrl && <AvatarImage src={avatarUrl} alt={email || "User"} />}
                 <AvatarFallback>{initials}</AvatarFallback>

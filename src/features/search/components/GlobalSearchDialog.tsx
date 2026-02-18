@@ -105,7 +105,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             autoFocus
           />
           {isLoading && (
-            <div className="size-4 shrink-0 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+            <div role="status" aria-label="Searching" className="size-4 shrink-0 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
           )}
         </div>
 
@@ -115,6 +115,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
               <button
                 key={type.id}
                 onClick={() => toggleTypeFilter(type.id)}
+                aria-pressed={typeIds.includes(type.id)}
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors',
                   typeIds.includes(type.id)
@@ -129,9 +130,9 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
           </div>
         )}
 
-        <div ref={listRef} className="max-h-72 overflow-y-auto">
+        <div ref={listRef} role="listbox" aria-label="Search results" className="max-h-72 overflow-y-auto">
           {query.trim() && totalItems === 0 && !isLoading && (
-            <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+            <div role="status" className="px-3 py-8 text-center text-sm text-muted-foreground">
               No results found
             </div>
           )}
@@ -148,6 +149,8 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
               {tagResults.map((tag, index) => (
                 <button
                   key={tag.id}
+                  role="option"
+                  aria-selected={index === selectedIndex}
                   data-selected={index === selectedIndex}
                   onClick={() => navigateTo(`/tags/${encodeURIComponent(tag.name)}`)}
                   onMouseEnter={() => setSelectedIndex(index)}
@@ -179,6 +182,8 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
                 return (
                   <button
                     key={obj.id}
+                    role="option"
+                    aria-selected={globalIndex === selectedIndex}
                     data-selected={globalIndex === selectedIndex}
                     onClick={() => navigateTo(`/objects/${obj.id}`)}
                     onMouseEnter={() => setSelectedIndex(globalIndex)}

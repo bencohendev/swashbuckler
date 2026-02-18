@@ -125,8 +125,8 @@ export function ProfileSection({ user }: { user: User }) {
             className="w-full rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground"
           />
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {success && <p className="text-sm text-green-600">Profile updated.</p>}
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        {success && <p role="status" className="text-sm text-green-600">Profile updated.</p>}
         <Button type="submit" size="sm" disabled={isSaving}>
           {isSaving ? 'Saving...' : 'Save'}
         </Button>

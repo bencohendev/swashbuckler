@@ -81,6 +81,7 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border">
       <table className="w-full text-sm">
+        <caption className="sr-only">{type.plural_name}</caption>
         <thead className="border-b bg-muted/50">
           <tr className="group">
             <SortableHeader
@@ -111,8 +112,16 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
           {sortedObjects.map((obj) => (
             <tr
               key={obj.id}
-              className="cursor-pointer transition-colors hover:bg-accent/50"
+              tabIndex={0}
+              role="link"
+              className="cursor-pointer transition-colors hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:outline-none"
               onClick={() => router.push(`/objects/${obj.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  router.push(`/objects/${obj.id}`)
+                }
+              }}
             >
               <td className="px-3 py-2 font-medium">
                 <span className="flex items-center gap-2">

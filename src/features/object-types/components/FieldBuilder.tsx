@@ -123,11 +123,13 @@ function FieldRow({ field, index, totalFields, onUpdate, onRemove, onMove }: Fie
           value={field.name}
           onChange={(e) => onUpdate({ name: e.target.value })}
           placeholder="Field name"
+          aria-label="Field name"
           className="flex-1 rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
         />
 
         <select
           value={field.type}
+          aria-label="Field type"
           onChange={(e) => {
             const newType = e.target.value as FieldType
             onUpdate({ type: newType, options: undefined })
@@ -157,6 +159,7 @@ function FieldRow({ field, index, totalFields, onUpdate, onRemove, onMove }: Fie
           size="icon-xs"
           variant="ghost"
           onClick={onRemove}
+          aria-label="Remove field"
           className="text-destructive hover:text-destructive"
         >
           <TrashIcon className="size-3" />
@@ -224,6 +227,7 @@ function OptionsEditor({ options, onChange }: OptionsEditorProps) {
             }
           }}
           placeholder="Add option..."
+          aria-label="New option"
           className="flex-1 rounded-md border bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-ring"
         />
         <Button type="button" size="sm" variant="outline" onClick={handleAdd} className="text-xs">

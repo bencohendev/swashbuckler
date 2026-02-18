@@ -69,6 +69,7 @@ export function TrashList() {
               onClick={() => handleRestore(obj)}
               disabled={processingId === obj.id}
               title="Restore"
+              aria-label={`Restore "${obj.title}"`}
             >
               <RotateCcwIcon className="size-4" />
               Restore
@@ -80,6 +81,7 @@ export function TrashList() {
               disabled={processingId === obj.id}
               className="text-destructive hover:text-destructive"
               title="Delete permanently"
+              aria-label={`Permanently delete "${obj.title}"`}
             >
               <TrashIcon className="size-4" />
             </Button>

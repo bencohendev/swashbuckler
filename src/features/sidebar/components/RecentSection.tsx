@@ -37,6 +37,9 @@ export function RecentSection({ objects }: RecentSectionProps) {
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hover:text-foreground"
+            aria-expanded={!collapsed}
+            aria-controls="recent-section-content"
+            aria-label="Toggle recent items"
           >
             <ChevronRightIcon
               className={cn(
@@ -52,7 +55,7 @@ export function RecentSection({ objects }: RecentSectionProps) {
         </div>
       </div>
       {!collapsed && (
-        <div className="pl-4">
+        <div id="recent-section-content" className="pl-4">
           {recentObjects.map(obj => (
             <ObjectItem
               key={obj.id}

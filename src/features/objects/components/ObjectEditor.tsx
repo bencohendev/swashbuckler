@@ -109,7 +109,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col animate-pulse">
+      <div className="flex h-full flex-col animate-pulse" role="status" aria-label="Loading entry" aria-busy="true">
         <header className="flex items-center justify-between border-b px-4 py-3 md:px-6">
           <div className="flex items-center gap-2">
             <div className="size-8 rounded-md bg-muted" />
@@ -164,6 +164,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
                 type="button"
                 className="flex size-8 items-center justify-center rounded-md text-2xl transition-colors hover:bg-muted"
                 title="Change icon"
+                aria-label="Change icon"
               >
                 {object.icon ?? <SmilePlusIcon className="size-5 text-muted-foreground" />}
               </button>
@@ -175,9 +176,9 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           {!canEdit && (
             <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">View only</span>
           )}
-          {isSaving && (
-            <span className="text-xs text-muted-foreground">Saving...</span>
-          )}
+          <span role="status" aria-live="polite" className="text-xs text-muted-foreground">
+            {isSaving ? "Saving..." : ""}
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <PinButton objectId={id} />
@@ -188,15 +189,16 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
                 variant={isTemplateMode ? 'default' : 'ghost'}
                 onClick={() => setIsTemplateMode(prev => !prev)}
                 title={isTemplateMode ? 'Exit template mode' : 'Template mode'}
+                aria-label={isTemplateMode ? 'Exit template mode' : 'Template mode'}
               >
                 <BracesIcon className="size-4" />
               </Button>
-              <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash">
+              <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash" aria-label="Move to trash">
                 <TrashIcon className="size-4" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon-sm" variant="ghost" title="More options">
+                  <Button size="icon-sm" variant="ghost" title="More options" aria-label="More options">
                     <MoreHorizontalIcon className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>

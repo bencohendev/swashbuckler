@@ -61,7 +61,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
             <ShieldIcon className="size-5 text-muted-foreground" />
             <h2 className="text-lg font-semibold">Share &quot;{spaceName}&quot;</h2>
           </div>
-          <button type="button" onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground" aria-label="Close">
             <XIcon className="size-5" />
           </button>
         </div>
@@ -74,11 +74,14 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="Email address"
+                aria-label="Email address"
+                aria-describedby={error ? "share-error" : undefined}
                 className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
               />
               <select
                 value={permission}
                 onChange={e => setPermission(e.target.value as SpaceSharePermission)}
+                aria-label="Permission level"
                 className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="view">View</option>
@@ -89,7 +92,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                 Share
               </Button>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p id="share-error" role="alert" className="text-sm text-destructive">{error}</p>}
           </form>
 
           <div className="space-y-1">
@@ -115,6 +118,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                     <select
                       value={share.permission}
                       onChange={e => handlePermissionChange(share, e.target.value as SpaceSharePermission)}
+                      aria-label={`Permission for ${share.shared_with_email}`}
                       className="rounded border bg-background px-2 py-1 text-xs outline-none"
                     >
                       <option value="view">View</option>
@@ -134,6 +138,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                       onClick={() => handleRemove(share.id)}
                       className="text-muted-foreground hover:text-destructive"
                       title="Remove access"
+                      aria-label={`Remove access for ${share.shared_with_email}`}
                     >
                       <TrashIcon className="size-4" />
                     </button>

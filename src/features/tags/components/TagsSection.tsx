@@ -49,6 +49,9 @@ export function TagsSection({ tags }: TagsSectionProps) {
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hover:text-foreground"
+            aria-expanded={!collapsed}
+            aria-controls="tags-section-content"
+            aria-label="Toggle tags"
           >
             <ChevronRightIcon
               className={cn(
@@ -65,7 +68,7 @@ export function TagsSection({ tags }: TagsSectionProps) {
         </div>
       </div>
       {!collapsed && (
-        <div className="pl-8">
+        <div id="tags-section-content" className="pl-8">
           {tags.map(tag => (
             <Link
               key={tag.id}

@@ -196,7 +196,7 @@ export function SlashMenu({ query, onSelect, onCreateNew }: SlashMenuProps) {
   let currentIndex = 0;
 
   return (
-    <div className="w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+    <div role="menu" aria-label="Insert block" className="w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
       <div className="max-h-80 overflow-y-auto p-1">
         {categories.map((category) => (
           <div key={category}>
@@ -210,6 +210,7 @@ export function SlashMenu({ query, onSelect, onCreateNew }: SlashMenuProps) {
                 <button
                   key={item.key}
                   type="button"
+                  role="menuitem"
                   onClick={() => onSelect(item.type)}
                   onMouseEnter={() => setSelectedIndex(itemIndex)}
                   className={`flex w-full items-center gap-3 rounded px-2 py-2 text-left ${

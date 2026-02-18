@@ -51,12 +51,12 @@ export function GraphView() {
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
       {isLoading && (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
+        <div role="status" className="flex items-center justify-center h-full text-muted-foreground">
           Loading graph...
         </div>
       )}
       {!isLoading && graphData.nodes.length === 0 && (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
+        <div role="status" className="flex items-center justify-center h-full text-muted-foreground">
           <div className="text-center space-y-2">
             <p className="text-lg font-medium">No entries to display</p>
             <p className="text-sm">Create some entries and link them to see the graph.</p>

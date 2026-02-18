@@ -77,7 +77,7 @@ export function MentionInput({
   let currentIndex = 0;
 
   return (
-    <div className="w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+    <div role="listbox" aria-label="Mention suggestions" className="w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
       <div className="max-h-80 overflow-y-auto p-1">
         {isLoading && (
           <div className="flex items-center justify-center py-4">
@@ -99,6 +99,8 @@ export function MentionInput({
                     <button
                       key={result.id}
                       type="button"
+                      role="option"
+                      aria-selected={isSelected}
                       onClick={() => onSelect(result)}
                       onMouseEnter={() => setSelectedIndex(itemIndex)}
                       className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left ${

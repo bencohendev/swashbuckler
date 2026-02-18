@@ -18,12 +18,13 @@ export function ViewToggle({ slug }: ViewToggleProps) {
   const { mode, setMode } = useViewMode(slug)
 
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border bg-muted/50 p-0.5">
+    <div role="group" aria-label="View mode" className="flex items-center gap-0.5 rounded-lg border bg-muted/50 p-0.5">
       {modes.map(({ value, icon: Icon, label }) => (
         <button
           key={value}
           onClick={() => setMode(value)}
           aria-label={label}
+          aria-pressed={mode === value}
           className={cn(
             'rounded-md p-2.5 transition-colors md:p-1.5',
             mode === value

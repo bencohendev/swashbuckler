@@ -170,6 +170,8 @@ export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCa
       ref={svgRef}
       width={width}
       height={height}
+      role="img"
+      aria-label="Relationship graph visualization"
       style={{ display: 'block' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
