@@ -105,6 +105,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [UI Terminology](ui-terminology.md) | Rename "object" → "entry", "Object Type" → "Type" in UI | Done |
 | [Export](export.md) | JSON data export (account settings) | Done |
 | [Data Caching](data-caching.md) | TanStack Query migration for SWR caching | Done |
+| [Custom Themes](custom-themes.md) | User-built themes with color pickers | Not started |
 | [Mobile](mobile.md) | Responsive layout for mobile devices | Not started |
 | [Realtime Collaboration](realtime.md) | Supabase Realtime, presence, collaborative editing | Not started |
 
@@ -112,10 +113,7 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| Template variables | {{date}}, {{user}}, custom prompts | Done |
-| Advanced graph layouts | Hierarchical, radial, clustered | Done |
 | Board view | Kanban for status-based entries | Not started |
 | First use tutorial | Onboarding walkthrough for new users | Not started |
-| Collapsible sidebar | Toggle sidebar open/closed | Done |
 | Advanced documentation | In-depth user docs and help content | Not started |
 | Accessibility audit | Review and fix a11y across the app | Not started |

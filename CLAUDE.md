@@ -13,6 +13,7 @@
 
 ## Feature Specs
 
-- After completing any implementation that adds, changes, or removes features, update the relevant feature spec in `.claude/plans/`. Read the existing doc first, then make surgical edits to reflect what changed.
-- If no spec exists for a substantial new feature, create one and add it to `.claude/plans/index.md`.
+- All feature specs live in `.claude/plans/` with descriptive names (e.g., `custom-themes.md`, not random/auto-generated names). When plan mode assigns a random filename, override it with a contextual name.
+- When planning a new feature, create its spec in `.claude/plans/` and add it to `.claude/plans/index.md` before starting implementation.
+- After completing any implementation that adds, changes, or removes features, update the relevant feature spec. Read the existing doc first, then make surgical edits to reflect what changed.
 - These docs are the source of truth for expected behavior — keep them accurate.
