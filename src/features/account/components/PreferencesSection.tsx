@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
+import { CheckIcon, ChevronsUpDownIcon, MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useSpaces } from '@/shared/lib/data'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/DropdownMenu'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 
@@ -33,6 +39,11 @@ export function PreferencesSection({ user }: { user: User }) {
     })
   }
 
+  const selectedSpace = spaces.find(s => s.id === defaultSpaceId)
+  const selectedLabel = selectedSpace
+    ? `${selectedSpace.icon} ${selectedSpace.name}`
+    : 'None (use last selected)'
+
   return (
     <div className="rounded-lg border p-6">
       <h2 className="mb-4 text-lg font-semibold">Preferences</h2>
@@ -59,22 +70,35 @@ export function PreferencesSection({ user }: { user: User }) {
         </div>
         {spaces.length > 1 && (
           <div>
-            <label htmlFor="default-space" className="mb-1 block text-sm font-medium">
+            <span className="mb-1 block text-sm font-medium">
               Default space
-            </label>
-            <select
-              id="default-space"
-              value={defaultSpaceId}
-              onChange={e => handleDefaultSpaceChange(e.target.value)}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">None (use last selected)</option>
-              {spaces.map(space => (
-                <option key={space.id} value={space.id}>
-                  {space.icon} {space.name}
-                </option>
-              ))}
-            </select>
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring">
+                <span className="truncate">{selectedLabel}</span>
+                <ChevronsUpDownIcon className="size-4 shrink-0 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+                <DropdownMenuItem
+                  onClick={() => handleDefaultSpaceChange('')}
+                  className="gap-2"
+                >
+                  <span className="flex-1">None (use last selected)</span>
+                  {!defaultSpaceId && <CheckIcon className="size-4 text-primary" />}
+                </DropdownMenuItem>
+                {spaces.map(space => (
+                  <DropdownMenuItem
+                    key={space.id}
+                    onClick={() => handleDefaultSpaceChange(space.id)}
+                    className="gap-2"
+                  >
+                    <span className="text-base">{space.icon}</span>
+                    <span className="flex-1 truncate">{space.name}</span>
+                    {defaultSpaceId === space.id && <CheckIcon className="size-4 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <p className="mt-1 text-xs text-muted-foreground">
               Choose which space to open by default.
             </p>
