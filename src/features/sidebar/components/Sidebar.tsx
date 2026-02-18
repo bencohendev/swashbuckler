@@ -286,52 +286,52 @@ export function Sidebar() {
     <>
       {/* Header */}
       <div className="flex h-14 items-center border-b px-2">
-        {!isMobile && collapsed ? (
+        {/* Desktop collapsed: expand button */}
+        {collapsed && (
           <button
             onClick={toggle}
             title="Expand sidebar"
             aria-label="Expand sidebar"
-            className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors mx-auto"
+            className="hidden md:flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors mx-auto"
           >
             <PanelLeftOpenIcon className="size-4" />
           </button>
-        ) : (
-          <>
-            <SpaceSwitcher />
-            {isGuest && (
-              <span className="ml-1 shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
-                Guest
-              </span>
-            )}
-            {isMobile ? (
-              <button
-                onClick={() => setMobileOpen(false)}
-                title="Close sidebar"
-                aria-label="Close sidebar"
-                className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <XIcon className="size-5" />
-              </button>
-            ) : (
-              <button
-                onClick={toggle}
-                title="Collapse sidebar"
-                aria-label="Collapse sidebar"
-                className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <PanelLeftCloseIcon className="size-4" />
-              </button>
-            )}
-          </>
         )}
+        {/* Space switcher + action buttons (always rendered for stable Radix IDs) */}
+        <div className={cn("flex flex-1 items-center min-w-0", collapsed && "md:hidden")}>
+          <SpaceSwitcher />
+          {isGuest && (
+            <span className="ml-1 shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+              Guest
+            </span>
+          )}
+          {/* Mobile: close button */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            title="Close sidebar"
+            aria-label="Close sidebar"
+            className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors md:hidden"
+          >
+            <XIcon className="size-5" />
+          </button>
+          {/* Desktop: collapse button */}
+          <button
+            onClick={toggle}
+            title="Collapse sidebar"
+            aria-label="Collapse sidebar"
+            className="ml-auto hidden size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors md:flex"
+          >
+            <PanelLeftCloseIcon className="size-4" />
+          </button>
+        </div>
       </div>
 
       {/* Navigation */}
       <div className="border-b">
         <nav
           className={cn(
-            "flex items-center px-2 py-2",
-            !isMobile && collapsed ? "flex-col gap-1" : "mx-auto max-w-40 justify-between"
+            "flex items-center px-2 py-2 mx-auto max-w-40 justify-between",
+            collapsed && "md:flex-col md:gap-1 md:mx-0 md:max-w-none md:justify-start"
           )}
         >
           {navItems.map((item) => {
@@ -360,15 +360,14 @@ export function Sidebar() {
       {/* Scrollable content — always rendered, faded out when collapsed (desktop only) */}
       <DndProvider backend={HTML5Backend}>
         <div
-          {...(!isMobile && collapsed ? { inert: true } : {})}
           className={cn(
-            "flex-1",
-            !isMobile && collapsed ? "overflow-hidden" : "overflow-y-auto"
+            "flex-1 overflow-y-auto",
+            collapsed && "md:overflow-hidden"
           )}
         >
           <div className={cn(
             "w-64 space-y-3 p-2 transition-transform duration-200",
-            !isMobile && collapsed ? "-translate-x-full" : "translate-x-0"
+            collapsed && "md:-translate-x-full"
           )}>
             {sidebarLoading ? (
               <div aria-busy="true" aria-label="Loading sidebar content" role="status">
