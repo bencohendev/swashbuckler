@@ -75,8 +75,10 @@ Dual-storage architecture with a `DataClient` interface:
 012_remove_builtins.sql     # remove built-in types, Page/Note as regular types
 013_tags.sql                # tags + object_tags tables
 014_pins.sql                # per-user object pins
-015_realtime.sql            # enable realtime publication (planned)
+015_space_wide_exclusions.sql # space-wide share exclusions
 016_storage.sql             # uploads bucket + RLS policies
+017_leave_space.sql         # leave space function
+018_realtime.sql            # enable realtime publication
 ```
 
 ## Feature Plans
@@ -108,7 +110,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Custom Themes](custom-themes.md) | User-built themes with color pickers | Not started |
 | [Mobile](mobile.md) | Responsive layout for mobile devices | Not started |
 | [Accessibility](accessibility.md) | Accessibility audit and remediation | Done |
-| [Realtime Collaboration](realtime.md) | Supabase Realtime, presence, collaborative editing | Not started |
+| [Realtime Sync](realtime.md) | Supabase Realtime + cross-tab BroadcastChannel | Done |
 
 ## Unfinished Features
 

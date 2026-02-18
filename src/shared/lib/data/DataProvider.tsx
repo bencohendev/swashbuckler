@@ -6,6 +6,7 @@ import { createClient } from '@/shared/lib/supabase/client'
 import type { DataClient, StorageMode } from './types'
 import { createSupabaseDataClient } from './supabase'
 import { createLocalDataClient, clearLocalData, exportLocalData } from './local'
+import { subscribeToRealtimeChanges } from './realtime'
 
 interface DataContextValue {
   dataClient: DataClient
@@ -37,6 +38,12 @@ export function DataProvider({ children, spaceId, user, isAuthLoading }: DataPro
     }
     return createLocalDataClient(effectiveSpaceId)
   }, [user, supabase, spaceId])
+
+  // Subscribe to Supabase Realtime for cross-user sync
+  useEffect(() => {
+    if (!user) return
+    return subscribeToRealtimeChanges(supabase)
+  }, [user, supabase])
 
   // Purge expired trash items on mount
   useEffect(() => {

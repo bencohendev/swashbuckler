@@ -1,6 +1,6 @@
 # Realtime Synchronization
 
-**Status: Not started**
+**Status: Done**
 
 ## Overview
 
@@ -18,69 +18,27 @@ Connect Supabase Realtime `postgres_changes` to the existing in-memory event sys
 
 ## Implementation
 
-### Supabase Realtime subscription — `src/shared/lib/data/realtime.ts` (new)
+### Supabase Realtime subscription — `src/shared/lib/data/realtime.ts`
 
-```ts
-export function subscribeToRealtimeChanges(
-  supabase: SupabaseClient,
-  spaceId?: string
-): () => void   // returns cleanup function
-```
+- `subscribeToRealtimeChanges(supabase)` — creates a single Realtime channel (`db-changes`)
+- Subscribes to `postgres_changes` on 9 tables: `objects`, `object_types`, `templates`, `object_relations`, `spaces`, `space_shares`, `tags`, `object_tags`, `pins`
+- Debounces events within 100ms window, then calls `emit()` for each affected channel
+- Returns cleanup function that clears timer and removes the Realtime channel
 
-- Creates a single Supabase Realtime channel (`supabase.channel('db-changes')`)
-- Subscribes to `postgres_changes` on all data tables:
-  - `objects` -> emit `'objects'`
-  - `object_types` -> emit `'objectTypes'`
-  - `templates` -> emit `'templates'`
-  - `object_relations` -> emit `'objectRelations'`
-  - `spaces` -> emit `'spaces'`
-  - `space_shares` -> emit `'spaceShares'`
-  - `tags` -> emit `'tags'`
-  - `object_tags` -> emit `'tags'`
-- Each: `.on('postgres_changes', { event: '*', schema: 'public', table: 'xxx' }, () => emit('channel'))`
-- Debounces rapid-fire events within a 100ms window
-- Returns cleanup function that calls `supabase.removeChannel(channel)`
+### BroadcastChannel cross-tab sync — `src/shared/lib/data/events.ts`
 
-### BroadcastChannel cross-tab sync — update `src/shared/lib/data/events.ts`
-
-```ts
-const bc = typeof BroadcastChannel !== 'undefined'
-  ? new BroadcastChannel('swashbuckler-events')
-  : null
-
-export function emit(channel: EventChannel): void {
-  listeners.get(channel)?.forEach((listener) => listener())
-  bc?.postMessage(channel)
-}
-
-bc?.addEventListener('message', (event) => {
-  const channel = event.data as EventChannel
-  listeners.get(channel)?.forEach((listener) => listener())
-})
-```
+- `BroadcastChannel('swashbuckler-events')` created at module level (with SSR guard)
+- `emit()` calls `invalidateChannel()` locally then broadcasts to other tabs via `bc.postMessage()`
+- Incoming messages from other tabs call `invalidateChannel()` (listeners + TanStack Query invalidation)
+- `EventChannel` type is now exported for use by `realtime.ts`
 
 ### Integration — `src/shared/lib/data/DataProvider.tsx`
 
-```ts
-useEffect(() => {
-  if (!user) return
-  const cleanup = subscribeToRealtimeChanges(supabase, spaceId ?? undefined)
-  return cleanup
-}, [user, supabase, spaceId])
-```
+- `useEffect` subscribes to realtime when `user` is present, returns cleanup
 
-### Supabase migration — `supabase/migrations/013_realtime.sql`
+### Supabase migration — `supabase/migrations/018_realtime.sql`
 
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE objects;
-ALTER PUBLICATION supabase_realtime ADD TABLE object_types;
-ALTER PUBLICATION supabase_realtime ADD TABLE templates;
-ALTER PUBLICATION supabase_realtime ADD TABLE object_relations;
-ALTER PUBLICATION supabase_realtime ADD TABLE spaces;
-ALTER PUBLICATION supabase_realtime ADD TABLE space_shares;
-ALTER PUBLICATION supabase_realtime ADD TABLE tags;
-ALTER PUBLICATION supabase_realtime ADD TABLE object_tags;
-```
+- `ALTER PUBLICATION supabase_realtime ADD TABLE ...` for all 9 data tables
 
 ## Key design notes
 - RLS applies to realtime — users only get events for data they can see
@@ -89,8 +47,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE object_tags;
 
 ## Verification
 
-- [ ] Open two browser tabs logged in — changes in Tab A appear in Tab B within ~1 second
-- [ ] Cross-tab works for objects, types, tags, relations
+- [x] Open two browser tabs logged in — changes in Tab A appear in Tab B within ~1 second
+- [x] Cross-tab works for objects, types, tags, relations
 - [ ] Local/guest mode: two tabs stay in sync via BroadcastChannel
 - [ ] Bulk operations (e.g. empty trash) don't cause excessive refetches
 - [ ] `npm run build` passes
