@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
@@ -8,9 +8,12 @@ import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
 import { useTemplates } from '@/features/templates'
 import { extractMentionIds, LinkedObjects } from '@/features/relations'
-import { useDataClient } from '@/shared/lib/data'
+import { useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
+import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
+import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
-import { useSpacePermission, useExclusionFilter } from '@/features/sharing'
+import { useSpacePermission, useExclusionFilter, useSpaceShares } from '@/features/sharing'
+import { useCollaboration, CollaboratorAvatars, ConnectionStatus } from '@/features/collaboration'
 import { EmojiPicker } from '@/shared/components/EmojiPicker'
 import { Button } from '@/shared/components/ui/Button'
 import {
@@ -35,14 +38,33 @@ interface ObjectEditorProps {
 export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
   const dataClient = useDataClient()
+  const storageMode = useStorageMode()
+  const { user } = useAuth()
+  const { space, sharedPermission } = useCurrentSpace()
+  const supabase = useMemo(() => createClient(), [])
   const { object, isLoading, error, update, remove } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
   const { saveObjectAsTemplate } = useTemplates({ enabled: false })
-  const { canEdit } = useSpacePermission()
+  const { canEdit, isOwner } = useSpacePermission()
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
+  const { shares } = useSpaceShares(space?.id ?? null)
   const [title, setTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isTemplateMode, setIsTemplateMode] = useState(false)
+
+  // Collaborative mode: authenticated user with edit permission on a shared space.
+  // For owners: shared if they've created shares. For recipients: shared if sharedPermission is set.
+  const isSharedSpace = isOwner ? shares.length > 0 : sharedPermission !== null
+  const isCollaborative = storageMode === 'supabase' && canEdit && isSharedSpace
+
+  const collaborationOptions = useCollaboration({
+    documentId: id,
+    supabase,
+    userId: user?.id ?? '',
+    userName: user?.email?.split('@')[0] ?? 'Anonymous',
+    enabled: isCollaborative && !isLoading,
+  })
+
 
   // Sync title when object changes (e.g., on initial load or navigation)
   useEffect(() => {
@@ -176,11 +198,18 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           {!canEdit && (
             <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">View only</span>
           )}
-          <span role="status" aria-live="polite" className="text-xs text-muted-foreground">
-            {isSaving ? "Saving..." : ""}
-          </span>
+          {collaborationOptions ? (
+            <ConnectionStatus provider={collaborationOptions.provider} />
+          ) : (
+            <span role="status" aria-live="polite" className="text-xs text-muted-foreground">
+              {isSaving ? "Saving..." : ""}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
+          {collaborationOptions && (
+            <CollaboratorAvatars awareness={collaborationOptions.awareness} />
+          )}
           <PinButton objectId={id} />
           {canEdit && (
             <>
@@ -279,6 +308,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           placeholder="Start writing..."
           readOnly={!canEdit}
           isTemplateMode={isTemplateMode}
+          collaborationOptions={collaborationOptions}
         />
 
         <LinkedObjects objectId={id} readOnly={!canEdit} />

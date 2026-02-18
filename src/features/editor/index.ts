@@ -52,6 +52,7 @@ export { MentionInput } from './components/MentionInput';
 // Main editor component
 export { Editor } from './components/Editor';
 export { EditorModeContext } from './components/Editor';
+export type { CollaborationOptions } from './components/Editor';
 
 // Types
 export type {

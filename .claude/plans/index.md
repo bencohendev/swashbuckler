@@ -35,6 +35,7 @@ src/
 │   └── auth/callback/        # OAuth callback
 ├── features/
 │   ├── auth/
+│   ├── collaboration/
 │   ├── editor/
 │   ├── graph/
 │   ├── object-types/
@@ -111,6 +112,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Mobile](mobile.md) | Responsive layout for mobile devices | Not started |
 | [Accessibility](accessibility.md) | Accessibility audit and remediation | Done |
 | [Realtime Sync](realtime.md) | Supabase Realtime + cross-tab BroadcastChannel | Done |
+| [Realtime Collaboration](realtime-collaboration.md) | Yjs CRDT collaborative editing for shared spaces | Done |
 
 ## Unfinished Features
 
