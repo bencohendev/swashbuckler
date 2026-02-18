@@ -491,39 +491,33 @@ export function Sidebar() {
     </>
   )
 
-  // Mobile: drawer overlay
-  if (isMobile) {
-    return (
-      <>
-        {/* Backdrop */}
-        {mobileOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/50"
-            onClick={() => setMobileOpen(false)}
-          />
-        )}
-        {/* Drawer */}
-        <aside
-          className={cn(
-            "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-muted/30 backdrop-blur-sm transition-transform duration-200",
-            mobileOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-        >
-          {sidebarContent}
-        </aside>
-      </>
-    )
-  }
-
-  // Desktop: standard sidebar
   return (
-    <aside
-      className={cn(
-        "flex h-screen flex-col overflow-hidden border-r bg-muted/30 transition-[width] duration-200",
-        collapsed ? "w-12" : "w-64"
+    <>
+      {/* Mobile backdrop */}
+      {isMobile && mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
-    >
-      {sidebarContent}
-    </aside>
+      <aside
+        className={cn(
+          "flex flex-col border-r bg-muted/30 transition-all duration-200",
+          // Mobile: fixed drawer
+          isMobile
+            ? cn(
+                "fixed inset-y-0 left-0 z-50 w-64 backdrop-blur-sm transition-transform",
+                mobileOpen ? "translate-x-0" : "-translate-x-full"
+              )
+            // Desktop: standard sidebar
+            : cn(
+                "h-screen overflow-hidden",
+                collapsed ? "w-12" : "w-64"
+              )
+        )}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   )
 }
