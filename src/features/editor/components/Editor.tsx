@@ -234,13 +234,19 @@ function CollaborativeEditor({
     const handleSynced = () => {
       if (cancelled) return;
 
-      // Seed Y.Doc only if no peer provided content via sync
+      // Seed Y.Doc only if no peer provided content via sync.
+      // Use a fixed clientID (0) so every peer produces identical Yjs structs.
+      // When a second peer's seed update arrives, Yjs sees the same (client, clock)
+      // pairs and skips them — preventing content duplication.
       const sharedType = doc.get('content', Y.XmlText)
       if (sharedType.length === 0) {
         const content = initialContent || initialEditorValue
+        const realClientID = doc.clientID
+        doc.clientID = 0
         doc.transact(() => {
           sharedType.applyDelta(slateNodesToInsertDelta(content))
         })
+        doc.clientID = realClientID
       }
 
       // Bind editor to Y.Doc (syncs Y.Doc content into Slate)
