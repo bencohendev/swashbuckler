@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
@@ -13,7 +13,7 @@ import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
 import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
 import { useSpacePermission, useExclusionFilter, useSpaceShares } from '@/features/sharing'
-import { useCollaboration, CollaboratorAvatars, ConnectionStatus } from '@/features/collaboration'
+import { useCollaboration, useMousePresence, CollaboratorAvatars, ConnectionStatus, RemoteMouseCursors } from '@/features/collaboration'
 import { EmojiPicker } from '@/shared/components/EmojiPicker'
 import { Button } from '@/shared/components/ui/Button'
 import {
@@ -37,6 +37,7 @@ interface ObjectEditorProps {
 
 export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
+  const mainRef = useRef<HTMLElement>(null)
   const dataClient = useDataClient()
   const storageMode = useStorageMode()
   const { user } = useAuth()
@@ -65,6 +66,11 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     enabled: isCollaborative && !isLoading,
   })
 
+  useMousePresence({
+    containerRef: mainRef,
+    awareness: collaborationOptions?.awareness ?? null,
+    enabled: isCollaborative && !!collaborationOptions,
+  })
 
   // Sync title when object changes (e.g., on initial load or navigation)
   useEffect(() => {
@@ -271,47 +277,52 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-4 md:p-6">
-        {isTemplateMode && (
-          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-            Template mode — variable insertion enabled
-          </div>
-        )}
-        <CoverImage
-          coverImage={object.cover_image}
-          onChange={handleCoverChange}
-          readOnly={!canEdit}
-        />
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => handleTitleChange(e.target.value)}
-          placeholder="Untitled"
-          readOnly={!canEdit}
-          className="mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground"
-        />
-
-        {objectType && objectType.fields.length > 0 && (
-          <PropertyFields
-            fields={objectType ? filterFields(objectType.id, objectType.fields) : []}
-            values={object.properties}
-            onChange={handlePropertyChange}
+      <main ref={mainRef} className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="relative">
+          {collaborationOptions && (
+            <RemoteMouseCursors awareness={collaborationOptions.awareness} />
+          )}
+          {isTemplateMode && (
+            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+              Template mode — variable insertion enabled
+            </div>
+          )}
+          <CoverImage
+            coverImage={object.cover_image}
+            onChange={handleCoverChange}
             readOnly={!canEdit}
           />
-        )}
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            placeholder="Untitled"
+            readOnly={!canEdit}
+            className="mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground"
+          />
 
-        <TagPicker objectId={id} readOnly={!canEdit} />
+          {objectType && objectType.fields.length > 0 && (
+            <PropertyFields
+              fields={objectType ? filterFields(objectType.id, objectType.fields) : []}
+              values={object.properties}
+              onChange={handlePropertyChange}
+              readOnly={!canEdit}
+            />
+          )}
 
-        <Editor
-          initialContent={object.content ?? undefined}
-          onSave={handleContentSave}
-          placeholder="Start writing..."
-          readOnly={!canEdit}
-          isTemplateMode={isTemplateMode}
-          collaborationOptions={collaborationOptions}
-        />
+          <TagPicker objectId={id} readOnly={!canEdit} />
 
-        <LinkedObjects objectId={id} readOnly={!canEdit} />
+          <Editor
+            initialContent={object.content ?? undefined}
+            onSave={handleContentSave}
+            placeholder="Start writing..."
+            readOnly={!canEdit}
+            isTemplateMode={isTemplateMode}
+            collaborationOptions={collaborationOptions}
+          />
+
+          <LinkedObjects objectId={id} readOnly={!canEdit} />
+        </div>
       </main>
     </div>
   )
