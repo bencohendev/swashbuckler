@@ -118,7 +118,8 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Bug | Plan | Status |
 |-----|------|--------|
-| [Collaborative cursor presence not visible](bugs.md#collaborative-cursor-presence-not-visible) | Remote text cursors don't appear during collab editing | Open |
+| [Collaborative cursor presence not visible](bugs.md#collaborative-cursor-presence-not-visible) | Remote text cursors don't appear during collab editing | Closed |
+| [Simultaneous join content duplication](bugs.md#simultaneous-join-content-duplication) | Two users joining a doc at the same time causes content to double | Closed |
 
 ## Unfinished Features
 
