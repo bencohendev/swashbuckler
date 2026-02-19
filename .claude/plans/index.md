@@ -128,6 +128,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Board view | Kanban for status-based entries | Not started |
 | First use tutorial | Onboarding walkthrough for new users | Not started |
 | Advanced documentation | In-depth user docs and help content | Not started |
-| Graph keyboard navigation | Tab/arrow-key navigation through graph nodes | Not started |
-| Custom confirm dialogs | Replace `window.confirm()` with Radix AlertDialog | Not started |
-| Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop | Not started |
+| Graph keyboard navigation (accessibility) | Tab/arrow-key navigation through graph nodes | Not started |
+| Custom confirm dialogs (accessibility) | Replace `window.confirm()` with Radix AlertDialog | Not started |
+| Type reorder keyboard support (accessibility) | Up/down buttons as keyboard alternative to drag-drop | Not started |
