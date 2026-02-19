@@ -7,6 +7,7 @@ export interface RemoteMouseCursor {
   clientId: number
   name: string
   color: string
+  avatarUrl?: string
   x: number
   y: number
 }
@@ -31,6 +32,7 @@ export function useRemoteMouseCursors(awareness: Awareness | null): RemoteMouseC
           clientId,
           name: state.user.name,
           color: state.user.color,
+          avatarUrl: state.data?.avatarUrl ?? state.user.avatarUrl,
           x: state.mouse.x,
           y: state.mouse.y,
         })

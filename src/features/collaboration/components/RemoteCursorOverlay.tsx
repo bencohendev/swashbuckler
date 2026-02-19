@@ -12,6 +12,7 @@ import * as Y from 'yjs'
 interface CursorData {
   name: string
   color: string
+  avatarUrl?: string
 }
 
 interface CursorOverlayPosition {
@@ -23,6 +24,7 @@ interface CursorOverlayPosition {
 
 const SELECTION_FIELD = 'selection'
 const DATA_FIELD = 'data'
+const LABEL_FADE_MS = 3000
 
 interface RemoteCursorOverlayProps {
   awareness: Awareness
@@ -72,6 +74,8 @@ export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps
   const editor = useEditorRef()
   const [cursors, setCursors] = useState<CursorOverlayPosition[]>([])
   const rafRef = useRef<number>(0)
+  const prevCaretKeys = useRef(new Map<number, string>())
+  const lastCaretActivity = useRef(new Map<number, number>())
 
   const updateCursors = useCallback(() => {
     const sharedRoot = doc.get('content', Y.XmlText)
@@ -140,6 +144,25 @@ export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps
       }
     }
 
+    // Track caret position changes for label fade
+    const now = Date.now()
+    for (const pos of positions) {
+      const key = pos.caretPosition
+        ? `${Math.round(pos.caretPosition.left)},${Math.round(pos.caretPosition.top)}`
+        : ''
+      if (prevCaretKeys.current.get(pos.clientId) !== key) {
+        prevCaretKeys.current.set(pos.clientId, key)
+        lastCaretActivity.current.set(pos.clientId, now)
+      }
+    }
+    const activeIds = new Set(positions.map(p => p.clientId))
+    for (const id of prevCaretKeys.current.keys()) {
+      if (!activeIds.has(id)) {
+        prevCaretKeys.current.delete(id)
+        lastCaretActivity.current.delete(id)
+      }
+    }
+
     setCursors(positions)
   }, [editor, awareness, doc])
 
@@ -162,43 +185,72 @@ export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps
 
   if (cursors.length === 0) return null
 
+  const renderNow = Date.now()
+
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
-      {cursors.map(({ clientId, data, caretPosition, selectionRects }) => (
-        <div key={clientId}>
-          {selectionRects.map((rect, i) => (
-            <div
-              key={`sel-${i}`}
-              className="absolute opacity-20"
-              style={{
-                backgroundColor: data.color,
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height,
-              }}
-            />
-          ))}
+      {cursors.map(({ clientId, data, caretPosition, selectionRects }) => {
+        const lastMoved = lastCaretActivity.current.get(clientId) ?? renderNow
+        const isLabelActive = renderNow - lastMoved < LABEL_FADE_MS
 
-          {caretPosition && (
-            <div className="absolute" style={{ left: caretPosition.left, top: caretPosition.top }}>
+        return (
+          <div key={clientId}>
+            {selectionRects.map((rect, i) => (
               <div
-                className="w-0.5"
+                key={`sel-${i}`}
+                className="absolute opacity-20"
                 style={{
                   backgroundColor: data.color,
-                  height: caretPosition.height,
+                  left: rect.left,
+                  top: rect.top,
+                  width: rect.width,
+                  height: rect.height,
                 }}
               />
-              <div
-                className="absolute -top-5 left-0 whitespace-nowrap rounded px-1 py-0.5 text-[10px] leading-tight text-white"
-                style={{ backgroundColor: data.color }}
-              >
-                {data.name}
+            ))}
+
+            {caretPosition && (
+              <div className="absolute" style={{ left: caretPosition.left, top: caretPosition.top }}>
+                <div
+                  className="w-0.5"
+                  style={{
+                    backgroundColor: data.color,
+                    height: caretPosition.height,
+                  }}
+                />
+                <div
+                  className="absolute left-0"
+                  style={{
+                    top: -24,
+                    opacity: isLabelActive ? 1 : 0,
+                    transition: isLabelActive ? 'opacity 0.15s ease' : 'opacity 1s ease',
+                  }}
+                >
+                  {data.avatarUrl ? (
+                    <div
+                      className="size-5 overflow-hidden rounded-full p-[1.5px]"
+                      style={{ backgroundColor: data.color }}
+                    >
+                      <img
+                        src={data.avatarUrl}
+                        alt={data.name}
+                        className="block h-full w-full rounded-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="whitespace-nowrap rounded px-1 py-0.5 text-[10px] leading-tight text-white"
+                      style={{ backgroundColor: data.color }}
+                    >
+                      {data.name}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      ))}
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

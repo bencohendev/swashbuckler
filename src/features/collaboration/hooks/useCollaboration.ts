@@ -11,6 +11,7 @@ interface UseCollaborationOptions {
   supabase: SupabaseClient
   userId: string
   userName: string
+  avatarUrl?: string
   enabled: boolean
 }
 
@@ -27,6 +28,7 @@ export function useCollaboration({
   supabase,
   userId,
   userName,
+  avatarUrl,
   enabled,
 }: UseCollaborationOptions): CollaborationOptions | undefined {
   return useMemo(() => {
@@ -38,7 +40,7 @@ export function useCollaboration({
 
     // Set our awareness state with user info
     awareness.setLocalState({
-      user: { name: userName, color },
+      user: { name: userName, color, avatarUrl },
       joinedAt: Date.now(),
     })
 
@@ -53,7 +55,7 @@ export function useCollaboration({
       provider,
       doc,
       awareness,
-      cursorData: { name: userName, color },
+      cursorData: { name: userName, color, avatarUrl },
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable: only recreate on doc/user/enabled
   }, [documentId, userId, enabled])

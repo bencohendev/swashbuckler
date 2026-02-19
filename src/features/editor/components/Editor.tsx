@@ -55,7 +55,7 @@ export interface CollaborationOptions {
   provider: SupabaseYjsProvider
   doc: Y.Doc
   awareness: Awareness
-  cursorData: { name: string; color: string }
+  cursorData: { name: string; color: string; avatarUrl?: string }
 }
 
 interface EditorProps {

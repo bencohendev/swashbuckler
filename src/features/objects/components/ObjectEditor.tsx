@@ -63,6 +63,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     supabase,
     userId: user?.id ?? '',
     userName: user?.email?.split('@')[0] ?? 'Anonymous',
+    avatarUrl: user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture,
     enabled: isCollaborative && !isLoading,
   })
 
