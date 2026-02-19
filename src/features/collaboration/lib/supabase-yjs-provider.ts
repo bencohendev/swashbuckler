@@ -21,7 +21,7 @@ interface SupabaseYjsProviderOptions {
 
 const UPDATE_DEBOUNCE_MS = 50
 /** If no peer responds with sync-step2 within this time, assume we're the sole editor */
-const SYNC_TIMEOUT_MS = 3000
+const SYNC_TIMEOUT_MS = 1500
 /** Base delay for reconnection attempts */
 const RECONNECT_BASE_MS = 1000
 /** Maximum reconnection delay */
@@ -51,6 +51,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
   private resyncTimer: ReturnType<typeof setInterval> | null = null
   private reconnectAttempts = 0
   private destroyed = false
+  private syncCallbacks: (() => void)[] = []
 
   constructor(options: SupabaseYjsProviderOptions) {
     this.supabase = options.supabase
@@ -111,6 +112,31 @@ export class SupabaseYjsProvider implements UnifiedProvider {
     this.disconnect()
   }
 
+  /**
+   * Register a callback that fires once the provider has completed initial sync.
+   * If already synced, the callback fires immediately.
+   */
+  onSync(callback: () => void): void {
+    if (this.isSynced) {
+      callback()
+    } else {
+      this.syncCallbacks.push(callback)
+    }
+  }
+
+  /** Remove a previously registered sync callback. */
+  offSync(callback: () => void): void {
+    this.syncCallbacks = this.syncCallbacks.filter(cb => cb !== callback)
+  }
+
+  private fireSyncCallbacks(): void {
+    const cbs = this.syncCallbacks
+    this.syncCallbacks = []
+    for (const cb of cbs) {
+      cb()
+    }
+  }
+
   // -- Sync Protocol --
 
   private startSync(): void {
@@ -127,6 +153,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
     this.syncTimer = setTimeout(() => {
       if (this.isConnected && !this.isSynced) {
         this.isSynced = true
+        this.fireSyncCallbacks()
       }
       this.startResyncInterval()
     }, SYNC_TIMEOUT_MS)
@@ -215,6 +242,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
           this.clearSyncTimer()
           this.isSynced = true
           this.startResyncInterval()
+          this.fireSyncCallbacks()
         }
         break
       }

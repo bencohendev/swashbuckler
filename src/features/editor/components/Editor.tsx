@@ -1,13 +1,13 @@
 'use client';
 
-import { createContext, useCallback, useEffect, useMemo, useRef } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Plate, PlateContent, usePlateEditor } from '@udecode/plate/react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import type { Value } from '@udecode/plate';
-import type { UnifiedProvider } from '@udecode/plate-yjs';
+import type { SupabaseYjsProvider } from '@/features/collaboration/lib/supabase-yjs-provider';
 import { YjsPlugin } from '@udecode/plate-yjs/react';
-import { YjsEditor, slateNodesToInsertDelta, type YjsEditor as YjsEditorType } from '@slate-yjs/core';
+import { YjsEditor, slateNodesToInsertDelta, slateRangeToRelativeRange, type YjsEditor as YjsEditorType } from '@slate-yjs/core';
 import type { Awareness } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 
@@ -52,7 +52,7 @@ function toYjsEditor(editor: unknown): YjsEditorType {
 export const EditorModeContext = createContext<{ isTemplateMode: boolean }>({ isTemplateMode: false });
 
 export interface CollaborationOptions {
-  provider: UnifiedProvider
+  provider: SupabaseYjsProvider
   doc: Y.Doc
   awareness: Awareness
   cursorData: { name: string; color: string }
@@ -160,6 +160,8 @@ function CollaborativeEditor({
 }: Required<Pick<EditorProps, 'collaborationOptions'>> & Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, lastSaved, setCollaborative } = useEditorStore();
   const { provider, doc, awareness, cursorData } = collaborationOptions;
+  const [isReady, setIsReady] = useState(false);
+  const isReadyRef = useRef(false);
 
   const plugins = useMemo(
     () => [
@@ -190,12 +192,28 @@ function CollaborativeEditor({
     override: { components: COMPONENT_OVERRIDES },
   });
 
-  // Keep Zustand store in sync so auto-save can read current content
+  // Keep Zustand store in sync so auto-save can read current content,
+  // and manually send cursor position via awareness.
+  // withCursors' autoSend wraps editor.onChange inside connect(), but
+  // that wrapped onChange may not fire reliably due to CJS/ESM dual-package
+  // hazard with @slate-yjs/core. Sending manually here guarantees it works.
   const handleChange = useCallback(
     (value: { value: Value }) => {
       setContent(value.value);
+
+      const sharedRoot = doc.get('content', Y.XmlText)
+      if (editor.selection) {
+        try {
+          const relRange = slateRangeToRelativeRange(sharedRoot, editor, editor.selection)
+          awareness.setLocalStateField('selection', relRange)
+        } catch {
+          // Selection may be invalid during editor transitions
+        }
+      } else {
+        awareness.setLocalStateField('selection', null)
+      }
     },
-    [setContent]
+    [setContent, editor, doc, awareness]
   );
 
   // Mark collaborative mode in store
@@ -204,36 +222,51 @@ function CollaborativeEditor({
     return () => setCollaborative(false);
   }, [setCollaborative]);
 
-  // Seed Y.Doc, bind editor to Y.Doc, and connect provider — all synchronous.
-  // We bypass editor.api.yjs.init() because it's async (slateToDeterministicYjsState)
-  // and has a stale-closure bug with autoConnect. Doing it manually avoids both issues
-  // and plays nicely with React strict mode's mount/cleanup/remount cycle.
+  // Connect provider FIRST, then seed Y.Doc and bind editor AFTER sync completes.
+  //
+  // This prevents content duplication: if we seed a fresh Y.Doc before syncing,
+  // the seeded content (under our new clientID) gets merged with a peer's identical
+  // content (under their clientID), doubling everything. By deferring the seed until
+  // after sync, we only seed if no peer provided content.
   useEffect(() => {
-    // Seed Y.Doc with initial content if the shared type is empty
-    const sharedType = doc.get('content', Y.XmlText)
-    if (sharedType.length === 0) {
-      const content = initialContent || initialEditorValue
-      doc.transact(() => {
-        sharedType.applyDelta(slateNodesToInsertDelta(content))
-      })
-    }
+    let cancelled = false;
 
-    // Bind editor to Y.Doc (syncs Y.Doc content into Slate)
-    // The YjsPlugin's extendEditor (withTYjs) already set up the binding with
-    // autoConnect:false, so we just need to call connect to activate it.
-    const yjsEd = toYjsEditor(editor)
-    if (!YjsEditor.connected(yjsEd)) {
-      YjsEditor.connect(yjsEd)
-    }
+    const handleSynced = () => {
+      if (cancelled) return;
 
-    // Start Supabase Broadcast sync
-    provider.connect()
+      // Seed Y.Doc only if no peer provided content via sync
+      const sharedType = doc.get('content', Y.XmlText)
+      if (sharedType.length === 0) {
+        const content = initialContent || initialEditorValue
+        doc.transact(() => {
+          sharedType.applyDelta(slateNodesToInsertDelta(content))
+        })
+      }
+
+      // Bind editor to Y.Doc (syncs Y.Doc content into Slate)
+      const yjsEd = toYjsEditor(editor)
+      if (!YjsEditor.connected(yjsEd)) {
+        YjsEditor.connect(yjsEd)
+      }
+
+      awareness.setLocalStateField('data', cursorData)
+      isReadyRef.current = true;
+      setIsReady(true);
+    };
+
+    provider.onSync(handleSynced);
+    provider.connect();
 
     return () => {
+      cancelled = true;
+      provider.offSync(handleSynced);
       provider.disconnect()
+      const yjsEd = toYjsEditor(editor)
       if (YjsEditor.connected(yjsEd)) {
         YjsEditor.disconnect(yjsEd)
       }
+      isReadyRef.current = false;
+      setIsReady(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, doc, provider]);
@@ -244,6 +277,8 @@ function CollaborativeEditor({
 
   const doSave = useCallback(async () => {
     if (!onSave || readOnly) return;
+    // Don't save before the editor is bound to Y.Doc
+    if (!isReadyRef.current) return;
     hasPendingRef.current = false;
 
     // Leader election: only the peer with lowest clientID saves
@@ -289,12 +324,20 @@ function CollaborativeEditor({
       <DndProvider backend={HTML5Backend}>
         <div className="relative min-h-[200px]">
           <Plate editor={editor} onChange={handleChange}>
-            <PlateContent
-              readOnly={readOnly}
-              placeholder={placeholder}
-              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
-            />
-            <RemoteCursorOverlay />
+            {isReady ? (
+              <>
+                <PlateContent
+                  readOnly={readOnly}
+                  placeholder={placeholder}
+                  className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
+                />
+                <RemoteCursorOverlay awareness={awareness} doc={doc} />
+              </>
+            ) : (
+              <div className="min-h-[200px] flex items-center justify-center">
+                <span className="text-sm text-muted-foreground animate-pulse">Connecting...</span>
+              </div>
+            )}
           </Plate>
 
           {onSave && (
