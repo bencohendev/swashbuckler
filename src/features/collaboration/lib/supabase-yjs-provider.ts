@@ -20,6 +20,14 @@ interface SupabaseYjsProviderOptions {
 }
 
 const UPDATE_DEBOUNCE_MS = 50
+/** If no peer responds with sync-step2 within this time, assume we're the sole editor */
+const SYNC_TIMEOUT_MS = 3000
+/** Base delay for reconnection attempts */
+const RECONNECT_BASE_MS = 1000
+/** Maximum reconnection delay */
+const RECONNECT_MAX_MS = 30000
+/** Periodic re-sync interval to recover from missed broadcasts */
+const RESYNC_INTERVAL_MS = 30000
 
 export class SupabaseYjsProvider implements UnifiedProvider {
   readonly type = 'supabase-broadcast'
@@ -28,6 +36,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
 
   isConnected = false
   isSynced = false
+  isReconnecting = false
 
   private supabase: SupabaseClient
   private documentId: string
@@ -37,6 +46,11 @@ export class SupabaseYjsProvider implements UnifiedProvider {
   private updateBuffer: Uint8Array[] = []
   private updateTimer: ReturnType<typeof setTimeout> | null = null
   private awarenessTimer: ReturnType<typeof setTimeout> | null = null
+  private syncTimer: ReturnType<typeof setTimeout> | null = null
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private resyncTimer: ReturnType<typeof setInterval> | null = null
+  private reconnectAttempts = 0
+  private destroyed = false
 
   constructor(options: SupabaseYjsProviderOptions) {
     this.supabase = options.supabase
@@ -46,7 +60,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
   }
 
   connect(): void {
-    if (this.isConnected || this.channel) return
+    if (this.destroyed || this.isConnected || this.channel) return
 
     const channelName = `collab:${this.documentId}`
     this.channel = this.supabase.channel(channelName)
@@ -59,14 +73,21 @@ export class SupabaseYjsProvider implements UnifiedProvider {
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           this.isConnected = true
+          this.isReconnecting = false
+          this.reconnectAttempts = 0
           this.startSync()
           this.setupDocListeners()
           this.setupAwarenessListeners()
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          this.handleConnectionLost()
         }
       })
   }
 
   disconnect(): void {
+    this.clearSyncTimer()
+    this.clearReconnectTimer()
+    this.clearResyncInterval()
     this.flushUpdates()
     this.teardownListeners()
 
@@ -82,9 +103,11 @@ export class SupabaseYjsProvider implements UnifiedProvider {
 
     this.isConnected = false
     this.isSynced = false
+    this.isReconnecting = false
   }
 
   destroy(): void {
+    this.destroyed = true
     this.disconnect()
   }
 
@@ -98,6 +121,79 @@ export class SupabaseYjsProvider implements UnifiedProvider {
     // Also broadcast our current awareness state
     const awarenessUpdate = encodeAwarenessUpdate(this.awareness, [this.document.clientID])
     this.broadcast('awareness-update', awarenessUpdate)
+
+    // If no peer responds with sync-step2, assume we're the sole editor
+    this.clearSyncTimer()
+    this.syncTimer = setTimeout(() => {
+      if (this.isConnected && !this.isSynced) {
+        this.isSynced = true
+      }
+      this.startResyncInterval()
+    }, SYNC_TIMEOUT_MS)
+  }
+
+  /**
+   * Periodically re-exchange state vectors to recover from missed broadcasts.
+   * Supabase Broadcast is fire-and-forget with no delivery guarantee, so
+   * individual yjs-update messages can be silently dropped. This ensures
+   * all peers converge even when messages are lost.
+   */
+  private startResyncInterval(): void {
+    this.clearResyncInterval()
+    this.resyncTimer = setInterval(() => {
+      if (this.isConnected) {
+        const stateVector = Y.encodeStateVector(this.document)
+        this.broadcast('yjs-sync-step1', stateVector)
+      }
+    }, RESYNC_INTERVAL_MS)
+  }
+
+  private clearResyncInterval(): void {
+    if (this.resyncTimer) {
+      clearInterval(this.resyncTimer)
+      this.resyncTimer = null
+    }
+  }
+
+  private handleConnectionLost(): void {
+    // Clean up current connection state
+    this.teardownListeners()
+    if (this.channel) {
+      this.supabase.removeChannel(this.channel)
+      this.channel = null
+    }
+    this.isConnected = false
+    this.isSynced = false
+    this.clearSyncTimer()
+    this.clearResyncInterval()
+
+    // Schedule reconnection with exponential backoff
+    if (!this.destroyed) {
+      this.isReconnecting = true
+      const delay = Math.min(
+        RECONNECT_BASE_MS * Math.pow(2, this.reconnectAttempts),
+        RECONNECT_MAX_MS
+      )
+      this.reconnectAttempts++
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null
+        this.connect()
+      }, delay)
+    }
+  }
+
+  private clearSyncTimer(): void {
+    if (this.syncTimer) {
+      clearTimeout(this.syncTimer)
+      this.syncTimer = null
+    }
+  }
+
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
   }
 
   private handleMessage(payload: BroadcastPayload): void {
@@ -115,7 +211,11 @@ export class SupabaseYjsProvider implements UnifiedProvider {
       case 'yjs-sync-step2': {
         // Peer sent us an update diff — apply it
         Y.applyUpdate(this.document, data, this)
-        this.isSynced = true
+        if (!this.isSynced) {
+          this.clearSyncTimer()
+          this.isSynced = true
+          this.startResyncInterval()
+        }
         break
       }
 
@@ -202,10 +302,24 @@ export class SupabaseYjsProvider implements UnifiedProvider {
       sender: this.instanceId,
     }
 
-    this.channel.send({
+    const result = this.channel.send({
       type: 'broadcast',
       event: 'yjs',
       payload,
     })
+
+    // channel.send() may return a Promise (with ack) or a string status
+    if (result && typeof (result as Promise<string>).then === 'function') {
+      ;(result as Promise<string>).then((status) => {
+        if (status !== 'ok') {
+          console.warn('[collab] broadcast failed:', status)
+        }
+      }).catch(() => {
+        // Channel may have been removed — trigger reconnection
+        if (!this.destroyed && this.isConnected) {
+          this.handleConnectionLost()
+        }
+      })
+    }
   }
 }

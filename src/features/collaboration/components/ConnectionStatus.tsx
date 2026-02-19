@@ -7,7 +7,7 @@ interface ConnectionStatusProps {
   provider: UnifiedProvider
 }
 
-type Status = 'connected' | 'syncing' | 'offline'
+type Status = 'connected' | 'syncing' | 'reconnecting' | 'offline'
 
 export function ConnectionStatus({ provider }: ConnectionStatusProps) {
   const [status, setStatus] = useState<Status>('offline')
@@ -18,6 +18,8 @@ export function ConnectionStatus({ provider }: ConnectionStatusProps) {
         setStatus('connected')
       } else if (provider.isConnected) {
         setStatus('syncing')
+      } else if ('isReconnecting' in provider && provider.isReconnecting) {
+        setStatus('reconnecting')
       } else {
         setStatus('offline')
       }
@@ -32,6 +34,7 @@ export function ConnectionStatus({ provider }: ConnectionStatusProps) {
   const config: Record<Status, { color: string; label: string }> = {
     connected: { color: 'bg-green-500', label: 'Synced' },
     syncing: { color: 'bg-yellow-500', label: 'Syncing...' },
+    reconnecting: { color: 'bg-yellow-500', label: 'Reconnecting...' },
     offline: { color: 'bg-gray-400', label: 'Offline' },
   }
 
