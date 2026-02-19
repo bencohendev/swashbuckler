@@ -114,6 +114,12 @@ Dual-storage architecture with a `DataClient` interface:
 | [Realtime Sync](realtime.md) | Supabase Realtime + cross-tab BroadcastChannel | Done |
 | [Realtime Collaboration](realtime-collaboration.md) | Yjs CRDT collaborative editing for shared spaces | Done |
 
+## Known Bugs
+
+| Bug | Plan | Status |
+|-----|------|--------|
+| [Collaborative cursor presence not visible](bugs.md#collaborative-cursor-presence-not-visible) | Remote text cursors don't appear during collab editing | Open |
+
 ## Unfinished Features
 
 | Feature | Description | Status |

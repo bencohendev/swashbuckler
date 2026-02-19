@@ -1,48 +1,118 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { CursorEditor, type CursorState } from '@slate-yjs/core'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { relativeRangeToSlateRange } from '@slate-yjs/core'
 import { useEditorRef } from '@udecode/plate/react'
+import type { Awareness } from 'y-protocols/awareness'
+// Import DOMEditor from the TOP-LEVEL slate-dom — NOT through @udecode/slate
+// which has a nested copy with separate WeakMaps. See the component JSDoc.
+import { DOMEditor } from 'slate-dom'
+import * as Y from 'yjs'
 
-interface CursorData extends Record<string, unknown> {
+interface CursorData {
   name: string
   color: string
 }
 
 interface CursorOverlayPosition {
-  clientId: string
+  clientId: number
   data: CursorData
   caretPosition: { top: number; left: number; height: number } | null
   selectionRects: { left: number; top: number; width: number; height: number }[]
 }
 
+const SELECTION_FIELD = 'selection'
+const DATA_FIELD = 'data'
+
+interface RemoteCursorOverlayProps {
+  awareness: Awareness
+  doc: Y.Doc
+}
+
+function reconstructRelativeRange(raw: unknown): { anchor: Y.RelativePosition; focus: Y.RelativePosition } | null {
+  if (!raw || typeof raw !== 'object') return null
+  const r = raw as Record<string, unknown>
+  if (!r.anchor || !r.focus) return null
+  try {
+    return {
+      anchor: Y.createRelativePositionFromJSON(r.anchor),
+      focus: Y.createRelativePositionFromJSON(r.focus),
+    }
+  } catch {
+    return null
+  }
+}
+
+function getRangeRects(domRange: Range): DOMRect[] {
+  const rects = Array.from(domRange.getClientRects())
+  if (rects.length > 0) return rects
+
+  const bounding = domRange.getBoundingClientRect()
+  if (bounding.height > 0) return [bounding]
+
+  return []
+}
+
 /**
  * Overlay that renders remote user cursors and selections.
  * Must be rendered inside a `<Plate>` context.
+ *
+ * IMPORTANT: Uses `DOMEditor` from `slate-dom` directly instead of
+ * `editor.api.toDOMNode/toDOMRange` from `@udecode/slate`. There are two
+ * copies of `slate-dom` in the dependency tree:
+ *   - `slate-dom@0.123.0` (top-level, used by `slate-react` / `PlateContent`)
+ *   - `slate-dom@0.114.0` (nested under `@udecode/slate`)
+ * The WeakMaps that map Slate nodes → DOM elements are populated by
+ * `slate-react` in the 0.123.0 copy. `editor.api.*` goes through
+ * `@udecode/slate` → the 0.114.0 copy with empty WeakMaps → always fails.
+ * Importing `DOMEditor` from `slate-dom` here resolves to the top-level
+ * 0.123.0 copy, matching what `slate-react` uses.
  */
-export function RemoteCursorOverlay() {
+export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps) {
   const editor = useEditorRef()
-  const containerRef = useRef<HTMLDivElement>(null)
   const [cursors, setCursors] = useState<CursorOverlayPosition[]>([])
+  const rafRef = useRef<number>(0)
 
   const updateCursors = useCallback(() => {
-    if (!CursorEditor.isCursorEditor(editor)) return
+    const sharedRoot = doc.get('content', Y.XmlText)
+    if (!sharedRoot || sharedRoot.length === 0) return
 
-    const cursorStates = CursorEditor.cursorStates<CursorData>(editor)
-    const editorEl = editor.api.toDOMNode(editor)
-    if (!editorEl) return
+    let editorEl: HTMLElement
+    try {
+      // @ts-expect-error — Plate editor type doesn't match slate-dom 0.123.0's DOMEditor
+      // type (different package versions), but the editor IS a DOMEditor at runtime.
+      editorEl = DOMEditor.toDOMNode(editor, editor)
+    } catch {
+      return
+    }
 
     const editorRect = editorEl.getBoundingClientRect()
+    const localClientId = awareness.clientID
+    const states = awareness.getStates()
     const positions: CursorOverlayPosition[] = []
 
-    for (const [clientId, state] of Object.entries(cursorStates)) {
-      if (!state.relativeSelection || !state.data) continue
+    for (const [clientId, state] of states) {
+      if (clientId === localClientId || !state) continue
+
+      const rawSelection = state[SELECTION_FIELD]
+      const data = state[DATA_FIELD] as CursorData | undefined
+      if (!rawSelection || !data?.name) continue
+
+      const relativeSelection = reconstructRelativeRange(rawSelection)
+      if (!relativeSelection) continue
 
       try {
-        const domRange = editor.api.toDOMRange(state.relativeSelection)
-        if (!domRange) continue
+        const slateRange = relativeRangeToSlateRange(
+          sharedRoot,
+          editor,
+          relativeSelection,
+        )
+        if (!slateRange) continue
 
-        const rects = Array.from(domRange.getClientRects())
+        // @ts-expect-error — same cross-package type mismatch as above
+        const domRange = DOMEditor.toDOMRange(editor, slateRange)
+
+        const rects = getRangeRects(domRange)
         if (rects.length === 0) continue
 
         const selectionRects = rects.map(r => ({
@@ -52,7 +122,6 @@ export function RemoteCursorOverlay() {
           height: r.height,
         }))
 
-        // Caret at focus point (last rect)
         const lastRect = rects[rects.length - 1]
         const caretPosition = {
           left: lastRect.right - editorRect.left,
@@ -62,41 +131,41 @@ export function RemoteCursorOverlay() {
 
         positions.push({
           clientId,
-          data: state.data,
+          data,
           caretPosition,
           selectionRects,
         })
       } catch {
-        // Range might be invalid if content changed between peers
         continue
       }
     }
 
     setCursors(positions)
-  }, [editor])
+  }, [editor, awareness, doc])
 
   useEffect(() => {
-    if (!CursorEditor.isCursorEditor(editor)) return
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(updateCursors)
+    }
 
-    // Update cursors when remote cursors change
-    CursorEditor.on(editor, 'change', updateCursors)
+    awareness.on('change', scheduleUpdate)
 
-    // Also update periodically to reposition after scroll/resize
     const interval = setInterval(updateCursors, 500)
 
     return () => {
-      CursorEditor.off(editor, 'change', updateCursors)
+      awareness.off('change', scheduleUpdate)
+      cancelAnimationFrame(rafRef.current)
       clearInterval(interval)
     }
-  }, [editor, updateCursors])
+  }, [awareness, updateCursors])
 
   if (cursors.length === 0) return null
 
   return (
-    <div ref={containerRef} className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-10">
       {cursors.map(({ clientId, data, caretPosition, selectionRects }) => (
         <div key={clientId}>
-          {/* Selection highlights */}
           {selectionRects.map((rect, i) => (
             <div
               key={`sel-${i}`}
@@ -111,7 +180,6 @@ export function RemoteCursorOverlay() {
             />
           ))}
 
-          {/* Caret line */}
           {caretPosition && (
             <div className="absolute" style={{ left: caretPosition.left, top: caretPosition.top }}>
               <div
@@ -121,7 +189,6 @@ export function RemoteCursorOverlay() {
                   height: caretPosition.height,
                 }}
               />
-              {/* User name label */}
               <div
                 className="absolute -top-5 left-0 whitespace-nowrap rounded px-1 py-0.5 text-[10px] leading-tight text-white"
                 style={{ backgroundColor: data.color }}
