@@ -6,7 +6,7 @@ import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, Brac
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
-import { useTemplates } from '@/features/templates'
+import { useTemplates, SaveAsTemplateDialog } from '@/features/templates'
 import { extractMentionIds, LinkedObjects } from '@/features/relations'
 import { useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
 import { useEditorStore } from '@/features/editor/store'
@@ -46,7 +46,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const supabase = useMemo(() => createClient(), [])
   const { object, isLoading, error, update, remove } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
-  const { saveObjectAsTemplate } = useTemplates({ enabled: false })
+  const { templates, saveObjectAsTemplate } = useTemplates()
   const { canEdit, isOwner } = useSpacePermission()
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
   const { shares } = useSpaceShares(space?.id ?? null)
@@ -54,6 +54,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const [title, setTitle] = useState('')
   const [isTitleSaving, setIsTitleSaving] = useState(false)
   const [isTemplateMode, setIsTemplateMode] = useState(false)
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
 
   // Collaborative mode: authenticated user with edit permission on a shared space.
   // For owners: shared if they've created shares. For recipients: shared if sharedPermission is set.
@@ -130,14 +131,16 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     }
   }
 
-  const handleSaveAsTemplate = async () => {
+  const handleSaveAsTemplate = () => {
     if (!object) return
-
-    const result = await saveObjectAsTemplate(object)
-    if (result) {
-      alert('Saved as template!')
-    }
+    setIsTemplateDialogOpen(true)
   }
+
+  const handleTemplateDialogSave = useCallback(async (name: string): Promise<boolean> => {
+    if (!object) return false
+    const result = await saveObjectAsTemplate(object, name)
+    return result !== null
+  }, [object, saveObjectAsTemplate])
 
   if (isLoading) {
     return (
@@ -329,6 +332,14 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           <LinkedObjects objectId={id} readOnly={!canEdit} />
         </div>
       </main>
+
+      <SaveAsTemplateDialog
+        open={isTemplateDialogOpen}
+        onOpenChange={setIsTemplateDialogOpen}
+        defaultName={object.title}
+        existingNames={templates.map((t) => t.name)}
+        onSave={handleTemplateDialogSave}
+      />
     </div>
   )
 }
