@@ -45,6 +45,16 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 - Created entry auto-inserted as mention
 - Mention IDs extracted on save to sync `object_relations`
 
+## Auto-save
+
+- Debounced save fires 1s after last keystroke (solo) / 3s after last Y.Doc update (collaborative)
+- `save` callback is stabilized via refs + `useEditorStore.getState()` — never changes identity, preventing stale closures in unmount/debounce effects
+- On unmount: pending debounce timer is cleared, then `isDirty` is read from store and a final save is flushed synchronously
+- `beforeunload` handler prompts the user if dirty changes exist when closing the tab
+- Collaborative mode uses the same ref pattern for `doSave` (`onSave`, `awareness`, `editor` in refs)
+- `isDirty` tracked in both solo and collaborative modes for status indicators
+- `markClean()` called on mount (SoloEditor) and after Y.Doc seeding (CollaborativeEditor) to clear false-positive dirty state from Plate initialization
+
 ## Verification
 
 - [x] All block types render
@@ -56,3 +66,5 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 - [x] Spoiler hides text, click reveals
 - [x] Auto-save after 1s idle
 - [x] Image support
+- [x] Navigate away mid-edit — changes saved on unmount
+- [x] Close tab mid-edit — browser prompts "Leave site?"

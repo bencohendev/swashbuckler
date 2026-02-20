@@ -102,7 +102,7 @@ function SoloEditor({
   placeholder,
   isTemplateMode,
 }: Omit<EditorProps, 'collaborationOptions'>) {
-  const { setContent, isSaving, lastSaved } = useEditorStore();
+  const { setContent, isSaving, isDirty, lastSaved } = useEditorStore();
   const editorValue = initialContent || initialEditorValue;
 
   const editor = usePlateEditor({
@@ -123,6 +123,14 @@ function SoloEditor({
     enabled: !!onSave && !readOnly,
   });
 
+  // Clear dirty flag after mount — Plate fires onChange during initialization which
+  // marks the store dirty even though the user hasn't edited anything yet.
+  // This runs after useAutoSave's effects so the debounce timer (if started) will
+  // re-evaluate isDirty from the store and see false.
+  useEffect(() => {
+    useEditorStore.getState().markClean();
+  }, []);
+
   return (
     <EditorModeContext value={{ isTemplateMode: isTemplateMode ?? false }}>
       <DndProvider backend={HTML5Backend}>
@@ -137,7 +145,7 @@ function SoloEditor({
 
           {onSave && (
             <div className="absolute right-2 top-2 text-xs text-gray-400">
-              {isSaving ? 'Saving...' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : null}
+              {isSaving ? 'Saving...' : isDirty ? 'Edited' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : null}
             </div>
           )}
         </div>
@@ -158,7 +166,7 @@ function CollaborativeEditor({
   isTemplateMode,
   collaborationOptions,
 }: Required<Pick<EditorProps, 'collaborationOptions'>> & Omit<EditorProps, 'collaborationOptions'>) {
-  const { setContent, isSaving, lastSaved, setCollaborative } = useEditorStore();
+  const { setContent, isSaving, isDirty, lastSaved, setCollaborative } = useEditorStore();
   const { provider, doc, awareness, cursorData } = collaborationOptions;
   const [isReady, setIsReady] = useState(false);
   const isReadyRef = useRef(false);
@@ -258,6 +266,8 @@ function CollaborativeEditor({
       awareness.setLocalStateField('data', cursorData)
       isReadyRef.current = true;
       setIsReady(true);
+      // Clear false-positive dirty flag from Y.Doc seeding onChange
+      useEditorStore.getState().markClean();
     };
 
     provider.onSync(handleSynced);
@@ -280,32 +290,39 @@ function CollaborativeEditor({
   // Collaborative auto-save: listen to Y.Doc updates and debounce persistence
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasPendingRef = useRef(false);
+  const onSaveRef = useRef(onSave);
+  const awarenessRef = useRef(awareness);
+  const editorRef = useRef(editor);
+  onSaveRef.current = onSave;
+  awarenessRef.current = awareness;
+  editorRef.current = editor;
 
   const doSave = useCallback(async () => {
-    if (!onSave || readOnly) return;
+    if (!onSaveRef.current || readOnly) return;
     // Don't save before the editor is bound to Y.Doc
     if (!isReadyRef.current) return;
     hasPendingRef.current = false;
 
     // Leader election: only the peer with lowest clientID saves
-    const states = awareness.getStates();
-    let lowestClient = awareness.clientID;
+    const aw = awarenessRef.current;
+    const states = aw.getStates();
+    let lowestClient = aw.clientID;
     states.forEach((_state, clientId) => {
       if (clientId < lowestClient) lowestClient = clientId;
     });
-    if (lowestClient !== awareness.clientID) return;
+    if (lowestClient !== aw.clientID) return;
 
     const { setSaving, setLastSaved } = useEditorStore.getState();
     setSaving(true);
     try {
-      await onSave(editor.children);
+      await onSaveRef.current(editorRef.current.children);
       setLastSaved(new Date());
     } catch (error) {
       console.error('Collaborative auto-save failed:', error);
     } finally {
       setSaving(false);
     }
-  }, [onSave, readOnly, awareness, editor]);
+  }, [readOnly]);
 
   useEffect(() => {
     if (!onSave || readOnly) return;
@@ -320,8 +337,13 @@ function CollaborativeEditor({
     return () => {
       doc.off('update', handler);
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      // Force-save on unmount if pending changes
-      if (hasPendingRef.current) doSave();
+      // Force-save on unmount — skip leader election (we're leaving, save what we have)
+      const { isDirty, content } = useEditorStore.getState();
+      if (isDirty && onSaveRef.current) {
+        onSaveRef.current(content).catch((err: unknown) => {
+          console.error('Collaborative unmount save failed:', err);
+        });
+      }
     };
   }, [doc, onSave, readOnly, doSave]);
 
@@ -348,7 +370,7 @@ function CollaborativeEditor({
 
           {onSave && (
             <div className="absolute right-2 top-2 text-xs text-gray-400">
-              {isSaving ? 'Saving...' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : null}
+              {isSaving ? 'Saving...' : isDirty ? 'Edited' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : null}
             </div>
           )}
         </div>

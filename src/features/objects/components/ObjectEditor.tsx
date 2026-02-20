@@ -9,6 +9,7 @@ import { useObjectType } from '@/features/object-types'
 import { useTemplates } from '@/features/templates'
 import { extractMentionIds, LinkedObjects } from '@/features/relations'
 import { useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
+import { useEditorStore } from '@/features/editor/store'
 import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
 import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
@@ -49,8 +50,9 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const { canEdit, isOwner } = useSpacePermission()
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
   const { shares } = useSpaceShares(space?.id ?? null)
+  const { isDirty: editorDirty, isSaving: editorSaving, lastSaved: editorLastSaved } = useEditorStore()
   const [title, setTitle] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
+  const [isTitleSaving, setIsTitleSaving] = useState(false)
   const [isTemplateMode, setIsTemplateMode] = useState(false)
 
   // Collaborative mode: authenticated user with edit permission on a shared space.
@@ -85,13 +87,14 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     setTitle(newTitle)
 
     // Auto-save
-    setIsSaving(true)
+    setIsTitleSaving(true)
     await update({ title: newTitle })
-    setIsSaving(false)
+    setIsTitleSaving(false)
   }, [update])
 
   const handleContentSave = useCallback(async (content: Value) => {
-    await update({ content })
+    const result = await update({ content })
+    if (!result) throw new Error('Failed to save content')
 
     // Sync mention relations
     const mentionIds = extractMentionIds(content)
@@ -208,8 +211,8 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           {collaborationOptions ? (
             <ConnectionStatus provider={collaborationOptions.provider} />
           ) : (
-            <span role="status" aria-live="polite" className="text-xs text-muted-foreground">
-              {isSaving ? "Saving..." : ""}
+            <span role="status" aria-live="polite" className={`text-xs font-medium ${editorDirty ? 'text-amber-600' : 'text-muted-foreground'}`}>
+              {isTitleSaving || editorSaving ? 'Saving...' : editorDirty ? 'Unsaved changes' : editorLastSaved ? `Saved ${editorLastSaved.toLocaleTimeString()}` : ''}
             </span>
           )}
         </div>
@@ -314,6 +317,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
           <TagPicker objectId={id} readOnly={!canEdit} />
 
           <Editor
+            key={id}
             initialContent={object.content ?? undefined}
             onSave={handleContentSave}
             placeholder="Start writing..."
