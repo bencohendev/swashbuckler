@@ -24,6 +24,12 @@
 - Small fixes (typos, one-line patches) are exempt — add a line to `bugs/log.md` if relevant
 - Plan mode files in `.claude/plans/` are drafts. After approval, create the permanent spec in `.claude/docs/` and delete the plan file
 
+### Feature Status
+- Each spec has a `**Status:**` line at the top: `Done`, `Active`, or `Not started`
+- When new work is planned for an implemented feature, set its status to `Active` and document the new scope
+- When the new scope ships, set it back to `Done`
+- To find features with open work: `grep -l "Status.*Active" .claude/docs/features/`
+
 ### Maintaining Docs
 - After completing implementation, update the relevant spec with surgical edits
 - Read the existing doc before modifying it

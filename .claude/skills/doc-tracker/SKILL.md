@@ -6,7 +6,7 @@ description: Format and structure guidelines for feature specs and bug docs in .
 ## Documentation Structure
 
 All documentation lives in `.claude/docs/`:
-- **`index.md`** — master index with feature table, bug table, and unfinished features
+- **`index.md`** — master index with implemented and planned feature tables
 - **`features/`** — one file per feature (planned or complete)
 - **`bugs/`** — `log.md` for quick fixes, individual files for complex bugs
 - **`v1-archive.md`** — historical v1 plan (reference only)
@@ -18,7 +18,7 @@ Feature specs are stored in `.claude/docs/features/` as separate per-feature mar
 ### File Naming
 
 - Use kebab-case slugs (e.g., `quick-capture.md`, `type-pages.md`)
-- Add new files to the Feature Plans table in `index.md`
+- Add new files to the appropriate table (Implemented or Planned) in `index.md`
 
 ### Document Structure
 
@@ -32,6 +32,16 @@ Each spec should include:
 6. **Verification** — checklist of expected behaviors (checked when confirmed working)
 
 Not every section is required — use what's relevant to the feature.
+
+### Feature Status Values
+
+- **Done** — fully implemented, no open work
+- **Active** — implemented but has new planned scope (document new work in the spec)
+- **Not started** — planned but not yet built
+
+When new work is planned for a Done feature, set status to Active and add the new scope to the spec. When it ships, set it back to Done. The index doesn't change — the spec self-reports its status.
+
+To find features with open work: `grep -l "Status.*Active" .claude/docs/features/`
 
 ## Bug Documentation Format
 
@@ -54,7 +64,7 @@ For bugs requiring root-cause analysis, create a file in `.claude/docs/bugs/` (e
 5. **Fix** — what was changed
 6. **Key files** — affected source files
 
-Add the bug to the Known Bugs table in `index.md`.
+Add the bug to the table in `bugs/index.md`.
 
 ## Guidelines
 
