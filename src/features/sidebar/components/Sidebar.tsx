@@ -1,8 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
@@ -169,6 +169,12 @@ export function Sidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on pathname change
   }, [pathname])
 
+  // Clear optimistic pending path when navigation completes
+  const setPendingPath = useSidebar((s) => s.setPendingPath)
+  useEffect(() => {
+    setPendingPath(null)
+  }, [pathname, setPendingPath])
+
   // Body scroll lock when mobile drawer is open
   useEffect(() => {
     if (isMobile && mobileOpen) {
@@ -334,16 +340,13 @@ export function Sidebar() {
             collapsed && "md:flex-col md:gap-1 md:mx-0 md:max-w-none md:justify-start"
           )}
         >
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
+          {navItems.map((item) => (
+              <SidebarLink
                 key={item.href}
                 href={item.href}
                 title={item.label}
                 aria-label={item.label}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
+                className={(isActive) => cn(
                   "flex size-10 items-center justify-center rounded-md transition-colors md:size-8",
                   isActive
                     ? "bg-accent text-accent-foreground"
@@ -351,9 +354,8 @@ export function Sidebar() {
                 )}
               >
                 <item.icon className="size-5 md:size-4" />
-              </Link>
-            )
-          })}
+              </SidebarLink>
+          ))}
         </nav>
       </div>
 
@@ -462,19 +464,18 @@ export function Sidebar() {
                 {hasTagsContent && <hr className="border-border" />}
                 <TagsSection tags={tags} />
                 <hr className="border-border" />
-                <Link
+                <SidebarLink
                   href="/trash"
-                  aria-current={pathname === "/trash" ? "page" : undefined}
-                  className={cn(
+                  className={(isActive) => cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                    pathname === "/trash"
+                    isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
                   <TrashIcon className="size-4" />
                   Trash
-                </Link>
+                </SidebarLink>
               </>
             )}
           </div>

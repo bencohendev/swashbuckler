@@ -1,6 +1,5 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
 import { ObjectItem } from './ObjectItem'
 import type { DataObject, ObjectType } from '@/shared/lib/data'
 
@@ -21,8 +20,6 @@ export function ObjectList({
   emptyState,
   compact,
 }: ObjectListProps) {
-  const pathname = usePathname()
-
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -53,7 +50,6 @@ export function ObjectList({
           key={object.id}
           object={object}
           objectType={objectType}
-          isActive={pathname === `/objects/${object.id}`}
           compact={compact}
         />
       ))}

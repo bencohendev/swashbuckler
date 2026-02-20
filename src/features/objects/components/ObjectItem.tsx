@@ -5,6 +5,7 @@ import { FileIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { DataObject, ObjectType } from '@/shared/lib/data'
 import { PinButton } from '@/features/pins'
+import { SidebarLink } from '@/features/sidebar/components/SidebarLink'
 
 interface ObjectItemProps {
   object: DataObject
@@ -16,11 +17,11 @@ interface ObjectItemProps {
 export function ObjectItem({ object, objectType, isActive, compact }: ObjectItemProps) {
   if (compact) {
     return (
-      <Link
+      <SidebarLink
         href={`/objects/${object.id}`}
-        className={cn(
+        className={(active) => cn(
           'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
-          isActive
+          active
             ? 'bg-accent text-accent-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
         )}
@@ -36,7 +37,7 @@ export function ObjectItem({ object, objectType, isActive, compact }: ObjectItem
           size="sm"
           className="shrink-0 opacity-0 group-hover:opacity-100"
         />
-      </Link>
+      </SidebarLink>
     )
   }
 
