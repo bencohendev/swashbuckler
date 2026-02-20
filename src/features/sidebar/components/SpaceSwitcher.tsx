@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { CheckIcon, ChevronsUpDownIcon, LogOutIcon, PlusIcon, ShareIcon } from "lucide-react"
 import { useCurrentSpace, useSpaces, useAuth } from "@/shared/lib/data"
 import {
@@ -14,16 +15,23 @@ import { CreateSpaceDialog } from "./CreateSpaceDialog"
 import { ShareSpaceDialog } from "@/features/sharing"
 
 export function SpaceSwitcher() {
+  const router = useRouter()
   const { space, spaces, switchSpace, leaveSpace } = useCurrentSpace()
   const { create } = useSpaces()
   const { user } = useAuth()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
 
+  const handleSwitchSpace = (id: string) => {
+    if (id === space?.id) return
+    switchSpace(id)
+    router.push('/')
+  }
+
   const handleCreate = async (input: { name: string; icon?: string }) => {
     const newSpace = await create(input)
     if (newSpace) {
-      switchSpace(newSpace.id)
+      handleSwitchSpace(newSpace.id)
     }
   }
 
@@ -51,7 +59,7 @@ export function SpaceSwitcher() {
             ...ownedSpaces.map((s) => (
               <DropdownMenuItem
                 key={s.id}
-                onClick={() => switchSpace(s.id)}
+                onClick={() => handleSwitchSpace(s.id)}
                 className="gap-2"
               >
                 <span className="text-base">{s.icon}</span>
@@ -69,7 +77,7 @@ export function SpaceSwitcher() {
               ...sharedSpaces.map((s) => (
                 <DropdownMenuItem
                   key={s.id}
-                  onClick={() => switchSpace(s.id)}
+                  onClick={() => handleSwitchSpace(s.id)}
                   className="gap-2"
                 >
                   <span className="text-base">{s.icon}</span>
@@ -97,9 +105,10 @@ export function SpaceSwitcher() {
             ...(space && !isOwned(space) ? [
               <DropdownMenuItem
                 key="__leave"
-                onClick={() => {
+                onClick={async () => {
                   if (window.confirm(`Leave "${space.name}"? You will lose access.`)) {
-                    leaveSpace(space.id)
+                    await leaveSpace(space.id)
+                    router.push('/')
                   }
                 }}
                 className="gap-2 text-destructive"
