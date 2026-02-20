@@ -53,7 +53,7 @@ Comprehensive WCAG 2.1 AA accessibility pass across all features.
 
 ## Deferred Items
 
-Tracked in [index.md](index.md) Unfinished Features table:
+Tracked in [index.md](../index.md) Unfinished Features table:
 - **Graph keyboard navigation** — Tab/arrow-key navigation through graph nodes
 - **Custom confirm dialogs** — Replace `window.confirm()` with Radix AlertDialog
 - **Type reorder keyboard support** — Up/down buttons as keyboard alternative to drag-drop
