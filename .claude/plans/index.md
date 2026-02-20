@@ -113,6 +113,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Accessibility](accessibility.md) | Accessibility audit and remediation | Done |
 | [Realtime Sync](realtime.md) | Supabase Realtime + cross-tab BroadcastChannel | Done |
 | [Realtime Collaboration](realtime-collaboration.md) | Yjs CRDT collaborative editing for shared spaces | Done |
+| [Documentation Site](docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest | Not started |
 
 ## Known Bugs
 
