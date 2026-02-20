@@ -1,6 +1,6 @@
 # Templates
 
-**Status: Done**
+**Status: Active**
 
 ## Overview
 
@@ -49,6 +49,15 @@ Template system with variable support. Templates are stored in a dedicated `temp
 4. `createFromTemplateWithVariables()` resolves all variables and creates object
 5. Built-in variables resolve to current date/time/user/space
 6. Custom variables resolve to user-provided values
+
+## Open Work
+
+### Template deletion
+- Users need to be able to delete templates (UI in template list / settings)
+
+### Template naming on save
+- "Save as Template" should open a modal to set the template name instead of saving silently or using the entry title
+- Validate for duplicate names within the same space — prevent saving if a template with that name already exists
 
 ## Verification
 
