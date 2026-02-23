@@ -1,6 +1,6 @@
 # Unsaved changes lost when navigating away quickly
 
-**Status**: Fixed
+**Status**: Closed
 **Feature**: Editor
 **Severity**: High — user data loss
 
