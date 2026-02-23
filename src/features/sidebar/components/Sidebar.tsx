@@ -130,7 +130,7 @@ export function Sidebar() {
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
   const { space } = useCurrentSpace()
-  const { canEdit: canEditSpace } = useSpacePermission()
+  const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects } = useExclusionFilter()
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
@@ -243,6 +243,8 @@ export function Sidebar() {
     })
     if (result) {
       router.push(`/objects/${result.id}`)
+    } else {
+      window.alert('Failed to create entry. You may not have permission to create in this space.')
     }
   }
 
@@ -428,42 +430,59 @@ export function Sidebar() {
                   <div className="px-4 py-6 text-center">
                     <p className="text-sm font-medium text-muted-foreground">No types yet</p>
                     <p className="mt-1 text-xs text-muted-foreground/70">Create a type to start organizing your entries</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 gap-1 text-xs text-muted-foreground"
-                      onClick={() => setCreateTypeOpen(true)}
-                    >
-                      <PlusIcon className="size-3" />
-                      New Type
-                    </Button>
+                    {isSpaceOwner && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-3 gap-1 text-xs text-muted-foreground"
+                        onClick={() => setCreateTypeOpen(true)}
+                      >
+                        <PlusIcon className="size-3" />
+                        New Type
+                      </Button>
+                    )}
                   </div>
                 ) : (
-                  filteredOrderedTypes.map((type, index) => (
-                    <DraggableTypeSection
-                      key={type.id}
-                      index={index}
-                      type={type}
-                      objects={objectsByType.get(type.id) ?? []}
-                      isLoading={objectsLoading}
-                      hideCreateButton={!canEditSpace}
-                      onCreateBlank={handleCreateBlank}
-                      onSelectTemplate={handleSelectTemplate}
-                      onDelete={removeType}
-                      onMove={handleMoveType}
-                      onDrop={handleDropType}
-                    />
-                  ))
+                  filteredOrderedTypes.map((type, index) =>
+                    isSpaceOwner ? (
+                      <DraggableTypeSection
+                        key={type.id}
+                        index={index}
+                        type={type}
+                        objects={objectsByType.get(type.id) ?? []}
+                        isLoading={objectsLoading}
+                        hideCreateButton={!canEditSpace}
+                        onCreateBlank={handleCreateBlank}
+                        onSelectTemplate={handleSelectTemplate}
+                        onDelete={removeType}
+                        onMove={handleMoveType}
+                        onDrop={handleDropType}
+                      />
+                    ) : (
+                      <TypeSection
+                        key={type.id}
+                        type={type}
+                        objects={objectsByType.get(type.id) ?? []}
+                        isLoading={objectsLoading}
+                        hideCreateButton={!canEditSpace}
+                        hideManageActions
+                        onCreateBlank={handleCreateBlank}
+                        onSelectTemplate={handleSelectTemplate}
+                      />
+                    )
+                  )
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start gap-1 text-xs text-muted-foreground"
-                  onClick={() => setCreateTypeOpen(true)}
-                >
-                  <PlusIcon className="size-3" />
-                  New Type
-                </Button>
+                {isSpaceOwner && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                    onClick={() => setCreateTypeOpen(true)}
+                  >
+                    <PlusIcon className="size-3" />
+                    New Type
+                  </Button>
+                )}
                 {hasRecentContent && <hr className="border-border" />}
                 <RecentSection objects={allObjects} />
                 {hasTagsContent && <hr className="border-border" />}

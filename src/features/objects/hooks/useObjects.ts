@@ -53,7 +53,10 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
 
   const create = useCallback(async (input: CreateObjectInput): Promise<DataObject | null> => {
     const result = await dataClient.objects.create(input)
-    if (result.error) return null
+    if (result.error) {
+      console.error('Failed to create object:', result.error.message)
+      return null
+    }
     emit('objects')
     return result.data
   }, [dataClient])

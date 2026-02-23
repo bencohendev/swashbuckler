@@ -80,28 +80,39 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       }
     }
 
-    // Load shared spaces for authenticated users
-    let loadedShared: Space[] = []
+    // Classify spaces by owner_id (not by cross-referencing getSharedSpaces)
     const newShareInfoMap = new Map<string, { shareId: string; permission: SpaceSharePermission }>()
+    let owned: Space[]
+    let shared: Space[]
+
     if (user) {
+      owned = loadedSpaces.filter(s => s.owner_id === user.id)
+      shared = loadedSpaces.filter(s => s.owner_id !== user.id)
+
+      // Enrich shared spaces with permission info from getSharedSpaces()
       const sharedResult = await sharingClient.getSharedSpaces()
       if (!sharedResult.error && sharedResult.data.length > 0) {
-        loadedShared = sharedResult.data.map(({ share_id, permission, ...space }) => {
-          newShareInfoMap.set(space.id, { shareId: share_id, permission })
-          return space
-        })
+        for (const { share_id, permission, id } of sharedResult.data) {
+          newShareInfoMap.set(id, { shareId: share_id, permission })
+        }
       }
 
-      // Filter list() results to owned-only since updated RLS also returns shared spaces
-      const sharedIds = new Set(loadedShared.map(s => s.id))
-      loadedSpaces = loadedSpaces.filter(s => !sharedIds.has(s.id))
+      // Any non-owned space missing from shareInfoMap defaults to 'view'
+      for (const s of shared) {
+        if (!newShareInfoMap.has(s.id)) {
+          newShareInfoMap.set(s.id, { shareId: '', permission: 'view' })
+        }
+      }
+    } else {
+      owned = loadedSpaces
+      shared = []
     }
 
-    setOwnedSpaces(loadedSpaces)
-    setSharedSpaces(loadedShared)
+    setOwnedSpaces(owned)
+    setSharedSpaces(shared)
     setShareInfoMap(newShareInfoMap)
 
-    const allSpaces = [...loadedSpaces, ...loadedShared]
+    const allSpaces = [...owned, ...shared]
 
     // Restore last selected space from localStorage
     const savedId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
