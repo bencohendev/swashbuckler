@@ -7,6 +7,11 @@
 - Use PascalCase for React component files (e.g., `Button.tsx`, `UserProfile.tsx`)
 - Avoid typecasting (`as`) when possible — prefer proper typing, type guards, or generics instead
 
+## Accessibility
+
+- All features and bug fixes must follow accessibility best practices: semantic HTML, ARIA attributes, keyboard navigation, focus management, and sufficient color contrast
+- Accessibility is not a separate concern — it's part of every feature and fix
+
 ## Testing & Verification
 
 After adding, modifying, or fixing features, run these checks:
