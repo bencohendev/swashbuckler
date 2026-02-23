@@ -1,6 +1,6 @@
 # Accessibility Audit & Remediation
 
-## Status: Done
+**Status:** Done
 
 Comprehensive WCAG 2.1 AA accessibility pass across all features.
 

@@ -1,6 +1,6 @@
 # Type Table Pages
 
-**Status: Done** (tags column deferred until tags feature is implemented)
+**Status:** Done
 
 ## Overview
 

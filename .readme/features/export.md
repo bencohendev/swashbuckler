@@ -1,6 +1,6 @@
 # Export
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

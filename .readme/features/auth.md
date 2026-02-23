@@ -1,6 +1,6 @@
 # Auth
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

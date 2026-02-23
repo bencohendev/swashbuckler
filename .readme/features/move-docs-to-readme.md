@@ -1,6 +1,6 @@
 # Move Docs to .readme/
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

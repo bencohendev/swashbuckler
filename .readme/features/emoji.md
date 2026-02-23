@@ -1,6 +1,6 @@
 # Emoji Support
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

@@ -1,6 +1,6 @@
 # Image Upload
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

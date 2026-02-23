@@ -1,6 +1,6 @@
 # Global Tags
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

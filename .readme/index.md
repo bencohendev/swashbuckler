@@ -138,3 +138,9 @@ Dual-storage architecture with a `DataClient` interface:
 ## Bugs
 
 See [bugs/log.md](bugs/log.md) for all tracked bugs.
+
+## Archive
+
+| Document | Description |
+|----------|-------------|
+| [v1 Implementation Plan](archive/v1-archive.md) | Original v1 plan (SvelteKit → Next.js rewrite) |

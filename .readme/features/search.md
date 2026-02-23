@@ -1,6 +1,6 @@
 # Search
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

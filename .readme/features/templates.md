@@ -1,6 +1,6 @@
 # Templates
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

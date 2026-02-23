@@ -1,6 +1,6 @@
 # Account Settings
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

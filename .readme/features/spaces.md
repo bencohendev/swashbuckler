@@ -1,6 +1,6 @@
 # Spaces
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

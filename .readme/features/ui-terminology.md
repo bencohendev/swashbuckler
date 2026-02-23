@@ -1,6 +1,6 @@
 # UI Terminology Rename
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

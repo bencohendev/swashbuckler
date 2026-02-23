@@ -1,6 +1,6 @@
 # Trash
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

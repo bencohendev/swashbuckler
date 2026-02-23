@@ -1,5 +1,7 @@
 # Custom Theme Builder
 
+**Status:** Not started
+
 ## Context
 
 Users currently can only switch between Light, Dark, and System themes. This feature adds a theme builder where users create custom themes by picking 8 core colors, saving them with unique names, and switching between them. Default Light/Dark always remain available.

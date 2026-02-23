@@ -1,6 +1,6 @@
 # Pins (formerly Favorites)
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

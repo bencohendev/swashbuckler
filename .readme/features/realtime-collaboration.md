@@ -1,6 +1,6 @@
 # Realtime Collaboration
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

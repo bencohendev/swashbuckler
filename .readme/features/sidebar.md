@@ -1,6 +1,6 @@
 # Sidebar
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

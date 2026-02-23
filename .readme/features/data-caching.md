@@ -1,6 +1,6 @@
 # Data Caching (TanStack Query)
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

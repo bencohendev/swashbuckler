@@ -1,6 +1,6 @@
 # Objects
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

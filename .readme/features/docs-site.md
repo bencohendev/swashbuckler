@@ -1,6 +1,6 @@
 # Documentation Site
 
-**Status: Not started**
+**Status:** Not started
 
 ## Overview
 

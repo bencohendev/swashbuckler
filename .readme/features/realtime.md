@@ -1,6 +1,6 @@
 # Realtime Synchronization
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

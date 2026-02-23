@@ -1,6 +1,6 @@
 # Theme
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

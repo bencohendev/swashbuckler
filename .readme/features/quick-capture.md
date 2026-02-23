@@ -1,6 +1,6 @@
 # Quick Capture
 
-**Status: Implemented**
+**Status:** Done
 
 ## Overview
 

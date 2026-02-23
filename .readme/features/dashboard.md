@@ -1,6 +1,6 @@
 # Dashboard
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

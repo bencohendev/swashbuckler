@@ -1,6 +1,6 @@
 # Graph
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

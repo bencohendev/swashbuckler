@@ -1,6 +1,6 @@
 # Editor
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 

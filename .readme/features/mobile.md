@@ -1,5 +1,7 @@
 # Mobile Responsive Design
 
+**Status:** Not started
+
 ## Context
 
 The app has no mobile support — sidebar is always visible at fixed width, no hamburger menu, no touch-friendly spacing. This plan makes the app usable on phones and tablets (320px through iPad).

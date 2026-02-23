@@ -1,6 +1,6 @@
 # Sharing
 
-**Status: Done**
+**Status:** Done
 
 ## Overview
 
