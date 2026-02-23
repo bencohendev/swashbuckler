@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { ContextMenu } from 'radix-ui'
@@ -9,6 +9,8 @@ import type { DataObject, ObjectType, Template } from '@/shared/lib/data'
 import { ObjectList } from '@/features/objects/components'
 import { useTemplates } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
+import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
+import type { CollapseSignal } from '@/features/sidebar/types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
@@ -30,6 +32,7 @@ interface TypeSectionProps {
   isDragging?: boolean
   hideCreateButton?: boolean
   hideManageActions?: boolean
+  collapseSignal?: CollapseSignal
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
   onDelete?: (typeId: string) => Promise<unknown>
@@ -87,20 +90,13 @@ export function TypeSection({
   isDragging,
   hideCreateButton,
   hideManageActions,
+  collapseSignal,
   onCreateBlank,
   onSelectTemplate,
   onDelete,
 }: TypeSectionProps) {
   const router = useRouter()
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem(getStorageKey(type.id)) === 'true'
-  })
-
-  useEffect(() => {
-    localStorage.setItem(getStorageKey(type.id), String(collapsed))
-  }, [collapsed, type.id])
-
+  const [collapsed, setCollapsed] = useCollapsible(getStorageKey(type.id), collapseSignal)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   return (

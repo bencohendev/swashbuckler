@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { ChevronsDownUpIcon, ChevronsUpDownIcon, HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar, useSidebarHydration } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
@@ -21,6 +21,7 @@ import { VariablePromptDialog } from "@/features/templates/components/VariablePr
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
 import { toast } from "@/shared/hooks/useToast"
+import type { CollapseSignal } from "../types"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
 import { RecentSection } from "./RecentSection"
@@ -43,6 +44,7 @@ function DraggableTypeSection({
   objects,
   isLoading,
   hideCreateButton,
+  collapseSignal,
   onCreateBlank,
   onSelectTemplate,
   onDelete,
@@ -54,6 +56,7 @@ function DraggableTypeSection({
   objects: DataObject[]
   isLoading: boolean
   hideCreateButton?: boolean
+  collapseSignal?: CollapseSignal
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
   onDelete: (typeId: string) => Promise<unknown>
@@ -115,6 +118,7 @@ function DraggableTypeSection({
         isLoading={isLoading}
         isDragging={isDragging}
         hideCreateButton={hideCreateButton}
+        collapseSignal={collapseSignal}
         onCreateBlank={onCreateBlank}
         onSelectTemplate={onSelectTemplate}
         onDelete={onDelete}
@@ -148,6 +152,7 @@ export function Sidebar() {
   const [variableDialogOpen, setVariableDialogOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
+  const [collapseSignal, setCollapseSignal] = useState<CollapseSignal | undefined>(undefined)
   const sidebarLoading = !space || objectsLoading || typesLoading || pinsLoading || tagsLoading || (types.length > 0 && orderedTypes.length === 0)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
@@ -297,6 +302,14 @@ export function Sidebar() {
   const hasRecentContent = allObjects.length > 0
   const hasTagsContent = tags.length > 0
 
+  const handleExpandAll = useCallback(() => {
+    setCollapseSignal((prev) => ({ collapsed: false, key: (prev?.key ?? 0) + 1 }))
+  }, [])
+
+  const handleCollapseAll = useCallback(() => {
+    setCollapseSignal((prev) => ({ collapsed: true, key: (prev?.key ?? 0) + 1 }))
+  }, [])
+
   const sidebarContent = (
     <>
       {/* Header */}
@@ -426,7 +439,27 @@ export function Sidebar() {
               </div>
             ) : (
               <>
-                <PinnedSection pinnedIds={pinnedIds} objects={allObjects} />
+                <div className="flex justify-end" role="toolbar" aria-label="Section controls">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    title="Expand all sections"
+                    aria-label="Expand all sections"
+                    onClick={handleExpandAll}
+                  >
+                    <ChevronsUpDownIcon className="size-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    title="Collapse all sections"
+                    aria-label="Collapse all sections"
+                    onClick={handleCollapseAll}
+                  >
+                    <ChevronsDownUpIcon className="size-3" />
+                  </Button>
+                </div>
+                <PinnedSection pinnedIds={pinnedIds} objects={allObjects} collapseSignal={collapseSignal} />
                 {hasPinnedContent && <hr className="border-border" />}
                 {filteredOrderedTypes.length === 0 ? (
                   <div className="px-4 py-6 text-center">
@@ -454,6 +487,7 @@ export function Sidebar() {
                         objects={objectsByType.get(type.id) ?? []}
                         isLoading={objectsLoading}
                         hideCreateButton={!canEditSpace}
+                        collapseSignal={collapseSignal}
                         onCreateBlank={handleCreateBlank}
                         onSelectTemplate={handleSelectTemplate}
                         onDelete={removeType}
@@ -468,6 +502,7 @@ export function Sidebar() {
                         isLoading={objectsLoading}
                         hideCreateButton={!canEditSpace}
                         hideManageActions
+                        collapseSignal={collapseSignal}
                         onCreateBlank={handleCreateBlank}
                         onSelectTemplate={handleSelectTemplate}
                       />
@@ -486,9 +521,9 @@ export function Sidebar() {
                   </Button>
                 )}
                 {hasRecentContent && <hr className="border-border" />}
-                <RecentSection objects={allObjects} />
+                <RecentSection objects={allObjects} collapseSignal={collapseSignal} />
                 {hasTagsContent && <hr className="border-border" />}
-                <TagsSection tags={tags} />
+                <TagsSection tags={tags} collapseSignal={collapseSignal} />
                 <hr className="border-border" />
                 <SidebarLink
                   href="/trash"
