@@ -21,7 +21,7 @@ export function useSpaceShares(spaceId: string | null) {
   }, [dataClient, spaceId])
 
   useEffect(() => {
-    loadShares()
+    loadShares() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch
   }, [loadShares])
 
   useEffect(() => {

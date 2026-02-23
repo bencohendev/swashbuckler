@@ -70,7 +70,6 @@ export function GraphView() {
             edges={graphData.edges}
             width={dimensions.width}
             height={dimensions.height}
-            onNavigate={handleNavigate}
           />
           <GraphLayoutToggle />
           <GraphFilterPanel types={types} nodes={graphData.nodes} />

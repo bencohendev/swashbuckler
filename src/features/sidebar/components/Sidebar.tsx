@@ -63,11 +63,14 @@ function DraggableTypeSection({
 
   // Use refs so useDrag/useDrop specs never need to reconnect mid-drag
   const indexRef = useRef(index)
-  indexRef.current = index
   const onMoveRef = useRef(onMove)
-  onMoveRef.current = onMove
   const onDropRef = useRef(onDrop)
-  onDropRef.current = onDrop
+
+  useEffect(() => {
+    indexRef.current = index
+    onMoveRef.current = onMove
+    onDropRef.current = onDrop
+  }, [index, onMove, onDrop])
 
   const [{ isDragging }, drag] = useDrag({
     type: DRAG_TYPE,
@@ -99,7 +102,9 @@ function DraggableTypeSection({
     },
   })
 
-  drag(drop(ref))
+  useEffect(() => {
+    drag(drop(ref))
+  }, [drag, drop])
 
   return (
     <div ref={ref} className="cursor-grab [&_*]:cursor-grab">
@@ -125,7 +130,7 @@ export function Sidebar() {
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
   const { space } = useCurrentSpace()
-  const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
+  const { canEdit: canEditSpace } = useSpacePermission()
   const { filterTypes, filterObjects } = useExclusionFilter()
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,

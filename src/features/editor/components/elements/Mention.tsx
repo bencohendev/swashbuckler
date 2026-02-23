@@ -82,11 +82,11 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
     search()
     return () => { cancelled = true }
-  }, [dataClient, query])
+  }, [dataClient, query, params.id])
 
   // Reset selection when results change
   useEffect(() => {
-    setSelectedIndex(0)
+    setSelectedIndex(0) // eslint-disable-line react-hooks/set-state-in-effect -- reset derived state on data change
   }, [results])
 
   // Select an object and insert mention

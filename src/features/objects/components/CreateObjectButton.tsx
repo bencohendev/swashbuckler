@@ -5,7 +5,6 @@ import { PlusIcon } from 'lucide-react'
 import { Button } from '@/shared/components/ui/Button'
 import { useObjects } from '../hooks/useObjects'
 import { useObjectTypes } from '@/features/object-types'
-import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 
 interface CreateObjectButtonProps {
   parentId?: string

@@ -36,8 +36,8 @@ export function ExclusionManager({ shareId, loadExclusions, addExclusion, remove
   const typeExclusions = exclusions.filter(e => e.excluded_type_id && !e.excluded_field && !e.excluded_object_id)
   const fieldExclusions = exclusions.filter(e => e.excluded_type_id && e.excluded_field)
   const objectExclusions = exclusions.filter(e => e.excluded_object_id)
-  const excludedTypeIds = new Set(typeExclusions.map(e => e.excluded_type_id))
-  const excludedObjectIds = new Set(objectExclusions.map(e => e.excluded_object_id))
+  const excludedTypeIds = useMemo(() => new Set(typeExclusions.map(e => e.excluded_type_id)), [typeExclusions])
+  const excludedObjectIds = useMemo(() => new Set(objectExclusions.map(e => e.excluded_object_id)), [objectExclusions])
 
   // Space-wide exclusion sets (shown as disabled in per-user lists)
   const spaceTypeIds = useMemo(() => new Set(

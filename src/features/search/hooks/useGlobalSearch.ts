@@ -47,7 +47,7 @@ export function useGlobalSearch(): UseGlobalSearchReturn {
 
   useEffect(() => {
     if (!query.trim()) {
-      setResults([])
+      setResults([]) // eslint-disable-line react-hooks/set-state-in-effect -- clear results when query empty
       setIsLoading(false)
       return
     }

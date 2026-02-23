@@ -21,7 +21,7 @@ export function ObjectTypeManager() {
   useEffect(() => {
     if (editTypeId && types.length > 0) {
       const type = types.find(t => t.id === editTypeId)
-      if (type) setEditingType(type)
+      if (type) setEditingType(type) // eslint-disable-line react-hooks/set-state-in-effect -- sync from URL param
     }
   }, [editTypeId, types])
 

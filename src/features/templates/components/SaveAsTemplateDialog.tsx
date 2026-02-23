@@ -42,7 +42,7 @@ export function SaveAsTemplateDialog({
         candidate = `${defaultName} ${i}`
         i++
       }
-      setName(candidate)
+      setName(candidate) // eslint-disable-line react-hooks/set-state-in-effect -- reset on dialog open
       setIsSaving(false)
       setError(null)
     }

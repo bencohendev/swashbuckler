@@ -378,7 +378,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
 
   // Reset selection when query changes
   useEffect(() => {
-    setSelectedIndex(0)
+    setSelectedIndex(0) // eslint-disable-line react-hooks/set-state-in-effect -- reset derived state on query change
   }, [query])
 
   // Close the slash menu
@@ -400,6 +400,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
 
   // Keyboard navigation handler for the filter input
   const handleInputKeyDown = useCallback(
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization -- complex deps that compiler can't trace
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
@@ -434,7 +435,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
         closeMenu()
       }
     },
-    [filteredItems, filteredCreateTypes, totalItems, selectedIndex, selectItem, createAndInsertMention, closeMenu, query]
+    [filteredItems, filteredCreateTypes, totalItems, selectedIndex, selectItem, createAndInsertMention, closeMenu, query] // eslint-disable-line react-hooks/preserve-manual-memoization
   )
 
   // Scroll selected item into view (only for keyboard navigation)

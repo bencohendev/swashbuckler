@@ -12,7 +12,7 @@ export function useExclusionFilter() {
 
   useEffect(() => {
     if (!isSharedUser || !space) {
-      setExclusions([])
+      setExclusions([]) // eslint-disable-line react-hooks/set-state-in-effect -- clear when not shared user
       return
     }
 

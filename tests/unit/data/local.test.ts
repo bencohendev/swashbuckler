@@ -3,7 +3,6 @@ import { createLocalDataClient, clearLocalData } from '@/shared/lib/data/local'
 import type { DataClient } from '@/shared/lib/data/types'
 
 const PAGE_TYPE_ID = '00000000-0000-0000-0000-000000000101'
-const NOTE_TYPE_ID = '00000000-0000-0000-0000-000000000002'
 
 describe('Local Data Client (IndexedDB)', () => {
   let client: DataClient

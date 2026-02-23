@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDataClient, useSpaceId } from '@/shared/lib/data'
-import type { ObjectRelation } from '@/shared/lib/data'
 import { useObjects } from '@/features/objects/hooks'
 import { useObjectTypeMap } from '@/features/object-types/hooks/useObjectTypeMap'
 import { useExclusionFilter } from '@/features/sharing'

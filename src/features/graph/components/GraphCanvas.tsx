@@ -12,7 +12,6 @@ interface GraphCanvasProps {
   edges: GraphEdgeType[]
   width: number
   height: number
-  onNavigate: (id: string) => void
 }
 
 type Mode =
@@ -20,7 +19,7 @@ type Mode =
   | { type: 'drag'; nodeId: string; didMove: boolean }
   | { type: 'pan'; startX: number; startY: number; startTx: number; startTy: number }
 
-export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCanvasProps) {
+export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const gRef = useRef<SVGGElement>(null)
   const modeRef = useRef<Mode>({ type: 'idle' })

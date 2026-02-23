@@ -48,7 +48,7 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
       <div className="p-6">
         <h1 className="text-2xl font-semibold">Type not found</h1>
         <p className="mt-2 text-muted-foreground">
-          No object type with slug "{slug}" exists.
+          No object type with slug &ldquo;{slug}&rdquo; exists.
         </p>
       </div>
     )
