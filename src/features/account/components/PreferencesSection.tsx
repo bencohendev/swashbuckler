@@ -28,7 +28,7 @@ export function PreferencesSection({ user }: { user: User }) {
   const [defaultSpaceId, setDefaultSpaceId] = useState<string>(metadata.default_space_id ?? '')
 
   useEffect(() => {
-    setMounted(true)
+    setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect -- hydration detection
   }, [])
 
   async function handleDefaultSpaceChange(spaceId: string) {

@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { ChevronRightIcon, TagIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { Tag } from '@/shared/lib/data'
 import { useDataClient } from '@/shared/lib/data'
+import { SidebarLink } from '@/features/sidebar/components/SidebarLink'
 
 interface TagsSectionProps {
   tags: Tag[]
@@ -70,10 +70,15 @@ export function TagsSection({ tags }: TagsSectionProps) {
       {!collapsed && (
         <div id="tags-section-content" className="pl-8">
           {tags.map(tag => (
-            <Link
+            <SidebarLink
               key={tag.id}
               href={`/tags/${encodeURIComponent(tag.name)}`}
-              className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              className={(isActive) => cn(
+                'flex items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors',
+                isActive
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
             >
               <span className="flex items-center gap-1.5 truncate">
                 <span
@@ -92,7 +97,7 @@ export function TagsSection({ tags }: TagsSectionProps) {
                   {tagCounts.get(tag.id)}
                 </span>
               )}
-            </Link>
+            </SidebarLink>
           ))}
         </div>
       )}

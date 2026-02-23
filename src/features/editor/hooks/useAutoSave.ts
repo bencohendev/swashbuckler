@@ -17,38 +17,45 @@ export function useAutoSave({
   enabled = true,
 }: UseAutoSaveOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { content, isDirty, setSaving, setLastSaved, markClean } = useEditorStore();
+  const onSaveRef = useRef(onSave);
+  const { content, isDirty } = useEditorStore();
 
+  // Keep onSave ref current
+  onSaveRef.current = onSave;
+
+  // Stable save function — reads all state at call time
   const save = useCallback(async () => {
+    const { content, isDirty, setSaving, setLastSaved, markClean } =
+      useEditorStore.getState();
     if (!isDirty) return;
 
+    // Mark clean immediately to prevent concurrent duplicate saves
+    markClean();
     setSaving(true);
     try {
-      await onSave(content);
+      await onSaveRef.current(content);
       setLastSaved(new Date());
     } catch (error) {
       console.error('Auto-save failed:', error);
-      // Keep dirty state so next change will retry
+      // Re-mark dirty so next change retries
+      useEditorStore.getState().markDirty();
     } finally {
       setSaving(false);
     }
-  }, [content, isDirty, onSave, setSaving, setLastSaved]);
+  }, []);
 
   // Debounced auto-save on content change
   useEffect(() => {
     if (!enabled || !isDirty) return;
 
-    // Clear existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Set new timeout
     timeoutRef.current = setTimeout(() => {
       save();
     }, delay);
 
-    // Cleanup
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -59,11 +66,25 @@ export function useAutoSave({
   // Save on unmount if dirty
   useEffect(() => {
     return () => {
-      if (isDirty) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (useEditorStore.getState().isDirty) {
         save();
       }
     };
-  }, [isDirty, save]);
+  }, [save]);
+
+  // Warn before tab close if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (useEditorStore.getState().isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   // Manual save function
   const saveNow = useCallback(async () => {
@@ -78,8 +99,8 @@ export function useAutoSave({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    markClean();
-  }, [markClean]);
+    useEditorStore.getState().markClean();
+  }, []);
 
   return {
     saveNow,

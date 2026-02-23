@@ -7,13 +7,42 @@
 - Use PascalCase for React component files (e.g., `Button.tsx`, `UserProfile.tsx`)
 - Avoid typecasting (`as`) when possible — prefer proper typing, type guards, or generics instead
 
+## Testing & Verification
+
+After adding, modifying, or fixing features, run these checks:
+- **Tests:** `npx vitest run` — don't let existing tests break; update them to match code changes
+- **Types:** `npx tsc --noEmit` — all code must pass typecheck with no errors
+- **Lint:** `npm run lint` — don't introduce new lint errors (pre-existing warnings are tracked separately)
+
+### Test conventions
+- Test fixtures live in `tests/fixtures/` — keep them in sync with current schemas
+- Zod 4 requires RFC4122-compliant UUIDs in tests (no synthetic `00000000-...` IDs)
+
 ## Task Management
 
 - Update tasks as they are completed
 
-## Feature Specs
+## Documentation
 
-- All feature specs live in `.claude/plans/` with descriptive names (e.g., `custom-themes.md`, not random/auto-generated names). When plan mode assigns a random filename, override it with a contextual name.
-- When planning a new feature, create its spec in `.claude/plans/` and add it to `.claude/plans/index.md` before starting implementation.
-- After completing any implementation that adds, changes, or removes features, update the relevant feature spec. Read the existing doc first, then make surgical edits to reflect what changed.
-- These docs are the source of truth for expected behavior — keep them accurate.
+### Structure
+- Feature specs live in `.claude/docs/features/` with kebab-case names (e.g., `custom-themes.md`)
+- Bug tracking lives in `.claude/docs/bugs/log.md` — all bugs get a row there; complex bugs with root-cause analysis also get individual files in the same directory, linked from the log
+- `.claude/docs/index.md` is the master index — update it when adding features
+- `.claude/plans/` is for Claude Code plan mode working files only — no permanent docs
+
+### Document-First Workflow
+- Before implementing a new feature or non-trivial bug fix, create/update its spec in `.claude/docs/`
+- New features get added to `index.md`; bugs get added to `bugs/log.md`
+- Small fixes (typos, one-line patches) are exempt — add a line to `bugs/log.md` if relevant
+- Plan mode files in `.claude/plans/` are drafts. After approval, create the permanent spec in `.claude/docs/` and delete the plan file
+
+### Feature Status
+- Each spec has a `**Status:**` line at the top: `Done`, `Active`, or `Not started`
+- When new work is planned for an implemented feature, set its status to `Active` and document the new scope
+- When the new scope ships, set it back to `Done`
+- To find features with open work: `grep -l "Status.*Active" .claude/docs/features/`
+
+### Maintaining Docs
+- After completing implementation, update the relevant spec with surgical edits
+- Read the existing doc before modifying it
+- These docs are the source of truth for expected behavior

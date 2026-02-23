@@ -55,6 +55,7 @@ export function CollaboratorAvatars({ awareness }: CollaboratorAvatarsProps) {
             className="relative size-6 overflow-hidden rounded-full border-2 border-background"
             title={user.name}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element -- external avatar URL from auth provider */}
             <img
               src={user.avatarUrl}
               alt={user.name}

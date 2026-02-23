@@ -97,7 +97,7 @@ function SharingControls({ spaceId }: { spaceId: string }) {
   }, [loadSpaceExclusions, spaceId])
 
   useEffect(() => {
-    refreshSpaceExclusions()
+    refreshSpaceExclusions() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch
   }, [refreshSpaceExclusions])
 
   const handleSubmit = async (e: React.FormEvent) => {

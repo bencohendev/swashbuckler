@@ -34,6 +34,7 @@ export function TypeCardView({ type, objects }: TypeCardViewProps) {
             className="flex flex-col overflow-hidden rounded-lg border bg-card text-left transition-colors hover:bg-accent/50"
           >
             {obj.cover_image && (
+              /* eslint-disable-next-line @next/next/no-img-element -- user-uploaded cover image URL */
               <img
                 src={obj.cover_image}
                 alt=""

@@ -14,33 +14,38 @@ interface RemoteMouseCursorsProps {
 export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
   const cursors = useRemoteMouseCursors(awareness)
   const prevPositions = useRef(new Map<number, string>())
-  const lastActivity = useRef(new Map<number, number>())
-  const [, setTick] = useState(0)
+  const [activityMap, setActivityMap] = useState<Map<number, number>>(new Map())
+  const [now, setNow] = useState(() => Date.now())
 
-  // Track position changes to detect activity
-  const now = Date.now()
-  for (const cursor of cursors) {
-    const key = `${cursor.x},${cursor.y}`
-    if (prevPositions.current.get(cursor.clientId) !== key) {
-      prevPositions.current.set(cursor.clientId, key)
-      lastActivity.current.set(cursor.clientId, now)
-    }
-  }
+  // Track position changes and clean up departed cursors
+  useEffect(() => {
+    const currentTime = Date.now()
+    const activeIds = new Set(cursors.map(c => c.clientId))
 
-  // Clean up departed cursors
-  const activeIds = new Set(cursors.map(c => c.clientId))
-  for (const id of prevPositions.current.keys()) {
-    if (!activeIds.has(id)) {
-      prevPositions.current.delete(id)
-      lastActivity.current.delete(id)
-    }
-  }
+    setActivityMap(prev => {
+      const next = new Map(prev)
+      for (const cursor of cursors) {
+        const key = `${cursor.x},${cursor.y}`
+        if (prevPositions.current.get(cursor.clientId) !== key) {
+          prevPositions.current.set(cursor.clientId, key)
+          next.set(cursor.clientId, currentTime)
+        }
+      }
+      for (const id of prev.keys()) {
+        if (!activeIds.has(id)) {
+          prevPositions.current.delete(id)
+          next.delete(id)
+        }
+      }
+      return next
+    })
+  }, [cursors])
 
   // Periodic re-render to trigger fade transitions
   const hasCursors = cursors.length > 0
   useEffect(() => {
     if (!hasCursors) return
-    const interval = setInterval(() => setTick(t => t + 1), 500)
+    const interval = setInterval(() => setNow(Date.now()), 500)
     return () => clearInterval(interval)
   }, [hasCursors])
 
@@ -49,7 +54,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
   return (
     <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
       {cursors.map((cursor) => {
-        const lastMoved = lastActivity.current.get(cursor.clientId) ?? now
+        const lastMoved = activityMap.get(cursor.clientId) ?? now
         const isActive = now - lastMoved < LABEL_FADE_MS
 
         return (
@@ -75,6 +80,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
                   className="size-6 overflow-hidden rounded-full p-[1.5px] shadow-sm"
                   style={{ backgroundColor: cursor.color }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- external avatar URL from auth provider */}
                   <img
                     src={cursor.avatarUrl}
                     alt={cursor.name}

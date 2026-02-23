@@ -73,9 +73,10 @@ function getRangeRects(domRange: Range): DOMRect[] {
 export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps) {
   const editor = useEditorRef()
   const [cursors, setCursors] = useState<CursorOverlayPosition[]>([])
+  const [renderNow, setRenderNow] = useState(() => Date.now())
+  const [caretActivity, setCaretActivity] = useState<Map<number, number>>(new Map())
   const rafRef = useRef<number>(0)
   const prevCaretKeys = useRef(new Map<number, string>())
-  const lastCaretActivity = useRef(new Map<number, number>())
 
   const updateCursors = useCallback(() => {
     const sharedRoot = doc.get('content', Y.XmlText)
@@ -146,22 +147,27 @@ export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps
 
     // Track caret position changes for label fade
     const now = Date.now()
-    for (const pos of positions) {
-      const key = pos.caretPosition
-        ? `${Math.round(pos.caretPosition.left)},${Math.round(pos.caretPosition.top)}`
-        : ''
-      if (prevCaretKeys.current.get(pos.clientId) !== key) {
-        prevCaretKeys.current.set(pos.clientId, key)
-        lastCaretActivity.current.set(pos.clientId, now)
-      }
-    }
     const activeIds = new Set(positions.map(p => p.clientId))
-    for (const id of prevCaretKeys.current.keys()) {
-      if (!activeIds.has(id)) {
-        prevCaretKeys.current.delete(id)
-        lastCaretActivity.current.delete(id)
+
+    setCaretActivity(prev => {
+      const next = new Map(prev)
+      for (const pos of positions) {
+        const key = pos.caretPosition
+          ? `${Math.round(pos.caretPosition.left)},${Math.round(pos.caretPosition.top)}`
+          : ''
+        if (prevCaretKeys.current.get(pos.clientId) !== key) {
+          prevCaretKeys.current.set(pos.clientId, key)
+          next.set(pos.clientId, now)
+        }
       }
-    }
+      for (const id of prev.keys()) {
+        if (!activeIds.has(id)) {
+          prevCaretKeys.current.delete(id)
+          next.delete(id)
+        }
+      }
+      return next
+    })
 
     setCursors(positions)
   }, [editor, awareness, doc])
@@ -174,7 +180,10 @@ export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps
 
     awareness.on('change', scheduleUpdate)
 
-    const interval = setInterval(updateCursors, 500)
+    const interval = setInterval(() => {
+      updateCursors()
+      setRenderNow(Date.now())
+    }, 500)
 
     return () => {
       awareness.off('change', scheduleUpdate)
@@ -185,12 +194,10 @@ export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps
 
   if (cursors.length === 0) return null
 
-  const renderNow = Date.now()
-
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
       {cursors.map(({ clientId, data, caretPosition, selectionRects }) => {
-        const lastMoved = lastCaretActivity.current.get(clientId) ?? renderNow
+        const lastMoved = caretActivity.get(clientId) ?? renderNow
         const isLabelActive = renderNow - lastMoved < LABEL_FADE_MS
 
         return (
@@ -231,6 +238,7 @@ export function RemoteCursorOverlay({ awareness, doc }: RemoteCursorOverlayProps
                       className="size-5 overflow-hidden rounded-full p-[1.5px]"
                       style={{ backgroundColor: data.color }}
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- external avatar URL from auth provider */}
                       <img
                         src={data.avatarUrl}
                         alt={data.name}

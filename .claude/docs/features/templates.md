@@ -27,7 +27,8 @@ Template system with variable support. Templates are stored in a dedicated `temp
 - `src/features/templates/components/TemplateSelector.tsx` — template selection when creating entries
 - `src/features/templates/hooks/useTemplates.ts` — template CRUD + variable-aware creation
 - `src/app/(main)/settings/templates/page.tsx` — templates settings page
-- "Save as Template" action in ObjectEditor
+- "Save as Template" action in ObjectEditor opens `SaveAsTemplateDialog` for naming
+- `src/features/templates/components/SaveAsTemplateDialog.tsx` — modal with name input, duplicate validation, save/cancel
 
 ### Template Variables
 - `src/features/templates/lib/variables.ts` — variable types, extraction, and resolution logic
@@ -64,4 +65,6 @@ Template system with variable support. Templates are stored in a dedicated `temp
 - [x] Built-in variables resolve on template creation
 - [x] Custom variables prompt dialog appears
 - [x] Templates without variables work as before
+- [x] Save as Template opens naming dialog
+- [x] Duplicate name validation (case-insensitive)
 - [x] Build passes

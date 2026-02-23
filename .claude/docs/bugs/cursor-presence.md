@@ -1,22 +1,20 @@
-# Known Bugs
-
-## Collaborative cursor presence not visible
+# Collaborative cursor presence not visible
 
 **Status**: Closed
 **Feature**: Realtime Collaboration
 **Severity**: Medium — collaboration content sync works, but users cannot see each other's text cursor/selection
 
-### Description
+## Description
 
 When two users are collaboratively editing a shared document, remote cursor positions (caret line + colored selection highlight + user name label) do not appear. The Figma-style mouse cursor presence works, but the text editor cursor overlay does not.
 
-### Architecture
+## Architecture
 
 - **Sending**: On editor change, the local user's Slate selection is converted to a Yjs `RelativeRange` via `slateRangeToRelativeRange()` and written to Yjs awareness state under the `'selection'` field.
 - **Broadcasting**: `SupabaseYjsProvider` listens to awareness updates and broadcasts them over Supabase Realtime Broadcast channels.
 - **Receiving**: `RemoteCursorOverlay` reads awareness states directly, converts remote `RelativeRange` back to Slate ranges via `relativeRangeToSlateRange()`, maps to DOM rects, and renders an absolute-positioned overlay.
 
-### What's been investigated
+## What's been investigated
 
 1. **Missing RelativeRange → SlateRange conversion** (fixed) — Original `RemoteCursorOverlay` passed Yjs RelativeRange directly to `editor.api.toDOMRange()` which expects a Slate Range. Added `relativeRangeToSlateRange()` conversion.
 
@@ -38,13 +36,13 @@ When two users are collaboratively editing a shared document, remote cursor posi
 
 10. **`slate-dom` dual-package hazard — `editor.api.toDOMNode/toDOMRange` always fails** (ROOT CAUSE, fixed) — Two copies of `slate-dom` exist in the dependency tree: `slate-dom@0.123.0` (top-level, used by `slate-react`/`PlateContent`) and `slate-dom@0.114.0` (nested under `@udecode/slate`). `PlateContent` renders `<Editable>` from `slate-react`, which sets `EDITOR_TO_ELEMENT`, `EDITOR_TO_KEY_TO_ELEMENT`, etc. WeakMaps in the 0.123.0 copy. But `editor.api.toDOMNode` and `editor.api.toDOMRange` are defined in `@udecode/slate` which imports from the nested 0.114.0 copy — a completely separate set of WeakMaps that are never populated. Result: every `editor.api.toDOMNode(editor)` call returns `undefined`, causing the overlay to bail out before it even looks at awareness states. **Fix**: Import `DOMEditor` directly from `slate-dom` (resolves to top-level 0.123.0) and call `DOMEditor.toDOMNode(editor, editor)` / `DOMEditor.toDOMRange(editor, range)` instead of going through `editor.api.*`.
 
-### If still not working — diagnostic steps
+## If still not working — diagnostic steps
 
 - In browser devtools, run: `window.__awareness = awareness` (exposed from useCollaboration) to inspect `.getStates()` in both browser tabs
 - Check if awareness states contain `selection` and `data` fields for remote peers
 - Add temporary `console.log` in `updateCursors` before/after `relativeRangeToSlateRange` and `toDOMRange` calls
 
-### Key files
+## Key files
 
 - `src/features/editor/components/Editor.tsx` — CollaborativeEditor sends cursor positions
 - `src/features/collaboration/components/RemoteCursorOverlay.tsx` — Renders remote cursors
@@ -52,27 +50,3 @@ When two users are collaboratively editing a shared document, remote cursor posi
 - `src/features/collaboration/hooks/useCollaboration.ts` — Creates Y.Doc, Awareness, Provider
 - `node_modules/@slate-yjs/core/dist/index.js` — `withCursors`, `withYjs`, `CONNECTED` WeakSet
 - `node_modules/@udecode/plate-yjs/dist/index.mjs` — `withPlateYjs` applies `withCursors`
-
----
-
-## Simultaneous join content duplication
-
-**Status**: Closed
-**Feature**: Realtime Collaboration
-**Severity**: High — document content doubles when two users open the same page at nearly the same time
-
-### Description
-
-When two users navigate to the same shared document at close to the same time, the page content appears twice. This is a race condition in the Y.Doc seeding logic.
-
-### Root cause
-
-Both clients connect with empty Y.Docs and exchange empty sync-step1/sync-step2 messages. After sync completes, both check `sharedType.length === 0` (true for both since neither had content during sync), and both independently seed the Y.Doc using `slateNodesToInsertDelta`. Each seed uses a different Yjs clientID, so the CRDT treats them as distinct insertions and merges them — doubling the content.
-
-### Fix
-
-Temporarily set `doc.clientID = 0` before seeding so every peer produces identical Yjs structs (same client + clock pairs). When the second peer's seed update arrives, Yjs recognizes the structs already exist and skips them. The real clientID is restored immediately after seeding for subsequent edits.
-
-### Key files
-
-- `src/features/editor/components/Editor.tsx` — `CollaborativeEditor` seeding logic in the sync callback

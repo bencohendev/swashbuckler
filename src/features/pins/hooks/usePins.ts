@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useDataClient, useSpaceId } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
@@ -18,7 +18,6 @@ interface UsePinsReturn {
 
 export function usePins(): UsePinsReturn {
   const dataClient = useDataClient()
-  const queryClient = useQueryClient()
   const spaceId = useSpaceId()
 
   const { data, isLoading } = useQuery({

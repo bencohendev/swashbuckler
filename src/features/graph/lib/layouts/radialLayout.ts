@@ -20,7 +20,7 @@ export function radialLayout(
 ): { nodes: GraphNode[]; edges: GraphEdge[] } {
   if (nodes.length === 0) return { nodes: [], edges: [] }
 
-  const { root, hasVirtualRoot } = buildSpanningTree(nodes, edges)
+  const { root } = buildSpanningTree(nodes, edges)
 
   const root_h = hierarchy<TreeNode>(root, (d) => d.children)
 

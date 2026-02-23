@@ -100,8 +100,7 @@ interface FieldRowProps {
   onMove: (direction: 'up' | 'down') => void
 }
 
-function FieldRow({ field, index, totalFields, onUpdate, onRemove, onMove }: FieldRowProps) {
-  const [showOptions, setShowOptions] = useState(false)
+function FieldRow({ field, index, onUpdate, onRemove, onMove }: FieldRowProps) {
   const needsOptions = field.type === 'select' || field.type === 'multi_select'
 
   return (
@@ -133,7 +132,6 @@ function FieldRow({ field, index, totalFields, onUpdate, onRemove, onMove }: Fie
           onChange={(e) => {
             const newType = e.target.value as FieldType
             onUpdate({ type: newType, options: undefined })
-            setShowOptions(newType === 'select' || newType === 'multi_select')
           }}
           className="rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
         >

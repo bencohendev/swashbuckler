@@ -61,6 +61,22 @@ Right-click context menu on type sections in the sidebar.
 
 - When `filteredOrderedTypes.length === 0` and not loading, shows centered "No types yet" message with hint text above the "New Type" button
 
+## Optimistic Active State
+
+### Problem
+Clicking sidebar items has a perceived delay — the active highlight only appears after the Next.js route transition completes because it's driven by `usePathname()`. PinnedSection and RecentSection also never highlight their items (missing `isActive` prop).
+
+### Approach
+Track a `pendingPath` in the sidebar Zustand store. `SidebarLink` component wraps `<Link>` and immediately highlights on click (before the route change). Clears `pendingPath` when `pathname` updates. Also prefetches object data via TanStack Query on hover.
+
+### Key files
+- `src/shared/stores/sidebar.ts` — `pendingPath` / `setPendingPath`
+- `src/features/sidebar/components/SidebarLink.tsx` — wraps `<Link>` with optimistic active state + hover data prefetch
+- `src/features/sidebar/components/Sidebar.tsx` — uses SidebarLink for nav items + trash, clears pendingPath on pathname change
+- `src/features/objects/components/ObjectItem.tsx` — uses SidebarLink in compact mode (self-determining active state)
+- `src/features/objects/components/ObjectList.tsx` — removed `isActive`/`usePathname` (SidebarLink handles it)
+- `src/features/tags/components/TagsSection.tsx` — uses SidebarLink with active styling
+
 ## Verification
 
 - [x] Hierarchical tree renders entries by type

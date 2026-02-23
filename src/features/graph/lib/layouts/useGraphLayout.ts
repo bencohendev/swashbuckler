@@ -87,7 +87,7 @@ export function useGraphLayout({
           sim.alpha(0.3).restart()
         }
       }
-      setStaticNodes([])
+      setStaticNodes([]) // eslint-disable-line react-hooks/set-state-in-effect -- reset on layout mode change
       setStaticEdges([])
       setAnimatingNodes(null)
       return
@@ -158,7 +158,7 @@ export function useGraphLayout({
     if (layoutMode === 'force') return
     const result = computeStaticLayout(layoutMode)
     if (result) {
-      setStaticNodes(result.nodes)
+      setStaticNodes(result.nodes) // eslint-disable-line react-hooks/set-state-in-effect -- sync layout computation
       setStaticEdges(result.edges)
       setAnimatingNodes(null)
     }

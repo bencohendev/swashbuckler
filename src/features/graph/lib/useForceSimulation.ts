@@ -43,7 +43,7 @@ export function useForceSimulation({
 
   useEffect(() => {
     if (nodes.length === 0 || width === 0 || height === 0) {
-      setSimulatedNodes([])
+      setSimulatedNodes([]) // eslint-disable-line react-hooks/set-state-in-effect -- clear when no data
       setSimulatedEdges([])
       return
     }

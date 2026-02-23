@@ -32,7 +32,7 @@ export function Header({ email }: { email?: string }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
+    setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect -- hydration detection
   }, [])
 
   useEffect(() => {

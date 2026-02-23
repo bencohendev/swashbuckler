@@ -10,6 +10,8 @@ interface SidebarState {
   _hydrate: () => void
   mobileOpen: boolean
   setMobileOpen: (open: boolean) => void
+  pendingPath: string | null
+  setPendingPath: (path: string | null) => void
 }
 
 export const useSidebar = create<SidebarState>((set) => ({
@@ -28,6 +30,8 @@ export const useSidebar = create<SidebarState>((set) => ({
     }),
   mobileOpen: false,
   setMobileOpen: (open: boolean) => set({ mobileOpen: open }),
+  pendingPath: null,
+  setPendingPath: (path: string | null) => set({ pendingPath: path }),
 }))
 
 /** Call once at app root to sync sidebar state from localStorage after hydration. */

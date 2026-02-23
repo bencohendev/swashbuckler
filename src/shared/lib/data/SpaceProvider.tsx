@@ -118,7 +118,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
   useEffect(() => {
     if (isAuthLoading) return
-    loadSpaces()
+    loadSpaces() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch
   }, [isAuthLoading, loadSpaces])
 
   // Listen for spaces and spaceShares events to refresh

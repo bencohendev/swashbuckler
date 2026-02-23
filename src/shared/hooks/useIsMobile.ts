@@ -9,7 +9,7 @@ export function useIsMobile(): boolean {
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    setIsMobile(mql.matches)
+    setIsMobile(mql.matches) // eslint-disable-line react-hooks/set-state-in-effect -- initial sync from media query before subscribing
 
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
     mql.addEventListener('change', handler)

@@ -93,7 +93,6 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
 export function useObject(id: string | null) {
   const dataClient = useDataClient()
   const queryClient = useQueryClient()
-  const spaceId = useSpaceId()
 
   const { data: object, isLoading, error: queryError } = useQuery({
     queryKey: queryKeys.objects.detail(id!),

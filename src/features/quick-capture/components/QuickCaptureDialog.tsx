@@ -32,7 +32,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setSelectedIndex(0)
+      setSelectedIndex(0) // eslint-disable-line react-hooks/set-state-in-effect -- reset on dialog open
       setIsCreating(false)
     }
   }, [open])

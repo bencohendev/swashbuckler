@@ -15,7 +15,7 @@ interface EditorState {
   // Last saved timestamp
   lastSaved: Date | null;
 
-  // Collaborative mode flag — when true, setContent skips isDirty
+  // Collaborative mode flag
   isCollaborative: boolean;
 
   // Actions
@@ -28,19 +28,14 @@ interface EditorState {
   reset: () => void;
 }
 
-export const useEditorStore = create<EditorState>((set, get) => ({
+export const useEditorStore = create<EditorState>((set) => ({
   content: initialEditorValue,
   isDirty: false,
   isSaving: false,
   lastSaved: null,
   isCollaborative: false,
 
-  setContent: (content) =>
-    set({
-      content,
-      // In collaborative mode, Y.Doc is the source of truth — skip dirty tracking
-      isDirty: get().isCollaborative ? false : true,
-    }),
+  setContent: (content) => set({ content, isDirty: true }),
 
   markDirty: () => set({ isDirty: true }),
 

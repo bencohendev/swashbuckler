@@ -15,7 +15,6 @@ import { TablePlugin } from '@udecode/plate-table/react';
 import { ImagePlugin } from '@udecode/plate-media/react';
 import { LinkPlugin } from '@udecode/plate-link/react';
 import { SlashPlugin, SlashInputPlugin } from '@udecode/plate-slash-command/react';
-import { SlashInputElement } from '../components/elements';
 import { MentionPlugin, MentionInputPlugin } from '@udecode/plate-mention/react';
 import { DndPlugin } from '@udecode/plate-dnd';
 import { AutoformatPlugin } from '@udecode/plate-autoformat/react';

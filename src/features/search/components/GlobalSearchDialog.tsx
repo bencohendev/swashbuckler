@@ -33,13 +33,13 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
     if (open) {
       setQuery('')
       setTypeIds([])
-      setSelectedIndex(0)
+      setSelectedIndex(0) // eslint-disable-line react-hooks/set-state-in-effect -- reset on dialog open
     }
   }, [open, setQuery, setTypeIds])
 
   // Reset selected index when results change
   useEffect(() => {
-    setSelectedIndex(0)
+    setSelectedIndex(0) // eslint-disable-line react-hooks/set-state-in-effect -- reset on data change
   }, [results, tagResults])
 
   // Scroll selected item into view
