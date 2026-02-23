@@ -119,6 +119,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
+| [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
 | Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
 | Advanced documentation | In-depth user docs and help content |
