@@ -125,13 +125,18 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
     },
 
     async delete(id: string): Promise<DataResult<void>> {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('object_types')
         .delete()
         .eq('id', id)
+        .select('id')
 
       if (error) {
         return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      if (!data || data.length === 0) {
+        return { data: null, error: { message: 'Type not found or could not be deleted', code: 'NOT_FOUND' } }
       }
 
       return { data: null, error: null }

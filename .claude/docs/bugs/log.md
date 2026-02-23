@@ -14,7 +14,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 | Date | Bug | Fix |
 |------|-----|-----|
 | 2026-02-23 | Mobile slash menu unusable | Render slash menu as bottom panel on mobile; skip auto-focus to prevent keyboard flicker |
-| 2026-02-23 | Delete types not working | Add ON DELETE CASCADE to type FKs (migration 020), cascade in Dexie, return errors from hook, show toast on failure |
+| 2026-02-23 | Delete types not working | Add ON DELETE CASCADE to type FKs (migration 020), cascade in Dexie (incl. relations/tags/pins), use `.select()` on Supabase delete to detect silent failures, invalidate objects/templates caches after type deletion |
 | 2026-02-23 | View-only users see create buttons | Guard Quick Capture FAB/shortcut and "New Type" buttons with `canEdit` permission check |
 | 2026-02-23 | [Shared user can't create new entries](shared-user-create-entries.md) | Classify spaces by owner_id, add error feedback, re-apply RLS INSERT policy (migration 019) |
 | 2026-02-22 | [Unsaved changes on navigate](unsaved-changes-on-navigate.md) | Key-based editor remount + stable save callback via refs |

@@ -60,6 +60,8 @@ export function useObjectTypes(): UseObjectTypesReturn {
     const result = await dataClient.objectTypes.delete(id)
     if (result.error) return result.error.message
     emit('objectTypes')
+    emit('objects')
+    emit('templates')
     return null
   }, [dataClient])
 

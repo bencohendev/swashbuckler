@@ -408,8 +408,25 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
         }
 
-        // Cascade: delete associated objects and templates (Dexie has no FK constraints)
-        await database.objects.where('type_id').equals(id).delete()
+        // Cascade: delete associated objects, their relations/tags/pins, and templates
+        const objectIds = await database.objects
+          .where('type_id').equals(id)
+          .primaryKeys()
+
+        if (objectIds.length > 0) {
+          for (const oid of objectIds) {
+            await database.objectRelations
+              .where('source_id').equals(oid).delete()
+            await database.objectRelations
+              .where('target_id').equals(oid).delete()
+            await database.objectTags
+              .where('object_id').equals(oid).delete()
+            await database.pins
+              .where('object_id').equals(oid).delete()
+          }
+          await database.objects.where('type_id').equals(id).delete()
+        }
+
         await database.templates.where('type_id').equals(id).delete()
         await database.objectTypes.delete(id)
         return { data: null, error: null }
