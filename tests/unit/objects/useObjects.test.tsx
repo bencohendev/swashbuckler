@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useObjects, useObject } from '@/features/objects/hooks/useObjects'
 import { DataProvider } from '@/shared/lib/data'
 import { clearLocalData } from '@/shared/lib/data/local'
+import { setQueryClient } from '@/shared/lib/data/events'
+
+const PAGE_TYPE_ID = '00000000-0000-0000-0000-000000000101'
+const NOTE_TYPE_ID = '00000000-0000-0000-0000-000000000002'
 
 // Mock Supabase client to return no user (guest mode)
 vi.mock('@/shared/lib/supabase/client', () => ({
@@ -20,11 +24,15 @@ vi.mock('@/shared/lib/supabase/client', () => ({
 }))
 
 function Wrapper({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  }))
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    })
+    setQueryClient(client)
+    return client
+  })
   return (
     <QueryClientProvider client={queryClient}>
       <DataProvider user={null} isAuthLoading={false}>{children}</DataProvider>
@@ -58,7 +66,7 @@ describe('useObjects', () => {
     // Create an object
     let created: Awaited<ReturnType<typeof result.current.create>>
     await act(async () => {
-      created = await result.current.create({ title: 'Test Page', type: 'page' })
+      created = await result.current.create({ title: 'Test Page', type_id: PAGE_TYPE_ID })
     })
 
     expect(created).not.toBeNull()
@@ -80,7 +88,7 @@ describe('useObjects', () => {
     // Create then update
     let created: Awaited<ReturnType<typeof result.current.create>>
     await act(async () => {
-      created = await result.current.create({ title: 'Original', type: 'page' })
+      created = await result.current.create({ title: 'Original', type_id: PAGE_TYPE_ID })
     })
 
     await act(async () => {
@@ -101,7 +109,7 @@ describe('useObjects', () => {
 
     let created: Awaited<ReturnType<typeof result.current.create>>
     await act(async () => {
-      created = await result.current.create({ title: 'To Delete', type: 'page' })
+      created = await result.current.create({ title: 'To Delete', type_id: PAGE_TYPE_ID })
     })
 
     await waitFor(() => {
@@ -126,7 +134,7 @@ describe('useObjects', () => {
 
     let created: Awaited<ReturnType<typeof result.current.create>>
     await act(async () => {
-      created = await result.current.create({ title: 'Restore Me', type: 'page' })
+      created = await result.current.create({ title: 'Restore Me', type_id: PAGE_TYPE_ID })
       await result.current.remove(created!.id)
     })
 
@@ -143,7 +151,7 @@ describe('useObjects', () => {
     })
   })
 
-  it('filters by type', async () => {
+  it('filters by typeId', async () => {
     // First create some objects
     const { result: createHook } = renderHook(() => useObjects(), { wrapper: Wrapper })
 
@@ -152,13 +160,13 @@ describe('useObjects', () => {
     })
 
     await act(async () => {
-      await createHook.current.create({ title: 'Page 1', type: 'page' })
-      await createHook.current.create({ title: 'Note 1', type: 'note' })
+      await createHook.current.create({ title: 'Page 1', type_id: PAGE_TYPE_ID })
+      await createHook.current.create({ title: 'Note 1', type_id: NOTE_TYPE_ID })
     })
 
     // Then test filtering with separate hooks
-    const { result: pagesResult } = renderHook(() => useObjects({ type: 'page' }), { wrapper: Wrapper })
-    const { result: notesResult } = renderHook(() => useObjects({ type: 'note' }), { wrapper: Wrapper })
+    const { result: pagesResult } = renderHook(() => useObjects({ typeId: PAGE_TYPE_ID }), { wrapper: Wrapper })
+    const { result: notesResult } = renderHook(() => useObjects({ typeId: NOTE_TYPE_ID }), { wrapper: Wrapper })
 
     await waitFor(() => {
       expect(pagesResult.current.isLoading).toBe(false)
