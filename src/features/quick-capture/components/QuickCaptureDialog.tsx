@@ -12,6 +12,8 @@ import { useObjectTypes } from '@/features/object-types/hooks/useObjectTypes'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { CreateTypeDialog } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks/useObjects'
+import { useSpacePermission } from '@/features/sharing'
+import { useNextTitle } from '@/features/objects/hooks/useNextTitle'
 import { toast } from '@/shared/hooks/useToast'
 import { useObjectModal } from '@/shared/stores/objectModal'
 
@@ -23,12 +25,14 @@ interface QuickCaptureDialogProps {
 export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogProps) {
   const { types, create: createType } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
+  const { isOwner: isSpaceOwner } = useSpacePermission()
+  const getNextTitle = useNextTitle()
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
   const [showCreateType, setShowCreateType] = useState(false)
 
-  // Total items = object types + 1 for "New Type" action
-  const totalItems = types.length + 1
+  // Total items = object types + 1 for "New Type" action (owners only)
+  const totalItems = types.length + (isSpaceOwner ? 1 : 0)
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -43,7 +47,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
     setIsCreating(true)
 
     const result = await create({
-      title: `Untitled ${typeName}`,
+      title: getNextTitle(typeId, typeName),
       type_id: typeId,
     })
 
@@ -55,7 +59,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
     }
 
     setIsCreating(false)
-  }, [isCreating, create, onOpenChange])
+  }, [isCreating, create, getNextTitle, onOpenChange])
 
   const handleCreateType = useCallback(() => {
     onOpenChange(false)
@@ -114,19 +118,23 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
                 <span className="min-w-0 flex-1 truncate">{type.name}</span>
               </button>
             ))}
-            <div className="border-t my-1" />
-            <button
-              data-selected={selectedIndex === types.length}
-              onClick={handleCreateType}
-              onMouseEnter={() => setSelectedIndex(types.length)}
-              className={cn(
-                'flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
-                selectedIndex === types.length ? 'bg-accent' : 'hover:bg-accent/50',
-              )}
-            >
-              <LayersIcon className="size-4 shrink-0 text-muted-foreground" />
-              <span className="min-w-0 flex-1 truncate">New Type</span>
-            </button>
+            {isSpaceOwner && (
+              <>
+                <div className="border-t my-1" />
+                <button
+                  data-selected={selectedIndex === types.length}
+                  onClick={handleCreateType}
+                  onMouseEnter={() => setSelectedIndex(types.length)}
+                  className={cn(
+                    'flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
+                    selectedIndex === types.length ? 'bg-accent' : 'hover:bg-accent/50',
+                  )}
+                >
+                  <LayersIcon className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1 truncate">New Type</span>
+                </button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

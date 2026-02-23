@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   useDataClient,
@@ -13,6 +13,7 @@ import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 
 const EMPTY_TAGS: Tag[] = []
+const EMPTY_BATCH: Record<string, Tag[]> = {}
 
 interface UseTagsReturn {
   tags: Tag[]
@@ -109,4 +110,30 @@ export function useObjectTags(objectId: string): UseObjectTagsReturn {
   }, [dataClient, objectId, queryClient, spaceId])
 
   return { tags: data ?? EMPTY_TAGS, isLoading, addTag, removeTag }
+}
+
+export function useObjectTagsBatch(objectIds: string[]): { tagsByObject: Record<string, Tag[]>; isLoading: boolean } {
+  const dataClient = useDataClient()
+
+  const sortedIds = useMemo(
+    () => [...objectIds].sort(),
+    [objectIds]
+  )
+
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.tags.objectTagsBatch(sortedIds),
+    queryFn: async () => {
+      if (sortedIds.length === 0) return EMPTY_BATCH
+      const result = await dataClient.tags.getObjectTagsBatch(sortedIds)
+      if (result.error) throw new Error(result.error.message)
+      const map: Record<string, Tag[]> = {}
+      for (const entry of result.data) {
+        map[entry.object_id] = entry.tags
+      }
+      return map
+    },
+    enabled: sortedIds.length > 0,
+  })
+
+  return { tagsByObject: data ?? EMPTY_BATCH, isLoading }
 }

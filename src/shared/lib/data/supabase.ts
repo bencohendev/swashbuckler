@@ -125,13 +125,18 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
     },
 
     async delete(id: string): Promise<DataResult<void>> {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('object_types')
         .delete()
         .eq('id', id)
+        .select('id')
 
       if (error) {
         return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      if (!data || data.length === 0) {
+        return { data: null, error: { message: 'Type not found or could not be deleted', code: 'NOT_FOUND' } }
       }
 
       return { data: null, error: null }
@@ -1062,6 +1067,38 @@ function createTagsClient(supabase: SupabaseClient, spaceId?: string): TagsClien
 
       const tags = (data ?? []).map((row: Record<string, unknown>) => row.tags as Tag)
       return { data: tags, error: null }
+    },
+
+    async getObjectTagsBatch(objectIds: string[]): Promise<DataListResult<{ object_id: string; tags: Tag[] }>> {
+      if (objectIds.length === 0) return { data: [], error: null }
+
+      const { data, error } = await supabase
+        .from('object_tags')
+        .select('object_id, tag_id, tags(*)')
+        .in('object_id', objectIds)
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      const grouped = new Map<string, Tag[]>()
+      for (const row of (data ?? []) as Array<Record<string, unknown>>) {
+        const objectId = row.object_id as string
+        const tag = row.tags as Tag
+        const existing = grouped.get(objectId)
+        if (existing) {
+          existing.push(tag)
+        } else {
+          grouped.set(objectId, [tag])
+        }
+      }
+
+      const result = objectIds.map(id => ({
+        object_id: id,
+        tags: grouped.get(id) ?? [],
+      }))
+
+      return { data: result, error: null }
     },
 
     async addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>> {

@@ -42,9 +42,13 @@ export function ObjectTypeManager() {
   const handleDelete = async () => {
     if (!pendingDeleteType) return
     const typeName = pendingDeleteType.name
-    await remove(pendingDeleteType.id)
+    const error = await remove(pendingDeleteType.id)
     setPendingDeleteType(null)
-    toast({ description: `Type "${typeName}" deleted`, variant: 'success' })
+    if (error) {
+      toast({ description: `Failed to delete type: ${error}`, variant: 'destructive' })
+    } else {
+      toast({ description: `Type "${typeName}" deleted`, variant: 'success' })
+    }
   }
 
   if (isLoading) {
@@ -102,7 +106,11 @@ export function ObjectTypeManager() {
         </Button>
       </div>
 
-      <div className="space-y-2">
+      {types.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          No types yet. Create one to get started.
+        </p>
+      ) : <div className="space-y-2">
         {types.map(type => (
           <div
             key={type.id}
@@ -150,12 +158,12 @@ export function ObjectTypeManager() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
       <ConfirmDialog
         open={!!pendingDeleteType}
         onOpenChange={(open) => { if (!open) setPendingDeleteType(null) }}
         title="Delete type"
-        description={`Delete "${pendingDeleteType?.name}" type? Entries of this type will not be deleted, but they will lose their type association.`}
+        description={`Delete "${pendingDeleteType?.name}" type? All entries and templates of this type will also be deleted. This cannot be undone.`}
         confirmLabel="Delete"
         destructive
         onConfirm={handleDelete}

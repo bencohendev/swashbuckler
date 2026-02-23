@@ -5,13 +5,13 @@ import { usePathname, useRouter } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { ChevronsDownUpIcon, ChevronsUpDownIcon, HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar, useSidebarHydration } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
-import { useObjects } from "@/features/objects/hooks"
+import { useObjects, useNextTitle } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { useSpacePermission, useExclusionFilter } from "@/features/sharing"
@@ -21,6 +21,7 @@ import { VariablePromptDialog } from "@/features/templates/components/VariablePr
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
 import { toast } from "@/shared/hooks/useToast"
+import type { CollapseSignal } from "../types"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
 import { RecentSection } from "./RecentSection"
@@ -43,6 +44,7 @@ function DraggableTypeSection({
   objects,
   isLoading,
   hideCreateButton,
+  collapseSignal,
   onCreateBlank,
   onSelectTemplate,
   onDelete,
@@ -54,9 +56,10 @@ function DraggableTypeSection({
   objects: DataObject[]
   isLoading: boolean
   hideCreateButton?: boolean
+  collapseSignal?: CollapseSignal
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
-  onDelete: (typeId: string) => Promise<void>
+  onDelete: (typeId: string) => Promise<unknown>
   onMove: (from: number, to: number) => void
   onDrop: () => void
 }) {
@@ -115,6 +118,7 @@ function DraggableTypeSection({
         isLoading={isLoading}
         isDragging={isDragging}
         hideCreateButton={hideCreateButton}
+        collapseSignal={collapseSignal}
         onCreateBlank={onCreateBlank}
         onSelectTemplate={onSelectTemplate}
         onDelete={onDelete}
@@ -131,7 +135,7 @@ export function Sidebar() {
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
   const { space } = useCurrentSpace()
-  const { canEdit: canEditSpace } = useSpacePermission()
+  const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects } = useExclusionFilter()
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
@@ -143,10 +147,12 @@ export function Sidebar() {
   const { pinnedIds, isLoading: pinsLoading } = usePins()
   const { tags, isLoading: tagsLoading } = useTags()
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
+  const getNextTitle = useNextTitle()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
   const [variableDialogOpen, setVariableDialogOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
+  const [collapseSignal, setCollapseSignal] = useState<CollapseSignal | undefined>(undefined)
   const sidebarLoading = !space || objectsLoading || typesLoading || pinsLoading || tagsLoading || (types.length > 0 && orderedTypes.length === 0)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
@@ -239,7 +245,7 @@ export function Sidebar() {
   const handleCreateBlank = async (typeId: string) => {
     const typeDef = types.find(t => t.id === typeId)
     const result = await create({
-      title: typeDef ? `Untitled ${typeDef.name}` : 'Untitled',
+      title: typeDef ? getNextTitle(typeId, typeDef.name) : 'Untitled',
       type_id: typeId,
     })
     if (result) {
@@ -295,6 +301,14 @@ export function Sidebar() {
   const hasPinnedContent = pinnedIds.size > 0 && allObjects.some(obj => pinnedIds.has(obj.id))
   const hasRecentContent = allObjects.length > 0
   const hasTagsContent = tags.length > 0
+
+  const handleExpandAll = useCallback(() => {
+    setCollapseSignal((prev) => ({ collapsed: false, key: (prev?.key ?? 0) + 1 }))
+  }, [])
+
+  const handleCollapseAll = useCallback(() => {
+    setCollapseSignal((prev) => ({ collapsed: true, key: (prev?.key ?? 0) + 1 }))
+  }, [])
 
   const sidebarContent = (
     <>
@@ -425,52 +439,91 @@ export function Sidebar() {
               </div>
             ) : (
               <>
-                <PinnedSection pinnedIds={pinnedIds} objects={allObjects} />
+                <div className="flex justify-end" role="toolbar" aria-label="Section controls">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    title="Expand all sections"
+                    aria-label="Expand all sections"
+                    onClick={handleExpandAll}
+                  >
+                    <ChevronsUpDownIcon className="size-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    title="Collapse all sections"
+                    aria-label="Collapse all sections"
+                    onClick={handleCollapseAll}
+                  >
+                    <ChevronsDownUpIcon className="size-3" />
+                  </Button>
+                </div>
+                <PinnedSection pinnedIds={pinnedIds} objects={allObjects} collapseSignal={collapseSignal} />
                 {hasPinnedContent && <hr className="border-border" />}
                 {filteredOrderedTypes.length === 0 ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-sm font-medium text-muted-foreground">No types yet</p>
                     <p className="mt-1 text-xs text-muted-foreground/70">Create a type to start organizing your entries</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 gap-1 text-xs text-muted-foreground"
-                      onClick={() => setCreateTypeOpen(true)}
-                    >
-                      <PlusIcon className="size-3" />
-                      New Type
-                    </Button>
+                    {canEditSpace && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-3 gap-1 text-xs text-muted-foreground"
+                        onClick={() => setCreateTypeOpen(true)}
+                      >
+                        <PlusIcon className="size-3" />
+                        New Type
+                      </Button>
+                    )}
                   </div>
                 ) : (
-                  filteredOrderedTypes.map((type, index) => (
-                    <DraggableTypeSection
-                      key={type.id}
-                      index={index}
-                      type={type}
-                      objects={objectsByType.get(type.id) ?? []}
-                      isLoading={objectsLoading}
-                      hideCreateButton={!canEditSpace}
-                      onCreateBlank={handleCreateBlank}
-                      onSelectTemplate={handleSelectTemplate}
-                      onDelete={removeType}
-                      onMove={handleMoveType}
-                      onDrop={handleDropType}
-                    />
-                  ))
+                  filteredOrderedTypes.map((type, index) =>
+                    isSpaceOwner ? (
+                      <DraggableTypeSection
+                        key={type.id}
+                        index={index}
+                        type={type}
+                        objects={objectsByType.get(type.id) ?? []}
+                        isLoading={objectsLoading}
+                        hideCreateButton={!canEditSpace}
+                        collapseSignal={collapseSignal}
+                        onCreateBlank={handleCreateBlank}
+                        onSelectTemplate={handleSelectTemplate}
+                        onDelete={removeType}
+                        onMove={handleMoveType}
+                        onDrop={handleDropType}
+                      />
+                    ) : (
+                      <TypeSection
+                        key={type.id}
+                        type={type}
+                        objects={objectsByType.get(type.id) ?? []}
+                        isLoading={objectsLoading}
+                        hideCreateButton={!canEditSpace}
+                        hideManageActions
+                        collapseSignal={collapseSignal}
+                        onCreateBlank={handleCreateBlank}
+                        onSelectTemplate={handleSelectTemplate}
+                      />
+                    )
+                  )
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start gap-1 text-xs text-muted-foreground"
-                  onClick={() => setCreateTypeOpen(true)}
-                >
-                  <PlusIcon className="size-3" />
-                  New Type
-                </Button>
+                {canEditSpace && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                    onClick={() => setCreateTypeOpen(true)}
+                  >
+                    <PlusIcon className="size-3" />
+                    New Type
+                  </Button>
+                )}
                 {hasRecentContent && <hr className="border-border" />}
-                <RecentSection objects={allObjects} />
+                <RecentSection objects={allObjects} collapseSignal={collapseSignal} />
                 {hasTagsContent && <hr className="border-border" />}
-                <TagsSection tags={tags} />
+                <TagsSection tags={tags} collapseSignal={collapseSignal} />
                 <hr className="border-border" />
                 <SidebarLink
                   href="/trash"

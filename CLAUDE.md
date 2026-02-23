@@ -7,6 +7,11 @@
 - Use PascalCase for React component files (e.g., `Button.tsx`, `UserProfile.tsx`)
 - Avoid typecasting (`as`) when possible — prefer proper typing, type guards, or generics instead
 
+## Accessibility
+
+- All features and bug fixes must follow accessibility best practices: semantic HTML, ARIA attributes, keyboard navigation, focus management, and sufficient color contrast
+- Accessibility is not a separate concern — it's part of every feature and fix
+
 ## Testing & Verification
 
 After adding, modifying, or fixing features, run these checks:
@@ -18,6 +23,12 @@ After adding, modifying, or fixing features, run these checks:
 - Test fixtures live in `tests/fixtures/` — keep them in sync with current schemas
 - Zod 4 requires RFC4122-compliant UUIDs in tests (no synthetic `00000000-...` IDs)
 
+## Branching & Worktrees
+
+- All work must be done in a git worktree — never commit directly on `dev`, `main`, or other environment branches
+- At the start of every task, create a worktree with a descriptive branch name before making any code changes
+- Merge the worktree branch back into the target branch only when work is complete and verified
+
 ## Task Management
 
 - Update tasks as they are completed
@@ -25,22 +36,22 @@ After adding, modifying, or fixing features, run these checks:
 ## Documentation
 
 ### Structure
-- Feature specs live in `.claude/docs/features/` with kebab-case names (e.g., `custom-themes.md`)
-- Bug tracking lives in `.claude/docs/bugs/log.md` — all bugs get a row there; complex bugs with root-cause analysis also get individual files in the same directory, linked from the log
-- `.claude/docs/index.md` is the master index — update it when adding features
+- Feature specs live in `.readme/features/` with kebab-case names (e.g., `custom-themes.md`)
+- Bug tracking lives in `.readme/bugs/log.md` — all bugs get a row there; complex bugs with root-cause analysis also get individual files in the same directory, linked from the log
+- `.readme/index.md` is the master index — update it when adding features
 - `.claude/plans/` is for Claude Code plan mode working files only — no permanent docs
 
 ### Document-First Workflow
-- Before implementing a new feature or non-trivial bug fix, create/update its spec in `.claude/docs/`
+- Before implementing a new feature or non-trivial bug fix, create/update its spec in `.readme/`
 - New features get added to `index.md`; bugs get added to `bugs/log.md`
 - Small fixes (typos, one-line patches) are exempt — add a line to `bugs/log.md` if relevant
-- Plan mode files in `.claude/plans/` are drafts. After approval, create the permanent spec in `.claude/docs/` and delete the plan file
+- Plan mode files in `.claude/plans/` are drafts. After approval, create the permanent spec in `.readme/` and delete the plan file
 
 ### Feature Status
 - Each spec has a `**Status:**` line at the top: `Done`, `Active`, or `Not started`
 - When new work is planned for an implemented feature, set its status to `Active` and document the new scope
 - When the new scope ships, set it back to `Done`
-- To find features with open work: `grep -l "Status.*Active" .claude/docs/features/`
+- To find features with open work: `grep -l "Status.*Active" .readme/features/`
 
 ### Maintaining Docs
 - After completing implementation, update the relevant spec with surgical edits

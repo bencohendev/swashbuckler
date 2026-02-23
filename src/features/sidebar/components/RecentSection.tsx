@@ -1,26 +1,22 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { ChevronRightIcon, ClockIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { DataObject } from '@/shared/lib/data'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
+import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
+import type { CollapseSignal } from '@/features/sidebar/types'
 
 const RECENT_LIMIT = 5
 
 interface RecentSectionProps {
   objects: DataObject[]
+  collapseSignal?: CollapseSignal
 }
 
-export function RecentSection({ objects }: RecentSectionProps) {
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('sidebar-collapsed-recent') === 'true'
-  })
-
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed-recent', String(collapsed))
-  }, [collapsed])
+export function RecentSection({ objects, collapseSignal }: RecentSectionProps) {
+  const [collapsed, setCollapsed] = useCollapsible('sidebar-collapsed-recent', collapseSignal)
 
   const recentObjects = useMemo(() => {
     return [...objects]

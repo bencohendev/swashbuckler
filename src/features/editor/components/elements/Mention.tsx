@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useDataClient, type DataObject } from '@/shared/lib/data'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
-import { useObjects, useObject } from '@/features/objects'
+import { useObjects, useObject, useNextTitle } from '@/features/objects'
 import { useObjectModal } from '@/shared/stores/objectModal'
 
 function getMentionProps(element: Record<string, unknown>) {
@@ -51,6 +51,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   const params = useParams<{ id: string }>()
   const { types } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
+  const getNextTitle = useNextTitle()
   const triggerRef = useRef<HTMLSpanElement>(null)
   const filterInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -112,14 +113,14 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   // Create a new object and insert mention
   const createAndInsert = useCallback(
     async (typeId: string, typeName: string) => {
-      const title = query || `Untitled ${typeName}`
+      const title = query || getNextTitle(typeId, typeName)
       const obj = await create({ title, type_id: typeId })
       if (obj) {
         selectObject(obj)
         useObjectModal.getState().open(obj.id)
       }
     },
-    [query, create, selectObject]
+    [query, create, getNextTitle, selectObject]
   )
 
   // Close the mention menu

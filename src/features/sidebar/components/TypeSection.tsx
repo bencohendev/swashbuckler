@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { ContextMenu } from 'radix-ui'
@@ -9,6 +9,8 @@ import type { DataObject, ObjectType, Template } from '@/shared/lib/data'
 import { ObjectList } from '@/features/objects/components'
 import { useTemplates } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
+import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
+import type { CollapseSignal } from '@/features/sidebar/types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
@@ -29,9 +31,11 @@ interface TypeSectionProps {
   isLoading: boolean
   isDragging?: boolean
   hideCreateButton?: boolean
+  hideManageActions?: boolean
+  collapseSignal?: CollapseSignal
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
-  onDelete?: (typeId: string) => Promise<void>
+  onDelete?: (typeId: string) => Promise<unknown>
 }
 
 function getStorageKey(typeId: string) {
@@ -85,20 +89,14 @@ export function TypeSection({
   isLoading,
   isDragging,
   hideCreateButton,
+  hideManageActions,
+  collapseSignal,
   onCreateBlank,
   onSelectTemplate,
   onDelete,
 }: TypeSectionProps) {
   const router = useRouter()
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem(getStorageKey(type.id)) === 'true'
-  })
-
-  useEffect(() => {
-    localStorage.setItem(getStorageKey(type.id), String(collapsed))
-  }, [collapsed, type.id])
-
+  const [collapsed, setCollapsed] = useCollapsible(getStorageKey(type.id), collapseSignal)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   return (
@@ -155,11 +153,15 @@ export function TypeSection({
                     <TemplateSubMenu typeId={type.id} onSelectTemplate={onSelectTemplate} />
                   </>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => router.push(`/settings/types?edit=${type.id}`)}>
-                  <SettingsIcon />
-                  Type settings
-                </DropdownMenuItem>
+                {!hideManageActions && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => router.push(`/settings/types?edit=${type.id}`)}>
+                      <SettingsIcon />
+                      Type settings
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -173,21 +175,25 @@ export function TypeSection({
               <EyeIcon />
               View all {type.plural_name.toLowerCase()}
             </ContextMenu.Item>
-            <ContextMenu.Item
-              className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
-              onSelect={() => router.push(`/settings/types?edit=${type.id}`)}
-            >
-              <PencilIcon />
-              Edit type
-            </ContextMenu.Item>
-            <ContextMenu.Separator className="bg-border -mx-1 my-1 h-px" />
-            <ContextMenu.Item
-              className={cn(menuItemClass, 'text-destructive focus:bg-destructive/10 focus:text-destructive')}
-              onSelect={() => setConfirmDeleteOpen(true)}
-            >
-              <TrashIcon />
-              Delete type
-            </ContextMenu.Item>
+            {!hideManageActions && (
+              <>
+                <ContextMenu.Item
+                  className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
+                  onSelect={() => router.push(`/settings/types?edit=${type.id}`)}
+                >
+                  <PencilIcon />
+                  Edit type
+                </ContextMenu.Item>
+                <ContextMenu.Separator className="bg-border -mx-1 my-1 h-px" />
+                <ContextMenu.Item
+                  className={cn(menuItemClass, 'text-destructive focus:bg-destructive/10 focus:text-destructive')}
+                  onSelect={() => setConfirmDeleteOpen(true)}
+                >
+                  <TrashIcon />
+                  Delete type
+                </ContextMenu.Item>
+              </>
+            )}
           </ContextMenu.Content>
         </ContextMenu.Portal>
       </ContextMenu.Root>
@@ -206,12 +212,16 @@ export function TypeSection({
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title="Delete type"
-        description={`Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`}
+        description={`Delete "${type.name}" type? All entries and templates of this type will also be deleted. This cannot be undone.`}
         confirmLabel="Delete"
         destructive
         onConfirm={async () => {
-          await onDelete?.(type.id)
-          toast({ description: `Type "${type.name}" deleted`, variant: 'success' })
+          const error = await onDelete?.(type.id)
+          if (typeof error === 'string') {
+            toast({ description: `Failed to delete type: ${error}`, variant: 'destructive' })
+          } else {
+            toast({ description: `Type "${type.name}" deleted`, variant: 'success' })
+          }
         }}
       />
     </div>

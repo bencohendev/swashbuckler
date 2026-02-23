@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
 import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
 import { useAuth } from "@/shared/lib/data"
+import { useSpacePermission } from "@/features/sharing"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
@@ -24,6 +25,7 @@ export function Header({ email }: { email?: string }) {
   const router = useRouter()
   const { user } = useAuth()
   const { setMobileOpen } = useSidebar()
+  const { canEdit } = useSpacePermission()
   const isGuest = !email
   const avatarUrl: string | undefined = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture
   const [searchOpen, setSearchOpen] = useState(false)
@@ -41,7 +43,7 @@ export function Header({ email }: { email?: string }) {
         e.preventDefault()
         setSearchOpen(true)
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'e' && canEdit) {
         e.preventDefault()
         setQuickCaptureOpen(true)
       }
@@ -49,7 +51,7 @@ export function Header({ email }: { email?: string }) {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [canEdit])
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -159,8 +161,12 @@ export function Header({ email }: { email?: string }) {
         </DropdownMenu>
       </div>
       <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-      <QuickCaptureDialog open={quickCaptureOpen} onOpenChange={setQuickCaptureOpen} />
-      <QuickCaptureButton onClick={() => setQuickCaptureOpen(true)} />
+      {canEdit && (
+        <>
+          <QuickCaptureDialog open={quickCaptureOpen} onOpenChange={setQuickCaptureOpen} />
+          <QuickCaptureButton onClick={() => setQuickCaptureOpen(true)} />
+        </>
+      )}
     </header>
   )
 }

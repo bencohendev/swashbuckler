@@ -1,25 +1,21 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { ChevronRightIcon, PinIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { DataObject } from '@/shared/lib/data'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
+import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
+import type { CollapseSignal } from '@/features/sidebar/types'
 
 interface PinnedSectionProps {
   pinnedIds: Set<string>
   objects: DataObject[]
+  collapseSignal?: CollapseSignal
 }
 
-export function PinnedSection({ pinnedIds, objects }: PinnedSectionProps) {
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('sidebar-collapsed-pinned') === 'true'
-  })
-
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed-pinned', String(collapsed))
-  }, [collapsed])
+export function PinnedSection({ pinnedIds, objects, collapseSignal }: PinnedSectionProps) {
+  const [collapsed, setCollapsed] = useCollapsible('sidebar-collapsed-pinned', collapseSignal)
 
   const pinnedObjects = useMemo(() => {
     if (pinnedIds.size === 0) return []

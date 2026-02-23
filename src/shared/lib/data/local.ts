@@ -408,6 +408,26 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
         }
 
+        // Cascade: delete associated objects, their relations/tags/pins, and templates
+        const objectIds = await database.objects
+          .where('type_id').equals(id)
+          .primaryKeys()
+
+        if (objectIds.length > 0) {
+          for (const oid of objectIds) {
+            await database.objectRelations
+              .where('source_id').equals(oid).delete()
+            await database.objectRelations
+              .where('target_id').equals(oid).delete()
+            await database.objectTags
+              .where('object_id').equals(oid).delete()
+            await database.pins
+              .where('object_id').equals(oid).delete()
+          }
+          await database.objects.where('type_id').equals(id).delete()
+        }
+
+        await database.templates.where('type_id').equals(id).delete()
         await database.objectTypes.delete(id)
         return { data: null, error: null }
       } catch (error) {
@@ -1252,6 +1272,47 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         if (tagIds.length === 0) return { data: [], error: null }
         const tags = await database.tags.bulkGet(tagIds)
         return { data: tags.filter((t): t is Tag => t !== undefined), error: null }
+      } catch (error) {
+        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async getObjectTagsBatch(objectIds: string[]): Promise<DataListResult<{ object_id: string; tags: Tag[] }>> {
+      if (objectIds.length === 0) return { data: [], error: null }
+      try {
+        const database = getDB()
+        const objectTags = await database.objectTags
+          .where('object_id')
+          .anyOf(objectIds)
+          .toArray()
+
+        const uniqueTagIds = [...new Set(objectTags.map(ot => ot.tag_id))]
+        const allTags = uniqueTagIds.length > 0
+          ? await database.tags.bulkGet(uniqueTagIds)
+          : []
+        const tagMap = new Map<string, Tag>()
+        for (const tag of allTags) {
+          if (tag) tagMap.set(tag.id, tag)
+        }
+
+        const grouped = new Map<string, Tag[]>()
+        for (const ot of objectTags) {
+          const tag = tagMap.get(ot.tag_id)
+          if (!tag) continue
+          const existing = grouped.get(ot.object_id)
+          if (existing) {
+            existing.push(tag)
+          } else {
+            grouped.set(ot.object_id, [tag])
+          }
+        }
+
+        const result = objectIds.map(id => ({
+          object_id: id,
+          tags: grouped.get(id) ?? [],
+        }))
+
+        return { data: result, error: null }
       } catch (error) {
         return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
       }
