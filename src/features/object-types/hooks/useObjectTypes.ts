@@ -21,7 +21,7 @@ interface UseObjectTypesReturn {
   refetch: () => Promise<void>
   create: (input: CreateObjectTypeInput) => Promise<ObjectType | null>
   update: (id: string, input: UpdateObjectTypeInput) => Promise<ObjectType | null>
-  remove: (id: string) => Promise<void>
+  remove: (id: string) => Promise<string | null>
 }
 
 export function useObjectTypes(): UseObjectTypesReturn {
@@ -56,10 +56,11 @@ export function useObjectTypes(): UseObjectTypesReturn {
     return result.data
   }, [dataClient])
 
-  const remove = useCallback(async (id: string): Promise<void> => {
+  const remove = useCallback(async (id: string): Promise<string | null> => {
     const result = await dataClient.objectTypes.delete(id)
-    if (result.error) return
+    if (result.error) return result.error.message
     emit('objectTypes')
+    return null
   }, [dataClient])
 
   return {

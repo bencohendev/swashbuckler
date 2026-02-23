@@ -32,7 +32,7 @@ interface TypeSectionProps {
   hideManageActions?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
-  onDelete?: (typeId: string) => Promise<void>
+  onDelete?: (typeId: string) => Promise<unknown>
 }
 
 function getStorageKey(typeId: string) {
@@ -216,12 +216,16 @@ export function TypeSection({
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title="Delete type"
-        description={`Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`}
+        description={`Delete "${type.name}" type? All entries and templates of this type will also be deleted. This cannot be undone.`}
         confirmLabel="Delete"
         destructive
         onConfirm={async () => {
-          await onDelete?.(type.id)
-          toast({ description: `Type "${type.name}" deleted`, variant: 'success' })
+          const error = await onDelete?.(type.id)
+          if (typeof error === 'string') {
+            toast({ description: `Failed to delete type: ${error}`, variant: 'destructive' })
+          } else {
+            toast({ description: `Type "${type.name}" deleted`, variant: 'success' })
+          }
         }}
       />
     </div>
