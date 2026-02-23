@@ -111,6 +111,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Accessibility](features/accessibility.md) | Accessibility audit and remediation |
 | [Realtime Sync](features/realtime.md) | Supabase Realtime + cross-tab BroadcastChannel |
 | [Realtime Collaboration](features/realtime-collaboration.md) | Yjs CRDT collaborative editing for shared spaces |
+| [Move docs to .readme/](features/move-docs-to-readme.md) | Move documentation from `.claude/docs/` to `.readme/` for GitHub visibility |
 
 ## Planned Features
 
@@ -132,7 +133,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Template section in type settings | Add template management section to the type settings page |
 | Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
 | Sidebar expand/collapse all | Add expand-all / collapse-all controls for entries in sidebar |
-| Move docs to .readme/ | Move documentation from `.claude/docs/` to `.readme/` for GitHub visibility |
 | Regression testing | Infrastructure exists (Vitest + Playwright + CI at `.github/workflows/ci.yml`) but existing tests need fixing and coverage needs expansion |
 
 ## Bugs

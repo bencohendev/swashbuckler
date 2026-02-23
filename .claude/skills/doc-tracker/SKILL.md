@@ -1,11 +1,11 @@
 ---
 name: doc-tracker
-description: Format and structure guidelines for feature specs and bug docs in .claude/docs/. Use when creating or updating documentation.
+description: Format and structure guidelines for feature specs and bug docs in .readme/. Use when creating or updating documentation.
 ---
 
 ## Documentation Structure
 
-All documentation lives in `.claude/docs/`:
+All documentation lives in `.readme/`:
 - **`index.md`** — master index with implemented and planned feature tables
 - **`features/`** — one file per feature (planned or complete)
 - **`bugs/`** — `log.md` for quick fixes, individual files for complex bugs
@@ -13,7 +13,7 @@ All documentation lives in `.claude/docs/`:
 
 ## Feature Spec Format
 
-Feature specs are stored in `.claude/docs/features/` as separate per-feature markdown documents.
+Feature specs are stored in `.readme/features/` as separate per-feature markdown documents.
 
 ### File Naming
 
@@ -41,7 +41,7 @@ Not every section is required — use what's relevant to the feature.
 
 When new work is planned for a Done feature, set status to Active and add the new scope to the spec. When it ships, set it back to Done. The index doesn't change — the spec self-reports its status.
 
-To find features with open work: `grep -l "Status.*Active" .claude/docs/features/`
+To find features with open work: `grep -l "Status.*Active" .readme/features/`
 
 ## Bug Documentation Format
 
@@ -55,7 +55,7 @@ Add a row to the table for simple bugs that don't need investigation docs:
 
 ### Complex Bugs — Individual Files
 
-For bugs requiring root-cause analysis, create a file in `.claude/docs/bugs/` (e.g., `cursor-presence.md`):
+For bugs requiring root-cause analysis, create a file in `.readme/bugs/` (e.g., `cursor-presence.md`):
 
 1. **Title** — bug name as H1
 2. **Status / Feature / Severity** — metadata block
