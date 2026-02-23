@@ -23,6 +23,7 @@ import { useObjects } from '@/features/objects'
 import { useObjectModal } from '@/shared/stores/objectModal'
 import { EditorModeContext } from '../Editor'
 import { BUILT_IN_VARIABLES } from '@/features/templates/lib/variables'
+import { useIsMobile } from '@/shared/hooks/useIsMobile'
 
 interface SlashMenuItem {
   key: string
@@ -137,6 +138,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   const { isTemplateMode } = useContext(EditorModeContext)
   const { types } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
+  const isMobile = useIsMobile()
   const inputRef = useRef<HTMLSpanElement>(null)
   const filterInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -158,10 +160,12 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
     }, 0)
   }, [])
 
-  // Auto-focus the filter input on mount
+  // Auto-focus the filter input on mount (skip on mobile to avoid keyboard flicker)
   useEffect(() => {
-    filterInputRef.current?.focus()
-  }, [])
+    if (!isMobile) {
+      filterInputRef.current?.focus()
+    }
+  }, [isMobile])
 
   // Build variable items when in template mode
   const variableItems: SlashMenuItem[] = isTemplateMode
@@ -455,8 +459,10 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
     }
   }, [isKeyboardMode])
 
-  // Position the dropdown relative to the trigger element
+  // Position the dropdown relative to the trigger element (desktop only)
   useEffect(() => {
+    if (isMobile) return // bottom panel needs no position calculation
+
     function updatePosition() {
       if (!inputRef.current) return
       const rect = inputRef.current.getBoundingClientRect()
@@ -471,19 +477,111 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('resize', updatePosition)
     }
-  }, [])
+  }, [isMobile])
 
-  // Click outside to close
+  // Click outside to close (desktop only; mobile uses backdrop tap)
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    if (isMobile) return
+
+    const handlePointerDown = (e: PointerEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         closeMenu()
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [closeMenu])
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [isMobile, closeMenu])
+
+  // Shared menu items JSX used by both mobile and desktop
+  const menuItemsJSX = (
+    <>
+      {categories.length > 0 ? (
+        categories.map(category => (
+          <div key={category}>
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              {category}
+            </div>
+            {groupedItems[category].map(item => {
+              const isSelected = item.index === selectedIndex
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  data-index={item.index}
+                  onMouseDown={e => {
+                    e.preventDefault()
+                    selectItem(item.type)
+                  }}
+                  onMouseEnter={() => {
+                    if (!isKeyboardMode) {
+                      setSelectedIndex(item.index)
+                    }
+                  }}
+                  className={`flex w-full items-center gap-3 rounded px-2 py-2 text-left ${
+                    isSelected ? 'bg-accent' : 'hover:bg-accent/50'
+                  }`}
+                >
+                  <span className="flex size-8 items-center justify-center rounded bg-muted">
+                    {item.icon}
+                  </span>
+                  <div>
+                    <div className="text-sm font-medium">{item.label}</div>
+                    <div className="text-xs text-muted-foreground">{item.description}</div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ))
+      ) : filteredCreateTypes.length === 0 ? (
+        <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+          No blocks found
+        </div>
+      ) : null}
+      {filteredCreateTypes.length > 0 && (
+        <>
+          {categories.length > 0 && (
+            <div className="my-1 border-t" />
+          )}
+          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+            Create New
+          </div>
+          {filteredCreateTypes.map((type, i) => {
+            const flatIndex = filteredItems.length + i
+            const isSelected = flatIndex === selectedIndex
+            return (
+              <button
+                key={type.id}
+                type="button"
+                data-index={flatIndex}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  createAndInsertMention(type.id, type.name)
+                }}
+                onMouseEnter={() => {
+                  if (!isKeyboardMode) {
+                    setSelectedIndex(flatIndex)
+                  }
+                }}
+                className={`flex w-full items-center gap-3 rounded px-2 py-2 text-left ${
+                  isSelected ? 'bg-accent' : 'hover:bg-accent/50'
+                }`}
+              >
+                <span className="flex size-8 items-center justify-center rounded bg-muted">
+                  <TypeIcon icon={type.icon} />
+                </span>
+                <div>
+                  <div className="text-sm font-medium">New {type.name}</div>
+                  <div className="text-xs text-muted-foreground">Create and insert a mention</div>
+                </div>
+              </button>
+            )
+          })}
+        </>
+      )}
+    </>
+  )
 
   return (
     <PlateElement {...props} element={element} as="span" className="inline">
@@ -504,101 +602,62 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
       </span>
       <span className="hidden">{children}</span>
 
-      {/* Dropdown portaled to body to escape overflow:auto ancestors */}
-      {dropdownPos && createPortal(
-        <div
-          ref={dropdownRef}
-          contentEditable={false}
-          style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left }}
-          className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
-        >
-          <div ref={scrollContainerRef} className="max-h-80 overflow-y-auto p-1" onMouseMove={handleMouseMove}>
-            {categories.length > 0 ? (
-              categories.map(category => (
-                <div key={category}>
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                    {category}
-                  </div>
-                  {groupedItems[category].map(item => {
-                    const isSelected = item.index === selectedIndex
-                    return (
-                      <button
-                        key={item.key}
-                        type="button"
-                        data-index={item.index}
-                        onMouseDown={e => {
-                          e.preventDefault()
-                          selectItem(item.type)
-                        }}
-                        onMouseEnter={() => {
-                          if (!isKeyboardMode) {
-                            setSelectedIndex(item.index)
-                          }
-                        }}
-                        className={`flex w-full items-center gap-3 rounded px-2 py-2 text-left ${
-                          isSelected ? 'bg-accent' : 'hover:bg-accent/50'
-                        }`}
-                      >
-                        <span className="flex size-8 items-center justify-center rounded bg-muted">
-                          {item.icon}
-                        </span>
-                        <div>
-                          <div className="text-sm font-medium">{item.label}</div>
-                          <div className="text-xs text-muted-foreground">{item.description}</div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              ))
-            ) : filteredCreateTypes.length === 0 ? (
-              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                No blocks found
+      {/* Menu portaled to body to escape overflow:auto ancestors */}
+      {createPortal(
+        isMobile ? (
+          <>
+            {/* Backdrop — tap to close */}
+            <div
+              aria-hidden="true"
+              className="fixed inset-0 z-40 bg-black/30"
+              onPointerDown={() => closeMenu()}
+            />
+            {/* Bottom panel */}
+            <div
+              ref={dropdownRef}
+              role="menu"
+              aria-label="Insert block"
+              contentEditable={false}
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-xl border-t bg-popover shadow-2xl"
+            >
+              {/* Drag-handle affordance */}
+              <div className="flex justify-center pb-1 pt-3" aria-hidden="true">
+                <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
               </div>
-            ) : null}
-            {filteredCreateTypes.length > 0 && (
-              <>
-                {categories.length > 0 && (
-                  <div className="my-1 border-t" />
-                )}
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                  Create New
-                </div>
-                {filteredCreateTypes.map((type, i) => {
-                  const flatIndex = filteredItems.length + i
-                  const isSelected = flatIndex === selectedIndex
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      data-index={flatIndex}
-                      onMouseDown={e => {
-                        e.preventDefault()
-                        createAndInsertMention(type.id, type.name)
-                      }}
-                      onMouseEnter={() => {
-                        if (!isKeyboardMode) {
-                          setSelectedIndex(flatIndex)
-                        }
-                      }}
-                      className={`flex w-full items-center gap-3 rounded px-2 py-2 text-left ${
-                        isSelected ? 'bg-accent' : 'hover:bg-accent/50'
-                      }`}
-                    >
-                      <span className="flex size-8 items-center justify-center rounded bg-muted">
-                        <TypeIcon icon={type.icon} />
-                      </span>
-                      <div>
-                        <div className="text-sm font-medium">New {type.name}</div>
-                        <div className="text-xs text-muted-foreground">Create and insert a mention</div>
-                      </div>
-                    </button>
-                  )
-                })}
-              </>
-            )}
+              {/* Filter input — visible but not auto-focused */}
+              <div className="px-3 pb-2">
+                <input
+                  ref={filterInputRef}
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={handleInputKeyDown}
+                  placeholder="Search blocks..."
+                  aria-label="Filter blocks"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              {/* Scrollable items */}
+              <div
+                ref={scrollContainerRef}
+                className="max-h-[50vh] overflow-y-auto p-1"
+                onMouseMove={handleMouseMove}
+              >
+                {menuItemsJSX}
+              </div>
+            </div>
+          </>
+        ) : dropdownPos ? (
+          <div
+            ref={dropdownRef}
+            contentEditable={false}
+            style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left }}
+            className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
+          >
+            <div ref={scrollContainerRef} className="max-h-80 overflow-y-auto p-1" onMouseMove={handleMouseMove}>
+              {menuItemsJSX}
+            </div>
           </div>
-        </div>,
+        ) : null,
         document.body
       )}
     </PlateElement>

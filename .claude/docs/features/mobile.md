@@ -105,3 +105,4 @@ A `MenuIcon` button with `md:hidden` in the left slot of the header (currently a
 - Type page defaults to card view on mobile; table view scrolls horizontally
 - SpaceSwitcher dropdown opens fully inside the mobile sidebar drawer
 - Icon buttons and interactive elements are comfortably tappable (44px+)
+- Slash menu renders as bottom panel with backdrop on mobile (no keyboard flicker)

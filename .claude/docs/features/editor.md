@@ -11,7 +11,7 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 | Area | Decision |
 |------|----------|
 | Framework | Plate.js (Slate.js) |
-| Slash menu | `/` trigger with categorized blocks |
+| Slash menu | `/` trigger with categorized blocks; bottom panel on mobile |
 | Mention trigger | `@` (changed from `[[`) |
 | Inline create | Via `/` menu + `@` "Create new" option |
 | Spoiler | Click to reveal |
@@ -68,3 +68,6 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 - [x] Image support
 - [x] Navigate away mid-edit — changes saved on unmount
 - [x] Close tab mid-edit — browser prompts "Leave site?"
+- [x] Slash menu on mobile renders as bottom panel (no keyboard flicker)
+- [x] Mobile bottom panel items are tappable and scrollable
+- [x] Backdrop tap closes mobile slash menu
