@@ -26,12 +26,13 @@ After adding, modifying, or fixing features, run these checks:
 
 ### Structure
 - Feature specs live in `.claude/docs/features/` with kebab-case names (e.g., `custom-themes.md`)
-- Bug docs live in `.claude/docs/bugs/` — quick fixes go in `log.md`, complex bugs with root-cause analysis get individual files
-- `.claude/docs/index.md` is the master index — update it when adding features or bugs
+- Bug tracking lives in `.claude/docs/bugs/log.md` — all bugs get a row there; complex bugs with root-cause analysis also get individual files in the same directory, linked from the log
+- `.claude/docs/index.md` is the master index — update it when adding features
 - `.claude/plans/` is for Claude Code plan mode working files only — no permanent docs
 
 ### Document-First Workflow
-- Before implementing a new feature or non-trivial bug fix, create/update its spec in `.claude/docs/` and add it to `index.md`
+- Before implementing a new feature or non-trivial bug fix, create/update its spec in `.claude/docs/`
+- New features get added to `index.md`; bugs get added to `bugs/log.md`
 - Small fixes (typos, one-line patches) are exempt — add a line to `bugs/log.md` if relevant
 - Plan mode files in `.claude/plans/` are drafts. After approval, create the permanent spec in `.claude/docs/` and delete the plan file
 

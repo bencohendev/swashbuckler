@@ -135,4 +135,4 @@ Dual-storage architecture with a `DataClient` interface:
 
 ## Bugs
 
-See [bugs/](bugs/) for tracked bugs and the [quick-fix log](bugs/log.md).
+See [bugs/log.md](bugs/log.md) for all tracked bugs.
