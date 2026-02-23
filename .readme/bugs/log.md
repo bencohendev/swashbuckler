@@ -6,11 +6,11 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Content flash on settings pages | Content flashes/flickers when navigating to settings pages |
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-23 | Content flash on settings pages | Add settings layout with Suspense boundary to handle `useSearchParams` bailout |
 | 2026-02-23 | Mobile graph broken | Add pinch-to-zoom, touch drag/pan, and tap selection for mobile graph view |
 | 2026-02-23 | Graph filter search no-op | Filter nodes by search query in GraphCanvas (was only highlighting, not filtering) |
 | 2026-02-23 | Mobile slash menu unusable | Render slash menu as bottom panel on mobile; skip auto-focus to prevent keyboard flicker |
