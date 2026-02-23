@@ -428,15 +428,17 @@ export function Sidebar() {
                   <div className="px-4 py-6 text-center">
                     <p className="text-sm font-medium text-muted-foreground">No types yet</p>
                     <p className="mt-1 text-xs text-muted-foreground/70">Create a type to start organizing your entries</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 gap-1 text-xs text-muted-foreground"
-                      onClick={() => setCreateTypeOpen(true)}
-                    >
-                      <PlusIcon className="size-3" />
-                      New Type
-                    </Button>
+                    {canEditSpace && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-3 gap-1 text-xs text-muted-foreground"
+                        onClick={() => setCreateTypeOpen(true)}
+                      >
+                        <PlusIcon className="size-3" />
+                        New Type
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   filteredOrderedTypes.map((type, index) => (
@@ -455,15 +457,17 @@ export function Sidebar() {
                     />
                   ))
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start gap-1 text-xs text-muted-foreground"
-                  onClick={() => setCreateTypeOpen(true)}
-                >
-                  <PlusIcon className="size-3" />
-                  New Type
-                </Button>
+                {canEditSpace && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                    onClick={() => setCreateTypeOpen(true)}
+                  >
+                    <PlusIcon className="size-3" />
+                    New Type
+                  </Button>
+                )}
                 {hasRecentContent && <hr className="border-border" />}
                 <RecentSection objects={allObjects} />
                 {hasTagsContent && <hr className="border-border" />}
