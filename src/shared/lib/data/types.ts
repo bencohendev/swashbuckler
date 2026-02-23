@@ -329,6 +329,7 @@ export interface TagsClient {
   update(id: string, input: UpdateTagInput): Promise<DataResult<Tag>>
   delete(id: string): Promise<DataResult<void>>
   getObjectTags(objectId: string): Promise<DataListResult<Tag>>
+  getObjectTagsBatch(objectIds: string[]): Promise<DataListResult<{ object_id: string; tags: Tag[] }>>
   addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>>
   removeTagFromObject(objectId: string, tagId: string): Promise<DataResult<void>>
   getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>>

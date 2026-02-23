@@ -1277,6 +1277,47 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
       }
     },
 
+    async getObjectTagsBatch(objectIds: string[]): Promise<DataListResult<{ object_id: string; tags: Tag[] }>> {
+      if (objectIds.length === 0) return { data: [], error: null }
+      try {
+        const database = getDB()
+        const objectTags = await database.objectTags
+          .where('object_id')
+          .anyOf(objectIds)
+          .toArray()
+
+        const uniqueTagIds = [...new Set(objectTags.map(ot => ot.tag_id))]
+        const allTags = uniqueTagIds.length > 0
+          ? await database.tags.bulkGet(uniqueTagIds)
+          : []
+        const tagMap = new Map<string, Tag>()
+        for (const tag of allTags) {
+          if (tag) tagMap.set(tag.id, tag)
+        }
+
+        const grouped = new Map<string, Tag[]>()
+        for (const ot of objectTags) {
+          const tag = tagMap.get(ot.tag_id)
+          if (!tag) continue
+          const existing = grouped.get(ot.object_id)
+          if (existing) {
+            existing.push(tag)
+          } else {
+            grouped.set(ot.object_id, [tag])
+          }
+        }
+
+        const result = objectIds.map(id => ({
+          object_id: id,
+          tags: grouped.get(id) ?? [],
+        }))
+
+        return { data: result, error: null }
+      } catch (error) {
+        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
     async addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>> {
       try {
         const database = getDB()

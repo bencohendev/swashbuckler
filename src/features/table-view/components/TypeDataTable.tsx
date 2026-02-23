@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import type { DataObject, ObjectType, FieldDefinition } from '@/shared/lib/data'
+import type { DataObject, ObjectType, FieldDefinition, Tag } from '@/shared/lib/data'
+import { useObjectTagsBatch, TagBadge } from '@/features/tags'
 import { SortableHeader, type SortState } from './SortableHeader'
 import { PropertyCell } from './PropertyCell'
 
@@ -34,6 +35,31 @@ function compareValues(a: unknown, b: unknown, fieldType?: string): number {
   return String(a).localeCompare(String(b))
 }
 
+const MAX_VISIBLE_TAGS = 3
+
+function TagsCell({ tags, router }: { tags: Tag[]; router: ReturnType<typeof useRouter> }) {
+  if (tags.length === 0) return null
+  const visible = tags.slice(0, MAX_VISIBLE_TAGS)
+  const overflow = tags.length - MAX_VISIBLE_TAGS
+
+  return (
+    <span className="flex flex-wrap items-center gap-1">
+      {visible.map(tag => (
+        <span key={tag.id} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+          <TagBadge
+            name={tag.name}
+            color={tag.color}
+            onClick={() => router.push(`/tags/${encodeURIComponent(tag.name)}`)}
+          />
+        </span>
+      ))}
+      {overflow > 0 && (
+        <span className="text-xs text-muted-foreground">+{overflow}</span>
+      )}
+    </span>
+  )
+}
+
 export function TypeDataTable({ type, objects }: TypeDataTableProps) {
   const router = useRouter()
   const [sort, setSort] = useState<SortState | null>(null)
@@ -42,6 +68,9 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
     () => [...type.fields].sort((a, b) => a.sort_order - b.sort_order),
     [type.fields]
   )
+
+  const objectIds = useMemo(() => objects.map(o => o.id), [objects])
+  const { tagsByObject } = useObjectTagsBatch(objectIds)
 
   const handleSort = useCallback((column: string) => {
     setSort((prev) => {
@@ -62,6 +91,13 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
 
       if (sort.column === 'title') {
         cmp = a.title.localeCompare(b.title)
+      } else if (sort.column === 'tags') {
+        const aTags = (tagsByObject[a.id] ?? []).map(t => t.name).sort().join(', ')
+        const bTags = (tagsByObject[b.id] ?? []).map(t => t.name).sort().join(', ')
+        if (!aTags && !bTags) cmp = 0
+        else if (!aTags) cmp = 1
+        else if (!bTags) cmp = -1
+        else cmp = aTags.localeCompare(bTags)
       } else if (sort.column === 'updated_at') {
         cmp = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
       } else {
@@ -76,7 +112,7 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
 
       return sort.direction === 'desc' ? -cmp : cmp
     })
-  }, [objects, sort, fields])
+  }, [objects, sort, fields, tagsByObject])
 
   return (
     <div className="overflow-x-auto rounded-lg border">
@@ -100,6 +136,12 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
                 onSort={handleSort}
               />
             ))}
+            <SortableHeader
+              column="tags"
+              label="Tags"
+              sort={sort}
+              onSort={handleSort}
+            />
             <SortableHeader
               column="updated_at"
               label="Updated"
@@ -137,6 +179,9 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
                   />
                 </td>
               ))}
+              <td className="px-3 py-2">
+                <TagsCell tags={tagsByObject[obj.id] ?? []} router={router} />
+              </td>
               <td className="px-3 py-2 text-xs text-muted-foreground">
                 {new Date(obj.updated_at).toLocaleDateString()}
               </td>
@@ -145,7 +190,7 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
           {sortedObjects.length === 0 && (
             <tr>
               <td
-                colSpan={fields.length + 2}
+                colSpan={fields.length + 3}
                 className="px-3 py-8 text-center text-muted-foreground"
               >
                 No {type.plural_name.toLowerCase()} yet

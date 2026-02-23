@@ -15,6 +15,7 @@ export const queryKeys = {
     all: (spaceId?: string) => ['tags', spaceId] as const,
     list: (spaceId?: string) => ['tags', spaceId, 'list'] as const,
     objectTags: (objectId: string) => ['tags', 'objectTags', objectId] as const,
+    objectTagsBatch: (objectIds: string[]) => ['tags', 'objectTagsBatch', objectIds] as const,
     objectsByTag: (tagId: string) => ['tags', 'objectsByTag', tagId] as const,
   },
   pins: {
