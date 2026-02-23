@@ -14,7 +14,7 @@ interface GraphNodeProps {
   isSelected: boolean
   isHighlighted: boolean
   isDimmed: boolean
-  onDragStart: (nodeId: string, pointerId: number) => void
+  onDragStart: (nodeId: string, pointerId: number, clientX: number, clientY: number) => void
 }
 
 export const GraphNode = memo(function GraphNode({
@@ -39,7 +39,7 @@ export const GraphNode = memo(function GraphNode({
       transform={`translate(${node.x ?? 0}, ${node.y ?? 0})`}
       onPointerDown={(e) => {
         e.stopPropagation()
-        onDragStart(node.id, e.pointerId)
+        onDragStart(node.id, e.pointerId, e.clientX, e.clientY)
       }}
       style={{ cursor: 'grab', opacity: isDimmed ? 0.15 : 1, touchAction: 'none' }}
     >
