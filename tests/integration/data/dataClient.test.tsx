@@ -54,7 +54,7 @@ describe('Data Client Integration', () => {
 
       const createResult = await result.current.objects.create({
         title: 'Test Page',
-        type: 'page',
+        type_id: '00000000-0000-0000-0000-000000000101',
       })
 
       expect(createResult.error).toBeNull()

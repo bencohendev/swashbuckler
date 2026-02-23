@@ -64,7 +64,7 @@ describe('useObjects', () => {
     })
 
     // Create an object
-    let created: Awaited<ReturnType<typeof result.current.create>>
+    let created: Awaited<ReturnType<typeof result.current.create>> = null
     await act(async () => {
       created = await result.current.create({ title: 'Test Page', type_id: PAGE_TYPE_ID })
     })
@@ -86,7 +86,7 @@ describe('useObjects', () => {
     })
 
     // Create then update
-    let created: Awaited<ReturnType<typeof result.current.create>>
+    let created: Awaited<ReturnType<typeof result.current.create>> = null
     await act(async () => {
       created = await result.current.create({ title: 'Original', type_id: PAGE_TYPE_ID })
     })
@@ -107,7 +107,7 @@ describe('useObjects', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    let created: Awaited<ReturnType<typeof result.current.create>>
+    let created: Awaited<ReturnType<typeof result.current.create>> = null
     await act(async () => {
       created = await result.current.create({ title: 'To Delete', type_id: PAGE_TYPE_ID })
     })
@@ -132,7 +132,7 @@ describe('useObjects', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    let created: Awaited<ReturnType<typeof result.current.create>>
+    let created: Awaited<ReturnType<typeof result.current.create>> = null
     await act(async () => {
       created = await result.current.create({ title: 'Restore Me', type_id: PAGE_TYPE_ID })
       await result.current.remove(created!.id)
