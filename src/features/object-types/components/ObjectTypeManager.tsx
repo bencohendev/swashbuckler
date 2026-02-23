@@ -106,7 +106,11 @@ export function ObjectTypeManager() {
         </Button>
       </div>
 
-      <div className="space-y-2">
+      {types.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          No types yet. Create one to get started.
+        </p>
+      ) : <div className="space-y-2">
         {types.map(type => (
           <div
             key={type.id}
@@ -154,7 +158,7 @@ export function ObjectTypeManager() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
       <ConfirmDialog
         open={!!pendingDeleteType}
         onOpenChange={(open) => { if (!open) setPendingDeleteType(null) }}
