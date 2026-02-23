@@ -27,12 +27,16 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
   const transformRef = useRef({ x: 0, y: 0, k: 1 })
   const pointersRef = useRef(new Map<number, { x: number; y: number }>())
 
-  const { enabledTypeIds, selectedNodeId, setSelectedNodeId, highlightedNodeIds } = useGraphStore()
+  const { enabledTypeIds, selectedNodeId, setSelectedNodeId, highlightedNodeIds, searchQuery } = useGraphStore()
 
-  const filteredNodes = useMemo(
-    () => enabledTypeIds.size === 0 ? nodes : nodes.filter(n => enabledTypeIds.has(n.typeId)),
-    [nodes, enabledTypeIds],
-  )
+  const filteredNodes = useMemo(() => {
+    let result = enabledTypeIds.size === 0 ? nodes : nodes.filter(n => enabledTypeIds.has(n.typeId))
+    const query = searchQuery.trim().toLowerCase()
+    if (query) {
+      result = result.filter(n => n.title.toLowerCase().includes(query))
+    }
+    return result
+  }, [nodes, enabledTypeIds, searchQuery])
   const filteredNodeIds = useMemo(() => new Set(filteredNodes.map(n => n.id)), [filteredNodes])
   const filteredEdges = useMemo(
     () => edges.filter(e => filteredNodeIds.has(e.sourceId) && filteredNodeIds.has(e.targetId)),
