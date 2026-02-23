@@ -431,7 +431,7 @@ export function Sidebar() {
                   <div className="px-4 py-6 text-center">
                     <p className="text-sm font-medium text-muted-foreground">No types yet</p>
                     <p className="mt-1 text-xs text-muted-foreground/70">Create a type to start organizing your entries</p>
-                    {isSpaceOwner && (
+                    {canEditSpace && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -473,7 +473,7 @@ export function Sidebar() {
                     )
                   )
                 )}
-                {isSpaceOwner && (
+                {canEditSpace && (
                   <Button
                     variant="ghost"
                     size="sm"
