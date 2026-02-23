@@ -6,22 +6,18 @@ import { cn } from '@/shared/lib/utils'
 import type { Tag } from '@/shared/lib/data'
 import { useDataClient } from '@/shared/lib/data'
 import { SidebarLink } from '@/features/sidebar/components/SidebarLink'
+import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
+import type { CollapseSignal } from '@/features/sidebar/types'
 
 interface TagsSectionProps {
   tags: Tag[]
+  collapseSignal?: CollapseSignal
 }
 
-export function TagsSection({ tags }: TagsSectionProps) {
+export function TagsSection({ tags, collapseSignal }: TagsSectionProps) {
   const dataClient = useDataClient()
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('sidebar-collapsed-tags') === 'true'
-  })
+  const [collapsed, setCollapsed] = useCollapsible('sidebar-collapsed-tags', collapseSignal)
   const [tagCounts, setTagCounts] = useState<Map<string, number>>(new Map())
-
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed-tags', String(collapsed))
-  }, [collapsed])
 
   // Fetch tag counts in parallel
   useEffect(() => {

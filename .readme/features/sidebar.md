@@ -77,6 +77,21 @@ Track a `pendingPath` in the sidebar Zustand store. `SidebarLink` component wrap
 - `src/features/objects/components/ObjectList.tsx` — removed `isActive`/`usePathname` (SidebarLink handles it)
 - `src/features/tags/components/TagsSection.tsx` — uses SidebarLink with active styling
 
+## Expand/Collapse All Sections
+
+Two icon buttons in a toolbar row above the first section (inside the scrollable content area):
+- **Expand all** (`ChevronsUpDownIcon`) — expands every collapsible section (Pinned, Types, Recent, Tags)
+- **Collapse all** (`ChevronsDownUpIcon`) — collapses every collapsible section
+
+### How it works
+
+Each section keeps its own local `collapsed` state via the shared `useCollapsible` hook (`src/features/sidebar/hooks/useCollapsible.ts`). The `Sidebar` parent emits a `CollapseSignal` object `{ collapsed: boolean, key: number }` on button click. Each section watches for `key` changes and syncs its local state accordingly. Individual toggles still work after a bulk action.
+
+### Key files
+- `src/features/sidebar/types.ts` — `CollapseSignal` interface
+- `src/features/sidebar/hooks/useCollapsible.ts` — shared hook replacing duplicated `useState`/`useEffect` pattern
+- `src/features/sidebar/components/Sidebar.tsx` — toolbar buttons and signal state
+
 ## Verification
 
 - [x] Hierarchical tree renders entries by type
@@ -94,3 +109,7 @@ Track a `pendingPath` in the sidebar Zustand store. `SidebarLink` component wrap
 - [x] Collapsed state persists across page refresh
 - [x] Cmd/Ctrl+\ keyboard shortcut toggles sidebar
 - [x] Navigation icons work in collapsed mode
+- [x] Expand all button expands all sections
+- [x] Collapse all button collapses all sections
+- [x] Individual toggles still work after bulk action
+- [x] Section states persist to localStorage after bulk action
