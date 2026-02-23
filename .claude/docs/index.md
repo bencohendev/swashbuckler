@@ -111,6 +111,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Accessibility](features/accessibility.md) | Accessibility audit and remediation |
 | [Realtime Sync](features/realtime.md) | Supabase Realtime + cross-tab BroadcastChannel |
 | [Realtime Collaboration](features/realtime-collaboration.md) | Yjs CRDT collaborative editing for shared spaces |
+| [Unique Default Names](features/unique-default-names.md) | Incrementing "New Page", "New Page 2", etc. |
 
 ## Planned Features
 

@@ -1,1 +1,1 @@
-export { useObjects, useObject } from './hooks'
+export { useObjects, useObject, useNextTitle } from './hooks'

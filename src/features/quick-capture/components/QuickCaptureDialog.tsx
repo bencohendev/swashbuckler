@@ -12,6 +12,7 @@ import { useObjectTypes } from '@/features/object-types/hooks/useObjectTypes'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { CreateTypeDialog } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks/useObjects'
+import { useNextTitle } from '@/features/objects/hooks/useNextTitle'
 import { toast } from '@/shared/hooks/useToast'
 import { useObjectModal } from '@/shared/stores/objectModal'
 
@@ -23,6 +24,7 @@ interface QuickCaptureDialogProps {
 export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogProps) {
   const { types, create: createType } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
+  const getNextTitle = useNextTitle()
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
   const [showCreateType, setShowCreateType] = useState(false)
@@ -43,7 +45,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
     setIsCreating(true)
 
     const result = await create({
-      title: `Untitled ${typeName}`,
+      title: getNextTitle(typeId, typeName),
       type_id: typeId,
     })
 
@@ -55,7 +57,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
     }
 
     setIsCreating(false)
-  }, [isCreating, create, onOpenChange])
+  }, [isCreating, create, getNextTitle, onOpenChange])
 
   const handleCreateType = useCallback(() => {
     onOpenChange(false)
