@@ -17,6 +17,8 @@ import { useSpacePermission, useExclusionFilter, useSpaceShares } from '@/featur
 import { useCollaboration, useMousePresence, CollaboratorAvatars, ConnectionStatus, RemoteMouseCursors } from '@/features/collaboration'
 import { EmojiPicker } from '@/shared/components/EmojiPicker'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +57,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const [isTitleSaving, setIsTitleSaving] = useState(false)
   const [isTemplateMode, setIsTemplateMode] = useState(false)
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+  const [confirmTrashOpen, setConfirmTrashOpen] = useState(false)
 
   // Collaborative mode: authenticated user with edit permission on a shared space.
   // For owners: shared if they've created shares. For recipients: shared if sharedPermission is set.
@@ -118,12 +121,8 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   }, [update])
 
   const handleDelete = async () => {
-    if (!object) return
-
-    const confirmed = window.confirm('Move this to trash?')
-    if (!confirmed) return
-
     await remove()
+    toast({ description: 'Moved to trash' })
     if (onDelete) {
       onDelete()
     } else {
@@ -139,6 +138,9 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const handleTemplateDialogSave = useCallback(async (name: string): Promise<boolean> => {
     if (!object) return false
     const result = await saveObjectAsTemplate(object, name)
+    if (result) {
+      toast({ description: `Template "${name}" saved` })
+    }
     return result !== null
   }, [object, saveObjectAsTemplate])
 
@@ -235,7 +237,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
               >
                 <BracesIcon className="size-4" />
               </Button>
-              <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Move to trash" aria-label="Move to trash">
+              <Button size="icon-sm" variant="ghost" onClick={() => setConfirmTrashOpen(true)} title="Move to trash" aria-label="Move to trash">
                 <TrashIcon className="size-4" />
               </Button>
               <DropdownMenu>
@@ -258,7 +260,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
                             const result = await uploadImage(file, 'covers')
                             await update({ cover_image: result.url })
                           } catch {
-                            // CoverImage component handles errors visually
+                            toast({ description: 'Failed to upload cover image', variant: 'destructive' })
                           }
                         }
                       }
@@ -273,7 +275,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
                     Save as Template
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                  <DropdownMenuItem variant="destructive" onClick={() => setConfirmTrashOpen(true)}>
                     <TrashIcon className="size-4" />
                     Move to Trash
                   </DropdownMenuItem>
@@ -339,6 +341,15 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
         defaultName={object.title}
         existingNames={templates.map((t) => t.name)}
         onSave={handleTemplateDialogSave}
+      />
+      <ConfirmDialog
+        open={confirmTrashOpen}
+        onOpenChange={setConfirmTrashOpen}
+        title="Move to trash"
+        description={`Move "${object.title}" to trash?`}
+        confirmLabel="Move to trash"
+        destructive
+        onConfirm={handleDelete}
       />
     </div>
   )

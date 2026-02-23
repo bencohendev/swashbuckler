@@ -8,6 +8,8 @@ import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
 import { ObjectTypeForm } from './ObjectTypeForm'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 import type { ObjectType, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
 
 export function ObjectTypeManager() {
@@ -15,6 +17,7 @@ export function ObjectTypeManager() {
   const searchParams = useSearchParams()
   const [editingType, setEditingType] = useState<ObjectType | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [pendingDeleteType, setPendingDeleteType] = useState<ObjectType | null>(null)
 
   // Auto-open edit form when ?edit=<typeId> is in the URL
   const editTypeId = searchParams.get('edit')
@@ -36,12 +39,12 @@ export function ObjectTypeManager() {
     setEditingType(null)
   }
 
-  const handleDelete = async (type: ObjectType) => {
-    const confirmed = window.confirm(
-      `Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`
-    )
-    if (!confirmed) return
-    await remove(type.id)
+  const handleDelete = async () => {
+    if (!pendingDeleteType) return
+    const typeName = pendingDeleteType.name
+    await remove(pendingDeleteType.id)
+    setPendingDeleteType(null)
+    toast({ description: `Type "${typeName}" deleted` })
   }
 
   if (isLoading) {
@@ -138,7 +141,7 @@ export function ObjectTypeManager() {
               <Button
                 size="icon-sm"
                 variant="ghost"
-                onClick={() => handleDelete(type)}
+                onClick={() => setPendingDeleteType(type)}
                 title="Delete type"
                 className="text-destructive hover:text-destructive"
               >
@@ -148,6 +151,15 @@ export function ObjectTypeManager() {
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        open={!!pendingDeleteType}
+        onOpenChange={(open) => { if (!open) setPendingDeleteType(null) }}
+        title="Delete type"
+        description={`Delete "${pendingDeleteType?.name}" type? Entries of this type will not be deleted, but they will lose their type association.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

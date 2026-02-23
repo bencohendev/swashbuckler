@@ -4,27 +4,30 @@ import { useState } from 'react'
 import { RotateCcwIcon, TrashIcon } from 'lucide-react'
 import { useObjects } from '../hooks/useObjects'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 import type { DataObject } from '@/shared/lib/data'
 
 export function TrashList() {
   const { objects, isLoading, restore, remove } = useObjects({ isDeleted: true })
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<DataObject | null>(null)
 
   const handleRestore = async (obj: DataObject) => {
     setProcessingId(obj.id)
     await restore(obj.id)
     setProcessingId(null)
+    toast({ description: `"${obj.title}" restored` })
   }
 
-  const handlePermanentDelete = async (obj: DataObject) => {
-    const confirmed = window.confirm(
-      `Permanently delete "${obj.title}"? This cannot be undone.`
-    )
-    if (!confirmed) return
-
-    setProcessingId(obj.id)
-    await remove(obj.id, true)
+  const handlePermanentDelete = async () => {
+    if (!pendingDelete) return
+    const title = pendingDelete.title
+    setProcessingId(pendingDelete.id)
+    await remove(pendingDelete.id, true)
     setProcessingId(null)
+    setPendingDelete(null)
+    toast({ description: `"${title}" permanently deleted` })
   }
 
   if (isLoading) {
@@ -77,7 +80,7 @@ export function TrashList() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => handlePermanentDelete(obj)}
+              onClick={() => setPendingDelete(obj)}
               disabled={processingId === obj.id}
               className="text-destructive hover:text-destructive"
               title="Delete permanently"
@@ -88,6 +91,15 @@ export function TrashList() {
           </div>
         </div>
       ))}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
+        title="Delete permanently"
+        description={`Permanently delete "${pendingDelete?.title}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handlePermanentDelete}
+      />
     </div>
   )
 }

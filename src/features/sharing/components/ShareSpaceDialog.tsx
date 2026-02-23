@@ -6,6 +6,8 @@ import { XIcon, UserPlusIcon, ShieldIcon, EyeOffIcon, ChevronDownIcon, TrashIcon
 import type { SpaceShare, SpaceSharePermission } from '@/shared/lib/data'
 import { useSpaceShares } from '../hooks/useSpaceShares'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 import { ExclusionManager } from './ExclusionManager'
 
 interface ShareSpaceDialogProps {
@@ -22,6 +24,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [expandedShareId, setExpandedShareId] = useState<string | null>(null)
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null)
 
   if (!open) return null
 
@@ -46,11 +49,11 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
     await updateShare(share.id, newPermission)
   }
 
-  const handleRemove = async (shareId: string) => {
-    const confirmed = window.confirm('Remove this user\'s access?')
-    if (confirmed) {
-      await deleteShare(shareId)
-    }
+  const handleRemove = async () => {
+    if (!pendingRemoveId) return
+    await deleteShare(pendingRemoveId)
+    setPendingRemoveId(null)
+    toast({ description: 'Access removed' })
   }
 
   return (
@@ -135,7 +138,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleRemove(share.id)}
+                      onClick={() => setPendingRemoveId(share.id)}
                       className="text-muted-foreground hover:text-destructive"
                       title="Remove access"
                       aria-label={`Remove access for ${share.shared_with_email}`}
@@ -170,6 +173,15 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={!!pendingRemoveId}
+        onOpenChange={(open) => { if (!open) setPendingRemoveId(null) }}
+        title="Remove access"
+        description="Remove this user's access to the space?"
+        confirmLabel="Remove"
+        destructive
+        onConfirm={handleRemove}
+      />
     </div>
   )
 }

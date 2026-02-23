@@ -6,6 +6,8 @@ import { useTemplates } from '../hooks/useTemplates'
 import { useObjectTypes } from '@/features/object-types'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,14 +24,13 @@ interface TemplateCardProps {
 
 function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const handleDelete = async () => {
-    const confirmed = window.confirm('Are you sure you want to permanently delete this template?')
-    if (!confirmed) return
-
     setIsDeleting(true)
     await onDelete(template.id)
     setIsDeleting(false)
+    toast({ description: `Template "${template.name}" deleted` })
   }
 
   return (
@@ -53,12 +54,21 @@ function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+          <DropdownMenuItem variant="destructive" onClick={() => setConfirmDeleteOpen(true)}>
             <TrashIcon className="size-4" />
             Delete Permanently
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete template"
+        description={`Permanently delete template "${template.name}"?`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

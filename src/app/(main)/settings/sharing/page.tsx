@@ -7,6 +7,8 @@ import type { SpaceShare, SpaceSharePermission, ShareExclusion } from '@/shared/
 import { useAuth, useCurrentSpace } from '@/shared/lib/data'
 import { useSpaceShares, ExclusionManager } from '@/features/sharing'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 
 export default function SharingSettingsPage() {
   const { user, isGuest } = useAuth()
@@ -89,6 +91,7 @@ function SharingControls({ spaceId }: { spaceId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [expandedShareId, setExpandedShareId] = useState<string | null>(null)
   const [spaceExclusionsOpen, setSpaceExclusionsOpen] = useState(false)
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null)
   const [cachedSpaceExclusions, setCachedSpaceExclusions] = useState<ShareExclusion[]>([])
 
   const refreshSpaceExclusions = useCallback(async () => {
@@ -121,11 +124,11 @@ function SharingControls({ spaceId }: { spaceId: string }) {
     await updateShare(share.id, newPermission)
   }
 
-  const handleRemove = async (shareId: string) => {
-    const confirmed = window.confirm('Remove this user\'s access?')
-    if (confirmed) {
-      await deleteShare(shareId)
-    }
+  const handleRemove = async () => {
+    if (!pendingRemoveId) return
+    await deleteShare(pendingRemoveId)
+    setPendingRemoveId(null)
+    toast({ description: 'Access removed' })
   }
 
   return (
@@ -220,7 +223,7 @@ function SharingControls({ spaceId }: { spaceId: string }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleRemove(share.id)}
+                  onClick={() => setPendingRemoveId(share.id)}
                   className="text-muted-foreground hover:text-destructive"
                   title="Remove access"
                 >
@@ -242,6 +245,15 @@ function SharingControls({ spaceId }: { spaceId: string }) {
           ))
         )}
       </div>
+      <ConfirmDialog
+        open={!!pendingRemoveId}
+        onOpenChange={(open) => { if (!open) setPendingRemoveId(null) }}
+        title="Remove access"
+        description="Remove this user's access to the space?"
+        confirmLabel="Remove"
+        destructive
+        onConfirm={handleRemove}
+      />
     </div>
   )
 }

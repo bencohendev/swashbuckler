@@ -13,6 +13,7 @@ import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { CreateTypeDialog } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks/useObjects'
 import { useSpacePermission } from '@/features/sharing'
+import { toast } from '@/shared/hooks/useToast'
 import { useObjectModal } from '@/shared/stores/objectModal'
 
 interface QuickCaptureDialogProps {
@@ -52,7 +53,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
       onOpenChange(false)
       useObjectModal.getState().open(result.id)
     } else {
-      window.alert('Failed to create entry. You may not have permission to create in this space.')
+      toast({ description: 'Failed to create entry. You may not have permission.', variant: 'destructive' })
     }
 
     setIsCreating(false)
