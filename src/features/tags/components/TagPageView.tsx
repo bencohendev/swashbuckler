@@ -12,6 +12,8 @@ import { queryKeys } from '@/shared/lib/data/queryKeys'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
 import { useObjectTypes } from '@/features/object-types'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 
 interface TagPageViewProps {
   name: string
@@ -23,6 +25,7 @@ export function TagPageView({ name }: TagPageViewProps) {
   const { tags, remove, update } = useTags()
   const { types } = useObjectTypes()
   const [showColors, setShowColors] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const tag = tags.find(t => t.name === name)
   const typeMap = new Map(types.map(t => [t.id, t]))
@@ -39,9 +42,9 @@ export function TagPageView({ name }: TagPageViewProps) {
 
   const handleDelete = async () => {
     if (!tag) return
-    const confirmed = window.confirm(`Delete tag "${tag.name}"? It will be removed from all entries.`)
-    if (!confirmed) return
+    const tagName = tag.name
     await remove(tag.id)
+    toast({ description: `Tag "${tagName}" deleted` })
     router.push('/')
   }
 
@@ -82,7 +85,7 @@ export function TagPageView({ name }: TagPageViewProps) {
               {objects.length} object{objects.length !== 1 ? 's' : ''}
             </span>
           </div>
-          <Button size="icon-sm" variant="ghost" onClick={handleDelete} title="Delete tag" aria-label="Delete tag">
+          <Button size="icon-sm" variant="ghost" onClick={() => setConfirmDeleteOpen(true)} title="Delete tag" aria-label="Delete tag">
             <TrashIcon className="size-4" />
           </Button>
         </div>
@@ -130,6 +133,17 @@ export function TagPageView({ name }: TagPageViewProps) {
           </div>
         )}
       </main>
+      {tag && (
+        <ConfirmDialog
+          open={confirmDeleteOpen}
+          onOpenChange={setConfirmDeleteOpen}
+          title="Delete tag"
+          description={`Delete tag "${tag.name}"? It will be removed from all entries.`}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   )
 }

@@ -20,6 +20,7 @@ import { usePins, PinnedSection } from "@/features/pins"
 import { VariablePromptDialog } from "@/features/templates/components/VariablePromptDialog"
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
+import { toast } from "@/shared/hooks/useToast"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
 import { RecentSection } from "./RecentSection"
@@ -243,6 +244,8 @@ export function Sidebar() {
     })
     if (result) {
       router.push(`/objects/${result.id}`)
+    } else {
+      toast({ description: 'Failed to create entry. You may not have permission.', variant: 'destructive' })
     }
   }
 

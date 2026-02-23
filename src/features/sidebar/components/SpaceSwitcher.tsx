@@ -11,6 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog"
+import { toast } from "@/shared/hooks/useToast"
 import { CreateSpaceDialog } from "./CreateSpaceDialog"
 import { ShareSpaceDialog } from "@/features/sharing"
 
@@ -21,6 +23,7 @@ export function SpaceSwitcher() {
   const { user } = useAuth()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false)
 
   const handleSwitchSpace = (id: string) => {
     if (id === space?.id) return
@@ -105,12 +108,7 @@ export function SpaceSwitcher() {
             ...(space && !isOwned(space) ? [
               <DropdownMenuItem
                 key="__leave"
-                onClick={async () => {
-                  if (window.confirm(`Leave "${space.name}"? You will lose access.`)) {
-                    await leaveSpace(space.id)
-                    router.push('/')
-                  }
-                }}
+                onClick={() => setConfirmLeaveOpen(true)}
                 className="gap-2 text-destructive"
               >
                 <LogOutIcon className="size-4" />
@@ -139,6 +137,21 @@ export function SpaceSwitcher() {
           onOpenChange={setShareDialogOpen}
           spaceId={space.id}
           spaceName={space.name}
+        />
+      )}
+      {space && (
+        <ConfirmDialog
+          open={confirmLeaveOpen}
+          onOpenChange={setConfirmLeaveOpen}
+          title="Leave space"
+          description={`Leave "${space.name}"? You will lose access.`}
+          confirmLabel="Leave"
+          destructive
+          onConfirm={async () => {
+            await leaveSpace(space.id)
+            toast({ description: `Left "${space.name}"` })
+            router.push('/')
+          }}
         />
       )}
     </>

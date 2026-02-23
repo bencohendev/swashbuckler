@@ -10,6 +10,8 @@ import { ObjectList } from '@/features/objects/components'
 import { useTemplates } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { Button } from '@/shared/components/ui/Button'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { toast } from '@/shared/hooks/useToast'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,14 +99,7 @@ export function TypeSection({
     localStorage.setItem(getStorageKey(type.id), String(collapsed))
   }, [collapsed, type.id])
 
-  const handleDelete = () => {
-    const confirmed = window.confirm(
-      `Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`
-    )
-    if (confirmed) {
-      onDelete?.(type.id)
-    }
-  }
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   return (
     <div className={cn(isDragging && 'opacity-40')}>
@@ -188,7 +183,7 @@ export function TypeSection({
             <ContextMenu.Separator className="bg-border -mx-1 my-1 h-px" />
             <ContextMenu.Item
               className={cn(menuItemClass, 'text-destructive focus:bg-destructive/10 focus:text-destructive')}
-              onSelect={handleDelete}
+              onSelect={() => setConfirmDeleteOpen(true)}
             >
               <TrashIcon />
               Delete type
@@ -207,6 +202,18 @@ export function TypeSection({
           />
         </div>
       )}
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete type"
+        description={`Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={async () => {
+          await onDelete?.(type.id)
+          toast({ description: `Type "${type.name}" deleted` })
+        }}
+      />
     </div>
   )
 }
