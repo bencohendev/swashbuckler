@@ -6,7 +6,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Shared user can't create new entries | Guest/shared users unable to create new entries in shared spaces |
+| [Shared user can't create new entries](shared-user-create-entries.md) | Guest/shared users unable to create new entries in shared spaces |
 | Mobile slash menu unusable | Slash menu can't scroll or select options; keyboard opens then closes on mobile |
 | Mobile graph broken | Can't zoom out, drag, or click nodes on mobile graph view |
 | Graph filter search no-op | Graph filter/search input doesn't filter anything |
