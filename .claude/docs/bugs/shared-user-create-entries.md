@@ -1,6 +1,6 @@
 # Shared user can't create new entries
 
-**Status**: Fixed
+**Status**: Closed
 **Feature**: Sharing / Spaces
 **Severity**: High — blocks core editing workflow for shared users
 
