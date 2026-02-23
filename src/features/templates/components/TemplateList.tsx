@@ -30,7 +30,7 @@ function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
     setIsDeleting(true)
     await onDelete(template.id)
     setIsDeleting(false)
-    toast({ description: `Template "${template.name}" deleted` })
+    toast({ description: `Template "${template.name}" deleted`, variant: 'success' })
   }
 
   return (

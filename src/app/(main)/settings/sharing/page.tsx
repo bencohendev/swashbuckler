@@ -128,7 +128,7 @@ function SharingControls({ spaceId }: { spaceId: string }) {
     if (!pendingRemoveId) return
     await deleteShare(pendingRemoveId)
     setPendingRemoveId(null)
-    toast({ description: 'Access removed' })
+    toast({ description: 'Access removed', variant: 'success' })
   }
 
   return (

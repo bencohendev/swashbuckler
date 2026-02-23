@@ -221,7 +221,7 @@ export function TypeSection({
         destructive
         onConfirm={async () => {
           await onDelete?.(type.id)
-          toast({ description: `Type "${type.name}" deleted` })
+          toast({ description: `Type "${type.name}" deleted`, variant: 'success' })
         }}
       />
     </div>

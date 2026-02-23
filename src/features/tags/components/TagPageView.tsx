@@ -44,7 +44,7 @@ export function TagPageView({ name }: TagPageViewProps) {
     if (!tag) return
     const tagName = tag.name
     await remove(tag.id)
-    toast({ description: `Tag "${tagName}" deleted` })
+    toast({ description: `Tag "${tagName}" deleted`, variant: 'success' })
     router.push('/')
   }
 

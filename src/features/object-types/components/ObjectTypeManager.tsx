@@ -44,7 +44,7 @@ export function ObjectTypeManager() {
     const typeName = pendingDeleteType.name
     await remove(pendingDeleteType.id)
     setPendingDeleteType(null)
-    toast({ description: `Type "${typeName}" deleted` })
+    toast({ description: `Type "${typeName}" deleted`, variant: 'success' })
   }
 
   if (isLoading) {

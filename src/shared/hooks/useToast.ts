@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 
+export type ToastVariant = 'default' | 'success' | 'info' | 'warning' | 'destructive'
+
 export interface ToastData {
   id: string
   title?: string
   description?: string
-  variant?: 'default' | 'destructive'
+  variant?: ToastVariant
 }
 
 interface ToastState {

@@ -53,7 +53,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
     if (!pendingRemoveId) return
     await deleteShare(pendingRemoveId)
     setPendingRemoveId(null)
-    toast({ description: 'Access removed' })
+    toast({ description: 'Access removed', variant: 'success' })
   }
 
   return (
