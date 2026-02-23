@@ -305,7 +305,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
             onChange={(e) => handleTitleChange(e.target.value)}
             placeholder="Untitled"
             readOnly={!canEdit}
-            className="mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground"
+            className={`mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground${!canEdit ? ' cursor-default' : ''}`}
           />
 
           {objectType && objectType.fields.length > 0 && (
