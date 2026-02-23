@@ -125,6 +125,13 @@ Dual-storage architecture with a `DataClient` interface:
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Custom confirm dialogs | Replace `window.confirm()` with Radix AlertDialog |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
+| Show password toggle | Add visibility toggle to password inputs (login, signup, account settings) |
+| Password security | Rate-limit login attempts; evaluate password strength requirements |
+| Template section in type settings | Add template management section to the type settings page |
+| Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
+| Sidebar expand/collapse all | Add expand-all / collapse-all controls for entries in sidebar |
+| Move docs to .readme/ | Move documentation from `.claude/docs/` to `.readme/` for GitHub visibility |
+| Regression testing | Infrastructure exists (Vitest + Playwright + CI at `.github/workflows/ci.yml`) but existing tests need fixing and coverage needs expansion |
 
 ## Bugs
 
