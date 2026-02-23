@@ -1,5 +1,8 @@
 import { render, type RenderOptions } from '@testing-library/react'
-import { type ReactElement, type ReactNode } from 'react'
+import { useState, type ReactElement, type ReactNode } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { DataProvider } from '@/shared/lib/data'
+import { setQueryClient } from '@/shared/lib/data/events'
 
 type WrapperProps = {
   children: ReactNode
@@ -15,6 +18,25 @@ function customRender(
   options?: Omit<RenderOptions, 'wrapper'>
 ) {
   return render(ui, { wrapper: AllProviders, ...options })
+}
+
+export function createHookWrapper() {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    const [queryClient] = useState(() => {
+      const client = new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+        },
+      })
+      setQueryClient(client)
+      return client
+    })
+    return (
+      <QueryClientProvider client={queryClient}>
+        <DataProvider user={null} isAuthLoading={false}>{children}</DataProvider>
+      </QueryClientProvider>
+    )
+  }
 }
 
 export * from '@testing-library/react'
