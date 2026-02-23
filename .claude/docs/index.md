@@ -120,6 +120,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
+| [Unique default names](features/unique-default-names.md) | New entries get incrementing names (e.g., "Untitled Page 2") instead of duplicates |
 | Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
 | Advanced documentation | In-depth user docs and help content |
