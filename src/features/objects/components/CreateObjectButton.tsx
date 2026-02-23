@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { PlusIcon } from 'lucide-react'
 import { Button } from '@/shared/components/ui/Button'
 import { useObjects } from '../hooks/useObjects'
+import { useNextTitle } from '../hooks/useNextTitle'
 import { useObjectTypes } from '@/features/object-types'
 
 interface CreateObjectButtonProps {
@@ -14,13 +15,14 @@ interface CreateObjectButtonProps {
 export function CreateObjectButton({ parentId, onCreated }: CreateObjectButtonProps) {
   const { create } = useObjects({ enabled: false })
   const { types } = useObjectTypes()
+  const getNextTitle = useNextTitle()
   const [isCreating, setIsCreating] = useState(false)
 
   const handleCreate = async (typeId: string, typeName: string) => {
     setIsCreating(true)
 
     const result = await create({
-      title: `Untitled ${typeName}`,
+      title: getNextTitle(typeId, typeName),
       type_id: typeId,
       parent_id: parentId ?? null,
     })

@@ -11,7 +11,7 @@ import { useSidebar, useSidebarHydration } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
-import { useObjects } from "@/features/objects/hooks"
+import { useObjects, useNextTitle } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
 import { useSpacePermission, useExclusionFilter } from "@/features/sharing"
@@ -143,6 +143,7 @@ export function Sidebar() {
   const { pinnedIds, isLoading: pinsLoading } = usePins()
   const { tags, isLoading: tagsLoading } = useTags()
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
+  const getNextTitle = useNextTitle()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
   const [variableDialogOpen, setVariableDialogOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
@@ -239,7 +240,7 @@ export function Sidebar() {
   const handleCreateBlank = async (typeId: string) => {
     const typeDef = types.find(t => t.id === typeId)
     const result = await create({
-      title: typeDef ? `Untitled ${typeDef.name}` : 'Untitled',
+      title: typeDef ? getNextTitle(typeId, typeDef.name) : 'Untitled',
       type_id: typeId,
     })
     if (result) {

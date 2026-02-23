@@ -1,39 +1,23 @@
 # Unique Default Names
 
-**Status: Not started**
+**Status:** Done
 
 ## Overview
+When creating new objects, each gets an incrementing default title instead of duplicating "New {type}".
 
-New entries should receive unique default titles with an incrementing number (e.g., "Untitled Page", "Untitled Page 2", "Untitled Page 3") instead of creating duplicates with identical names.
-
-## Decisions
-
-| Decision | Choice | Why |
-|----------|--------|-----|
-| Numbering style | "Untitled Page", "Untitled Page 2", "Untitled Page 3" | First entry has no number for cleanliness; subsequent entries increment from 2 |
-| Scope of uniqueness | Per type within the current space | Avoids cross-type/cross-space collisions; matches how users think about entries |
-| Where to resolve | At call sites (UI components) | Keeps data layer simple; name generation is a UI concern |
-| Deleted entries | Excluded from count | Avoids confusing gaps in numbering |
+## Behavior
+- First object of a type: `New Page`
+- Second: `New Page 2`
+- Third: `New Page 3`
+- No gap-filling: if "New Page" and "New Page 5" exist, the next is "New Page 6"
+- Each type is independent: "New Page 2" doesn't affect "New Note" numbering
+- Only non-deleted objects in the current space are considered
+- When a user types a custom title (e.g., in the mention input), that title is used instead
 
 ## Implementation
+- `src/shared/lib/naming.ts` — pure `getNextDefaultName(typeName, existingTitles)` utility
+- `src/features/objects/hooks/useNextTitle.ts` — hook that reads current objects and returns a title generator
+- Used in: CreateObjectButton, QuickCaptureDialog, Sidebar, SlashInput, MentionInput
 
-Four call sites currently hardcode `Untitled ${typeName}`:
-
-| File | Context |
-|------|---------|
-| `src/features/objects/components/CreateObjectButton.tsx` | "Create" button |
-| `src/features/quick-capture/components/QuickCaptureDialog.tsx` | Quick capture dialog |
-| `src/features/sidebar/components/Sidebar.tsx` | Sidebar new-entry action |
-| `src/features/editor/components/elements/SlashInput.tsx` | Slash menu inline creation |
-
-Approach: extract a shared helper (e.g., `getNextUntitledName(typeName, existingTitles)`) that all four sites call, using the current object list to determine the next available number.
-
-## Verification
-
-- [ ] First entry of a type is titled "Untitled {Type}" (no number)
-- [ ] Second entry of the same type is titled "Untitled {Type} 2"
-- [ ] Numbering increments correctly with many entries
-- [ ] Deleting an earlier entry does not affect new entry numbering (no gap-filling)
-- [ ] Different types maintain independent counters
-- [ ] Different spaces maintain independent counters
-- [ ] Works in both local (Dexie) and Supabase storage modes
+## Tests
+- `tests/unit/naming.test.ts` — 8 tests covering the pure utility function

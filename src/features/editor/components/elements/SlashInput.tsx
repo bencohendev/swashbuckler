@@ -19,7 +19,7 @@ import {
   BracesIcon,
 } from 'lucide-react'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
-import { useObjects } from '@/features/objects'
+import { useObjects, useNextTitle } from '@/features/objects'
 import { useObjectModal } from '@/shared/stores/objectModal'
 import { EditorModeContext } from '../Editor'
 import { BUILT_IN_VARIABLES } from '@/features/templates/lib/variables'
@@ -139,6 +139,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   const { types } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
   const isMobile = useIsMobile()
+  const getNextTitle = useNextTitle()
   const inputRef = useRef<HTMLSpanElement>(null)
   const filterInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -364,7 +365,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
         match: (n) => 'type' in n && n.type === 'slash_input',
       })
 
-      const obj = await create({ title: `Untitled ${typeName}`, type_id: typeId })
+      const obj = await create({ title: getNextTitle(typeId, typeName), type_id: typeId })
       if (obj) {
         editor.tf.insertNodes({
           type: 'mention',
@@ -377,7 +378,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
         useObjectModal.getState().open(obj.id)
       }
     },
-    [editor, create, focusEditor]
+    [editor, create, getNextTitle, focusEditor]
   )
 
   // Reset selection when query changes
