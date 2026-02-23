@@ -23,6 +23,12 @@ After adding, modifying, or fixing features, run these checks:
 - Test fixtures live in `tests/fixtures/` — keep them in sync with current schemas
 - Zod 4 requires RFC4122-compliant UUIDs in tests (no synthetic `00000000-...` IDs)
 
+## Branching & Worktrees
+
+- All work must be done in a git worktree — never commit directly on `dev`, `main`, or other environment branches
+- At the start of every task, create a worktree with a descriptive branch name before making any code changes
+- Merge the worktree branch back into the target branch only when work is complete and verified
+
 ## Task Management
 
 - Update tasks as they are completed
