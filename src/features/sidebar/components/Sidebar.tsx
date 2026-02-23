@@ -55,7 +55,7 @@ function DraggableTypeSection({
   hideCreateButton?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
-  onDelete: (typeId: string) => Promise<void>
+  onDelete: (typeId: string) => Promise<unknown>
   onMove: (from: number, to: number) => void
   onDrop: () => void
 }) {

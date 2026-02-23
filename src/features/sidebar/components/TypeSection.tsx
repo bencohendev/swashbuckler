@@ -29,7 +29,7 @@ interface TypeSectionProps {
   hideCreateButton?: boolean
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
-  onDelete?: (typeId: string) => Promise<void>
+  onDelete?: (typeId: string) => Promise<unknown>
 }
 
 function getStorageKey(typeId: string) {
@@ -99,7 +99,7 @@ export function TypeSection({
 
   const handleDelete = () => {
     const confirmed = window.confirm(
-      `Delete "${type.name}" type? Entries of this type will not be deleted, but they will lose their type association.`
+      `Delete "${type.name}" type? All entries and templates of this type will also be deleted. This cannot be undone.`
     )
     if (confirmed) {
       onDelete?.(type.id)
