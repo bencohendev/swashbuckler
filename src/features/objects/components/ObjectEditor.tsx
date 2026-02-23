@@ -122,7 +122,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
 
   const handleDelete = async () => {
     await remove()
-    toast({ description: 'Moved to trash' })
+    toast({ description: 'Moved to trash', variant: 'info' })
     if (onDelete) {
       onDelete()
     } else {
@@ -139,7 +139,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     if (!object) return false
     const result = await saveObjectAsTemplate(object, name)
     if (result) {
-      toast({ description: `Template "${name}" saved` })
+      toast({ description: `Template "${name}" saved`, variant: 'success' })
     }
     return result !== null
   }, [object, saveObjectAsTemplate])

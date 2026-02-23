@@ -149,7 +149,7 @@ export function SpaceSwitcher() {
           destructive
           onConfirm={async () => {
             await leaveSpace(space.id)
-            toast({ description: `Left "${space.name}"` })
+            toast({ description: `Left "${space.name}"`, variant: 'success' })
             router.push('/')
           }}
         />

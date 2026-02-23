@@ -17,7 +17,7 @@ export function TrashList() {
     setProcessingId(obj.id)
     await restore(obj.id)
     setProcessingId(null)
-    toast({ description: `"${obj.title}" restored` })
+    toast({ description: `"${obj.title}" restored`, variant: 'success' })
   }
 
   const handlePermanentDelete = async () => {
@@ -27,7 +27,7 @@ export function TrashList() {
     await remove(pendingDelete.id, true)
     setProcessingId(null)
     setPendingDelete(null)
-    toast({ description: `"${title}" permanently deleted` })
+    toast({ description: `"${title}" permanently deleted`, variant: 'success' })
   }
 
   if (isLoading) {
