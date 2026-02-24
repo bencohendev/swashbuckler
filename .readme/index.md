@@ -140,6 +140,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
+| Auto-focus title on new entry | Focus title field automatically when creating a new entry |
 
 ## Bugs
 
