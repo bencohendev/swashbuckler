@@ -13,7 +13,7 @@ import {
 } from "@/shared/components/ui/DropdownMenu"
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog"
 import { toast } from "@/shared/hooks/useToast"
-import { CreateSpaceDialog } from "./CreateSpaceDialog"
+import { CreateSpaceDialog, type CreateSpaceInput } from "./CreateSpaceDialog"
 import { ShareSpaceDialog } from "@/features/sharing"
 
 export function SpaceSwitcher() {
@@ -31,7 +31,7 @@ export function SpaceSwitcher() {
     router.push('/')
   }
 
-  const handleCreate = async (input: { name: string; icon?: string }) => {
+  const handleCreate = async (input: CreateSpaceInput) => {
     const newSpace = await create(input)
     if (newSpace) {
       handleSwitchSpace(newSpace.id)
@@ -130,6 +130,7 @@ export function SpaceSwitcher() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onCreate={handleCreate}
+        spaces={ownedSpaces}
       />
       {space && (
         <ShareSpaceDialog
