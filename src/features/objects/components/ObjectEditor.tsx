@@ -34,13 +34,15 @@ import { CoverImage } from './CoverImage'
 
 interface ObjectEditorProps {
   id: string
+  autoFocus?: boolean
   onDelete?: () => void
   onNavigateAway?: () => void
 }
 
-export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps) {
+export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
   const mainRef = useRef<HTMLElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
   const dataClient = useDataClient()
   const storageMode = useStorageMode()
   const { user } = useAuth()
@@ -85,6 +87,15 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
       setTitle(object.title)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync on id change
+  }, [object?.id])
+
+  // Auto-focus and select title text for newly created entries
+  useEffect(() => {
+    if (autoFocus && object && titleRef.current) {
+      titleRef.current.focus()
+      titleRef.current.select()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on initial load
   }, [object?.id])
 
   const handleTitleChange = useCallback(async (newTitle: string) => {
@@ -302,6 +313,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
             readOnly={!canEdit}
           />
           <input
+            ref={titleRef}
             type="text"
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
