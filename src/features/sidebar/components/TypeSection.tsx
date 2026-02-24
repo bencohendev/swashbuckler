@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { ContextMenu } from 'radix-ui'
@@ -37,6 +38,8 @@ interface TypeSectionProps {
   onSelectTemplate: (template: Template) => Promise<void>
   onDelete?: (typeId: string) => Promise<unknown>
 }
+
+const SIDEBAR_TYPE_LIMIT = 10
 
 function getStorageKey(typeId: string) {
   return `sidebar-collapsed-${typeId}`
@@ -98,6 +101,8 @@ export function TypeSection({
   const router = useRouter()
   const [collapsed, setCollapsed] = useCollapsible(getStorageKey(type.id), collapseSignal)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const visibleObjects = useMemo(() => objects.slice(0, SIDEBAR_TYPE_LIMIT), [objects])
+  const hasMore = objects.length > SIDEBAR_TYPE_LIMIT
 
   return (
     <div className={cn(isDragging && 'opacity-40')}>
@@ -204,12 +209,21 @@ export function TypeSection({
       {!collapsed && (
         <div id={`type-section-${type.id}`} className="pl-8">
           <ObjectList
-            objects={objects}
+            objects={visibleObjects}
             objectType={type}
             isLoading={isLoading}
             emptyMessage={`No ${type.plural_name.toLowerCase()} yet`}
             compact
           />
+          {hasMore && (
+            <Link
+              href={`/types/${type.slug}`}
+              className="block px-2 py-1 text-xs text-muted-foreground/70 hover:text-muted-foreground"
+              aria-label={`See all ${objects.length} ${type.plural_name.toLowerCase()}`}
+            >
+              See all {objects.length}
+            </Link>
+          )}
         </div>
       )}
       <ConfirmDialog
