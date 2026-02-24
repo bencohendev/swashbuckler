@@ -1,21 +1,40 @@
 'use client'
 
 import { useRef, useId } from 'react'
-import { SearchIcon, ListFilterIcon, XIcon } from 'lucide-react'
+import {
+  SearchIcon,
+  ListFilterIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  XIcon,
+} from 'lucide-react'
 import { Popover } from 'radix-ui'
-import type { ObjectType, Tag } from '@/shared/lib/data'
+import type { ObjectType, FieldDefinition, Tag } from '@/shared/lib/data'
 import { TagBadge } from '@/features/tags'
 import { Input } from '@/shared/components/ui/Input'
 import { cn } from '@/shared/lib/utils'
 import { type TypePageFilters, EMPTY_FILTERS, isFiltered } from '../lib/filterObjects'
+import type { SortConfig } from '../lib/sortObjects'
 
 interface TypePageFilterBarProps {
   type: ObjectType
   tags: Tag[]
   filters: TypePageFilters
   onFiltersChange: (filters: TypePageFilters) => void
+  sort: SortConfig
+  onSortChange: (sort: SortConfig) => void
   totalCount: number
   filteredCount: number
+}
+
+function getSortLabel(field: string, fields: FieldDefinition[]): string {
+  if (field === 'title') return 'Title'
+  if (field === 'tags') return 'Tags'
+  if (field === 'updated_at') return 'Updated'
+  if (field === 'created_at') return 'Created'
+  const f = fields.find((fd) => fd.id === field)
+  return f?.name ?? field
 }
 
 export function TypePageFilterBar({
@@ -23,21 +42,33 @@ export function TypePageFilterBar({
   tags,
   filters,
   onFiltersChange,
+  sort,
+  onSortChange,
   totalCount,
   filteredCount,
 }: TypePageFilterBarProps) {
   const searchRef = useRef<HTMLInputElement>(null)
   const liveId = useId()
   const active = isFiltered(filters)
-  const hasFilterableFields = type.fields.some(
-    (f) => f.type === 'select' || f.type === 'multi_select' || f.type === 'checkbox'
-  )
-  const showPopover = hasFilterableFields || tags.length > 0
 
-  const selectFields = type.fields.filter(
+  const fields = [...type.fields].sort((a, b) => a.sort_order - b.sort_order)
+  const selectFields = fields.filter(
     (f) => f.type === 'select' || f.type === 'multi_select'
   )
-  const checkboxFields = type.fields.filter((f) => f.type === 'checkbox')
+  const checkboxFields = fields.filter((f) => f.type === 'checkbox')
+  const dateFields = fields.filter((f) => f.type === 'date')
+  const numberFields = fields.filter((f) => f.type === 'number')
+  const textFields = fields.filter((f) => f.type === 'text')
+  const urlFields = fields.filter((f) => f.type === 'url')
+
+  const hasFilterableFields =
+    selectFields.length > 0 ||
+    checkboxFields.length > 0 ||
+    dateFields.length > 0 ||
+    numberFields.length > 0 ||
+    textFields.length > 0 ||
+    urlFields.length > 0 ||
+    tags.length > 0
 
   function updateSearch(search: string) {
     onFiltersChange({ ...filters, search })
@@ -72,6 +103,27 @@ export function TypePageFilterBar({
       next.add(tagId)
     }
     onFiltersChange({ ...filters, tagFilter: next })
+  }
+
+  function setDateFilter(fieldId: string, range: { from?: string; to?: string }) {
+    onFiltersChange({
+      ...filters,
+      dateFilters: { ...filters.dateFilters, [fieldId]: range },
+    })
+  }
+
+  function setNumberFilter(fieldId: string, range: { min?: number; max?: number }) {
+    onFiltersChange({
+      ...filters,
+      numberFilters: { ...filters.numberFilters, [fieldId]: range },
+    })
+  }
+
+  function setTextFilter(fieldId: string, value: string) {
+    onFiltersChange({
+      ...filters,
+      textFilters: { ...filters.textFilters, [fieldId]: value },
+    })
   }
 
   function clearAll() {
@@ -114,6 +166,71 @@ export function TypePageFilterBar({
     })
   }
 
+  for (const field of dateFields) {
+    const range = filters.dateFilters[field.id]
+    if (!range || (!range.from && !range.to)) continue
+    let label: string
+    if (range.from && range.to) {
+      label = `${field.name}: ${range.from} \u2013 ${range.to}`
+    } else if (range.from) {
+      label = `${field.name}: after ${range.from}`
+    } else {
+      label = `${field.name}: before ${range.to}`
+    }
+    pills.push({
+      key: `date:${field.id}`,
+      label,
+      onRemove: () => {
+        const next = { ...filters.dateFilters }
+        delete next[field.id]
+        onFiltersChange({ ...filters, dateFilters: next })
+      },
+    })
+  }
+
+  for (const field of numberFields) {
+    const range = filters.numberFilters[field.id]
+    if (!range || (range.min === undefined && range.max === undefined)) continue
+    let label: string
+    if (range.min !== undefined && range.max !== undefined) {
+      label = `${field.name}: ${range.min} \u2013 ${range.max}`
+    } else if (range.min !== undefined) {
+      label = `${field.name}: \u2265 ${range.min}`
+    } else {
+      label = `${field.name}: \u2264 ${range.max}`
+    }
+    pills.push({
+      key: `number:${field.id}`,
+      label,
+      onRemove: () => {
+        const next = { ...filters.numberFilters }
+        delete next[field.id]
+        onFiltersChange({ ...filters, numberFilters: next })
+      },
+    })
+  }
+
+  for (const field of [...textFields, ...urlFields]) {
+    const val = filters.textFilters[field.id]
+    if (!val) continue
+    pills.push({
+      key: `text:${field.id}`,
+      label: `${field.name}: contains \u201c${val}\u201d`,
+      onRemove: () => {
+        const next = { ...filters.textFilters }
+        delete next[field.id]
+        onFiltersChange({ ...filters, textFilters: next })
+      },
+    })
+  }
+
+  const sortFieldOptions = [
+    { value: 'title', label: 'Title' },
+    ...fields.map((f) => ({ value: f.id, label: f.name })),
+    { value: 'tags', label: 'Tags' },
+    { value: 'updated_at', label: 'Updated' },
+  ]
+
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -123,7 +240,7 @@ export function TypePageFilterBar({
             ref={searchRef}
             role="searchbox"
             aria-label={`Search ${type.plural_name}`}
-            placeholder={`Search ${type.plural_name.toLowerCase()}…`}
+            placeholder={`Search ${type.plural_name.toLowerCase()}\u2026`}
             value={filters.search}
             onChange={(e) => updateSearch(e.target.value)}
             onKeyDown={(e) => {
@@ -136,7 +253,89 @@ export function TypePageFilterBar({
           />
         </div>
 
-        {showPopover && (
+        {/* Sort popover */}
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors hover:bg-accent"
+            >
+              <ArrowUpDownIcon className="size-4" />
+              <span className="hidden sm:inline">
+                {getSortLabel(sort.field, fields)}
+              </span>
+            </button>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
+              side="bottom"
+              align="end"
+              sideOffset={4}
+              className="z-50 w-56 rounded-lg border bg-popover p-3 shadow-md"
+            >
+              <div className="space-y-3">
+                <div role="radiogroup" aria-label="Sort field" className="space-y-0.5">
+                  <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Sort by</p>
+                  {sortFieldOptions.map((opt) => (
+                    <label key={opt.value} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-accent">
+                      <input
+                        type="radio"
+                        name="sort-field"
+                        value={opt.value}
+                        checked={sort.field === opt.value}
+                        onChange={() =>
+                          onSortChange({ ...sort, field: opt.value })
+                        }
+                        className="accent-primary"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Direction</p>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      aria-pressed={sort.direction === 'asc'}
+                      onClick={() =>
+                        onSortChange({ ...sort, direction: 'asc' })
+                      }
+                      className={cn(
+                        'flex items-center gap-1 rounded-md px-3 py-1 text-sm transition-colors',
+                        sort.direction === 'asc'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      <ArrowUpIcon className="size-3" />
+                      Asc
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={sort.direction === 'desc'}
+                      onClick={() =>
+                        onSortChange({ ...sort, direction: 'desc' })
+                      }
+                      className={cn(
+                        'flex items-center gap-1 rounded-md px-3 py-1 text-sm transition-colors',
+                        sort.direction === 'desc'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      <ArrowDownIcon className="size-3" />
+                      Desc
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+
+        {/* Filter popover */}
+        {hasFilterableFields && (
           <Popover.Root>
             <Popover.Trigger asChild>
               <button
@@ -164,6 +363,7 @@ export function TypePageFilterBar({
                 className="z-50 w-72 rounded-lg border bg-popover p-3 shadow-md"
               >
                 <div className="max-h-80 space-y-4 overflow-y-auto">
+                  {/* Select / multi_select fields */}
                   {selectFields.map((field) => {
                     const headingId = `filter-${field.id}`
                     const selected = filters.selectFilters[field.id] ?? new Set<string>()
@@ -189,6 +389,7 @@ export function TypePageFilterBar({
                     )
                   })}
 
+                  {/* Checkbox fields */}
                   {checkboxFields.map((field) => {
                     const headingId = `filter-cb-${field.id}`
                     const val = filters.checkboxFilters[field.id]
@@ -222,6 +423,115 @@ export function TypePageFilterBar({
                     )
                   })}
 
+                  {/* Date fields */}
+                  {dateFields.map((field) => {
+                    const range = filters.dateFilters[field.id] ?? {}
+                    return (
+                      <fieldset key={field.id} className="space-y-1.5">
+                        <legend className="text-xs font-medium uppercase text-muted-foreground">{field.name}</legend>
+                        <div className="flex items-center gap-2">
+                          <label className="flex flex-col gap-0.5">
+                            <span className="text-[11px] text-muted-foreground">From</span>
+                            <input
+                              type="date"
+                              value={range.from ?? ''}
+                              onChange={(e) =>
+                                setDateFilter(field.id, { ...range, from: e.target.value || undefined })
+                              }
+                              aria-label={`${field.name} from date`}
+                              className="h-8 rounded-md border border-input bg-background px-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                            />
+                          </label>
+                          <label className="flex flex-col gap-0.5">
+                            <span className="text-[11px] text-muted-foreground">To</span>
+                            <input
+                              type="date"
+                              value={range.to ?? ''}
+                              onChange={(e) =>
+                                setDateFilter(field.id, { ...range, to: e.target.value || undefined })
+                              }
+                              aria-label={`${field.name} to date`}
+                              className="h-8 rounded-md border border-input bg-background px-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                            />
+                          </label>
+                        </div>
+                      </fieldset>
+                    )
+                  })}
+
+                  {/* Number fields */}
+                  {numberFields.map((field) => {
+                    const range = filters.numberFilters[field.id] ?? {}
+                    return (
+                      <fieldset key={field.id} className="space-y-1.5">
+                        <legend className="text-xs font-medium uppercase text-muted-foreground">{field.name}</legend>
+                        <div className="flex items-center gap-2">
+                          <label className="flex flex-col gap-0.5">
+                            <span className="text-[11px] text-muted-foreground">Min</span>
+                            <input
+                              type="number"
+                              value={range.min ?? ''}
+                              onChange={(e) =>
+                                setNumberFilter(field.id, {
+                                  ...range,
+                                  min: e.target.value === '' ? undefined : Number(e.target.value),
+                                })
+                              }
+                              aria-label={`${field.name} minimum`}
+                              className="h-8 w-24 rounded-md border border-input bg-background px-2 text-sm tabular-nums outline-none focus:ring-1 focus:ring-ring"
+                            />
+                          </label>
+                          <label className="flex flex-col gap-0.5">
+                            <span className="text-[11px] text-muted-foreground">Max</span>
+                            <input
+                              type="number"
+                              value={range.max ?? ''}
+                              onChange={(e) =>
+                                setNumberFilter(field.id, {
+                                  ...range,
+                                  max: e.target.value === '' ? undefined : Number(e.target.value),
+                                })
+                              }
+                              aria-label={`${field.name} maximum`}
+                              className="h-8 w-24 rounded-md border border-input bg-background px-2 text-sm tabular-nums outline-none focus:ring-1 focus:ring-ring"
+                            />
+                          </label>
+                        </div>
+                      </fieldset>
+                    )
+                  })}
+
+                  {/* Text fields */}
+                  {textFields.map((field) => (
+                    <div key={field.id}>
+                      <h4 className="mb-1.5 text-xs font-medium uppercase text-muted-foreground">{field.name}</h4>
+                      <Input
+                        type="text"
+                        value={filters.textFilters[field.id] ?? ''}
+                        onChange={(e) => setTextFilter(field.id, e.target.value)}
+                        placeholder={`Filter ${field.name.toLowerCase()}\u2026`}
+                        aria-label={`${field.name} filter`}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  ))}
+
+                  {/* URL fields */}
+                  {urlFields.map((field) => (
+                    <div key={field.id}>
+                      <h4 className="mb-1.5 text-xs font-medium uppercase text-muted-foreground">{field.name}</h4>
+                      <Input
+                        type="text"
+                        value={filters.textFilters[field.id] ?? ''}
+                        onChange={(e) => setTextFilter(field.id, e.target.value)}
+                        placeholder={`Filter ${field.name.toLowerCase()}\u2026`}
+                        aria-label={`${field.name} filter`}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  ))}
+
+                  {/* Tags */}
                   {tags.length > 0 && (
                     <div role="group" aria-labelledby="filter-tags">
                       <h4 id="filter-tags" className="mb-1.5 text-xs font-medium uppercase text-muted-foreground">
