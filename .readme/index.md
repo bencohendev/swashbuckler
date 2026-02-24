@@ -128,7 +128,6 @@ Dual-storage architecture with a `DataClient` interface:
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
-| Advanced documentation | In-depth user docs and help content |
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
