@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { TagIcon, TrashIcon } from 'lucide-react'
@@ -9,8 +9,9 @@ import { useTags } from '../hooks/useTags'
 import { TAG_COLORS, COLOR_NAMES } from './TagPicker'
 import { useDataClient } from '@/shared/lib/data'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
-import { ObjectItem } from '@/features/objects/components/ObjectItem'
 import { useObjectTypes } from '@/features/object-types'
+import { ViewToggle, TagDataTable, TypeListView, TypeCardView } from '@/features/table-view/components'
+import { useViewMode } from '@/features/table-view/stores/viewMode'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
@@ -28,7 +29,8 @@ export function TagPageView({ name }: TagPageViewProps) {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const tag = tags.find(t => t.name === name)
-  const typeMap = new Map(types.map(t => [t.id, t]))
+  const { mode } = useViewMode(`tag:${name}`)
+  const typeMap = useMemo(() => new Map(types.map(t => [t.id, t])), [types])
 
   const { data: objects = [], isLoading } = useQuery({
     queryKey: queryKeys.tags.objectsByTag(tag?.id ?? ''),
@@ -39,6 +41,15 @@ export function TagPageView({ name }: TagPageViewProps) {
     },
     enabled: !!tag,
   })
+
+  const sortedObjects = useMemo(() => {
+    if (mode === 'table') return objects
+    return [...objects].sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    )
+  }, [objects, mode])
+
+  const emptyMessage = 'No entries with this tag'
 
   const handleDelete = async () => {
     if (!tag) return
@@ -85,9 +96,12 @@ export function TagPageView({ name }: TagPageViewProps) {
               {objects.length} object{objects.length !== 1 ? 's' : ''}
             </span>
           </div>
-          <Button size="icon-sm" variant="ghost" onClick={() => setConfirmDeleteOpen(true)} title="Delete tag" aria-label="Delete tag">
-            <TrashIcon className="size-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <ViewToggle slug={`tag:${name}`} />
+            <Button size="icon-sm" variant="ghost" onClick={() => setConfirmDeleteOpen(true)} title="Delete tag" aria-label="Delete tag">
+              <TrashIcon className="size-4" />
+            </Button>
+          </div>
         </div>
         {showColors && tag && (
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -122,15 +136,17 @@ export function TagPageView({ name }: TagPageViewProps) {
             <p className="mt-1 text-xs text-muted-foreground/70">Use the tag picker on any entry to add this tag</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {objects.map(obj => (
-              <ObjectItem
-                key={obj.id}
-                object={obj}
-                objectType={typeMap.get(obj.type_id)}
-              />
-            ))}
-          </div>
+          <>
+            {mode === 'table' && (
+              <TagDataTable objects={sortedObjects} typeMap={typeMap} emptyMessage={emptyMessage} />
+            )}
+            {mode === 'list' && (
+              <TypeListView objects={sortedObjects} emptyMessage={emptyMessage} />
+            )}
+            {mode === 'card' && (
+              <TypeCardView objects={sortedObjects} emptyMessage={emptyMessage} />
+            )}
+          </>
         )}
       </main>
       {tag && (
