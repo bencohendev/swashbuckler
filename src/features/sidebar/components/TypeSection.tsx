@@ -160,6 +160,10 @@ export function TypeSection({
                       <SettingsIcon />
                       Type settings
                     </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => router.push('/settings/templates')}>
+                      <CopyIcon />
+                      Manage templates
+                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>

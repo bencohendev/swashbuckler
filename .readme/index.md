@@ -119,6 +119,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
 | [Password Security](features/password-security.md) | Strength meter, 8-char minimum, login rate limiting |
 | [Template Section in Type Settings](features/template-section-in-type-settings.md) | Inline template rename/delete in type edit form |
+| Manage Templates Shortcut | "Manage Templates" option in sidebar type dropdown |
 
 ## Planned Features
 
@@ -132,7 +133,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
-| Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
 | [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
 
