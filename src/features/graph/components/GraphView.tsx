@@ -13,6 +13,7 @@ export function GraphView() {
   const router = useRouter()
   const { graphData, types, isLoading } = useGraphData()
   const reset = useGraphStore(s => s.reset)
+  const selectedNodeId = useGraphStore(s => s.selectedNodeId)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
@@ -48,8 +49,18 @@ export function GraphView() {
 
   const showGraph = !isLoading && graphData.nodes.length > 0
 
+  const selectedNode = selectedNodeId
+    ? graphData.nodes.find(n => n.id === selectedNodeId)
+    : null
+  const announcement = selectedNode
+    ? `${selectedNode.title}, ${selectedNode.typeName}, ${selectedNode.connectionCount} connection${selectedNode.connectionCount !== 1 ? 's' : ''}`
+    : ''
+
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
       {isLoading && (
         <div role="status" className="flex items-center justify-center h-full text-muted-foreground">
           Loading graph...
@@ -70,6 +81,7 @@ export function GraphView() {
             edges={graphData.edges}
             width={dimensions.width}
             height={dimensions.height}
+            onNavigate={handleNavigate}
           />
           <GraphLayoutToggle />
           <GraphFilterPanel types={types} nodes={graphData.nodes} />

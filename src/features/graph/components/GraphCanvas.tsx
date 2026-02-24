@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useMemo, useCallback } from 'react'
 import { useGraphLayout } from '../lib/layouts/useGraphLayout'
+import { findNearestInDirection, findCenterNode } from '../lib/spatialNav'
+import type { Direction } from '../lib/spatialNav'
 import { useGraphStore } from '../lib/store'
 import type { GraphNode as GraphNodeType, GraphEdge as GraphEdgeType } from '../lib/types'
 import { GraphNode } from './GraphNode'
@@ -12,6 +14,7 @@ interface GraphCanvasProps {
   edges: GraphEdgeType[]
   width: number
   height: number
+  onNavigate: (id: string) => void
 }
 
 type Mode =
@@ -20,7 +23,14 @@ type Mode =
   | { type: 'pan'; pointerId: number; startX: number; startY: number; startTx: number; startTy: number }
   | { type: 'pinch'; prevDist: number | null; prevMidX: number; prevMidY: number }
 
-export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
+const DIRECTION_MAP: Record<string, Direction> = {
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+}
+
+export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const gRef = useRef<SVGGElement>(null)
   const modeRef = useRef<Mode>({ type: 'idle' })
@@ -319,14 +329,54 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
     }
   }, [releaseNode])
 
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<SVGSVGElement>) => {
+    const direction = DIRECTION_MAP[e.key]
+
+    if (direction) {
+      e.preventDefault()
+      if (!selectedNodeId) {
+        // No selection: pick node nearest viewport center
+        const t = transformRef.current
+        const centerX = (width / 2 - t.x) / t.k
+        const centerY = (height / 2 - t.y) / t.k
+        const center = findCenterNode(simulatedNodes, centerX, centerY)
+        if (center) setSelectedNodeId(center.id)
+        return
+      }
+      const next = findNearestInDirection(simulatedNodes, selectedNodeId, direction)
+      if (next) setSelectedNodeId(next.id)
+      return
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (selectedNodeId) onNavigate(selectedNodeId)
+      return
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      if (selectedNodeId) {
+        setSelectedNodeId(null)
+      } else {
+        svgRef.current?.blur()
+      }
+    }
+  }, [selectedNodeId, setSelectedNodeId, simulatedNodes, width, height, onNavigate])
+
   return (
     <svg
       ref={svgRef}
       width={width}
       height={height}
-      role="img"
-      aria-label="Relationship graph visualization"
-      style={{ display: 'block', touchAction: 'none' }}
+      role="application"
+      aria-roledescription="graph"
+      aria-label="Relationship graph. Use arrow keys to navigate between nodes."
+      tabIndex={0}
+      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      style={{ display: 'block', touchAction: 'none', outline: 'none' }}
+      onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

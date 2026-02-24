@@ -138,7 +138,6 @@ Dual-storage architecture with a `DataClient` interface:
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | First use tutorial | Onboarding walkthrough for new users |
-| Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | Auto-focus title on new entry | Focus title field automatically when creating a new entry |
 | Advanced Filtering | Filter entries on type pages by properties, tags, and content |
