@@ -76,9 +76,9 @@ describe('useTemplates', () => {
     const { result } = renderHook(() => useTemplates(), { wrapper: Wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    let template: Awaited<ReturnType<typeof result.current.saveObjectAsTemplate>> = null
+    let templateResult: Awaited<ReturnType<typeof result.current.saveObjectAsTemplate>> | null = null
     await act(async () => {
-      template = await result.current.saveObjectAsTemplate(obj!, 'ToDelete')
+      templateResult = await result.current.saveObjectAsTemplate(obj!, 'ToDelete')
     })
 
     await waitFor(() => {
@@ -86,7 +86,7 @@ describe('useTemplates', () => {
     })
 
     await act(async () => {
-      await result.current.deleteTemplate(template!.id)
+      await result.current.deleteTemplate(templateResult!.data!.id)
     })
 
     await waitFor(() => {
@@ -104,7 +104,7 @@ describe('useTemplates', () => {
       const noteType = await typeResult.current.create({
         name: 'Note', plural_name: 'Notes', slug: 'note', icon: 'sticky-note',
       })
-      noteTypeId = noteType!.id
+      noteTypeId = noteType.data!.id
     })
 
     const { result: objResult } = renderHook(() => useObjects(), { wrapper: Wrapper })

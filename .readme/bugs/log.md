@@ -10,6 +10,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 ## Closed
 
 | Date | Bug | Fix |
+| 2026-02-24 | Duplicate names allowed for spaces, types, templates, tags | Add case-insensitive unique constraints (Supabase migration 021), pre-mutation Dexie checks, surface DUPLICATE errors in UI |
 |------|-----|-----|
 | 2026-02-24 | Graph node tap not working on mobile | Add 5px drag threshold so touch jitter doesn't prevent node selection |
 | 2026-02-24 | Guest mode: no "New Type" button and no default type | Treat `owner_id === 'local'` as owner in permission resolver; seed Page type on first local space creation |

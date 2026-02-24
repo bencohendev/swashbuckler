@@ -41,7 +41,7 @@ interface UseTemplatesReturn {
     parentId?: string | null,
   ) => Promise<DataObject | null>
   getTemplateVariables: (templateId: string) => Promise<TemplateVariableInfo | null>
-  saveObjectAsTemplate: (object: DataObject, name?: string) => Promise<Template | null>
+  saveObjectAsTemplate: (object: DataObject, name?: string) => Promise<{ data: Template | null; error?: string }>
   deleteTemplate: (id: string) => Promise<void>
   renameTemplate: (id: string, name: string) => Promise<void>
 }
@@ -69,7 +69,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
   const saveObjectAsTemplate = useCallback(async (
     object: DataObject,
     name?: string
-  ): Promise<Template | null> => {
+  ): Promise<{ data: Template | null; error?: string }> => {
     const input: CreateTemplateInput = {
       name: name || `${object.title} (Template)`,
       type_id: object.type_id,
@@ -80,9 +80,9 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     }
 
     const result = await dataClient.templates.create(input)
-    if (result.error) return null
+    if (result.error) return { data: null, error: result.error.message }
     emit('templates')
-    return result.data
+    return { data: result.data }
   }, [dataClient])
 
   const createFromTemplate = useCallback(async (

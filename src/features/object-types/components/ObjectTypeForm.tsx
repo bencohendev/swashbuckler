@@ -12,6 +12,7 @@ interface ObjectTypeFormProps {
   isGlobal?: boolean
   onSave: (input: CreateObjectTypeInput | UpdateObjectTypeInput) => Promise<void>
   onCancel: () => void
+  error?: string | null
 }
 
 function slugify(name: string): string {
@@ -21,7 +22,7 @@ function slugify(name: string): string {
     .replace(/^-|-$/g, '')
 }
 
-export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormProps) {
+export function ObjectTypeForm({ objectType, onSave, onCancel, error }: ObjectTypeFormProps) {
   const [name, setName] = useState(objectType?.name ?? '')
   const [pluralName, setPluralName] = useState(objectType?.plural_name ?? '')
   const [slug, setSlug] = useState(objectType?.slug ?? '')
@@ -120,6 +121,12 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
           />
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <div>
         <label className="mb-2 block text-sm font-medium">Icon</label>

@@ -25,7 +25,7 @@ export interface CreateSpaceInput {
 interface CreateSpaceDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (input: CreateSpaceInput) => Promise<unknown>
+  onCreate: (input: CreateSpaceInput) => Promise<{ data: unknown; error?: string }>
   spaces?: Space[]
 }
 
@@ -35,28 +35,40 @@ export function CreateSpaceDialog({ open, onOpenChange, onCreate, spaces = [] }:
   const [copyFromSpaceId, setCopyFromSpaceId] = useState("")
   const [includeTemplates, setIncludeTemplates] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
 
     setIsCreating(true)
-    await onCreate({
+    setError(null)
+    const result = await onCreate({
       name: name.trim(),
       icon,
       copyTypesFromSpaceId: copyFromSpaceId || undefined,
       includeTemplates: copyFromSpaceId ? includeTemplates : undefined,
     })
     setIsCreating(false)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
     setName("")
     setIcon("📁")
     setCopyFromSpaceId("")
     setIncludeTemplates(false)
+    setError(null)
     onOpenChange(false)
   }
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) setError(null)
+    onOpenChange(nextOpen)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Space</DialogTitle>
@@ -71,9 +83,15 @@ export function CreateSpaceDialog({ open, onOpenChange, onCreate, spaces = [] }:
               id="space-name"
               placeholder="My Space"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value)
+                setError(null)
+              }}
               autoFocus
             />
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Icon</Label>

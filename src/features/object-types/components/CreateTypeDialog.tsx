@@ -14,7 +14,7 @@ import type { ObjectType, CreateObjectTypeInput, UpdateObjectTypeInput } from '@
 interface CreateTypeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (input: CreateObjectTypeInput) => Promise<ObjectType | null>
+  onCreate: (input: CreateObjectTypeInput) => Promise<{ data: ObjectType | null; error?: string }>
 }
 
 export function CreateTypeDialog({ open, onOpenChange, onCreate }: CreateTypeDialogProps) {
@@ -23,10 +23,10 @@ export function CreateTypeDialog({ open, onOpenChange, onCreate }: CreateTypeDia
   const handleSave = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
     setError(null)
     const result = await onCreate(input as CreateObjectTypeInput)
-    if (result) {
+    if (result.data) {
       onOpenChange(false)
     } else {
-      setError('Failed to create type. Please try again.')
+      setError(result.error ?? 'Failed to create type. Please try again.')
     }
   }
 

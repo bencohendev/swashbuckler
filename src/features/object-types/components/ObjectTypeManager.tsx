@@ -31,14 +31,27 @@ export function ObjectTypeManager() {
     }
   }, [editTypeId, types])
 
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
+
   const handleCreate = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
-    await create(input as CreateObjectTypeInput)
+    setCreateError(null)
+    const result = await create(input as CreateObjectTypeInput)
+    if (result.error) {
+      setCreateError(result.error)
+      return
+    }
     setIsCreating(false)
   }
 
   const handleUpdate = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
     if (!editingType) return
-    await update(editingType.id, input as UpdateObjectTypeInput)
+    setEditError(null)
+    const result = await update(editingType.id, input as UpdateObjectTypeInput)
+    if (result.error) {
+      setEditError(result.error)
+      return
+    }
     setEditingType(null)
   }
 
@@ -78,7 +91,8 @@ export function ObjectTypeManager() {
         <h2 className="mb-4 text-lg font-medium">Create New Type</h2>
         <ObjectTypeForm
           onSave={handleCreate}
-          onCancel={() => setIsCreating(false)}
+          onCancel={() => { setIsCreating(false); setCreateError(null) }}
+          error={createError}
         />
       </div>
     )
@@ -91,7 +105,8 @@ export function ObjectTypeManager() {
         <ObjectTypeForm
           objectType={editingType}
           onSave={handleUpdate}
-          onCancel={() => setEditingType(null)}
+          onCancel={() => { setEditingType(null); setEditError(null) }}
+          error={editError}
         />
       </div>
     )

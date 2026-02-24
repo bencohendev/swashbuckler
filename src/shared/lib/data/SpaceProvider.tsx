@@ -28,8 +28,8 @@ interface CreateSpaceInput {
 
 interface SpacesContextValue {
   spaces: Space[]
-  create: (input: CreateSpaceInput) => Promise<Space | null>
-  update: (id: string, input: { name?: string; icon?: string }) => Promise<Space | null>
+  create: (input: CreateSpaceInput) => Promise<{ data: Space | null; error?: string }>
+  update: (id: string, input: { name?: string; icon?: string }) => Promise<{ data: Space | null; error?: string }>
   remove: (id: string) => Promise<void>
 }
 
@@ -197,9 +197,11 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     create: async (input: CreateSpaceInput) => {
       const { copyTypesFromSpaceId, includeTemplates, ...createInput } = input
       const result = await spacesClient.create(createInput)
-      if (!result.data) return null
+      if (result.error) {
+        return { data: null, error: result.error.message }
+      }
 
-      const newSpace = result.data
+      const newSpace = result.data!
 
       if (copyTypesFromSpaceId) {
         try {
@@ -261,15 +263,15 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       }
 
       emit('spaces')
-      return newSpace
+      return { data: newSpace }
     },
     update: async (id: string, input: { name?: string; icon?: string }) => {
       const result = await spacesClient.update(id, input)
-      if (result.data) {
-        emit('spaces')
-        return result.data
+      if (result.error) {
+        return { data: null, error: result.error.message }
       }
-      return null
+      emit('spaces')
+      return { data: result.data }
     },
     remove: async (id: string) => {
       await spacesClient.delete(id)

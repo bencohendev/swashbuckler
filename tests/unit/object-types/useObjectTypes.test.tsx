@@ -41,7 +41,7 @@ describe('useObjectTypes', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    let created: Awaited<ReturnType<typeof result.current.create>> = null
+    let created: Awaited<ReturnType<typeof result.current.create>> | null = null
     await act(async () => {
       created = await result.current.create({
         name: 'Task',
@@ -51,8 +51,8 @@ describe('useObjectTypes', () => {
       })
     })
 
-    expect(created).not.toBeNull()
-    expect(created!.name).toBe('Task')
+    expect(created!.data).not.toBeNull()
+    expect(created!.data!.name).toBe('Task')
 
     await waitFor(() => {
       expect(result.current.types.some(t => t.slug === 'task')).toBe(true)
@@ -66,7 +66,7 @@ describe('useObjectTypes', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    let created: Awaited<ReturnType<typeof result.current.create>> = null
+    let created: Awaited<ReturnType<typeof result.current.create>> | null = null
     await act(async () => {
       created = await result.current.create({
         name: 'Original',
@@ -77,7 +77,7 @@ describe('useObjectTypes', () => {
     })
 
     await act(async () => {
-      await result.current.update(created!.id, { name: 'Renamed' })
+      await result.current.update(created!.data!.id, { name: 'Renamed' })
     })
 
     await waitFor(() => {
@@ -92,7 +92,7 @@ describe('useObjectTypes', () => {
       expect(result.current.isLoading).toBe(false)
     })
 
-    let created: Awaited<ReturnType<typeof result.current.create>> = null
+    let created: Awaited<ReturnType<typeof result.current.create>> | null = null
     await act(async () => {
       created = await result.current.create({
         name: 'ToRemove',
@@ -108,7 +108,7 @@ describe('useObjectTypes', () => {
     })
 
     await act(async () => {
-      await result.current.remove(created!.id)
+      await result.current.remove(created!.data!.id)
     })
 
     await waitFor(() => {
@@ -130,7 +130,7 @@ describe('useObjectType', () => {
       expect(listResult.current.isLoading).toBe(false)
     })
 
-    let created: Awaited<ReturnType<typeof listResult.current.create>> = null
+    let created: Awaited<ReturnType<typeof listResult.current.create>> | null = null
     await act(async () => {
       created = await listResult.current.create({
         name: 'Findable',
@@ -140,7 +140,7 @@ describe('useObjectType', () => {
       })
     })
 
-    const { result } = renderHook(() => useObjectType(created!.id), { wrapper: Wrapper })
+    const { result } = renderHook(() => useObjectType(created!.data!.id), { wrapper: Wrapper })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
