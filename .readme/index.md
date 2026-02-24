@@ -115,6 +115,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Unique Default Names](features/unique-default-names.md) | Incrementing "New Page", "New Page 2", etc. |
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
 | Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
+| Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
 
 ## Planned Features
 
@@ -128,7 +129,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Advanced documentation | In-depth user docs and help content |
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
-| Show password toggle | Add visibility toggle to password inputs (login, signup, account settings) |
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
 | Template section in type settings | Add template management section to the type settings page |
 | Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
