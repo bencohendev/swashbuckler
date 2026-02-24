@@ -5,17 +5,18 @@ import type { DataObject, ObjectType } from '@/shared/lib/data'
 import { extractPlainText } from '../lib/extractPlainText'
 
 interface TypeListViewProps {
-  type: ObjectType
+  type?: ObjectType
   objects: DataObject[]
+  emptyMessage?: string
 }
 
-export function TypeListView({ type, objects }: TypeListViewProps) {
+export function TypeListView({ type, objects, emptyMessage }: TypeListViewProps) {
   const router = useRouter()
 
   if (objects.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
-        No {type.plural_name.toLowerCase()} yet
+        {emptyMessage ?? `No ${type?.plural_name.toLowerCase() ?? 'items'} yet`}
       </div>
     )
   }

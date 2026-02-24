@@ -1,5 +1,6 @@
 export { TypeTableView } from './TypeTableView'
 export { TypeDataTable } from './TypeDataTable'
+export { TagDataTable } from './TagDataTable'
 export { TypeCardView } from './TypeCardView'
 export { TypeListView } from './TypeListView'
 export { ViewToggle } from './ViewToggle'

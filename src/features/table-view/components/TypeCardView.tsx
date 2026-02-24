@@ -5,17 +5,18 @@ import type { DataObject, ObjectType } from '@/shared/lib/data'
 import { extractPlainText } from '../lib/extractPlainText'
 
 interface TypeCardViewProps {
-  type: ObjectType
+  type?: ObjectType
   objects: DataObject[]
+  emptyMessage?: string
 }
 
-export function TypeCardView({ type, objects }: TypeCardViewProps) {
+export function TypeCardView({ type, objects, emptyMessage }: TypeCardViewProps) {
   const router = useRouter()
 
   if (objects.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
-        No {type.plural_name.toLowerCase()} yet
+        {emptyMessage ?? `No ${type?.plural_name.toLowerCase() ?? 'items'} yet`}
       </div>
     )
   }
