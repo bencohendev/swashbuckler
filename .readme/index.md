@@ -127,6 +127,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Manage Templates Shortcut | "Manage Templates" option in sidebar type dropdown |
 | [Board View](features/board-view.md) | Kanban board view for type pages — group entries by select field |
 | [Global Types](features/global-types.md) | Reusable type blueprints importable across spaces |
+| [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
 
 ## Planned Features
 
@@ -139,8 +140,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
-| [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
-| Type page search & filter | Search and filter support on type pages |
 
 ## Bugs
 
