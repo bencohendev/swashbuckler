@@ -7,13 +7,16 @@ import { PlusIcon, EditIcon, TrashIcon } from 'lucide-react'
 import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
 import { ObjectTypeForm } from './ObjectTypeForm'
+import { GlobalTypeImporter } from '@/features/global-types/components/GlobalTypeImporter'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
+import { useAuth } from '@/shared/lib/data'
 import type { ObjectType, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
 
 export function ObjectTypeManager() {
   const { types, isLoading, error, create, update, remove } = useObjectTypes()
+  const { isGuest } = useAuth()
   const searchParams = useSearchParams()
   const [editingType, setEditingType] = useState<ObjectType | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -100,10 +103,13 @@ export function ObjectTypeManager() {
         <p className="text-sm text-muted-foreground">
           {types.length} type{types.length !== 1 ? 's' : ''}
         </p>
-        <Button onClick={() => setIsCreating(true)}>
-          <PlusIcon className="size-4" />
-          Create Type
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isGuest && <GlobalTypeImporter />}
+          <Button onClick={() => setIsCreating(true)}>
+            <PlusIcon className="size-4" />
+            Create Type
+          </Button>
+        </div>
       </div>
 
       {types.length === 0 ? (

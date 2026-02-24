@@ -37,6 +37,7 @@ src/
 │   ├── auth/
 │   ├── collaboration/
 │   ├── editor/
+│   ├── global-types/
 │   ├── graph/
 │   ├── object-types/
 │   ├── objects/
@@ -80,6 +81,9 @@ Dual-storage architecture with a `DataClient` interface:
 016_storage.sql             # uploads bucket + RLS policies
 017_leave_space.sql         # leave space function
 018_realtime.sql            # enable realtime publication
+019_fix_shared_user_insert.sql # fix shared user insert
+020_cascade_delete_types.sql   # cascade delete types
+021_global_types.sql           # per-owner global type slug index
 ```
 
 ## Implemented Features
@@ -122,6 +126,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Template Section in Type Settings](features/template-section-in-type-settings.md) | Inline template rename/delete in type edit form |
 | Manage Templates Shortcut | "Manage Templates" option in sidebar type dropdown |
 | [Board View](features/board-view.md) | Kanban board view for type pages — group entries by select field |
+| [Global Types](features/global-types.md) | Reusable type blueprints importable across spaces |
 
 ## Planned Features
 
@@ -134,7 +139,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
-| [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
 | Type page search & filter | Search and filter support on type pages |
 

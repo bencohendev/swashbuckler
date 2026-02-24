@@ -4,6 +4,7 @@ import type {
   DataClient,
   ObjectsClient,
   ObjectTypesClient,
+  GlobalObjectTypesClient,
   TemplatesClient,
   RelationsClient,
   SpacesClient,
@@ -140,6 +141,168 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
       }
 
       return { data: null, error: null }
+    },
+  }
+}
+
+function createGlobalObjectTypesClient(supabase: SupabaseClient): GlobalObjectTypesClient {
+  return {
+    async list(): Promise<DataListResult<ObjectType>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: [], error: { message: 'Not authenticated' } }
+      }
+
+      const { data, error } = await supabase
+        .from('object_types')
+        .select('*')
+        .eq('owner_id', user.id)
+        .is('space_id', null)
+        .order('sort_order', { ascending: true })
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType[], error: null }
+    },
+
+    async get(id: string): Promise<DataResult<ObjectType>> {
+      const { data, error } = await supabase
+        .from('object_types')
+        .select('*')
+        .eq('id', id)
+        .is('space_id', null)
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
+    },
+
+    async create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>> {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { data: null, error: { message: 'Must be logged in to create global types' } }
+      }
+
+      const now = new Date().toISOString()
+      const typeData = {
+        ...input,
+        fields: input.fields ?? [],
+        is_built_in: false,
+        owner_id: user.id,
+        space_id: null,
+        created_at: now,
+        updated_at: now,
+      }
+
+      const { data, error } = await supabase
+        .from('object_types')
+        .insert(typeData)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
+    },
+
+    async update(id: string, input: UpdateObjectTypeInput): Promise<DataResult<ObjectType>> {
+      const { data, error } = await supabase
+        .from('object_types')
+        .update({ ...input, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .is('space_id', null)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      const { data, error } = await supabase
+        .from('object_types')
+        .delete()
+        .eq('id', id)
+        .is('space_id', null)
+        .select('id')
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      if (!data || data.length === 0) {
+        return { data: null, error: { message: 'Global type not found or could not be deleted', code: 'NOT_FOUND' } }
+      }
+
+      return { data: null, error: null }
+    },
+
+    async importToSpace(id: string, targetSpaceId: string): Promise<DataResult<ObjectType>> {
+      // Fetch the global type
+      const { data: globalType, error: fetchError } = await supabase
+        .from('object_types')
+        .select('*')
+        .eq('id', id)
+        .is('space_id', null)
+        .single()
+
+      if (fetchError || !globalType) {
+        return { data: null, error: { message: fetchError?.message ?? 'Global type not found', code: 'NOT_FOUND' } }
+      }
+
+      // Check for slug conflict in target space
+      const { data: existing } = await supabase
+        .from('object_types')
+        .select('id')
+        .eq('space_id', targetSpaceId)
+        .eq('slug', globalType.slug)
+        .maybeSingle()
+
+      if (existing) {
+        return { data: null, error: { message: `A type with slug "${globalType.slug}" already exists in this space`, code: 'DUPLICATE' } }
+      }
+
+      // Copy with new field UUIDs
+      const now = new Date().toISOString()
+      const newFields = (globalType.fields ?? []).map((field: Record<string, unknown>) => ({
+        ...field,
+        id: crypto.randomUUID(),
+      }))
+
+      const { data: newType, error: insertError } = await supabase
+        .from('object_types')
+        .insert({
+          name: globalType.name,
+          plural_name: globalType.plural_name,
+          slug: globalType.slug,
+          icon: globalType.icon,
+          color: globalType.color,
+          fields: newFields,
+          is_built_in: false,
+          owner_id: globalType.owner_id,
+          space_id: targetSpaceId,
+          sort_order: globalType.sort_order,
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        return { data: null, error: { message: insertError.message, code: insertError.code } }
+      }
+
+      return { data: newType as ObjectType, error: null }
     },
   }
 }
@@ -1239,6 +1402,7 @@ export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: str
   return {
     objects: createObjectsClient(supabase, spaceId),
     objectTypes: createObjectTypesClient(supabase, spaceId),
+    globalObjectTypes: createGlobalObjectTypesClient(supabase),
     templates: createTemplatesClient(supabase, spaceId),
     relations: createRelationsClient(supabase, spaceId),
     spaces: createSpacesClient(supabase),

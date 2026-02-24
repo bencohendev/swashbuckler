@@ -9,6 +9,7 @@ import type { ObjectType, FieldDefinition, CreateObjectTypeInput, UpdateObjectTy
 
 interface ObjectTypeFormProps {
   objectType?: ObjectType
+  isGlobal?: boolean
   onSave: (input: CreateObjectTypeInput | UpdateObjectTypeInput) => Promise<void>
   onCancel: () => void
 }
