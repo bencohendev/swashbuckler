@@ -128,12 +128,12 @@ Dual-storage architecture with a `DataClient` interface:
 | [Board View](features/board-view.md) | Kanban board view for type pages — group entries by select field |
 | [Global Types](features/global-types.md) | Reusable type blueprints importable across spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
+| [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | First use tutorial | Onboarding walkthrough for new users |

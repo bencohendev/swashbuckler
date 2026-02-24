@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileStackIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
+import { FileStackIcon, PaletteIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
 
 const settingsItems = [
   {
@@ -7,6 +7,12 @@ const settingsItems = [
     label: 'Account',
     description: 'Profile, security, and preferences',
     icon: UserIcon,
+  },
+  {
+    href: '/settings/appearance',
+    label: 'Appearance',
+    description: 'Customize themes and color schemes',
+    icon: PaletteIcon,
   },
   {
     href: '/settings/templates',
