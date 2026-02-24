@@ -132,7 +132,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
 | Template section in type settings | Add template management section to the type settings page |
 | Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
-| Regression testing | Infrastructure exists (Vitest + Playwright + CI at `.github/workflows/ci.yml`) but existing tests need fixing and coverage needs expansion |
 
 ## Bugs
 
