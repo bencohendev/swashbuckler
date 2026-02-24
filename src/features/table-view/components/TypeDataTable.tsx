@@ -3,13 +3,14 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { DataObject, ObjectType, FieldDefinition, Tag } from '@/shared/lib/data'
-import { useObjectTagsBatch, TagBadge } from '@/features/tags'
+import { TagBadge } from '@/features/tags'
 import { SortableHeader, type SortState } from './SortableHeader'
 import { PropertyCell } from './PropertyCell'
 
 interface TypeDataTableProps {
   type: ObjectType
   objects: DataObject[]
+  tagsByObject: Record<string, Tag[]>
 }
 
 function getFieldValue(obj: DataObject, field: FieldDefinition): unknown {
@@ -60,7 +61,7 @@ function TagsCell({ tags, router }: { tags: Tag[]; router: ReturnType<typeof use
   )
 }
 
-export function TypeDataTable({ type, objects }: TypeDataTableProps) {
+export function TypeDataTable({ type, objects, tagsByObject }: TypeDataTableProps) {
   const router = useRouter()
   const [sort, setSort] = useState<SortState | null>(null)
 
@@ -68,9 +69,6 @@ export function TypeDataTable({ type, objects }: TypeDataTableProps) {
     () => [...type.fields].sort((a, b) => a.sort_order - b.sort_order),
     [type.fields]
   )
-
-  const objectIds = useMemo(() => objects.map(o => o.id), [objects])
-  const { tagsByObject } = useObjectTagsBatch(objectIds)
 
   const handleSort = useCallback((column: string) => {
     setSort((prev) => {

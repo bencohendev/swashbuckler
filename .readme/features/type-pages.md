@@ -2,6 +2,40 @@
 
 **Status:** Done
 
+## Search & Filter
+
+Type pages include a search bar and structured filter popover between the header and view content. All filtering is client-side — views receive pre-filtered data with no changes to their internal logic.
+
+### Search
+- Text input with search icon, searches title only (case-insensitive `includes`)
+- Escape key clears the search and blurs the input
+
+### Filters
+- Radix Popover triggered by a "Filter" button with badge count
+- Sections for each filterable field type:
+  - **select / multi_select** — checkboxes for each option value
+  - **checkbox** — Any / Yes / No toggle buttons (`aria-pressed`)
+  - **tags** — checkboxes with `TagBadge` for each space tag
+- All filters combine with AND logic
+- "Clear all" button when any filter is active
+
+### Filter Pills
+- Active filters shown as removable badge pills below the search bar
+- Each pill has a remove button with `aria-label="Remove filter: {description}"`
+
+### Result Count
+- Header count shows `"X of Y"` when filtered, `"Y"` otherwise
+- `aria-live="polite"` region announces count changes for screen readers
+
+### Empty Filtered State
+- When filters match no entries: "No {plural_name} match your filters" with "Clear filters" link
+- Replaces the view entirely (no empty table/list/card grid)
+
+### Implementation Files
+- `lib/filterObjects.ts` — pure filter logic (`TypePageFilters`, `EMPTY_FILTERS`, `isFiltered`, `filterObjects`)
+- `components/TypePageFilterBar.tsx` — search input, filter popover, filter pills, live region
+- Tag fetching lifted from `TypeDataTable` to `TypeTableView` (passed down as `tagsByObject` prop)
+
 ## Overview
 
 Dedicated pages for each type at `/types/[slug]` showing all instances in table, list, or card views with a persistent toggle. The table view has sortable columns for title, property fields, and tags.
@@ -91,3 +125,14 @@ Dedicated pages for each type at `/types/[slug]` showing all instances in table,
 - [x] List view shows icon, title, content preview, date
 - [x] Empty state shows "No X yet" in all three views
 - [x] `npm run build` passes
+- [ ] Search filters entries by title across all views
+- [ ] Select/multi_select filters narrow entries by property values
+- [ ] Checkbox filter toggles between Any/Yes/No
+- [ ] Tag filter narrows entries by tag
+- [ ] Combined filters use AND logic
+- [ ] Filter pills appear and are individually removable
+- [ ] "Clear all" resets all filters
+- [ ] Empty filtered state shows message with "Clear filters" link
+- [ ] Header count shows "X of Y" when filtered
+- [ ] Keyboard navigation works in filter popover (Escape to close)
+- [ ] `aria-live` announces result count changes
