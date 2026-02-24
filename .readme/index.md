@@ -135,6 +135,8 @@ Dual-storage architecture with a `DataClient` interface:
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
+| Entry pagination | Max 10 entries per type in sidebar with "see more" button |
+| Type page search & filter | Search and filter support on type pages |
 
 ## Bugs
 
