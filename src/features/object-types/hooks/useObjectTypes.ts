@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   useDataClient,
   useSpaceId,
@@ -36,6 +36,7 @@ export function useObjectTypes(): UseObjectTypesReturn {
       if (result.error) throw new Error(result.error.message)
       return result.data
     },
+    placeholderData: keepPreviousData,
   })
 
   const refetch = useCallback(async () => {

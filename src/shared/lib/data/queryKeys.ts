@@ -33,4 +33,7 @@ export const queryKeys = {
   relations: {
     list: (objectId: string) => ['relations', objectId] as const,
   },
+  shares: {
+    list: (spaceId: string) => ['shares', spaceId] as const,
+  },
 }

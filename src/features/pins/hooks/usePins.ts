@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useDataClient, useSpaceId } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
@@ -27,6 +27,7 @@ export function usePins(): UsePinsReturn {
       if (result.error) throw new Error(result.error.message)
       return result.data.map(p => p.object_id)
     },
+    placeholderData: keepPreviousData,
   })
 
   const pinnedIds = useMemo(() => new Set(data ?? EMPTY_IDS), [data])

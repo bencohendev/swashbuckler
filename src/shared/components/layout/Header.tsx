@@ -164,12 +164,8 @@ export function Header({ email }: { email?: string }) {
         </DropdownMenu>
       </div>
       <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-      {canEdit && (
-        <>
-          <QuickCaptureDialog open={quickCaptureOpen} onOpenChange={setQuickCaptureOpen} />
-          <QuickCaptureButton onClick={() => setQuickCaptureOpen(true)} />
-        </>
-      )}
+      <QuickCaptureDialog open={quickCaptureOpen} onOpenChange={setQuickCaptureOpen} />
+      <QuickCaptureButton onClick={() => setQuickCaptureOpen(true)} className={canEdit ? '' : 'invisible'} />
     </header>
   )
 }

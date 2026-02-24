@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useDataClient, useSpaceId, type DataObject, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
@@ -45,6 +45,7 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
       return result.data
     },
     enabled,
+    placeholderData: keepPreviousData,
   })
 
   const refetch = useCallback(async () => {

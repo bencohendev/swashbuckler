@@ -7,7 +7,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
-import { useSidebar, useSidebarHydration } from "@/shared/stores/sidebar"
+import { useSidebar } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
@@ -130,22 +130,21 @@ function DraggableTypeSection({
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  useSidebarHydration()
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
-  const { filterTypes, filterObjects } = useExclusionFilter()
+  const { filterTypes, filterObjects, isLoading: exclusionFilterLoading, isSharedUser } = useExclusionFilter()
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
   })
   // All non-deleted objects — shared with PinnedSection + RecentSection via props
   const { objects: allObjects } = useObjects({ isDeleted: false })
-  const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
-  const { pinnedIds, isLoading: pinsLoading } = usePins()
-  const { tags, isLoading: tagsLoading } = useTags()
+  const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
+  const { pinnedIds } = usePins()
+  const { tags } = useTags()
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
   const getNextTitle = useNextTitle()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
@@ -153,7 +152,7 @@ export function Sidebar() {
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
   const [collapseSignal, setCollapseSignal] = useState<CollapseSignal | undefined>(undefined)
-  const sidebarLoading = !space || objectsLoading || typesLoading || pinsLoading || tagsLoading || (types.length > 0 && orderedTypes.length === 0)
+  const sidebarLoading = !space || (isSharedUser && exclusionFilterLoading)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
 
