@@ -17,6 +17,7 @@ import {
   Table,
   Image as ImageIcon,
   BracesIcon,
+  EyeOff,
 } from 'lucide-react'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
 import { useObjects, useNextTitle } from '@/features/objects'
@@ -135,7 +136,7 @@ const menuItems: SlashMenuItem[] = [
 
 export function SlashInputElement({ children, element, ...props }: PlateElementProps) {
   const editor = useEditorRef()
-  const { isTemplateMode } = useContext(EditorModeContext)
+  const { isTemplateMode, isOwner } = useContext(EditorModeContext)
   const { types } = useObjectTypes()
   const { create } = useObjects({ enabled: false })
   const isMobile = useIsMobile()
@@ -190,8 +191,22 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
       ]
     : []
 
+  // Owner-only items
+  const ownerItems: SlashMenuItem[] = isOwner
+    ? [
+        {
+          key: 'private_block',
+          label: 'Private block',
+          description: 'Content only visible to you',
+          icon: <EyeOff className="size-4" />,
+          type: 'private_block',
+          category: 'Advanced',
+        },
+      ]
+    : []
+
   // Filter items based on query
-  const allMenuItems = [...menuItems, ...variableItems]
+  const allMenuItems = [...menuItems, ...ownerItems, ...variableItems]
   const filteredItems = allMenuItems.filter(
     item =>
       item.label.toLowerCase().includes(query.toLowerCase()) ||
@@ -332,6 +347,11 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
               ],
             },
           ],
+        }
+      } else if (type === 'private_block') {
+        node = {
+          type: 'private_block',
+          children: [{ type: 'p', children: [{ text: '' }] }],
         }
       } else if (type === 'img') {
         node = {
