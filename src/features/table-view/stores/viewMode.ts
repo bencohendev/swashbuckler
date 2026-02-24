@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
 
-export type ViewMode = 'table' | 'list' | 'card'
+export type ViewMode = 'table' | 'list' | 'card' | 'board'
 
 const STORAGE_KEY = 'swashbuckler:typeViewMode'
 

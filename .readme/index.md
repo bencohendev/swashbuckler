@@ -116,6 +116,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
 | Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
 | Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
+| [Board View](features/board-view.md) | Kanban board view for type pages — group entries by select field |
 
 ## Planned Features
 
@@ -124,7 +125,6 @@ Dual-storage architecture with a `DataClient` interface:
 | [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
-| Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
 | Advanced documentation | In-depth user docs and help content |
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
