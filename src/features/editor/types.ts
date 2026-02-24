@@ -12,6 +12,7 @@ export interface TextNode {
   strikethrough?: boolean;
   code?: boolean;
   spoiler?: boolean;
+  private?: boolean;
 }
 
 // Base element node type
@@ -109,6 +110,11 @@ export interface MentionInputNode extends BaseNode {
   trigger: string;
 }
 
+// Private block node (content only visible to owner)
+export interface PrivateBlockNode extends BaseNode {
+  type: 'private_block';
+}
+
 // Union of all node types
 export type EditorNode =
   | ParagraphNode
@@ -126,7 +132,8 @@ export type EditorNode =
   | ImageNode
   | LinkNode
   | MentionNode
-  | MentionInputNode;
+  | MentionInputNode
+  | PrivateBlockNode;
 
 // Props for element components
 export interface ElementProps {

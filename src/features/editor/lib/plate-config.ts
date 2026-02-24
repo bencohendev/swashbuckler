@@ -21,6 +21,7 @@ import { AutoformatPlugin } from '@udecode/plate-autoformat/react';
 import { IndentPlugin } from '@udecode/plate-indent/react';
 import { NodeIdPlugin } from '@udecode/plate-node-id';
 import { SpoilerPlugin } from '../plugins/spoiler-plugin';
+import { PrivateBlockPlugin, PrivateMarkPlugin } from '../plugins/private-plugin';
 import { TemplateVariablePlugin } from '../plugins/template-variable-plugin';
 
 // Plugin configuration for the editor
@@ -35,6 +36,7 @@ export const editorPlugins = [
   StrikethroughPlugin,
   CodePlugin,
   SpoilerPlugin,
+  PrivateMarkPlugin,
 
   // Block elements
   HeadingPlugin.configure({
@@ -47,6 +49,7 @@ export const editorPlugins = [
   ListPlugin,
   TogglePlugin,
   CalloutPlugin,
+  PrivateBlockPlugin,
   TablePlugin,
   ImagePlugin.configure({
     options: {
@@ -119,6 +122,12 @@ export const editorPlugins = [
           mode: 'mark',
           type: 'code',
           match: '`',
+        },
+        // Private (must be before spoiler to avoid prefix conflict)
+        {
+          mode: 'mark',
+          type: 'private',
+          match: '|||',
         },
         // Spoiler
         {

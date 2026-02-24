@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
 import { Editor } from '@/features/editor'
+import { stripPrivateContent } from '@/features/editor/lib/stripPrivateContent'
 import { TagPicker } from '@/features/tags'
 import { PinButton } from '@/features/pins'
 import { PropertyFields } from './PropertyFields'
@@ -143,6 +144,14 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
     }
     return result !== null
   }, [object, saveObjectAsTemplate])
+
+  // Strip private content for view-only non-owners
+  const editorContent = useMemo(() => {
+    if (!isOwner && !canEdit && object?.content) {
+      return stripPrivateContent(object.content)
+    }
+    return object?.content ?? undefined
+  }, [isOwner, canEdit, object?.content])
 
   if (isLoading) {
     return (
@@ -323,11 +332,12 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
 
           <Editor
             key={id}
-            initialContent={object.content ?? undefined}
+            initialContent={editorContent}
             onSave={handleContentSave}
             placeholder="Start writing..."
             readOnly={!canEdit}
             isTemplateMode={isTemplateMode}
+            isOwner={isOwner}
             collaborationOptions={collaborationOptions}
           />
 

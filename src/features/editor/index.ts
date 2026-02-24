@@ -3,10 +3,14 @@ export { editorPlugins, initialEditorValue } from './lib/plate-config';
 
 // Plugins
 export { SpoilerPlugin, SpoilerMark } from './plugins/spoiler-plugin';
+export { PrivateBlockPlugin, PrivateMarkPlugin, PrivateBlockElement, PrivateMark } from './plugins/private-plugin';
 export { TemplateVariablePlugin } from './plugins/template-variable-plugin';
 
 // Store
 export { useEditorStore } from './store';
+
+// Lib
+export { stripPrivateContent } from './lib/stripPrivateContent';
 
 // Hooks
 export { useAutoSave } from './hooks/useAutoSave';
@@ -75,6 +79,7 @@ export type {
   LinkNode,
   MentionNode,
   MentionInputNode,
+  PrivateBlockNode,
   EditorNode,
   ElementProps,
   LeafProps,

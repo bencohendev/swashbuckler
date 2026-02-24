@@ -114,6 +114,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Move docs to .readme/](features/move-docs-to-readme.md) | Move documentation from `.claude/docs/` to `.readme/` for GitHub visibility |
 | [Unique Default Names](features/unique-default-names.md) | Incrementing "New Page", "New Page 2", etc. |
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
+| [Private Content](features/private-content.md) | Hide content within entries from shared users |
 | Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
 | Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
 
