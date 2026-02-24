@@ -332,6 +332,19 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
     >
+      <defs>
+        <marker
+          id="arrowhead"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
+          orient="auto"
+          markerUnits="userSpaceOnUse"
+        >
+          <polygon points="0 0, 8 3, 0 6" fill="var(--muted-foreground)" />
+        </marker>
+      </defs>
       <g ref={gRef}>
         {simulatedEdges.map(edge => {
           const srcId = typeof edge.source === 'object' ? (edge.source as GraphNodeType).id : edge.source as string

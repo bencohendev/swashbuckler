@@ -11,7 +11,7 @@ Force-directed knowledge graph visualization using D3.js, with type filtering, n
 | Area | Decision |
 |------|----------|
 | Layout | Four modes: force-directed, hierarchical (tree), radial, clustered (by type) |
-| Rendering | SVG-based |
+| Rendering | SVG-based with directed arrowhead markers on edges |
 | Interactions | Click to select, drag to move, zoom/pan |
 | Filtering | Inclusion-based type filter (click to include) |
 | Node color | Deterministic palette per type, with swatches in filter panel |
@@ -32,6 +32,7 @@ Disconnected components are handled via a virtual root node (not rendered) that 
 - `src/features/graph/components/GraphView.tsx` — main graph view
 - `src/features/graph/components/GraphCanvas.tsx` — SVG canvas with pan/zoom and interaction
 - `src/features/graph/components/GraphFilterPanel.tsx` — type inclusion filter with color swatches
+- `src/features/graph/components/GraphEdge.tsx` — directed edge with arrowhead, shortened to node boundaries
 - `src/features/graph/components/GraphNodeDetail.tsx` — node selection detail panel
 - `src/features/graph/components/GraphLayoutToggle.tsx` — layout mode toggle (force/hierarchical/radial/clustered)
 - `src/features/graph/lib/useForceSimulation.ts` — D3 force simulation
@@ -54,6 +55,7 @@ Disconnected components are handled via a virtual root node (not rendered) that 
 - [x] Type filter works (inclusion mode)
 - [x] Zoom/pan works
 - [x] Nodes color-coded by type
+- [x] Directed arrows on edges showing source→target
 - [ ] Search with highlighting
 - [x] Switch between all 4 layout modes
 - [x] Animated transitions between layouts
