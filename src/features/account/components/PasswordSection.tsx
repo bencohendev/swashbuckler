@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import { Button } from '@/shared/components/ui/Button'
+import { PasswordInput } from '@/shared/components/ui/PasswordInput'
 
 export function PasswordSection({ user }: { user: User }) {
   const hasEmailIdentity = user.identities?.some(i => i.provider === 'email')
@@ -80,13 +81,11 @@ export function PasswordSection({ user }: { user: User }) {
           <label htmlFor="current-password" className="mb-1 block text-sm font-medium">
             Current password
           </label>
-          <input
+          <PasswordInput
             id="current-password"
-            type="password"
             value={currentPassword}
             onChange={e => setCurrentPassword(e.target.value)}
             aria-describedby={error ? "password-error" : undefined}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             required
           />
         </div>
@@ -94,12 +93,10 @@ export function PasswordSection({ user }: { user: User }) {
           <label htmlFor="new-password" className="mb-1 block text-sm font-medium">
             New password
           </label>
-          <input
+          <PasswordInput
             id="new-password"
-            type="password"
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             required
             minLength={6}
           />
@@ -108,12 +105,10 @@ export function PasswordSection({ user }: { user: User }) {
           <label htmlFor="confirm-password" className="mb-1 block text-sm font-medium">
             Confirm new password
           </label>
-          <input
+          <PasswordInput
             id="confirm-password"
-            type="password"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             required
             minLength={6}
           />

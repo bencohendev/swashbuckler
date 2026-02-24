@@ -6,6 +6,7 @@ import Link from "next/link"
 import { createClient } from "@/shared/lib/supabase/client"
 import { Button } from "@/shared/components/ui/Button"
 import { Input } from "@/shared/components/ui/Input"
+import { PasswordInput } from "@/shared/components/ui/PasswordInput"
 import { Label } from "@/shared/components/ui/Label"
 import {
   Card,
@@ -93,9 +94,8 @@ export function SignupForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -103,9 +103,8 @@ export function SignupForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
