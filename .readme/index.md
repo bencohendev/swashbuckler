@@ -121,6 +121,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Password Security](features/password-security.md) | Strength meter, 8-char minimum, login rate limiting |
 | [Template Section in Type Settings](features/template-section-in-type-settings.md) | Inline template rename/delete in type edit form |
 | Manage Templates Shortcut | "Manage Templates" option in sidebar type dropdown |
+| [Board View](features/board-view.md) | Kanban board view for type pages — group entries by select field |
 
 ## Planned Features
 
@@ -129,7 +130,6 @@ Dual-storage architecture with a `DataClient` interface:
 | [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
-| Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |

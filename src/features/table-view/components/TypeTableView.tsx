@@ -7,6 +7,7 @@ import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { TypeDataTable } from './TypeDataTable'
 import { TypeCardView } from './TypeCardView'
 import { TypeListView } from './TypeListView'
+import { TypeBoardView } from './TypeBoardView'
 import { ViewToggle } from './ViewToggle'
 import { useViewMode } from '../stores/viewMode'
 
@@ -73,6 +74,9 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
       )}
       {mode === 'card' && (
         <TypeCardView type={type} objects={sortedObjects} />
+      )}
+      {mode === 'board' && (
+        <TypeBoardView type={type} objects={sortedObjects} />
       )}
     </div>
   )
