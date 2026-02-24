@@ -116,6 +116,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
 | Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
 | Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
+| [Template Section in Type Settings](features/template-section-in-type-settings.md) | Inline template rename/delete in type edit form |
 
 ## Planned Features
 
@@ -130,7 +131,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
-| Template section in type settings | Add template management section to the type settings page |
 | Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
 | [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
