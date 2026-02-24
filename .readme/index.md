@@ -132,6 +132,8 @@ Dual-storage architecture with a `DataClient` interface:
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
 | Template section in type settings | Add template management section to the type settings page |
 | Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
+| [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
+| [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
 
 ## Bugs
 
