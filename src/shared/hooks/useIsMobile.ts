@@ -1,20 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 
 const MOBILE_BREAKPOINT = 768
+const QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+
+let mql: MediaQueryList | null = null
+
+function getMql(): MediaQueryList {
+  if (!mql) mql = window.matchMedia(QUERY)
+  return mql
+}
+
+function subscribe(callback: () => void): () => void {
+  const mediaQuery = getMql()
+  mediaQuery.addEventListener('change', callback)
+  return () => mediaQuery.removeEventListener('change', callback)
+}
+
+function getSnapshot(): boolean {
+  return getMql().matches
+}
+
+function getServerSnapshot(): boolean {
+  return false
+}
 
 export function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    setIsMobile(mql.matches) // eslint-disable-line react-hooks/set-state-in-effect -- initial sync from media query before subscribing
-
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    mql.addEventListener('change', handler)
-    return () => mql.removeEventListener('change', handler)
-  }, [])
-
-  return isMobile
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }

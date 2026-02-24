@@ -6,6 +6,7 @@ export function useExclusionFilter() {
   const { user } = useAuth()
   const { space, sharedPermission } = useCurrentSpace()
   const [exclusions, setExclusions] = useState<ShareExclusion[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
   // Only load exclusions for shared spaces (non-owner)
   const isSharedUser = !!sharedPermission && !!space && space.owner_id !== user?.id
@@ -15,6 +16,8 @@ export function useExclusionFilter() {
       setExclusions([]) // eslint-disable-line react-hooks/set-state-in-effect -- clear when not shared user
       return
     }
+
+    setIsLoading(true)
 
     async function loadExclusions() {
       const allExclusions: ShareExclusion[] = []
@@ -38,6 +41,7 @@ export function useExclusionFilter() {
       }
 
       setExclusions(allExclusions)
+      setIsLoading(false)
     }
 
     loadExclusions()
@@ -112,5 +116,6 @@ export function useExclusionFilter() {
     filterFields,
     filterProperties,
     isSharedUser,
-  }), [isTypeExcluded, isObjectExcluded, filterTypes, filterObjects, isFieldExcluded, filterFields, filterProperties, isSharedUser])
+    isLoading,
+  }), [isTypeExcluded, isObjectExcluded, filterTypes, filterObjects, isFieldExcluded, filterFields, filterProperties, isSharedUser, isLoading])
 }

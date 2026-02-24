@@ -7,11 +7,16 @@ import { cn } from '@/shared/lib/utils'
 import { useAuth } from '@/shared/lib/data'
 import { Button } from './ui/Button'
 
-export function GuestBanner() {
+interface GuestBannerProps {
+  isGuestServer?: boolean
+}
+
+export function GuestBanner({ isGuestServer = true }: GuestBannerProps) {
   const { isGuest, isLoading } = useAuth()
   const [isDismissed, setIsDismissed] = useState(false)
 
-  const show = !isLoading && isGuest && !isDismissed
+  const isGuestResolved = isLoading ? isGuestServer : isGuest
+  const show = isGuestResolved && !isDismissed
 
   return (
     <div

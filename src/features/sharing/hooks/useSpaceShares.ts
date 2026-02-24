@@ -1,32 +1,29 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDataClient, type SpaceShare, type SpaceSharePermission, type CreateShareExclusionInput, type ShareExclusion } from '@/shared/lib/data'
-import { emit, subscribe } from '@/shared/lib/data/events'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
+
+const EMPTY_SHARES: SpaceShare[] = []
 
 export function useSpaceShares(spaceId: string | null) {
   const dataClient = useDataClient()
-  const [shares, setShares] = useState<SpaceShare[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const queryClient = useQueryClient()
 
-  const loadShares = useCallback(async () => {
-    if (!spaceId) {
-      setShares([])
-      return
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.shares.list(spaceId!),
+    queryFn: async () => {
+      const result = await dataClient.sharing.listShares(spaceId!)
+      if (result.error) throw new Error(result.error.message)
+      return result.data
+    },
+    enabled: !!spaceId,
+  })
+
+  const invalidate = useCallback(() => {
+    if (spaceId) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.shares.list(spaceId) })
     }
-    setIsLoading(true)
-    const result = await dataClient.sharing.listShares(spaceId)
-    if (!result.error) {
-      setShares(result.data)
-    }
-    setIsLoading(false)
-  }, [dataClient, spaceId])
-
-  useEffect(() => {
-    loadShares() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch
-  }, [loadShares])
-
-  useEffect(() => {
-    return subscribe('spaceShares', loadShares)
-  }, [loadShares])
+  }, [queryClient, spaceId])
 
   const createShare = useCallback(async (email: string, permission: SpaceSharePermission) => {
     if (!spaceId) return null
@@ -36,27 +33,27 @@ export function useSpaceShares(spaceId: string | null) {
       permission,
     })
     if (!result.error && result.data) {
-      emit('spaceShares')
+      invalidate()
       return result.data
     }
     return result.error
-  }, [dataClient, spaceId])
+  }, [dataClient, spaceId, invalidate])
 
   const updateShare = useCallback(async (shareId: string, permission: SpaceSharePermission) => {
     const result = await dataClient.sharing.updateShare(shareId, { permission })
     if (!result.error) {
-      emit('spaceShares')
+      invalidate()
     }
     return result.error
-  }, [dataClient])
+  }, [dataClient, invalidate])
 
   const deleteShare = useCallback(async (shareId: string) => {
     const result = await dataClient.sharing.deleteShare(shareId)
     if (!result.error) {
-      emit('spaceShares')
+      invalidate()
     }
     return result.error
-  }, [dataClient])
+  }, [dataClient, invalidate])
 
   // Exclusions management
   const loadExclusions = useCallback(async (shareId: string) => {
@@ -97,7 +94,7 @@ export function useSpaceShares(spaceId: string | null) {
   }, [dataClient])
 
   return {
-    shares,
+    shares: data ?? EMPTY_SHARES,
     isLoading,
     createShare,
     updateShare,

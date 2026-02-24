@@ -10,6 +10,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-24 | Site-wide content flickers | Rewrote useIsMobile with useSyncExternalStore, sync sidebar hydration, added keepPreviousData to sidebar queries, decomposed all-or-nothing sidebar skeleton, migrated tag counts and space shares to TanStack Query, fixed QuickCaptureButton/GraphView/LinkedObjects/GuestBanner pop-in |
 | 2026-02-23 | Content flash on settings pages | Add settings layout with Suspense boundary to handle `useSearchParams` bailout |
 | 2026-02-23 | Mobile graph broken | Add pinch-to-zoom, touch drag/pan, and tap selection for mobile graph view |
 | 2026-02-23 | Graph filter search no-op | Filter nodes by search query in GraphCanvas (was only highlighting, not filtering) |

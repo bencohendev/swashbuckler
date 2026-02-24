@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGraphData } from '../hooks/useGraphData'
 import { useGraphStore } from '../lib/store'
@@ -22,7 +22,15 @@ export function GraphView() {
     reset()
   }, [reset])
 
-  // Measure container with ResizeObserver
+  // Synchronous initial measurement to avoid blank frame
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (el) {
+      setDimensions({ width: el.clientWidth, height: el.clientHeight })
+    }
+  }, [])
+
+  // Ongoing size tracking via ResizeObserver
   useEffect(() => {
     const el = containerRef.current
     if (!el) return

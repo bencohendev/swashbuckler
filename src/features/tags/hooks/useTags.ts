@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueries, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   useDataClient,
   useSpaceId,
@@ -37,6 +37,7 @@ export function useTags(): UseTagsReturn {
       if (result.error) throw new Error(result.error.message)
       return result.data
     },
+    placeholderData: keepPreviousData,
   })
 
   const refetch = useCallback(async () => {
@@ -136,4 +137,33 @@ export function useObjectTagsBatch(objectIds: string[]): { tagsByObject: Record<
   })
 
   return { tagsByObject: data ?? EMPTY_BATCH, isLoading }
+}
+
+const EMPTY_COUNTS: Map<string, number> = new Map()
+
+export function useTagCounts(tags: Tag[]): Map<string, number> {
+  const dataClient = useDataClient()
+
+  const results = useQueries({
+    queries: tags.map((tag) => ({
+      queryKey: queryKeys.tags.objectsByTag(tag.id),
+      queryFn: async () => {
+        const result = await dataClient.tags.getObjectsByTag(tag.id)
+        if (result.error) throw new Error(result.error.message)
+        return { tagId: tag.id, count: result.data.length }
+      },
+    })),
+  })
+
+  return useMemo(() => {
+    const hasAnyData = results.some((r) => r.data)
+    if (!hasAnyData) return EMPTY_COUNTS
+    const map = new Map<string, number>()
+    for (const result of results) {
+      if (result.data) {
+        map.set(result.data.tagId, result.data.count)
+      }
+    }
+    return map
+  }, [results])
 }
