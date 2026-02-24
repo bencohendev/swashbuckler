@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/shared/lib/supabase/client"
@@ -19,15 +19,44 @@ import {
 import { OAuthButtons } from "./OAuthButtons"
 import { Separator } from "@/shared/components/ui/Separator"
 
+function getCooldownSeconds(attempts: number): number {
+  if (attempts >= 10) return 60
+  if (attempts >= 5) return 30
+  return 0
+}
+
 export function LoginForm() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null)
+  const [cooldownRemaining, setCooldownRemaining] = useState(0)
+
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return
+
+    const timer = setInterval(() => {
+      setCooldownRemaining(prev => {
+        if (prev <= 1) {
+          setLockoutUntil(null)
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [cooldownRemaining])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (lockoutUntil && Date.now() < lockoutUntil) return
+
     setError(null)
     setIsLoading(true)
 
@@ -38,6 +67,13 @@ export function LoginForm() {
     })
 
     if (error) {
+      const newAttempts = failedAttempts + 1
+      setFailedAttempts(newAttempts)
+      const cooldown = getCooldownSeconds(newAttempts)
+      if (cooldown > 0) {
+        setLockoutUntil(Date.now() + cooldown * 1000)
+        setCooldownRemaining(cooldown)
+      }
       setError(error.message)
       setIsLoading(false)
       return
@@ -46,6 +82,8 @@ export function LoginForm() {
     router.push("/")
     router.refresh()
   }
+
+  const isLockedOut = cooldownRemaining > 0
 
   return (
     <Card>
@@ -86,11 +124,20 @@ export function LoginForm() {
               required
             />
           </div>
-          {error && (
+          {isLockedOut && (
+            <p className="text-sm text-amber-600 dark:text-amber-400" role="status">
+              Too many failed attempts. Please wait {cooldownRemaining} seconds before trying again.
+            </p>
+          )}
+          {error && !isLockedOut && (
             <p className="text-sm text-destructive">{error}</p>
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
+          <Button type="submit" className="w-full" disabled={isLoading || isLockedOut}>
+            {isLoading
+              ? "Signing in..."
+              : isLockedOut
+                ? `Try again in ${cooldownRemaining}s`
+                : "Sign in"}
           </Button>
         </form>
       </CardContent>
