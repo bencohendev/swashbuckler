@@ -129,6 +129,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Advanced documentation | In-depth user docs and help content |
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
+| [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
 | Template section in type settings | Add template management section to the type settings page |
 | Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
