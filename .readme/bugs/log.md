@@ -10,6 +10,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-24 | Graph node tap not working on mobile | Add 5px drag threshold so touch jitter doesn't prevent node selection |
 | 2026-02-24 | Guest mode: no "New Type" button and no default type | Treat `owner_id === 'local'` as owner in permission resolver; seed Page type on first local space creation |
 | 2026-02-23 | Content flash on settings pages | Add settings layout with Suspense boundary to handle `useSearchParams` bailout |
 | 2026-02-23 | Mobile graph broken | Add pinch-to-zoom, touch drag/pan, and tap selection for mobile graph view |
