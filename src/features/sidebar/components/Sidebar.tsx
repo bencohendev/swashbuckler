@@ -439,7 +439,7 @@ export function Sidebar() {
               </div>
             ) : (
               <>
-                <div className="flex justify-end" role="toolbar" aria-label="Section controls">
+                <div className="flex justify-end pr-1" role="toolbar" aria-label="Section controls">
                   <Button
                     variant="ghost"
                     size="icon-xs"
