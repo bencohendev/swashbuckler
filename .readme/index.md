@@ -130,6 +130,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
 | [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Type Reorder Keyboard](features/type-reorder-keyboard.md) | Up/down buttons as keyboard alternative to drag-drop in type settings |
+| [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
 
 ## Planned Features
 
@@ -140,7 +141,6 @@ Dual-storage architecture with a `DataClient` interface:
 | First use tutorial | Onboarding walkthrough for new users |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | Auto-focus title on new entry | Focus title field automatically when creating a new entry |
-| Advanced Filtering | Filter entries on type pages by properties, tags, and content |
 
 ## Bugs
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useObjectTypes } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks'
 import { useObjectTagsBatch, useTags } from '@/features/tags'
@@ -12,7 +12,11 @@ import { TypeBoardView } from './TypeBoardView'
 import { TypePageFilterBar } from './TypePageFilterBar'
 import { ViewToggle } from './ViewToggle'
 import { useViewMode } from '../stores/viewMode'
-import { filterObjects, isFiltered, EMPTY_FILTERS, type TypePageFilters } from '../lib/filterObjects'
+import { useSortConfig } from '../stores/sortConfig'
+import { usePersistedFilters } from '../stores/filterConfig'
+import { filterObjects, isFiltered, EMPTY_FILTERS } from '../lib/filterObjects'
+import { sortObjects } from '../lib/sortObjects'
+import type { SortConfig } from '../lib/sortObjects'
 
 interface TypeTableViewProps {
   slug: string
@@ -21,7 +25,8 @@ interface TypeTableViewProps {
 export function TypeTableView({ slug }: TypeTableViewProps) {
   const { types, isLoading: typesLoading } = useObjectTypes()
   const { mode } = useViewMode(slug)
-  const [filters, setFilters] = useState<TypePageFilters>(EMPTY_FILTERS)
+  const { sort, setSort } = useSortConfig(slug)
+  const { filters, setFilters } = usePersistedFilters(slug)
 
   const type = useMemo(
     () => types.find((t) => t.slug === slug),
@@ -32,21 +37,34 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     type ? { typeId: type.id, isDeleted: false } : { typeId: '__none__', isDeleted: false }
   )
 
-  const objectIds = useMemo(() => objects.map((o) => o.id), [objects])
+  const rawObjects = useMemo(
+    () => (objectsLoading ? [] : objects),
+    [objectsLoading, objects],
+  )
+
+  const objectIds = useMemo(() => rawObjects.map((o) => o.id), [rawObjects])
   const { tagsByObject } = useObjectTagsBatch(objectIds)
   const { tags } = useTags()
 
-  const filteredObjects = useMemo(
-    () => filterObjects(objectsLoading ? [] : objects, filters, tagsByObject),
-    [objects, objectsLoading, filters, tagsByObject]
+  const fields = useMemo(
+    () => type ? [...type.fields].sort((a, b) => a.sort_order - b.sort_order) : [],
+    [type],
   )
 
-  const sortedObjects = useMemo(() => {
-    if (mode === 'table') return filteredObjects
-    return [...filteredObjects].sort(
-      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    )
-  }, [filteredObjects, mode])
+  const filteredObjects = useMemo(
+    () => filterObjects(rawObjects, filters, tagsByObject),
+    [rawObjects, filters, tagsByObject],
+  )
+
+  const sortedObjects = useMemo(
+    () => sortObjects(filteredObjects, sort, fields, tagsByObject),
+    [filteredObjects, sort, fields, tagsByObject],
+  )
+
+  const handleSortChange = useCallback(
+    (next: SortConfig) => setSort(next),
+    [setSort],
+  )
 
   if (typesLoading) {
     return (
@@ -68,7 +86,7 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     )
   }
 
-  const totalCount = objectsLoading ? 0 : objects.length
+  const totalCount = rawObjects.length
   const filteredCount = filteredObjects.length
   const filtered = isFiltered(filters)
 
@@ -92,6 +110,8 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
         tags={tags}
         filters={filters}
         onFiltersChange={setFilters}
+        sort={sort}
+        onSortChange={handleSortChange}
         totalCount={totalCount}
         filteredCount={filteredCount}
       />
@@ -110,7 +130,13 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
       ) : (
         <>
           {mode === 'table' && (
-            <TypeDataTable type={type} objects={sortedObjects} tagsByObject={tagsByObject} />
+            <TypeDataTable
+              type={type}
+              objects={sortedObjects}
+              tagsByObject={tagsByObject}
+              sort={sort}
+              onSortChange={handleSortChange}
+            />
           )}
           {mode === 'list' && (
             <TypeListView type={type} objects={sortedObjects} />

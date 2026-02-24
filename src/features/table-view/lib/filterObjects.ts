@@ -5,6 +5,9 @@ export interface TypePageFilters {
   selectFilters: Record<string, Set<string>>
   checkboxFilters: Record<string, boolean | undefined>
   tagFilter: Set<string>
+  dateFilters: Record<string, { from?: string; to?: string }>
+  numberFilters: Record<string, { min?: number; max?: number }>
+  textFilters: Record<string, string>
 }
 
 export const EMPTY_FILTERS: TypePageFilters = {
@@ -12,6 +15,9 @@ export const EMPTY_FILTERS: TypePageFilters = {
   selectFilters: {},
   checkboxFilters: {},
   tagFilter: new Set(),
+  dateFilters: {},
+  numberFilters: {},
+  textFilters: {},
 }
 
 export function isFiltered(filters: TypePageFilters): boolean {
@@ -23,6 +29,19 @@ export function isFiltered(filters: TypePageFilters): boolean {
     if (val !== undefined) return true
   }
   if (filters.tagFilter.size > 0) return true
+
+  for (const range of Object.values(filters.dateFilters)) {
+    if (range.from || range.to) return true
+  }
+
+  for (const range of Object.values(filters.numberFilters)) {
+    if (range.min !== undefined || range.max !== undefined) return true
+  }
+
+  for (const val of Object.values(filters.textFilters)) {
+    if (val.length > 0) return true
+  }
+
   return false
 }
 
@@ -72,6 +91,43 @@ export function filterObjects(
     if (filters.tagFilter.size > 0) {
       const objTags = tagsByObject[obj.id]
       if (!objTags || !objTags.some((t) => filters.tagFilter.has(t.id))) {
+        return false
+      }
+    }
+
+    // Date filters
+    for (const [fieldId, range] of Object.entries(filters.dateFilters)) {
+      if (!range.from && !range.to) continue
+      const val = obj.properties?.[fieldId]
+      if (val === undefined || val === null || val === '') {
+        return false
+      }
+      const dateStr = String(val).slice(0, 10) // YYYY-MM-DD
+      if (range.from && dateStr < range.from) return false
+      if (range.to && dateStr > range.to) return false
+    }
+
+    // Number filters
+    for (const [fieldId, range] of Object.entries(filters.numberFilters)) {
+      if (range.min === undefined && range.max === undefined) continue
+      const val = obj.properties?.[fieldId]
+      if (val === undefined || val === null || val === '') {
+        return false
+      }
+      const num = Number(val)
+      if (isNaN(num)) return false
+      if (range.min !== undefined && num < range.min) return false
+      if (range.max !== undefined && num > range.max) return false
+    }
+
+    // Text filters (text + url)
+    for (const [fieldId, filterQuery] of Object.entries(filters.textFilters)) {
+      if (!filterQuery) continue
+      const val = obj.properties?.[fieldId]
+      if (val === undefined || val === null || val === '') {
+        return false
+      }
+      if (!String(val).toLowerCase().includes(filterQuery.toLowerCase())) {
         return false
       }
     }

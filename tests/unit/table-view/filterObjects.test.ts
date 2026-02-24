@@ -208,6 +208,7 @@ describe('filterObjects', () => {
 
   it('combines filters with AND logic', () => {
     const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
       search: 'meeting',
       selectFilters: { status: new Set(['active']) },
       checkboxFilters: { done: true },
@@ -220,10 +221,9 @@ describe('filterObjects', () => {
 
   it('AND logic excludes when any filter fails', () => {
     const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
       search: 'shopping',
       selectFilters: { status: new Set(['active']) },
-      checkboxFilters: {},
-      tagFilter: new Set(),
     }
     // Shopping List has status 'draft', not 'active'
     const result = filterObjects(objects, filters, {})
@@ -267,5 +267,166 @@ describe('filterObjects', () => {
     // empty tagsByObject — no object has tags
     const result = filterObjects(objects, filters, {})
     expect(result).toHaveLength(0)
+  })
+})
+
+describe('filterObjects — date filters', () => {
+  const DUE_FIELD = 'due-date-field'
+  const objA = createMockObject({ title: 'Early', properties: { [DUE_FIELD]: '2025-03-01' } })
+  const objB = createMockObject({ title: 'Middle', properties: { [DUE_FIELD]: '2025-06-15' } })
+  const objC = createMockObject({ title: 'Late', properties: { [DUE_FIELD]: '2025-09-30' } })
+  const objEmpty = createMockObject({ title: 'No date', properties: {} })
+  const dateObjects = [objA, objB, objC, objEmpty]
+
+  it('filters by "from" date only', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      dateFilters: { [DUE_FIELD]: { from: '2025-06-01' } },
+    }
+    const result = filterObjects(dateObjects, filters, {})
+    expect(result.map((o) => o.title).sort()).toEqual(['Late', 'Middle'])
+  })
+
+  it('filters by "to" date only', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      dateFilters: { [DUE_FIELD]: { to: '2025-06-15' } },
+    }
+    const result = filterObjects(dateObjects, filters, {})
+    expect(result.map((o) => o.title).sort()).toEqual(['Early', 'Middle'])
+  })
+
+  it('filters by date range (from + to)', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      dateFilters: { [DUE_FIELD]: { from: '2025-04-01', to: '2025-07-01' } },
+    }
+    const result = filterObjects(dateObjects, filters, {})
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Middle')
+  })
+
+  it('excludes objects with no date value', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      dateFilters: { [DUE_FIELD]: { from: '2025-01-01' } },
+    }
+    const result = filterObjects(dateObjects, filters, {})
+    expect(result.find((o) => o.title === 'No date')).toBeUndefined()
+  })
+})
+
+describe('filterObjects — number filters', () => {
+  const SCORE_FIELD = 'score-field'
+  const objA = createMockObject({ title: 'Low', properties: { [SCORE_FIELD]: 10 } })
+  const objB = createMockObject({ title: 'Mid', properties: { [SCORE_FIELD]: 50 } })
+  const objC = createMockObject({ title: 'High', properties: { [SCORE_FIELD]: 95 } })
+  const objEmpty = createMockObject({ title: 'No score', properties: {} })
+  const numObjects = [objA, objB, objC, objEmpty]
+
+  it('filters by "min" only', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      numberFilters: { [SCORE_FIELD]: { min: 50 } },
+    }
+    const result = filterObjects(numObjects, filters, {})
+    expect(result.map((o) => o.title).sort()).toEqual(['High', 'Mid'])
+  })
+
+  it('filters by "max" only', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      numberFilters: { [SCORE_FIELD]: { max: 50 } },
+    }
+    const result = filterObjects(numObjects, filters, {})
+    expect(result.map((o) => o.title).sort()).toEqual(['Low', 'Mid'])
+  })
+
+  it('filters by number range (min + max)', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      numberFilters: { [SCORE_FIELD]: { min: 20, max: 60 } },
+    }
+    const result = filterObjects(numObjects, filters, {})
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Mid')
+  })
+
+  it('excludes objects with no number value', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      numberFilters: { [SCORE_FIELD]: { min: 0 } },
+    }
+    const result = filterObjects(numObjects, filters, {})
+    expect(result.find((o) => o.title === 'No score')).toBeUndefined()
+  })
+})
+
+describe('filterObjects — text filters', () => {
+  const NOTES_FIELD = 'notes-field'
+  const URL_FIELD = 'url-field'
+  const objA = createMockObject({ title: 'A', properties: { [NOTES_FIELD]: 'Main project for Q3', [URL_FIELD]: 'https://example.com/dash' } })
+  const objB = createMockObject({ title: 'B', properties: { [NOTES_FIELD]: 'Resolved quickly', [URL_FIELD]: 'https://github.com/issues' } })
+  const objEmpty = createMockObject({ title: 'C', properties: {} })
+  const textObjects = [objA, objB, objEmpty]
+
+  it('filters by text field (case-insensitive)', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      textFilters: { [NOTES_FIELD]: 'PROJECT' },
+    }
+    const result = filterObjects(textObjects, filters, {})
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('A')
+  })
+
+  it('filters by URL field (case-insensitive substring)', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      textFilters: { [URL_FIELD]: 'github' },
+    }
+    const result = filterObjects(textObjects, filters, {})
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('B')
+  })
+
+  it('excludes objects with empty text value', () => {
+    const filters: TypePageFilters = {
+      ...EMPTY_FILTERS,
+      textFilters: { [NOTES_FIELD]: 'anything' },
+    }
+    const result = filterObjects(textObjects, filters, {})
+    expect(result.find((o) => o.title === 'C')).toBeUndefined()
+  })
+})
+
+describe('isFiltered — new filter types', () => {
+  it('returns true when dateFilters have from', () => {
+    expect(
+      isFiltered({ ...EMPTY_FILTERS, dateFilters: { f: { from: '2025-01-01' } } })
+    ).toBe(true)
+  })
+
+  it('returns true when numberFilters have min', () => {
+    expect(
+      isFiltered({ ...EMPTY_FILTERS, numberFilters: { f: { min: 5 } } })
+    ).toBe(true)
+  })
+
+  it('returns true when textFilters have value', () => {
+    expect(
+      isFiltered({ ...EMPTY_FILTERS, textFilters: { f: 'query' } })
+    ).toBe(true)
+  })
+
+  it('returns false for empty new filter fields', () => {
+    expect(
+      isFiltered({
+        ...EMPTY_FILTERS,
+        dateFilters: { f: {} },
+        numberFilters: { f: {} },
+        textFilters: { f: '' },
+      })
+    ).toBe(false)
   })
 })
