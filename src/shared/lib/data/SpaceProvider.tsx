@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { Space, SpacesClient, SharingClient, SpaceSharePermission } from './types'
+import type { Space, SpacesClient, SharingClient, SpaceSharePermission, DataClient } from './types'
 import { createSupabaseDataClient } from './supabase'
 import { createLocalDataClient, ensureLocalDefaultSpace, ensureLocalDefaultTypes } from './local'
 import { createClient } from '@/shared/lib/supabase/client'
@@ -19,9 +19,16 @@ interface SpaceContextValue {
   sharedPermission: SpaceSharePermission | null
 }
 
+interface CreateSpaceInput {
+  name: string
+  icon?: string
+  copyTypesFromSpaceId?: string
+  includeTemplates?: boolean
+}
+
 interface SpacesContextValue {
   spaces: Space[]
-  create: (input: { name: string; icon?: string }) => Promise<Space | null>
+  create: (input: CreateSpaceInput) => Promise<Space | null>
   update: (id: string, input: { name?: string; icon?: string }) => Promise<Space | null>
   remove: (id: string) => Promise<void>
 }
@@ -187,13 +194,74 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
   const spacesContextValue: SpacesContextValue = useMemo(() => ({
     spaces,
-    create: async (input: { name: string; icon?: string }) => {
-      const result = await spacesClient.create(input)
-      if (result.data) {
-        emit('spaces')
-        return result.data
+    create: async (input: CreateSpaceInput) => {
+      const { copyTypesFromSpaceId, includeTemplates, ...createInput } = input
+      const result = await spacesClient.create(createInput)
+      if (!result.data) return null
+
+      const newSpace = result.data
+
+      if (copyTypesFromSpaceId) {
+        try {
+          const createClient = (spaceId: string): DataClient =>
+            user
+              ? createSupabaseDataClient(supabase, spaceId)
+              : createLocalDataClient(spaceId)
+
+          const sourceClient = createClient(copyTypesFromSpaceId)
+          const targetClient = createClient(newSpace.id)
+
+          const typesResult = await sourceClient.objectTypes.list()
+          if (!typesResult.error) {
+            const typeIdMap = new Map<string, string>()
+
+            for (const sourceType of typesResult.data) {
+              const newFields = sourceType.fields.map((f) => ({
+                ...f,
+                id: crypto.randomUUID(),
+              }))
+              const createResult = await targetClient.objectTypes.create({
+                name: sourceType.name,
+                plural_name: sourceType.plural_name,
+                slug: sourceType.slug,
+                icon: sourceType.icon,
+                color: sourceType.color,
+                fields: newFields,
+                sort_order: sourceType.sort_order,
+              })
+              if (createResult.data) {
+                typeIdMap.set(sourceType.id, createResult.data.id)
+              }
+            }
+
+            if (includeTemplates) {
+              const templatesResult = await sourceClient.templates.list()
+              if (!templatesResult.error) {
+                for (const tmpl of templatesResult.data) {
+                  const newTypeId = typeIdMap.get(tmpl.type_id)
+                  if (!newTypeId) continue
+                  await targetClient.templates.create({
+                    name: tmpl.name,
+                    type_id: newTypeId,
+                    icon: tmpl.icon,
+                    cover_image: tmpl.cover_image,
+                    properties: tmpl.properties,
+                    content: tmpl.content,
+                  })
+                }
+              }
+            }
+
+            emit('objectTypes')
+            if (includeTemplates) emit('templates')
+          }
+        } catch (err) {
+          console.error('Failed to copy types/templates:', err)
+        }
       }
-      return null
+
+      emit('spaces')
+      return newSpace
     },
     update: async (id: string, input: { name?: string; icon?: string }) => {
       const result = await spacesClient.update(id, input)
@@ -207,7 +275,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       await spacesClient.delete(id)
       emit('spaces')
     },
-  }), [spaces, spacesClient])
+  }), [spaces, spacesClient, supabase, user])
 
   return (
     <SpaceContext.Provider value={spaceContextValue}>
