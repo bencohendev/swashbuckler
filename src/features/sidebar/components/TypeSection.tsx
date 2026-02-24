@@ -218,7 +218,7 @@ export function TypeSection({
           {hasMore && (
             <Link
               href={`/types/${type.slug}`}
-              className="block px-2 py-1 text-xs text-muted-foreground/70 hover:text-muted-foreground"
+              className="block cursor-pointer px-2 py-1 text-xs text-muted-foreground/70 hover:text-muted-foreground"
               aria-label={`See all ${objects.length} ${type.plural_name.toLowerCase()}`}
             >
               See all {objects.length}
