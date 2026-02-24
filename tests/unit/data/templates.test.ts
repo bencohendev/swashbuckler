@@ -34,6 +34,30 @@ describe('Templates (local data layer)', () => {
       expect(result.data!.content).toEqual(content)
       expect(result.data!.properties).toEqual({ status: 'draft' })
     })
+
+    it('rejects duplicate name for same type+space', async () => {
+      await client.templates.create({ name: 'Meeting Notes', type_id: PAGE_TYPE_ID })
+      const result = await client.templates.create({ name: 'Meeting Notes', type_id: PAGE_TYPE_ID })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('rejects duplicate name case-insensitively', async () => {
+      await client.templates.create({ name: 'Meeting Notes', type_id: PAGE_TYPE_ID })
+      const result = await client.templates.create({ name: 'meeting notes', type_id: PAGE_TYPE_ID })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('allows same name for different types', async () => {
+      const noteType = await client.objectTypes.create({
+        name: 'Note', plural_name: 'Notes', slug: 'note-tmpl', icon: 'sticky-note',
+      })
+      await client.templates.create({ name: 'Default', type_id: PAGE_TYPE_ID })
+      const result = await client.templates.create({ name: 'Default', type_id: noteType.data!.id })
+      expect(result.error).toBeNull()
+      expect(result.data!.name).toBe('Default')
+    })
   })
 
   describe('list', () => {
@@ -82,6 +106,21 @@ describe('Templates (local data layer)', () => {
       const created = await client.templates.create({ name: 'Old', type_id: PAGE_TYPE_ID })
       const result = await client.templates.update(created.data!.id, { name: 'New' })
       expect(result.data!.name).toBe('New')
+    })
+
+    it('rejects rename to duplicate name', async () => {
+      await client.templates.create({ name: 'Existing', type_id: PAGE_TYPE_ID })
+      const second = await client.templates.create({ name: 'Second', type_id: PAGE_TYPE_ID })
+      const result = await client.templates.update(second.data!.id, { name: 'Existing' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('allows updating to same name (self-check)', async () => {
+      const created = await client.templates.create({ name: 'Same', type_id: PAGE_TYPE_ID })
+      const result = await client.templates.update(created.data!.id, { name: 'Same' })
+      expect(result.error).toBeNull()
+      expect(result.data!.name).toBe('Same')
     })
   })
 

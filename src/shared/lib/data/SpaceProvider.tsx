@@ -21,8 +21,8 @@ interface SpaceContextValue {
 
 interface SpacesContextValue {
   spaces: Space[]
-  create: (input: { name: string; icon?: string }) => Promise<Space | null>
-  update: (id: string, input: { name?: string; icon?: string }) => Promise<Space | null>
+  create: (input: { name: string; icon?: string }) => Promise<{ data: Space | null; error?: string }>
+  update: (id: string, input: { name?: string; icon?: string }) => Promise<{ data: Space | null; error?: string }>
   remove: (id: string) => Promise<void>
 }
 
@@ -181,19 +181,19 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     spaces,
     create: async (input: { name: string; icon?: string }) => {
       const result = await spacesClient.create(input)
-      if (result.data) {
-        emit('spaces')
-        return result.data
+      if (result.error) {
+        return { data: null, error: result.error.message }
       }
-      return null
+      emit('spaces')
+      return { data: result.data }
     },
     update: async (id: string, input: { name?: string; icon?: string }) => {
       const result = await spacesClient.update(id, input)
-      if (result.data) {
-        emit('spaces')
-        return result.data
+      if (result.error) {
+        return { data: null, error: result.error.message }
       }
-      return null
+      emit('spaces')
+      return { data: result.data }
     },
     remove: async (id: string) => {
       await spacesClient.delete(id)

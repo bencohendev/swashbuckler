@@ -32,10 +32,11 @@ export function SpaceSwitcher() {
   }
 
   const handleCreate = async (input: { name: string; icon?: string }) => {
-    const newSpace = await create(input)
-    if (newSpace) {
-      handleSwitchSpace(newSpace.id)
+    const result = await create(input)
+    if (result.data) {
+      handleSwitchSpace(result.data.id)
     }
+    return result
   }
 
   const isOwned = (s: { owner_id: string }) => !user || s.owner_id === user.id

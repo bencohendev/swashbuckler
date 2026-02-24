@@ -9,6 +9,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 ## Closed
 
 | Date | Bug | Fix |
+| 2026-02-24 | Duplicate names allowed for spaces, types, templates, tags | Add case-insensitive unique constraints (Supabase migration 021), pre-mutation Dexie checks, surface DUPLICATE errors in UI |
 |------|-----|-----|
 | 2026-02-23 | Content flash on settings pages | Add settings layout with Suspense boundary to handle `useSearchParams` bailout |
 | 2026-02-23 | Mobile graph broken | Add pinch-to-zoom, touch drag/pan, and tap selection for mobile graph view |

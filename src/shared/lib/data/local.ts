@@ -341,6 +341,16 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
         const database = getDB()
         const now = new Date().toISOString()
 
+        // Check for duplicate slug in space (case-insensitive)
+        const lowerSlug = input.slug.toLowerCase()
+        const effectiveSpace = spaceId ?? null
+        const duplicate = await database.objectTypes
+          .filter(t => t.space_id === effectiveSpace && t.slug.toLowerCase() === lowerSlug)
+          .first()
+        if (duplicate) {
+          return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+        }
+
         // Determine sort_order if not provided
         let sortOrder = input.sort_order
         if (sortOrder === undefined) {
@@ -381,6 +391,17 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
 
         if (!existing) {
           return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
+        }
+
+        // Check for duplicate slug in space (case-insensitive), excluding self
+        if (input.slug !== undefined) {
+          const lowerSlug = input.slug.toLowerCase()
+          const duplicate = await database.objectTypes
+            .filter(t => t.id !== id && t.space_id === existing.space_id && t.slug.toLowerCase() === lowerSlug)
+            .first()
+          if (duplicate) {
+            return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+          }
         }
 
         const updated: ObjectType = {
@@ -786,6 +807,15 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
         const now = new Date().toISOString()
         const effectiveSpaceId = spaceId ?? LOCAL_DEFAULT_SPACE_ID
 
+        // Check for duplicate name per type+space (case-insensitive)
+        const lowerName = input.name.toLowerCase()
+        const duplicate = await database.templates
+          .filter(t => t.type_id === input.type_id && t.space_id === effectiveSpaceId && t.name.toLowerCase() === lowerName)
+          .first()
+        if (duplicate) {
+          return { data: null, error: { message: 'A template with this name already exists for this type', code: 'DUPLICATE' } }
+        }
+
         const template: Template = {
           id: generateUUID(),
           name: input.name,
@@ -817,6 +847,17 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
 
         if (!existing) {
           return { data: null, error: { message: 'Template not found', code: 'NOT_FOUND' } }
+        }
+
+        // Check for duplicate name per type+space (case-insensitive), excluding self
+        if (input.name !== undefined) {
+          const lowerName = input.name.toLowerCase()
+          const duplicate = await database.templates
+            .filter(t => t.id !== id && t.type_id === existing.type_id && t.space_id === existing.space_id && t.name.toLowerCase() === lowerName)
+            .first()
+          if (duplicate) {
+            return { data: null, error: { message: 'A template with this name already exists for this type', code: 'DUPLICATE' } }
+          }
         }
 
         const updated: Template = {
@@ -1078,6 +1119,15 @@ function createLocalSpacesClient(): SpacesClient {
         const database = getDB()
         const now = new Date().toISOString()
 
+        // Check for duplicate name per owner (case-insensitive)
+        const lowerName = input.name.toLowerCase()
+        const duplicate = await database.spaces
+          .filter(s => s.owner_id === 'local' && s.name.toLowerCase() === lowerName)
+          .first()
+        if (duplicate) {
+          return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+        }
+
         const space: Space = {
           id: generateUUID(),
           name: input.name,
@@ -1104,6 +1154,17 @@ function createLocalSpacesClient(): SpacesClient {
 
         if (!existing) {
           return { data: null, error: { message: 'Space not found', code: 'NOT_FOUND' } }
+        }
+
+        // Check for duplicate name per owner (case-insensitive), excluding self
+        if (input.name !== undefined) {
+          const lowerName = input.name.toLowerCase()
+          const duplicate = await database.spaces
+            .filter(s => s.id !== id && s.owner_id === existing.owner_id && s.name.toLowerCase() === lowerName)
+            .first()
+          if (duplicate) {
+            return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+          }
         }
 
         const updated: Space = {
@@ -1202,9 +1263,10 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
     async create(input: CreateTagInput): Promise<DataResult<Tag>> {
       try {
         const database = getDB()
-        // Check for duplicate name in space
+        // Check for duplicate name in space (case-insensitive)
+        const lowerName = input.name.toLowerCase()
         const existing = await database.tags
-          .filter(t => t.space_id === effectiveSpaceId && t.name === input.name)
+          .filter(t => t.space_id === effectiveSpaceId && t.name.toLowerCase() === lowerName)
           .first()
         if (existing) {
           return { data: null, error: { message: 'A tag with this name already exists', code: 'DUPLICATE' } }
@@ -1232,6 +1294,16 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         const existing = await database.tags.get(id)
         if (!existing) {
           return { data: null, error: { message: 'Tag not found', code: 'NOT_FOUND' } }
+        }
+        // Check for duplicate name in space (case-insensitive), excluding self
+        if (input.name !== undefined) {
+          const lowerName = input.name.toLowerCase()
+          const duplicate = await database.tags
+            .filter(t => t.id !== id && t.space_id === existing.space_id && t.name.toLowerCase() === lowerName)
+            .first()
+          if (duplicate) {
+            return { data: null, error: { message: 'A tag with this name already exists', code: 'DUPLICATE' } }
+          }
         }
         const updated: Tag = {
           ...existing,

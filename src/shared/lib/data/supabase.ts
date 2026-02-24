@@ -103,6 +103,9 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
         .single()
 
       if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+        }
         return { data: null, error: { message: error.message, code: error.code } }
       }
 
@@ -118,6 +121,9 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
         .single()
 
       if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+        }
         return { data: null, error: { message: error.message, code: error.code } }
       }
 
@@ -414,6 +420,9 @@ function createTemplatesClient(supabase: SupabaseClient, spaceId?: string): Temp
         .single()
 
       if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A template with this name already exists for this type', code: 'DUPLICATE' } }
+        }
         return { data: null, error: { message: error.message, code: error.code } }
       }
 
@@ -429,6 +438,9 @@ function createTemplatesClient(supabase: SupabaseClient, spaceId?: string): Temp
         .single()
 
       if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A template with this name already exists for this type', code: 'DUPLICATE' } }
+        }
         return { data: null, error: { message: error.message, code: error.code } }
       }
 
@@ -681,6 +693,9 @@ function createSpacesClient(supabase: SupabaseClient): SpacesClient {
         .single()
 
       if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+        }
         return { data: null, error: { message: error.message, code: error.code } }
       }
 
@@ -696,6 +711,9 @@ function createSpacesClient(supabase: SupabaseClient): SpacesClient {
         .single()
 
       if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+        }
         return { data: null, error: { message: error.message, code: error.code } }
       }
 
@@ -1036,6 +1054,9 @@ function createTagsClient(supabase: SupabaseClient, spaceId?: string): TagsClien
         .single()
 
       if (error) {
+        if (error.code === '23505') {
+          return { data: null, error: { message: 'A tag with this name already exists', code: 'DUPLICATE' } }
+        }
         return { data: null, error: { message: error.message, code: error.code } }
       }
 

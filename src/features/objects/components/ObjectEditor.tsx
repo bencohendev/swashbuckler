@@ -138,10 +138,11 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const handleTemplateDialogSave = useCallback(async (name: string): Promise<boolean> => {
     if (!object) return false
     const result = await saveObjectAsTemplate(object, name)
-    if (result) {
+    if (result.data) {
       toast({ description: `Template "${name}" saved`, variant: 'success' })
+      return true
     }
-    return result !== null
+    return false
   }, [object, saveObjectAsTemplate])
 
   if (isLoading) {

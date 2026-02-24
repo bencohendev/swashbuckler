@@ -60,6 +60,28 @@ describe('Object Types (local data layer)', () => {
       })
       expect(result.data!.space_id).toBe(space.data!.id)
     })
+
+    it('rejects duplicate slug in same space', async () => {
+      await client.objectTypes.create({
+        name: 'Task', plural_name: 'Tasks', slug: 'task', icon: 'check',
+      })
+      const result = await client.objectTypes.create({
+        name: 'Task 2', plural_name: 'Task 2s', slug: 'task', icon: 'check',
+      })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('rejects duplicate slug case-insensitively', async () => {
+      await client.objectTypes.create({
+        name: 'Task', plural_name: 'Tasks', slug: 'task', icon: 'check',
+      })
+      const result = await client.objectTypes.create({
+        name: 'Task 2', plural_name: 'Task 2s', slug: 'Task', icon: 'check',
+      })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
   })
 
   describe('get', () => {
@@ -89,6 +111,27 @@ describe('Object Types (local data layer)', () => {
       })
       const result = await client.objectTypes.update(created.data!.id, { slug: 'new-slug' })
       expect(result.data!.slug).toBe('new-slug')
+    })
+
+    it('rejects rename to duplicate slug', async () => {
+      await client.objectTypes.create({
+        name: 'A', plural_name: 'As', slug: 'alpha', icon: 'a',
+      })
+      const b = await client.objectTypes.create({
+        name: 'B', plural_name: 'Bs', slug: 'beta', icon: 'b',
+      })
+      const result = await client.objectTypes.update(b.data!.id, { slug: 'alpha' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('allows updating to same slug (self-check)', async () => {
+      const created = await client.objectTypes.create({
+        name: 'Self', plural_name: 'Selfs', slug: 'self-slug', icon: 'a',
+      })
+      const result = await client.objectTypes.update(created.data!.id, { slug: 'self-slug' })
+      expect(result.error).toBeNull()
+      expect(result.data!.slug).toBe('self-slug')
     })
   })
 

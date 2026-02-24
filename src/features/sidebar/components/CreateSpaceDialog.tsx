@@ -17,28 +17,40 @@ import { EmojiPicker } from "@/shared/components/EmojiPicker"
 interface CreateSpaceDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (input: { name: string; icon?: string }) => Promise<unknown>
+  onCreate: (input: { name: string; icon?: string }) => Promise<{ data: unknown; error?: string }>
 }
 
 export function CreateSpaceDialog({ open, onOpenChange, onCreate }: CreateSpaceDialogProps) {
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("📁")
   const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
 
     setIsCreating(true)
-    await onCreate({ name: name.trim(), icon })
+    setError(null)
+    const result = await onCreate({ name: name.trim(), icon })
     setIsCreating(false)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
     setName("")
     setIcon("📁")
+    setError(null)
     onOpenChange(false)
   }
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) setError(null)
+    onOpenChange(nextOpen)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Space</DialogTitle>
@@ -53,9 +65,15 @@ export function CreateSpaceDialog({ open, onOpenChange, onCreate }: CreateSpaceD
               id="space-name"
               placeholder="My Space"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value)
+                setError(null)
+              }}
               autoFocus
             />
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Icon</Label>
