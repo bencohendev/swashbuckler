@@ -249,7 +249,7 @@ export function Sidebar() {
       type_id: typeId,
     })
     if (result) {
-      router.push(`/objects/${result.id}`)
+      router.push(`/objects/${result.id}?new=1`)
     } else {
       toast({ description: 'Failed to create entry. You may not have permission.', variant: 'destructive' })
     }
@@ -273,12 +273,12 @@ export function Sidebar() {
     if (info && info.hasVariables) {
       const result = await createFromTemplateWithVariables(template.id, {}, buildResolutionContext())
       if (result) {
-        router.push(`/objects/${result.id}`)
+        router.push(`/objects/${result.id}?new=1`)
       }
     } else {
       const result = await createFromTemplate(template.id)
       if (result) {
-        router.push(`/objects/${result.id}`)
+        router.push(`/objects/${result.id}?new=1`)
       }
     }
   }
@@ -293,7 +293,7 @@ export function Sidebar() {
     )
     setPendingTemplate(null)
     if (result) {
-      router.push(`/objects/${result.id}`)
+      router.push(`/objects/${result.id}?new=1`)
     }
   }
 

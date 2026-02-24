@@ -13,7 +13,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { ObjectEditor } from './ObjectEditor'
 
 export function ObjectEditorModal() {
-  const { objectId, close } = useObjectModal()
+  const { objectId, autoFocus, close } = useObjectModal()
   const isMobile = useIsMobile()
 
   if (!objectId) return null
@@ -46,6 +46,7 @@ export function ObjectEditorModal() {
         <div className={isMobile ? "h-[calc(100%-3.5rem)] overflow-auto" : undefined}>
           <ObjectEditor
             id={objectId}
+            autoFocus={autoFocus}
             onDelete={close}
             onNavigateAway={close}
           />
