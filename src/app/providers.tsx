@@ -8,6 +8,7 @@ import { createClient } from '@/shared/lib/supabase/client'
 import { DataProvider, SpaceProvider, useCurrentSpace } from '@/shared/lib/data'
 import { setQueryClient } from '@/shared/lib/data/events'
 import { Toaster } from '@/shared/components/ui/Toast'
+import { CustomThemeApplier } from '@/features/theme-builder'
 
 interface ProvidersProps {
   children: ReactNode
@@ -68,6 +69,7 @@ export function Providers({ children }: ProvidersProps) {
         </SpaceProvider>
       </QueryClientProvider>
       <Toaster />
+      <CustomThemeApplier />
     </ThemeProvider>
   )
 }

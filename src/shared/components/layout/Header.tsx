@@ -20,6 +20,7 @@ import { useSidebar } from "@/shared/stores/sidebar"
 import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
 import { QuickCaptureDialog, QuickCaptureButton } from "@/features/quick-capture"
+import { useCustomThemeStore } from "@/features/theme-builder"
 
 export function Header({ email }: { email?: string }) {
   const router = useRouter()
@@ -31,6 +32,7 @@ export function Header({ email }: { email?: string }) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
   const { theme, setTheme, resolvedTheme } = useTheme()
+  const clearActiveTheme = useCustomThemeStore(s => s.clearActiveTheme)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -93,6 +95,7 @@ export function Header({ email }: { email?: string }) {
           size="icon"
           className="text-muted-foreground"
           onClick={() => {
+            clearActiveTheme()
             if (theme === 'light') setTheme('dark')
             else if (theme === 'dark') setTheme('system')
             else setTheme('light')
