@@ -82,6 +82,12 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       }
     }
 
+    // Ensure guest mode always has default types (e.g. Page)
+    if (!user) {
+      await ensureLocalDefaultTypes()
+      emit('objectTypes')
+    }
+
     // Classify spaces by owner_id (not by cross-referencing getSharedSpaces)
     const newShareInfoMap = new Map<string, { shareId: string; permission: SpaceSharePermission }>()
     let owned: Space[]

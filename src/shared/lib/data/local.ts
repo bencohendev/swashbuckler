@@ -1510,6 +1510,13 @@ export async function exportLocalData(): Promise<{
   return { objects, objectTypes, templates, objectRelations, spaces, tags, objectTags, pins }
 }
 
+export async function ensureLocalDefaultTypes(): Promise<void> {
+  const database = getDB()
+  const count = await database.objectTypes.where('space_id').equals(LOCAL_DEFAULT_SPACE_ID).count()
+  if (count > 0) return
+  await database.objectTypes.bulkAdd(DEFAULT_TYPES)
+}
+
 export async function ensureLocalDefaultSpace(): Promise<Space> {
   const database = getDB()
   const existing = await database.spaces.get(LOCAL_DEFAULT_SPACE_ID)
