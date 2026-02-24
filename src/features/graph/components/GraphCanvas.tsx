@@ -16,7 +16,7 @@ interface GraphCanvasProps {
 
 type Mode =
   | { type: 'idle' }
-  | { type: 'drag'; nodeId: string; pointerId: number; didMove: boolean }
+  | { type: 'drag'; nodeId: string; pointerId: number; didMove: boolean; startX: number; startY: number }
   | { type: 'pan'; pointerId: number; startX: number; startY: number; startTx: number; startTy: number }
   | { type: 'pinch'; prevDist: number | null; prevMidX: number; prevMidY: number }
 
@@ -162,7 +162,7 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
       return
     }
 
-    modeRef.current = { type: 'drag', nodeId, pointerId, didMove: false }
+    modeRef.current = { type: 'drag', nodeId, pointerId, didMove: false, startX: clientX, startY: clientY }
     svgRef.current?.setPointerCapture(pointerId)
     const sim = getSimulation()
     if (sim) {
@@ -204,7 +204,13 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
     if (m.type === 'drag') {
       // Only respond to the pointer that started the drag
       if (e.pointerId !== m.pointerId) return
-      m.didMove = true
+      // Require 5px movement before treating as drag (touch jitter tolerance)
+      if (!m.didMove) {
+        const dx = e.clientX - m.startX
+        const dy = e.clientY - m.startY
+        if (dx * dx + dy * dy < 25) return
+        m.didMove = true
+      }
       const pt = toSimCoords(e.clientX, e.clientY)
       const sim = getSimulation()
       if (sim) {
