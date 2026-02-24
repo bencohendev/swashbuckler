@@ -12,7 +12,7 @@ Force-directed knowledge graph visualization using D3.js, with type filtering, n
 |------|----------|
 | Layout | Four modes: force-directed, hierarchical (tree), radial, clustered (by type) |
 | Rendering | SVG-based |
-| Interactions | Click to select, drag to move, zoom/pan |
+| Interactions | Click to select, drag to move, zoom/pan, keyboard navigation |
 | Filtering | Inclusion-based type filter (click to include) |
 | Node color | Deterministic palette per type, with swatches in filter panel |
 | Node labels | Truncated object titles |
@@ -42,6 +42,7 @@ Disconnected components are handled via a virtual root node (not rendered) that 
 - `src/features/graph/lib/layouts/clusteredLayout.ts` — type-grouped circle layout
 - `src/features/graph/lib/buildGraphData.ts` — graph data construction
 - `src/features/graph/lib/colors.ts` — deterministic color palette
+- `src/features/graph/lib/spatialNav.ts` — spatial navigation algorithm (cone-based nearest-neighbor search)
 - `src/features/graph/lib/store.ts` — graph state (Zustand) including `layoutMode`
 - `src/app/(main)/graph/page.tsx` — graph page
 
@@ -55,6 +56,7 @@ Disconnected components are handled via a virtual root node (not rendered) that 
 - [x] Zoom/pan works
 - [x] Nodes color-coded by type
 - [ ] Search with highlighting
+- [x] Keyboard navigation (arrow keys, Enter, Escape) with screen reader announcements
 - [x] Switch between all 4 layout modes
 - [x] Animated transitions between layouts
 - [x] Node drag works in force (physics) and static (direct move) layouts

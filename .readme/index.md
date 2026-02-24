@@ -127,7 +127,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
 | Advanced documentation | In-depth user docs and help content |
-| Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
 | Template section in type settings | Add template management section to the type settings page |
