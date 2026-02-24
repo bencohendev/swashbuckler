@@ -115,6 +115,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Unique Default Names](features/unique-default-names.md) | Incrementing "New Page", "New Page 2", etc. |
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
 | [Private Content](features/private-content.md) | Hide content within entries from shared users |
+| Entry Pagination | Max 10 entries per type in sidebar with "See all" link |
 | Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
 | Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
 | [Password Security](features/password-security.md) | Strength meter, 8-char minimum, login rate limiting |
@@ -135,7 +136,6 @@ Dual-storage architecture with a `DataClient` interface:
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
-| Entry pagination | Max 10 entries per type in sidebar with "see more" button |
 | Type page search & filter | Search and filter support on type pages |
 
 ## Bugs
