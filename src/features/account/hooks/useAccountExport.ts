@@ -62,11 +62,15 @@ export function useAccountExport() {
       // Fetch pins (user-scoped, not space-scoped)
       const pinsResult = await unscoped.pins.list()
 
+      // Fetch global object types (not tied to any space)
+      const globalTypesResult = await unscoped.globalObjectTypes.list()
+
       const exportPayload = {
         exportedAt: new Date().toISOString(),
         spaces,
         objects: allObjects,
         objectTypes: allObjectTypes,
+        globalObjectTypes: globalTypesResult.data ?? [],
         templates: allTemplates,
         objectRelations: allRelations,
         tags: allTags,

@@ -2,6 +2,7 @@ export type {
   DataClient,
   ObjectsClient,
   ObjectTypesClient,
+  GlobalObjectTypesClient,
   TemplatesClient,
   RelationsClient,
   SpacesClient,

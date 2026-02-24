@@ -37,6 +37,7 @@ src/
 │   ├── auth/
 │   ├── collaboration/
 │   ├── editor/
+│   ├── global-types/
 │   ├── graph/
 │   ├── object-types/
 │   ├── objects/
@@ -80,6 +81,9 @@ Dual-storage architecture with a `DataClient` interface:
 016_storage.sql             # uploads bucket + RLS policies
 017_leave_space.sql         # leave space function
 018_realtime.sql            # enable realtime publication
+019_fix_shared_user_insert.sql # fix shared user insert
+020_cascade_delete_types.sql   # cascade delete types
+021_global_types.sql           # per-owner global type slug index
 ```
 
 ## Implemented Features
@@ -116,6 +120,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
 | Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
 | Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
+| [Global Types](features/global-types.md) | Reusable type blueprints importable across spaces |
 
 ## Planned Features
 
@@ -132,7 +137,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
 | Template section in type settings | Add template management section to the type settings page |
 | Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
-| [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
 
 ## Bugs

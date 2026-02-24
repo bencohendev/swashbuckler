@@ -3,6 +3,7 @@ import type {
   DataClient,
   ObjectsClient,
   ObjectTypesClient,
+  GlobalObjectTypesClient,
   TemplatesClient,
   RelationsClient,
   SpacesClient,
@@ -430,6 +431,176 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
         await database.templates.where('type_id').equals(id).delete()
         await database.objectTypes.delete(id)
         return { data: null, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+  }
+}
+
+function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
+  return {
+    async list(): Promise<DataListResult<ObjectType>> {
+      try {
+        const database = getDB()
+        const results = await database.objectTypes
+          .filter(t => t.space_id === null || t.space_id === undefined)
+          .toArray()
+        results.sort((a, b) => a.sort_order - b.sort_order)
+        return { data: results, error: null }
+      } catch (error) {
+        return {
+          data: [],
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async get(id: string): Promise<DataResult<ObjectType>> {
+      try {
+        const database = getDB()
+        const objectType = await database.objectTypes.get(id)
+
+        if (!objectType || (objectType.space_id !== null && objectType.space_id !== undefined)) {
+          return { data: null, error: { message: 'Global type not found', code: 'NOT_FOUND' } }
+        }
+
+        return { data: objectType, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>> {
+      try {
+        const database = getDB()
+        const now = new Date().toISOString()
+
+        let sortOrder = input.sort_order
+        if (sortOrder === undefined) {
+          const all = await database.objectTypes
+            .filter(t => t.space_id === null || t.space_id === undefined)
+            .toArray()
+          sortOrder = all.length > 0 ? Math.max(...all.map(t => t.sort_order)) + 1 : 0
+        }
+
+        const objectType: ObjectType = {
+          id: generateUUID(),
+          name: input.name,
+          plural_name: input.plural_name,
+          slug: input.slug,
+          icon: input.icon,
+          color: input.color ?? null,
+          fields: input.fields ?? [],
+          is_built_in: false,
+          owner_id: null,
+          space_id: null,
+          sort_order: sortOrder,
+          created_at: now,
+          updated_at: now,
+        }
+
+        await database.objectTypes.add(objectType)
+        return { data: objectType, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async update(id: string, input: UpdateObjectTypeInput): Promise<DataResult<ObjectType>> {
+      try {
+        const database = getDB()
+        const existing = await database.objectTypes.get(id)
+
+        if (!existing || (existing.space_id !== null && existing.space_id !== undefined)) {
+          return { data: null, error: { message: 'Global type not found', code: 'NOT_FOUND' } }
+        }
+
+        const updated: ObjectType = {
+          ...existing,
+          ...input,
+          updated_at: new Date().toISOString(),
+        }
+
+        await database.objectTypes.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        const existing = await database.objectTypes.get(id)
+
+        if (!existing || (existing.space_id !== null && existing.space_id !== undefined)) {
+          return { data: null, error: { message: 'Global type not found', code: 'NOT_FOUND' } }
+        }
+
+        await database.objectTypes.delete(id)
+        return { data: null, error: null }
+      } catch (error) {
+        return {
+          data: null,
+          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+        }
+      }
+    },
+
+    async importToSpace(id: string, targetSpaceId: string): Promise<DataResult<ObjectType>> {
+      try {
+        const database = getDB()
+        const globalType = await database.objectTypes.get(id)
+
+        if (!globalType || (globalType.space_id !== null && globalType.space_id !== undefined)) {
+          return { data: null, error: { message: 'Global type not found', code: 'NOT_FOUND' } }
+        }
+
+        // Check for slug conflict in target space
+        const existing = await database.objectTypes
+          .filter(t => t.space_id === targetSpaceId && t.slug === globalType.slug)
+          .first()
+
+        if (existing) {
+          return { data: null, error: { message: `A type with slug "${globalType.slug}" already exists in this space`, code: 'DUPLICATE' } }
+        }
+
+        // Copy with new field UUIDs
+        const now = new Date().toISOString()
+        const newType: ObjectType = {
+          id: generateUUID(),
+          name: globalType.name,
+          plural_name: globalType.plural_name,
+          slug: globalType.slug,
+          icon: globalType.icon,
+          color: globalType.color,
+          fields: globalType.fields.map(field => ({
+            ...field,
+            id: generateUUID(),
+          })),
+          is_built_in: false,
+          owner_id: globalType.owner_id,
+          space_id: targetSpaceId,
+          sort_order: globalType.sort_order,
+          created_at: now,
+          updated_at: now,
+        }
+
+        await database.objectTypes.add(newType)
+        return { data: newType, error: null }
       } catch (error) {
         return {
           data: null,
@@ -1464,6 +1635,7 @@ export function createLocalDataClient(spaceId?: string): DataClient {
   return {
     objects: createObjectsClient(spaceId),
     objectTypes: createObjectTypesClient(spaceId),
+    globalObjectTypes: createLocalGlobalObjectTypesClient(),
     templates: createTemplatesClient(spaceId),
     relations: createRelationsClient(spaceId),
     spaces: createLocalSpacesClient(),

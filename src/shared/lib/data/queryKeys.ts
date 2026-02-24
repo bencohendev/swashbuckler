@@ -11,6 +11,11 @@ export const queryKeys = {
     list: (spaceId?: string) => ['objectTypes', spaceId, 'list'] as const,
     detail: (id: string) => ['objectTypes', 'detail', id] as const,
   },
+  globalObjectTypes: {
+    all: () => ['globalObjectTypes'] as const,
+    list: () => ['globalObjectTypes', 'list'] as const,
+    detail: (id: string) => ['globalObjectTypes', 'detail', id] as const,
+  },
   tags: {
     all: (spaceId?: string) => ['tags', spaceId] as const,
     list: (spaceId?: string) => ['tags', spaceId, 'list'] as const,
