@@ -43,6 +43,7 @@ interface UseTemplatesReturn {
   getTemplateVariables: (templateId: string) => Promise<TemplateVariableInfo | null>
   saveObjectAsTemplate: (object: DataObject, name?: string) => Promise<Template | null>
   deleteTemplate: (id: string) => Promise<void>
+  renameTemplate: (id: string, name: string) => Promise<void>
 }
 
 export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesReturn {
@@ -171,6 +172,12 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     emit('templates')
   }, [dataClient])
 
+  const renameTemplate = useCallback(async (id: string, name: string): Promise<void> => {
+    const result = await dataClient.templates.update(id, { name })
+    if (result.error) return
+    emit('templates')
+  }, [dataClient])
+
   return {
     templates: data ?? EMPTY_TEMPLATES,
     isLoading,
@@ -181,5 +188,6 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     getTemplateVariables,
     saveObjectAsTemplate,
     deleteTemplate,
+    renameTemplate,
   }
 }

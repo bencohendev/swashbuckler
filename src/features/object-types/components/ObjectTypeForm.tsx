@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
 import { EmojiPicker } from '@/shared/components/EmojiPicker'
 import { FieldBuilder } from './FieldBuilder'
+import { TemplateSection } from './TemplateSection'
 import type { ObjectType, FieldDefinition, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
 
 interface ObjectTypeFormProps {
@@ -164,6 +165,8 @@ export function ObjectTypeForm({ objectType, onSave, onCancel }: ObjectTypeFormP
       </div>
 
       <FieldBuilder fields={fields} onChange={setFields} />
+
+      {isEditing && <TemplateSection typeId={objectType.id} />}
 
       <div className="flex items-center justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
