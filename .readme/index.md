@@ -141,6 +141,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | Auto-focus title on new entry | Focus title field automatically when creating a new entry |
+| Advanced Filtering | Filter entries on type pages by properties, tags, and content |
 
 ## Bugs
 
