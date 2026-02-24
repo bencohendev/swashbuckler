@@ -113,6 +113,8 @@ Dual-storage architecture with a `DataClient` interface:
 | [Realtime Collaboration](features/realtime-collaboration.md) | Yjs CRDT collaborative editing for shared spaces |
 | [Move docs to .readme/](features/move-docs-to-readme.md) | Move documentation from `.claude/docs/` to `.readme/` for GitHub visibility |
 | [Unique Default Names](features/unique-default-names.md) | Incrementing "New Page", "New Page 2", etc. |
+| [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
+| Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
 
 ## Planned Features
 
@@ -121,12 +123,10 @@ Dual-storage architecture with a `DataClient` interface:
 | [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
-| [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
 | Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
 | Advanced documentation | In-depth user docs and help content |
 | Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
-| Custom confirm dialogs | Replace `window.confirm()` with Radix AlertDialog |
 | Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
 | Show password toggle | Add visibility toggle to password inputs (login, signup, account settings) |
 | Password security | Rate-limit login attempts; evaluate password strength requirements |
