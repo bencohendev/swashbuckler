@@ -5,7 +5,8 @@ export function resolveSpacePermission(
   userId: string | undefined,
   sharedPermission: SpaceSharePermission | null,
 ): SpacePermission {
-  if (!space || !userId) return 'view'
+  if (!space) return 'view'
+  if (!userId) return space.owner_id === 'local' ? 'owner' : 'view'
   if (space.owner_id === userId) return 'owner'
   if (sharedPermission === 'edit') return 'edit'
   return 'view'

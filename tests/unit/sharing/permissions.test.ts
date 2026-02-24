@@ -20,9 +20,14 @@ describe('resolveSpacePermission', () => {
     expect(resolveSpacePermission(null, 'some-user-id', null)).toBe('view')
   })
 
-  it('returns view when userId is undefined', () => {
+  it('returns view when userId is undefined and space is not local', () => {
     const space = mockSpace('owner-123')
     expect(resolveSpacePermission(space, undefined, null)).toBe('view')
+  })
+
+  it('returns owner when userId is undefined and space owner is local (guest mode)', () => {
+    const space = mockSpace('local')
+    expect(resolveSpacePermission(space, undefined, null)).toBe('owner')
   })
 
   it('returns view when both space is null and userId is undefined', () => {
