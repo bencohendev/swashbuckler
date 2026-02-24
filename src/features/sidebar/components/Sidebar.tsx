@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { ChevronsDownUpIcon, ChevronsUpDownIcon, HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar, useSidebarHydration } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
@@ -302,12 +302,14 @@ export function Sidebar() {
   const hasRecentContent = allObjects.length > 0
   const hasTagsContent = tags.length > 0
 
-  const handleExpandAll = useCallback(() => {
-    setCollapseSignal((prev) => ({ collapsed: false, key: (prev?.key ?? 0) + 1 }))
-  }, [])
+  const [allCollapsed, setAllCollapsed] = useState(false)
 
-  const handleCollapseAll = useCallback(() => {
-    setCollapseSignal((prev) => ({ collapsed: true, key: (prev?.key ?? 0) + 1 }))
+  const handleToggleAll = useCallback(() => {
+    setAllCollapsed((prev) => {
+      const next = !prev
+      setCollapseSignal((s) => ({ collapsed: next, key: (s?.key ?? 0) + 1 }))
+      return next
+    })
   }, [])
 
   const sidebarContent = (
@@ -443,20 +445,13 @@ export function Sidebar() {
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    title="Expand all sections"
-                    aria-label="Expand all sections"
-                    onClick={handleExpandAll}
+                    title={allCollapsed ? "Expand all sections" : "Collapse all sections"}
+                    aria-label={allCollapsed ? "Expand all sections" : "Collapse all sections"}
+                    onClick={handleToggleAll}
                   >
-                    <ChevronsUpDownIcon className="size-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    title="Collapse all sections"
-                    aria-label="Collapse all sections"
-                    onClick={handleCollapseAll}
-                  >
-                    <ChevronsDownUpIcon className="size-3" />
+                    {allCollapsed
+                      ? <ListChevronsUpDownIcon className="size-3" />
+                      : <ListChevronsDownUpIcon className="size-3" />}
                   </Button>
                 </div>
                 <PinnedSection pinnedIds={pinnedIds} objects={allObjects} collapseSignal={collapseSignal} />
