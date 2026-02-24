@@ -6,6 +6,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
+| Duplicate names allowed | Spaces (per owner), object types (per space), objects (per type+space), templates (per type+space), and tags (per space) can all have duplicate names — each should enforce uniqueness within its scope |
 ## Closed
 
 | Date | Bug | Fix |
