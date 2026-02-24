@@ -509,7 +509,7 @@ export function Sidebar() {
                     )
                   )
                 )}
-                {canEditSpace && (
+                {canEditSpace && filteredOrderedTypes.length > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"

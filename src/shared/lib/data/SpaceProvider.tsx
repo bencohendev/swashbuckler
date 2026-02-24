@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Space, SpacesClient, SharingClient, SpaceSharePermission } from './types'
 import { createSupabaseDataClient } from './supabase'
-import { createLocalDataClient, ensureLocalDefaultSpace } from './local'
+import { createLocalDataClient, ensureLocalDefaultSpace, ensureLocalDefaultTypes } from './local'
 import { createClient } from '@/shared/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { emit, subscribe } from './events'
@@ -78,6 +78,12 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
         const defaultSpace = await ensureLocalDefaultSpace()
         loadedSpaces = [defaultSpace]
       }
+    }
+
+    // Ensure guest mode always has default types (e.g. Page)
+    if (!user) {
+      await ensureLocalDefaultTypes()
+      emit('objectTypes')
     }
 
     // Classify spaces by owner_id (not by cross-referencing getSharedSpaces)
