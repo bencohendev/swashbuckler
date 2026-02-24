@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/Card"
 import { OAuthButtons } from "./OAuthButtons"
+import { PasswordStrengthMeter } from "./PasswordStrengthMeter"
 import { Separator } from "@/shared/components/ui/Separator"
 
 export function SignupForm() {
@@ -36,8 +37,8 @@ export function SignupForm() {
       return
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters")
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters")
       return
     }
 
@@ -100,6 +101,7 @@ export function SignupForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <PasswordStrengthMeter password={password} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
