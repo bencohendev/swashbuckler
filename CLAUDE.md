@@ -59,3 +59,10 @@ After adding, modifying, or fixing features, run these checks:
 - After completing implementation, update the relevant spec with surgical edits
 - Read the existing doc before modifying it
 - These docs are the source of truth for expected behavior
+
+### User-Facing Documentation
+- User docs live in `apps/docs/content/docs/` as MDX files
+- When a feature is added, changed, or removed, update the corresponding docs page to match
+- New features that don't fit an existing page need a new MDX file and an entry in `meta.json`
+- Screenshot placeholders use `{/* screenshot: description */}` (MDX comments)
+- Escape bare curly braces in prose with backslashes (`\{...\}`) — MDX parses them as JSX expressions
