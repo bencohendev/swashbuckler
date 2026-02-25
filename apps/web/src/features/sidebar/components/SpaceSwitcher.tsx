@@ -28,7 +28,7 @@ export function SpaceSwitcher() {
   const handleSwitchSpace = (id: string) => {
     if (id === space?.id) return
     switchSpace(id)
-    router.push('/')
+    router.push('/dashboard')
   }
 
   const handleCreate = async (input: CreateSpaceInput) => {
@@ -152,7 +152,7 @@ export function SpaceSwitcher() {
           onConfirm={async () => {
             await leaveSpace(space.id)
             toast({ description: `Left "${space.name}"`, variant: 'success' })
-            router.push('/')
+            router.push('/dashboard')
           }}
         />
       )}

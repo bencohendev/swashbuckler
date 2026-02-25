@@ -56,14 +56,14 @@ export function TagPageView({ name }: TagPageViewProps) {
     const tagName = tag.name
     await remove(tag.id)
     toast({ description: `Tag "${tagName}" deleted`, variant: 'success' })
-    router.push('/')
+    router.push('/dashboard')
   }
 
   if (!tag && !isLoading) {
     return (
       <div className="p-6">
         <p className="text-muted-foreground">Tag &ldquo;{name}&rdquo; not found.</p>
-        <Button variant="outline" onClick={() => router.push('/')} className="mt-4">
+        <Button variant="outline" onClick={() => router.push('/dashboard')} className="mt-4">
           Go back
         </Button>
       </div>
