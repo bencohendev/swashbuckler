@@ -6,12 +6,12 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| New entry title shows text instead of placeholder | When creating a new entry, the title field should show a placeholder instead of pre-filled text |
 | Cursor jumps out of newly created special blocks | When inserting a code block, table, or private block via the slash menu, the cursor lands outside the block instead of inside it. Likely cause: selection is set synchronously in `selectItem` (SlashInput.tsx:370-373) but `focusEditor` defers DOM focus via `setTimeout(0)` — plugin normalization (TrailingBlockPlugin, CodeBlockPlugin) can shift the selection in between. Fix: defer both selection and focus together in the same `setTimeout` callback. |
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-24 | New entry title shows text instead of placeholder | Show placeholder instead of generated name in title input for new entries |
 | 2026-02-24 | Cursor trapped in code blocks, tables, and private blocks | Add ExitBreakPlugin (Mod+Enter / Mod+Shift+Enter) and TrailingBlockPlugin to ensure users can always escape block-level elements |
 | 2026-02-24 | Table blocks have no row/column controls | Add floating toolbar on hover with add row, add column, delete row, delete column, delete table buttons |
 | 2026-02-24 | Sidebar skeleton spacing off | Change `px-2` → `p-2` on skeleton sections to add vertical padding |
