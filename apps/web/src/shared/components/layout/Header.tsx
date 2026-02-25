@@ -24,10 +24,11 @@ import { useCustomThemeStore } from "@/features/theme-builder"
 
 export function Header({ email }: { email?: string }) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { setMobileOpen } = useSidebar()
   const { canEdit } = useSpacePermission()
-  const isGuest = !email
+  const isGuest = isLoading ? !email : !user
+  const resolvedEmail = user?.email ?? email
   const avatarUrl: string | undefined = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture
   const [searchOpen, setSearchOpen] = useState(false)
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
@@ -62,8 +63,8 @@ export function Header({ email }: { email?: string }) {
     router.refresh()
   }
 
-  const initials = email
-    ? email.slice(0, 2).toUpperCase()
+  const initials = resolvedEmail
+    ? resolvedEmail.slice(0, 2).toUpperCase()
     : "G"
 
   return (
@@ -115,7 +116,7 @@ export function Header({ email }: { email?: string }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full" aria-label="Account menu">
               <Avatar size="sm">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt={email || "User"} />}
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={resolvedEmail || "User"} />}
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </Button>
@@ -145,7 +146,7 @@ export function Header({ email }: { email?: string }) {
               <>
                 <DropdownMenuItem disabled>
                   <UserIcon className="size-4" />
-                  {email}
+                  {resolvedEmail}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
