@@ -10,9 +10,9 @@ Scan the project's `.readme/` documentation to find all available work, then pre
 
 ### Steps
 
-1. **Active features** — grep for `Status.*Active` in `.readme/features/` and list each with a one-line description of the open work scope (read each matching file to find it).
+1. **Active features** — grep for `^\*\*Status:\*\*.*Active` in `.readme/features/` and list each with a one-line description of the open work scope (read each matching file to find it).
 
-2. **Not-started features** — grep for `Status.*Not started` in `.readme/features/` and list each with its overview.
+2. **Not-started features** — grep for `^\*\*Status:\*\*.*Not started` in `.readme/features/` and list each with its overview.
 
 3. **Planned features without specs** — read `.readme/index.md`, find rows in the "Planned Features" table that do NOT link to a feature file (no `[...](...)` markdown link), and list them. These are ideas that still need a spec written.
 
