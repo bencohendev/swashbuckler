@@ -8,11 +8,11 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 |-----|-------------|
 | New entry title shows text instead of placeholder | When creating a new entry, the title field should show a placeholder instead of pre-filled text |
 | Private block / code block unescapable | Can't escape out of private blocks or code blocks — cursor gets trapped with no way to insert content above or below |
-| Table block missing row/column controls | Table blocks have no UI controls to add or delete rows and columns |
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-24 | Table blocks have no row/column controls | Add floating toolbar on hover with add row, add column, delete row, delete column, delete table buttons |
 | 2026-02-24 | Sidebar skeleton spacing off | Change `px-2` → `p-2` on skeleton sections to add vertical padding |
 | 2026-02-24 | Duplicate names allowed for spaces, types, templates, tags | Add case-insensitive unique constraints (Supabase migration 021), pre-mutation Dexie checks, surface DUPLICATE errors in UI |
 | 2026-02-24 | Site-wide content flickers | Rewrote useIsMobile with useSyncExternalStore, sync sidebar hydration, added keepPreviousData to sidebar queries, decomposed all-or-nothing sidebar skeleton, migrated tag counts and space shares to TanStack Query, fixed QuickCaptureButton/GraphView/LinkedObjects/GuestBanner pop-in |
