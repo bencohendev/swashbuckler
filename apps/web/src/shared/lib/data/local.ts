@@ -28,6 +28,8 @@ import type {
   CreateTagInput,
   UpdateTagInput,
   ListObjectsOptions,
+  ListObjectTypesOptions,
+  ListSpacesOptions,
   ListRelationsOptions,
   ListAllRelationsOptions,
   ListTemplatesOptions,
@@ -56,6 +58,8 @@ const DEFAULT_TYPES: ObjectType[] = [
     owner_id: null,
     space_id: LOCAL_DEFAULT_SPACE_ID,
     sort_order: 0,
+    is_archived: false,
+    archived_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -75,6 +79,8 @@ const LEGACY_BUILT_IN_TYPES: ObjectType[] = [
     owner_id: null,
     space_id: null,
     sort_order: 0,
+    is_archived: false,
+    archived_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -90,6 +96,8 @@ const LEGACY_BUILT_IN_TYPES: ObjectType[] = [
     owner_id: null,
     space_id: null,
     sort_order: 1,
+    is_archived: false,
+    archived_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -284,6 +292,32 @@ class SwashbucklerDB extends Dexie {
       objectTags: 'id, object_id, tag_id',
       pins: 'id, object_id',
     })
+
+    // Version 10: Add archive columns
+    this.version(10).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, is_archived, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, is_archived, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id',
+      pins: 'id, object_id',
+    }).upgrade(async (tx) => {
+      // Backfill is_archived/archived_at on all existing records
+      await tx.table('objects').toCollection().modify((obj: Record<string, unknown>) => {
+        obj.is_archived = false
+        obj.archived_at = null
+      })
+      await tx.table('objectTypes').toCollection().modify((type: Record<string, unknown>) => {
+        type.is_archived = false
+        type.archived_at = null
+      })
+      await tx.table('spaces').toCollection().modify((space: Record<string, unknown>) => {
+        space.is_archived = false
+        space.archived_at = null
+      })
+    })
   }
 }
 
@@ -302,12 +336,15 @@ function generateUUID(): string {
 
 function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
   return {
-    async list(): Promise<DataListResult<ObjectType>> {
+    async list(options: ListObjectTypesOptions = {}): Promise<DataListResult<ObjectType>> {
       try {
         const database = getDB()
         let results = await database.objectTypes.toArray()
         if (spaceId) {
           results = results.filter(t => t.space_id === spaceId)
+        }
+        if (options.isArchived !== undefined) {
+          results = results.filter(t => t.is_archived === options.isArchived)
         }
         results.sort((a, b) => a.sort_order - b.sort_order)
         return { data: results, error: null }
@@ -371,6 +408,8 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           owner_id: null,
           space_id: spaceId ?? null,
           sort_order: sortOrder,
+          is_archived: false,
+          archived_at: null,
           created_at: now,
           updated_at: now,
         }
@@ -459,6 +498,38 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
         }
       }
     },
+
+    async archive(id: string): Promise<DataResult<ObjectType>> {
+      try {
+        const database = getDB()
+        const existing = await database.objectTypes.get(id)
+        if (!existing) {
+          return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
+        }
+        const now = new Date().toISOString()
+        const updated: ObjectType = { ...existing, is_archived: true, archived_at: now, updated_at: now }
+        await database.objectTypes.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async unarchive(id: string): Promise<DataResult<ObjectType>> {
+      try {
+        const database = getDB()
+        const existing = await database.objectTypes.get(id)
+        if (!existing) {
+          return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
+        }
+        const now = new Date().toISOString()
+        const updated: ObjectType = { ...existing, is_archived: false, archived_at: null, updated_at: now }
+        await database.objectTypes.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
   }
 }
 
@@ -523,6 +594,8 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
           owner_id: null,
           space_id: null,
           sort_order: sortOrder,
+          is_archived: false,
+          archived_at: null,
           created_at: now,
           updated_at: now,
         }
@@ -616,6 +689,8 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
           owner_id: globalType.owner_id,
           space_id: targetSpaceId,
           sort_order: globalType.sort_order,
+          is_archived: false,
+          archived_at: null,
           created_at: now,
           updated_at: now,
         }
@@ -656,6 +731,10 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
 
         if (options.isDeleted !== undefined) {
           filters.push(obj => obj.is_deleted === options.isDeleted)
+        }
+
+        if (options.isArchived !== undefined) {
+          filters.push(obj => obj.is_archived === options.isArchived)
         }
 
         let results = await collection.toArray()
@@ -725,6 +804,8 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           content: input.content ?? null,
           is_deleted: false,
           deleted_at: null,
+          is_archived: false,
+          archived_at: null,
           created_at: now,
           updated_at: now,
         }
@@ -841,6 +922,41 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       }
     },
 
+    async archive(id: string): Promise<DataResult<DataObject>> {
+      try {
+        const database = getDB()
+        const existing = await database.objects.get(id)
+        if (!existing) {
+          return { data: null, error: { message: 'Object not found', code: 'NOT_FOUND' } }
+        }
+        if (existing.is_deleted) {
+          return { data: null, error: { message: 'Cannot archive a deleted item', code: 'CONFLICT' } }
+        }
+        const now = new Date().toISOString()
+        const archived: DataObject = { ...existing, is_archived: true, archived_at: now, updated_at: now }
+        await database.objects.put(archived)
+        return { data: archived, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async unarchive(id: string): Promise<DataResult<DataObject>> {
+      try {
+        const database = getDB()
+        const existing = await database.objects.get(id)
+        if (!existing) {
+          return { data: null, error: { message: 'Object not found', code: 'NOT_FOUND' } }
+        }
+        const now = new Date().toISOString()
+        const unarchived: DataObject = { ...existing, is_archived: false, archived_at: null, updated_at: now }
+        await database.objects.put(unarchived)
+        return { data: unarchived, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
     async purgeExpired(): Promise<DataResult<number>> {
       try {
         const database = getDB()
@@ -898,6 +1014,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
         const results = await database.objects
           .filter(obj => {
             if (obj.is_deleted) return false
+            if (obj.is_archived) return false
             if (spaceId && obj.space_id !== spaceId) return false
             if (options?.typeIds && options.typeIds.length > 0 && !options.typeIds.includes(obj.type_id)) return false
 
@@ -1251,10 +1368,13 @@ function createRelationsClient(spaceId?: string): RelationsClient {
 
 function createLocalSpacesClient(): SpacesClient {
   return {
-    async list(): Promise<DataListResult<Space>> {
+    async list(options: ListSpacesOptions = {}): Promise<DataListResult<Space>> {
       try {
         const database = getDB()
-        const results = await database.spaces.toArray()
+        let results = await database.spaces.toArray()
+        if (options.isArchived !== undefined) {
+          results = results.filter(s => s.is_archived === options.isArchived)
+        }
         results.sort((a, b) =>
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         )
@@ -1304,6 +1424,8 @@ function createLocalSpacesClient(): SpacesClient {
           name: input.name,
           icon: input.icon ?? '📁',
           owner_id: 'local',
+          is_archived: false,
+          archived_at: null,
           created_at: now,
           updated_at: now,
         }
@@ -1397,6 +1519,38 @@ function createLocalSpacesClient(): SpacesClient {
           data: null,
           error: { message: error instanceof Error ? error.message : 'Unknown error' },
         }
+      }
+    },
+
+    async archive(id: string): Promise<DataResult<Space>> {
+      try {
+        const database = getDB()
+        const existing = await database.spaces.get(id)
+        if (!existing) {
+          return { data: null, error: { message: 'Space not found', code: 'NOT_FOUND' } }
+        }
+        const now = new Date().toISOString()
+        const updated: Space = { ...existing, is_archived: true, archived_at: now, updated_at: now }
+        await database.spaces.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async unarchive(id: string): Promise<DataResult<Space>> {
+      try {
+        const database = getDB()
+        const existing = await database.spaces.get(id)
+        if (!existing) {
+          return { data: null, error: { message: 'Space not found', code: 'NOT_FOUND' } }
+        }
+        const now = new Date().toISOString()
+        const updated: Space = { ...existing, is_archived: false, archived_at: null, updated_at: now }
+        await database.spaces.put(updated)
+        return { data: updated, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
       }
     },
   }
@@ -1772,6 +1926,8 @@ export async function ensureLocalDefaultSpace(): Promise<Space> {
     name: 'My Space',
     icon: '📁',
     owner_id: 'local',
+    is_archived: false,
+    archived_at: null,
     created_at: now,
     updated_at: now,
   }

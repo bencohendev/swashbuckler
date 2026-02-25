@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { CheckIcon, ChevronsUpDownIcon, LogOutIcon, PlusIcon, ShareIcon } from "lucide-react"
+import { ArchiveIcon, CheckIcon, ChevronsUpDownIcon, LogOutIcon, PlusIcon, ShareIcon } from "lucide-react"
 import { useCurrentSpace, useSpaces, useAuth } from "@/shared/lib/data"
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ import { ShareSpaceDialog } from "@/features/sharing"
 export function SpaceSwitcher() {
   const router = useRouter()
   const { space, spaces, switchSpace, leaveSpace } = useCurrentSpace()
-  const { create } = useSpaces()
+  const { create, archiveSpace } = useSpaces()
   const { user } = useAuth()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
@@ -105,6 +105,24 @@ export function SpaceSwitcher() {
                 <ShareIcon className="size-4" />
                 Share Space
               </DropdownMenuItem>,
+              ...(ownedSpaces.length > 1 ? [
+                <DropdownMenuItem
+                  key="__archive"
+                  onClick={async () => {
+                    const result = await archiveSpace(space.id)
+                    if (result.error) {
+                      toast({ description: result.error, variant: 'destructive' })
+                    } else {
+                      toast({ description: `"${space.name}" archived`, variant: 'success' })
+                      router.push('/')
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  <ArchiveIcon className="size-4" />
+                  Archive Space
+                </DropdownMenuItem>,
+              ] : []),
             ] : []),
             ...(space && !isOwned(space) ? [
               <DropdownMenuItem

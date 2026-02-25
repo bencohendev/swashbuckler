@@ -28,9 +28,12 @@ interface CreateSpaceInput {
 
 interface SpacesContextValue {
   spaces: Space[]
+  allSpaces: Space[]
   create: (input: CreateSpaceInput) => Promise<{ data: Space | null; error?: string }>
   update: (id: string, input: { name?: string; icon?: string }) => Promise<{ data: Space | null; error?: string }>
   remove: (id: string) => Promise<void>
+  archiveSpace: (id: string) => Promise<{ error?: string }>
+  unarchiveSpace: (id: string) => Promise<{ error?: string }>
 }
 
 const SpaceContext = createContext<SpaceContextValue | null>(null)
@@ -128,15 +131,18 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     setShareInfoMap(newShareInfoMap)
 
     const allSpaces = [...owned, ...shared]
+    // Active (non-archived) spaces for selection
+    const activeSpaces = allSpaces.filter(s => !s.is_archived)
 
     // Restore last selected space from localStorage
     const savedId = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
-    const savedSpace = savedId ? allSpaces.find(s => s.id === savedId) : null
+    // Only select non-archived spaces as current
+    const savedSpace = savedId ? activeSpaces.find(s => s.id === savedId) : null
 
     if (savedSpace) {
       setCurrentSpaceId(savedSpace.id)
-    } else if (allSpaces.length > 0) {
-      setCurrentSpaceId(allSpaces[0].id)
+    } else if (activeSpaces.length > 0) {
+      setCurrentSpaceId(activeSpaces[0].id)
     }
 
     setIsLoading(false)
@@ -161,7 +167,17 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     }
   }, [])
 
-  const spaces = useMemo(() => [...ownedSpaces, ...sharedSpaces], [ownedSpaces, sharedSpaces])
+  // Active (non-archived) spaces for the switcher and general use
+  const spaces = useMemo(() =>
+    [...ownedSpaces, ...sharedSpaces].filter(s => !s.is_archived),
+    [ownedSpaces, sharedSpaces]
+  )
+
+  // All spaces including archived — for the archive page
+  const allSpacesIncludingArchived = useMemo(() =>
+    [...ownedSpaces, ...sharedSpaces],
+    [ownedSpaces, sharedSpaces]
+  )
 
   const currentSpace = useMemo(() => {
     return spaces.find(s => s.id === currentSpaceId) ?? null
@@ -194,6 +210,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
   const spacesContextValue: SpacesContextValue = useMemo(() => ({
     spaces,
+    allSpaces: allSpacesIncludingArchived,
     create: async (input: CreateSpaceInput) => {
       const { copyTypesFromSpaceId, includeTemplates, ...createInput } = input
       const result = await spacesClient.create(createInput)
@@ -277,7 +294,35 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       await spacesClient.delete(id)
       emit('spaces')
     },
-  }), [spaces, spacesClient, supabase, user])
+    archiveSpace: async (id: string) => {
+      // Guard: cannot archive the last non-archived owned space
+      const activeOwned = ownedSpaces.filter(s => !s.is_archived)
+      if (activeOwned.length <= 1 && activeOwned.some(s => s.id === id)) {
+        return { error: 'Cannot archive your last space' }
+      }
+      const result = await spacesClient.archive(id)
+      if (result.error) {
+        return { error: result.error.message }
+      }
+      // If archiving the current space, switch to next available
+      if (id === currentSpaceId) {
+        const remaining = [...ownedSpaces, ...sharedSpaces].filter(s => s.id !== id && !s.is_archived)
+        if (remaining.length > 0) {
+          switchSpace(remaining[0].id)
+        }
+      }
+      emit('spaces')
+      return {}
+    },
+    unarchiveSpace: async (id: string) => {
+      const result = await spacesClient.unarchive(id)
+      if (result.error) {
+        return { error: result.error.message }
+      }
+      emit('spaces')
+      return {}
+    },
+  }), [spaces, allSpacesIncludingArchived, spacesClient, supabase, user, ownedSpaces, sharedSpaces, currentSpaceId, switchSpace])
 
   return (
     <SpaceContext.Provider value={spaceContextValue}>

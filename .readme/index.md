@@ -71,6 +71,7 @@ Dual-storage architecture with a `DataClient` interface:
 019_fix_shared_user_insert.sql # fix shared user insert
 020_cascade_delete_types.sql   # cascade delete types
 021_global_types.sql           # per-owner global type slug index
+022_archive.sql                # is_archived + archived_at on objects, types, spaces
 ```
 
 ## Implemented Features
@@ -119,6 +120,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Type Reorder Keyboard](features/type-reorder-keyboard.md) | Up/down buttons as keyboard alternative to drag-drop in type settings |
 | [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
+| [Archive](features/archive.md) | Hide entries, types, and spaces without deleting them |
 
 ## Planned Features
 

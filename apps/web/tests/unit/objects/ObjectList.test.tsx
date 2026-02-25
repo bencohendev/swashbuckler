@@ -23,6 +23,8 @@ const mockPageType: ObjectType = {
   owner_id: null,
   space_id: '99b075ae-465d-4843-a324-cc3d48a80d6e',
   sort_order: 0,
+  is_archived: false,
+  archived_at: null,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
 }

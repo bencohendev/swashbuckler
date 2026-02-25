@@ -16,6 +16,8 @@ export const mockObject = {
   content: null,
   is_deleted: false,
   deleted_at: null,
+  is_archived: false,
+  archived_at: null,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
 }

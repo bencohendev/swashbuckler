@@ -34,6 +34,8 @@ import type {
   UpdateTagInput,
   SpaceSharePermission,
   ListObjectsOptions,
+  ListObjectTypesOptions,
+  ListSpacesOptions,
   ListRelationsOptions,
   ListAllRelationsOptions,
   ListTemplatesOptions,
@@ -44,7 +46,7 @@ import type {
 
 function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): ObjectTypesClient {
   return {
-    async list(): Promise<DataListResult<ObjectType>> {
+    async list(options: ListObjectTypesOptions = {}): Promise<DataListResult<ObjectType>> {
       let query = supabase
         .from('object_types')
         .select('*')
@@ -55,6 +57,10 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
       } else {
         // No space selected — return empty
         return { data: [], error: null }
+      }
+
+      if (options.isArchived !== undefined) {
+        query = query.eq('is_archived', options.isArchived)
       }
 
       const { data, error } = await query
@@ -147,6 +153,38 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
       }
 
       return { data: null, error: null }
+    },
+
+    async archive(id: string): Promise<DataResult<ObjectType>> {
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('object_types')
+        .update({ is_archived: true, archived_at: now, updated_at: now })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
+    },
+
+    async unarchive(id: string): Promise<DataResult<ObjectType>> {
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('object_types')
+        .update({ is_archived: false, archived_at: null, updated_at: now })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as ObjectType, error: null }
     },
   }
 }
@@ -339,6 +377,10 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
         query = query.eq('is_deleted', options.isDeleted)
       }
 
+      if (options.isArchived !== undefined) {
+        query = query.eq('is_archived', options.isArchived)
+      }
+
       if (options.limit) {
         query = query.limit(options.limit)
       }
@@ -465,6 +507,53 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
       return { data: data as DataObject, error: null }
     },
 
+    async archive(id: string): Promise<DataResult<DataObject>> {
+      // Fail if already deleted
+      const { data: existing, error: getError } = await supabase
+        .from('objects')
+        .select('is_deleted')
+        .eq('id', id)
+        .single()
+
+      if (getError) {
+        return { data: null, error: { message: getError.message, code: getError.code } }
+      }
+
+      if (existing?.is_deleted) {
+        return { data: null, error: { message: 'Cannot archive a deleted item', code: 'CONFLICT' } }
+      }
+
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('objects')
+        .update({ is_archived: true, archived_at: now, updated_at: now })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as DataObject, error: null }
+    },
+
+    async unarchive(id: string): Promise<DataResult<DataObject>> {
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('objects')
+        .update({ is_archived: false, archived_at: null, updated_at: now })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as DataObject, error: null }
+    },
+
     async purgeExpired(): Promise<DataResult<number>> {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -483,11 +572,12 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
     },
 
     async search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>> {
-      // Fetch recent non-deleted objects to search across title + content
+      // Fetch recent non-deleted, non-archived objects to search across title + content
       let searchQuery = supabase
         .from('objects')
         .select('*')
         .eq('is_deleted', false)
+        .eq('is_archived', false)
         .order('updated_at', { ascending: false })
         .limit(200)
 
@@ -809,11 +899,17 @@ function createRelationsClient(supabase: SupabaseClient, spaceId?: string): Rela
 
 function createSpacesClient(supabase: SupabaseClient): SpacesClient {
   return {
-    async list(): Promise<DataListResult<Space>> {
-      const { data, error } = await supabase
+    async list(options: ListSpacesOptions = {}): Promise<DataListResult<Space>> {
+      let query = supabase
         .from('spaces')
         .select('*')
         .order('created_at', { ascending: true })
+
+      if (options.isArchived !== undefined) {
+        query = query.eq('is_archived', options.isArchived)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         return { data: [], error: { message: error.message, code: error.code } }
@@ -894,6 +990,38 @@ function createSpacesClient(supabase: SupabaseClient): SpacesClient {
       }
 
       return { data: null, error: null }
+    },
+
+    async archive(id: string): Promise<DataResult<Space>> {
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('spaces')
+        .update({ is_archived: true, archived_at: now, updated_at: now })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Space, error: null }
+    },
+
+    async unarchive(id: string): Promise<DataResult<Space>> {
+      const now = new Date().toISOString()
+      const { data, error } = await supabase
+        .from('spaces')
+        .update({ is_archived: false, archived_at: null, updated_at: now })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as Space, error: null }
     },
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon } from 'lucide-react'
+import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
@@ -49,7 +49,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const { user } = useAuth()
   const { space, sharedPermission } = useCurrentSpace()
   const supabase = useMemo(() => createClient(), [])
-  const { object, isLoading, error, update, remove } = useObject(id)
+  const { object, isLoading, error, update, remove, archive } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
   const { templates, saveObjectAsTemplate } = useTemplates()
   const { canEdit, isOwner } = useSpacePermission()
@@ -132,6 +132,16 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const handleCoverChange = useCallback(async (url: string | null) => {
     await update({ cover_image: url })
   }, [update])
+
+  const handleArchive = async () => {
+    await archive()
+    toast({ description: 'Archived', variant: 'info' })
+    if (onNavigateAway) {
+      onNavigateAway()
+    } else {
+      router.push('/')
+    }
+  }
 
   const handleDelete = async () => {
     await remove()
@@ -297,6 +307,12 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
                     Save as Template
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  {!object.is_deleted && (
+                    <DropdownMenuItem onClick={handleArchive}>
+                      <ArchiveIcon className="size-4" />
+                      Archive
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem variant="destructive" onClick={() => setConfirmTrashOpen(true)}>
                     <TrashIcon className="size-4" />
                     Move to Trash
