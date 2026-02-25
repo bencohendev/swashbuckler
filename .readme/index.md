@@ -134,6 +134,8 @@ Dual-storage architecture with a `DataClient` interface:
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Landing Page](features/landing-page.md) | Marketing/landing page for the app |
 | [Link to Docs](features/link-to-docs.md) | Help button with docs link and keyboard shortcuts reference |
+| [Todo Block](features/todo-block.md) |  Checkbox/task list block type for the editor. Each todo item has a clickable checkbox that toggles checked/unchecked state, with visual strikethrough on completed items. |
+
 
 ## Planned Features
 
