@@ -365,16 +365,18 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
 
       editor.tf.insertNodes(node, { at: blockPath })
 
-      // Select the first text position in the newly inserted block
-      // so the cursor lands inside the deepest editable node
-      const start = editor.api.start(blockPath)
-      if (start) {
-        editor.tf.select(start)
-      }
-
-      focusEditor()
+      // Defer selection + focus together so plugin normalization
+      // (TrailingBlockPlugin, CodeBlockPlugin) finishes first
+      setTimeout(() => {
+        const start = editor.api.start(blockPath)
+        if (start) {
+          editor.tf.select(start)
+        }
+        const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
+        el?.focus()
+      }, 0)
     },
-    [editor, focusEditor]
+    [editor]
   )
 
   // Create a new object and insert a mention node
