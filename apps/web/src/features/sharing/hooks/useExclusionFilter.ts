@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useDataClient, useAuth, useCurrentSpace, type ShareExclusion, type FieldDefinition, type ObjectType, type DataObject } from '@/shared/lib/data'
+import { useDataClient, useAuth, useCurrentSpace, type ShareExclusion, type FieldDefinition, type ObjectType, type DataObjectSummary } from '@/shared/lib/data'
 
 export function useExclusionFilter() {
   const dataClient = useDataClient()
@@ -78,7 +78,7 @@ export function useExclusionFilter() {
     return types.filter(t => !excludedTypeIds.has(t.id))
   }, [isSharedUser, excludedTypeIds])
 
-  const filterObjects = useCallback((objects: DataObject[]): DataObject[] => {
+  const filterObjects = useCallback((objects: DataObjectSummary[]): DataObjectSummary[] => {
     if (!isSharedUser) return objects
     return objects.filter(o => !excludedTypeIds.has(o.type_id) && !excludedObjectIds.has(o.id))
   }, [isSharedUser, excludedTypeIds, excludedObjectIds])

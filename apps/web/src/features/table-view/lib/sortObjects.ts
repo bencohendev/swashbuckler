@@ -1,4 +1,4 @@
-import type { DataObject, FieldDefinition, Tag } from '@/shared/lib/data'
+import type { DataObjectSummary, FieldDefinition, Tag } from '@/shared/lib/data'
 
 export interface SortConfig {
   field: string
@@ -30,11 +30,11 @@ function compareValues(a: unknown, b: unknown, fieldType?: string): number {
 }
 
 export function sortObjects(
-  objects: DataObject[],
+  objects: DataObjectSummary[],
   sort: SortConfig,
   fields: FieldDefinition[],
   tagsByObject: Record<string, Tag[]>,
-): DataObject[] {
+): DataObjectSummary[] {
   const fieldMap = new Map(fields.map((f) => [f.id, f]))
 
   return [...objects].sort((a, b) => {

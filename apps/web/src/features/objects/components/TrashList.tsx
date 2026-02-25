@@ -6,14 +6,14 @@ import { useObjects } from '../hooks/useObjects'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
-import type { DataObject } from '@/shared/lib/data'
+import type { DataObjectSummary } from '@/shared/lib/data'
 
 export function TrashList() {
   const { objects, isLoading, restore, remove } = useObjects({ isDeleted: true })
   const [processingId, setProcessingId] = useState<string | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<DataObject | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<DataObjectSummary | null>(null)
 
-  const handleRestore = async (obj: DataObject) => {
+  const handleRestore = async (obj: DataObjectSummary) => {
     setProcessingId(obj.id)
     await restore(obj.id)
     setProcessingId(null)

@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { ChevronRightIcon, ClockIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import type { DataObject } from '@/shared/lib/data'
+import type { DataObjectSummary } from '@/shared/lib/data'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
 import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
 import type { CollapseSignal } from '@/features/sidebar/types'
@@ -11,7 +11,7 @@ import type { CollapseSignal } from '@/features/sidebar/types'
 const RECENT_LIMIT = 5
 
 interface RecentSectionProps {
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   collapseSignal?: CollapseSignal
 }
 

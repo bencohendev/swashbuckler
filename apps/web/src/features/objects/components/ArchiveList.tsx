@@ -8,14 +8,14 @@ import { useSpaces, useDataClient } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
 import { toast } from '@/shared/hooks/useToast'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
-import type { DataObject, ObjectType, Space } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType, Space } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 
 function ArchivedEntriesSection() {
   const { objects, isLoading, unarchive } = useObjects({ isArchived: true, isDeleted: false })
   const [processingId, setProcessingId] = useState<string | null>(null)
 
-  const handleUnarchive = async (obj: DataObject) => {
+  const handleUnarchive = async (obj: DataObjectSummary) => {
     setProcessingId(obj.id)
     await unarchive(obj.id)
     setProcessingId(null)

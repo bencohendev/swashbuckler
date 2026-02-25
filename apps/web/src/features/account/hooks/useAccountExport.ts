@@ -33,15 +33,15 @@ export function useAccountExport() {
       for (const space of spaces) {
         const client = createSupabaseDataClient(supabase, space.id)
 
-        const [objects, types, templates, relations, tags] = await Promise.all([
-          client.objects.list(),
+        const [objectsRaw, types, templates, relations, tags] = await Promise.all([
+          supabase.from('objects').select('*').eq('space_id', space.id),
           client.objectTypes.list(),
           client.templates.list(),
           client.relations.listAll(),
           client.tags.list(),
         ])
 
-        const spaceObjects = objects.data ?? []
+        const spaceObjects = objectsRaw.data ?? []
         allObjects.push(...spaceObjects)
         allObjectTypes.push(...(types.data ?? []))
         allTemplates.push(...(templates.data ?? []))

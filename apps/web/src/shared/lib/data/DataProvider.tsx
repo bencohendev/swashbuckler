@@ -34,7 +34,7 @@ export function DataProvider({ children, spaceId, user, isAuthLoading }: DataPro
   const dataClient = useMemo(() => {
     const effectiveSpaceId = spaceId ?? undefined
     if (user) {
-      return createSupabaseDataClient(supabase, effectiveSpaceId)
+      return createSupabaseDataClient(supabase, effectiveSpaceId, user.id)
     }
     return createLocalDataClient(effectiveSpaceId)
   }, [user, supabase, spaceId])
@@ -63,7 +63,7 @@ export function DataProvider({ children, spaceId, user, isAuthLoading }: DataPro
     const localData = await exportLocalData()
     if (localData.objects.length === 0 && localData.objectTypes.length === 0) return
 
-    const supabaseClient = createSupabaseDataClient(supabase, spaceId ?? undefined)
+    const supabaseClient = createSupabaseDataClient(supabase, spaceId ?? undefined, user.id)
 
     // Build type ID mapping: check for existing types with matching slugs
     const typeIdMap = new Map<string, string>()

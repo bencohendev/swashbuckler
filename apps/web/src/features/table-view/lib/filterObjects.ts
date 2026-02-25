@@ -1,4 +1,4 @@
-import type { DataObject, Tag } from '@/shared/lib/data'
+import type { DataObjectSummary, Tag } from '@/shared/lib/data'
 
 export interface TypePageFilters {
   search: string
@@ -46,10 +46,10 @@ export function isFiltered(filters: TypePageFilters): boolean {
 }
 
 export function filterObjects(
-  objects: DataObject[],
+  objects: DataObjectSummary[],
   filters: TypePageFilters,
   tagsByObject: Record<string, Tag[]>,
-): DataObject[] {
+): DataObjectSummary[] {
   if (!isFiltered(filters)) return objects
 
   const query = filters.search.trim().toLowerCase()

@@ -137,6 +137,8 @@ export const objectSchema = z.object({
 
 export type DataObject = z.infer<typeof objectSchema>
 
+export type DataObjectSummary = Omit<DataObject, 'content'>
+
 export const createObjectSchema = z.object({
   title: z.string().min(1).max(255),
   type_id: z.string().uuid(),
@@ -262,7 +264,7 @@ export interface SearchOptions {
 }
 
 export interface ObjectsClient {
-  list(options?: ListObjectsOptions): Promise<DataListResult<DataObject>>
+  list(options?: ListObjectsOptions): Promise<DataListResult<DataObjectSummary>>
   get(id: string): Promise<DataResult<DataObject>>
   create(input: CreateObjectInput): Promise<DataResult<DataObject>>
   update(id: string, input: UpdateObjectInput): Promise<DataResult<DataObject>>
@@ -271,6 +273,7 @@ export interface ObjectsClient {
   archive(id: string): Promise<DataResult<DataObject>>
   unarchive(id: string): Promise<DataResult<DataObject>>
   search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>>
+  batchGetSummary(ids: string[]): Promise<DataListResult<Pick<DataObject, 'id' | 'title' | 'icon' | 'type_id'>>>
   purgeExpired(): Promise<DataResult<number>>
 }
 
@@ -362,7 +365,8 @@ export interface TagsClient {
   getObjectTagsBatch(objectIds: string[]): Promise<DataListResult<{ object_id: string; tags: Tag[] }>>
   addTagToObject(objectId: string, tagId: string): Promise<DataResult<ObjectTag>>
   removeTagFromObject(objectId: string, tagId: string): Promise<DataResult<void>>
-  getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>>
+  getObjectsByTag(tagId: string): Promise<DataListResult<DataObjectSummary>>
+  countObjectsByTag(tagId: string): Promise<DataResult<number>>
 }
 
 // --- Sharing schemas ---

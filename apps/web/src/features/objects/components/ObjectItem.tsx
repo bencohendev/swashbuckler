@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { FileIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import type { DataObject, ObjectType } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType } from '@/shared/lib/data'
 import { PinButton } from '@/features/pins'
 import { SidebarLink } from '@/features/sidebar/components/SidebarLink'
 
 interface ObjectItemProps {
-  object: DataObject
+  object: DataObjectSummary
   objectType?: ObjectType
   isActive?: boolean
   compact?: boolean

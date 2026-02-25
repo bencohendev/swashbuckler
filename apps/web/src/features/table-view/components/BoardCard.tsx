@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDrag } from 'react-dnd'
-import type { DataObject, FieldDefinition } from '@/shared/lib/data'
+import type { DataObjectSummary, FieldDefinition } from '@/shared/lib/data'
 import { PropertyCell } from './PropertyCell'
 import { cn } from '@/shared/lib/utils'
 
@@ -16,7 +16,7 @@ export interface BoardCardDragItem {
 }
 
 interface BoardCardProps {
-  object: DataObject
+  object: DataObjectSummary
   fields: FieldDefinition[]
   sourceValue: string | null
   canEdit: boolean
