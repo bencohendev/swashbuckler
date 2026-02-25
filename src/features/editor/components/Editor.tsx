@@ -36,6 +36,7 @@ import {
   SlashInputElement,
   TemplateVariableElement,
 } from './elements';
+import { PrivateBlockElement } from '../plugins/private-plugin';
 import { useEditorStore } from '../store';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { RemoteCursorOverlay } from '@/features/collaboration/components/RemoteCursorOverlay';
@@ -49,7 +50,7 @@ function toYjsEditor(editor: unknown): YjsEditorType {
   return editor as YjsEditorType
 }
 
-export const EditorModeContext = createContext<{ isTemplateMode: boolean }>({ isTemplateMode: false });
+export const EditorModeContext = createContext<{ isTemplateMode: boolean; isOwner: boolean }>({ isTemplateMode: false, isOwner: true });
 
 export interface CollaborationOptions {
   provider: SupabaseYjsProvider
@@ -64,6 +65,7 @@ interface EditorProps {
   readOnly?: boolean;
   placeholder?: string;
   isTemplateMode?: boolean;
+  isOwner?: boolean;
   collaborationOptions?: CollaborationOptions;
 }
 
@@ -90,6 +92,7 @@ const COMPONENT_OVERRIDES = {
   mention_input: MentionInputElement,
   slash_input: SlashInputElement,
   template_variable: TemplateVariableElement,
+  private_block: PrivateBlockElement,
 } as const;
 
 /**
@@ -101,6 +104,7 @@ function SoloEditor({
   readOnly,
   placeholder,
   isTemplateMode,
+  isOwner = true,
 }: Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, isDirty, lastSaved } = useEditorStore();
   const editorValue = initialContent || initialEditorValue;
@@ -132,7 +136,7 @@ function SoloEditor({
   }, []);
 
   return (
-    <EditorModeContext value={{ isTemplateMode: isTemplateMode ?? false }}>
+    <EditorModeContext value={{ isTemplateMode: isTemplateMode ?? false, isOwner }}>
       <DndProvider backend={HTML5Backend}>
         <div className="relative min-h-[200px]">
           <Plate editor={editor} onChange={handleChange}>
@@ -164,6 +168,7 @@ function CollaborativeEditor({
   readOnly,
   placeholder,
   isTemplateMode,
+  isOwner = true,
   collaborationOptions,
 }: Required<Pick<EditorProps, 'collaborationOptions'>> & Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, isDirty, lastSaved, setCollaborative } = useEditorStore();
@@ -348,7 +353,7 @@ function CollaborativeEditor({
   }, [doc, onSave, readOnly, doSave]);
 
   return (
-    <EditorModeContext value={{ isTemplateMode: isTemplateMode ?? false }}>
+    <EditorModeContext value={{ isTemplateMode: isTemplateMode ?? false, isOwner }}>
       <DndProvider backend={HTML5Backend}>
         <div className="relative min-h-[200px]">
           <Plate editor={editor} onChange={handleChange}>

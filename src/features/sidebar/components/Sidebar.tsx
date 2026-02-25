@@ -5,9 +5,9 @@ import { usePathname, useRouter } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { ChevronsDownUpIcon, ChevronsUpDownIcon, HomeIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
-import { useSidebar, useSidebarHydration } from "@/shared/stores/sidebar"
+import { useSidebar } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
@@ -130,22 +130,21 @@ function DraggableTypeSection({
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  useSidebarHydration()
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
-  const { filterTypes, filterObjects } = useExclusionFilter()
+  const { filterTypes, filterObjects, isLoading: exclusionFilterLoading, isSharedUser } = useExclusionFilter()
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
   })
   // All non-deleted objects — shared with PinnedSection + RecentSection via props
   const { objects: allObjects } = useObjects({ isDeleted: false })
-  const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
-  const { pinnedIds, isLoading: pinsLoading } = usePins()
-  const { tags, isLoading: tagsLoading } = useTags()
+  const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
+  const { pinnedIds } = usePins()
+  const { tags } = useTags()
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
   const getNextTitle = useNextTitle()
   const [createTypeOpen, setCreateTypeOpen] = useState(false)
@@ -153,7 +152,7 @@ export function Sidebar() {
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
   const [collapseSignal, setCollapseSignal] = useState<CollapseSignal | undefined>(undefined)
-  const sidebarLoading = !space || objectsLoading || typesLoading || pinsLoading || tagsLoading || (types.length > 0 && orderedTypes.length === 0)
+  const sidebarLoading = !space || (isSharedUser && exclusionFilterLoading)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
 
@@ -249,7 +248,7 @@ export function Sidebar() {
       type_id: typeId,
     })
     if (result) {
-      router.push(`/objects/${result.id}`)
+      router.push(`/objects/${result.id}?new=1`)
     } else {
       toast({ description: 'Failed to create entry. You may not have permission.', variant: 'destructive' })
     }
@@ -273,12 +272,12 @@ export function Sidebar() {
     if (info && info.hasVariables) {
       const result = await createFromTemplateWithVariables(template.id, {}, buildResolutionContext())
       if (result) {
-        router.push(`/objects/${result.id}`)
+        router.push(`/objects/${result.id}?new=1`)
       }
     } else {
       const result = await createFromTemplate(template.id)
       if (result) {
-        router.push(`/objects/${result.id}`)
+        router.push(`/objects/${result.id}?new=1`)
       }
     }
   }
@@ -293,7 +292,7 @@ export function Sidebar() {
     )
     setPendingTemplate(null)
     if (result) {
-      router.push(`/objects/${result.id}`)
+      router.push(`/objects/${result.id}?new=1`)
     }
   }
 
@@ -302,12 +301,14 @@ export function Sidebar() {
   const hasRecentContent = allObjects.length > 0
   const hasTagsContent = tags.length > 0
 
-  const handleExpandAll = useCallback(() => {
-    setCollapseSignal((prev) => ({ collapsed: false, key: (prev?.key ?? 0) + 1 }))
-  }, [])
+  const [allCollapsed, setAllCollapsed] = useState(false)
 
-  const handleCollapseAll = useCallback(() => {
-    setCollapseSignal((prev) => ({ collapsed: true, key: (prev?.key ?? 0) + 1 }))
+  const handleToggleAll = useCallback(() => {
+    setAllCollapsed((prev) => {
+      const next = !prev
+      setCollapseSignal((s) => ({ collapsed: next, key: (s?.key ?? 0) + 1 }))
+      return next
+    })
   }, [])
 
   const sidebarContent = (
@@ -439,24 +440,17 @@ export function Sidebar() {
               </div>
             ) : (
               <>
-                <div className="flex justify-end" role="toolbar" aria-label="Section controls">
+                <div className="flex justify-end pr-2" role="toolbar" aria-label="Section controls">
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    title="Expand all sections"
-                    aria-label="Expand all sections"
-                    onClick={handleExpandAll}
+                    title={allCollapsed ? "Expand all sections" : "Collapse all sections"}
+                    aria-label={allCollapsed ? "Expand all sections" : "Collapse all sections"}
+                    onClick={handleToggleAll}
                   >
-                    <ChevronsUpDownIcon className="size-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    title="Collapse all sections"
-                    aria-label="Collapse all sections"
-                    onClick={handleCollapseAll}
-                  >
-                    <ChevronsDownUpIcon className="size-3" />
+                    {allCollapsed
+                      ? <ListChevronsUpDownIcon className="size-3" />
+                      : <ListChevronsDownUpIcon className="size-3" />}
                   </Button>
                 </div>
                 <PinnedSection pinnedIds={pinnedIds} objects={allObjects} collapseSignal={collapseSignal} />
@@ -509,7 +503,7 @@ export function Sidebar() {
                     )
                   )
                 )}
-                {canEditSpace && (
+                {canEditSpace && filteredOrderedTypes.length > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"

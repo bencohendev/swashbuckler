@@ -6,10 +6,15 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
+| Duplicate names allowed | Spaces (per owner), object types (per space), objects (per type+space), templates (per type+space), and tags (per space) can all have duplicate names — each should enforce uniqueness within its scope |
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-24 | Duplicate names allowed for spaces, types, templates, tags | Add case-insensitive unique constraints (Supabase migration 021), pre-mutation Dexie checks, surface DUPLICATE errors in UI |
+| 2026-02-24 | Site-wide content flickers | Rewrote useIsMobile with useSyncExternalStore, sync sidebar hydration, added keepPreviousData to sidebar queries, decomposed all-or-nothing sidebar skeleton, migrated tag counts and space shares to TanStack Query, fixed QuickCaptureButton/GraphView/LinkedObjects/GuestBanner pop-in |
+| 2026-02-24 | Graph node tap not working on mobile | Add 5px drag threshold so touch jitter doesn't prevent node selection |
+| 2026-02-24 | Guest mode: no "New Type" button and no default type | Treat `owner_id === 'local'` as owner in permission resolver; seed Page type on first local space creation |
 | 2026-02-23 | Content flash on settings pages | Add settings layout with Suspense boundary to handle `useSearchParams` bailout |
 | 2026-02-23 | Mobile graph broken | Add pinch-to-zoom, touch drag/pan, and tap selection for mobile graph view |
 | 2026-02-23 | Graph filter search no-op | Filter nodes by search query in GraphCanvas (was only highlighting, not filtering) |

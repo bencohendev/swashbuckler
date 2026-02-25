@@ -95,6 +95,15 @@ export interface ObjectTypesClient {
   delete(id: string): Promise<DataResult<void>>
 }
 
+export interface GlobalObjectTypesClient {
+  list(): Promise<DataListResult<ObjectType>>
+  get(id: string): Promise<DataResult<ObjectType>>
+  create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>>
+  update(id: string, input: UpdateObjectTypeInput): Promise<DataResult<ObjectType>>
+  delete(id: string): Promise<DataResult<void>>
+  importToSpace(id: string, targetSpaceId: string): Promise<DataResult<ObjectType>>
+}
+
 // --- Data Object schemas ---
 
 export const objectSchema = z.object({
@@ -412,6 +421,7 @@ export interface PinsClient {
 export interface DataClient {
   objects: ObjectsClient
   objectTypes: ObjectTypesClient
+  globalObjectTypes: GlobalObjectTypesClient
   templates: TemplatesClient
   relations: RelationsClient
   spaces: SpacesClient

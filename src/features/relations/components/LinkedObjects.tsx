@@ -16,8 +16,6 @@ export function LinkedObjects({ objectId, readOnly }: LinkedObjectsProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
 
-  if (isLoading && relations.length === 0) return null
-
   return (
     <div className="mt-8 border-t pt-6">
       <button
@@ -32,7 +30,7 @@ export function LinkedObjects({ objectId, readOnly }: LinkedObjectsProps) {
         </h3>
       </button>
 
-      {isExpanded && (
+      {isExpanded && !isLoading && (
         <>
           {relations.length > 0 && (
             <div className="mb-3 space-y-1">

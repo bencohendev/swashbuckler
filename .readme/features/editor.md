@@ -17,7 +17,8 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 | Spoiler | Click to reveal |
 | Auto-save | Debounced (1000ms) |
 | Code highlighting | Full stack (JS, TS, HTML, CSS, JSON, Python, SQL, Go, Rust) |
-| Inline formatting | Bold, italic, code, link, strikethrough, underline, highlight, spoiler |
+| Inline formatting | Bold, italic, code, link, strikethrough, underline, highlight, spoiler, private |
+| Private content | Owner-only blocks and inline marks hidden from shared users |
 
 ## Block Types
 
@@ -33,6 +34,8 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 - `src/features/editor/components/SlashMenu.tsx` — slash menu with block categories
 - `src/features/editor/components/MentionInput.tsx` — mention with search and inline creation
 - `src/features/editor/plugins/spoiler-plugin.tsx` — custom spoiler mark plugin
+- `src/features/editor/plugins/private-plugin.tsx` — private block + inline mark plugins
+- `src/features/editor/lib/stripPrivateContent.ts` — strips private content for non-owners
 - `src/features/editor/hooks/useAutoSave.ts` — debounced auto-save
 - `src/features/editor/components/elements/` — block element components (Image, CodeBlock, etc.)
 - `src/features/editor/store.ts` — Zustand editor state

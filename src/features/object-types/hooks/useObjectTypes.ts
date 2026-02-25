@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   useDataClient,
   useSpaceId,
@@ -19,8 +19,8 @@ interface UseObjectTypesReturn {
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
-  create: (input: CreateObjectTypeInput) => Promise<ObjectType | null>
-  update: (id: string, input: UpdateObjectTypeInput) => Promise<ObjectType | null>
+  create: (input: CreateObjectTypeInput) => Promise<{ data: ObjectType | null; error?: string }>
+  update: (id: string, input: UpdateObjectTypeInput) => Promise<{ data: ObjectType | null; error?: string }>
   remove: (id: string) => Promise<string | null>
 }
 
@@ -36,24 +36,25 @@ export function useObjectTypes(): UseObjectTypesReturn {
       if (result.error) throw new Error(result.error.message)
       return result.data
     },
+    placeholderData: keepPreviousData,
   })
 
   const refetch = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.objectTypes.all(spaceId ?? undefined) })
   }, [queryClient, spaceId])
 
-  const create = useCallback(async (input: CreateObjectTypeInput): Promise<ObjectType | null> => {
+  const create = useCallback(async (input: CreateObjectTypeInput): Promise<{ data: ObjectType | null; error?: string }> => {
     const result = await dataClient.objectTypes.create(input)
-    if (result.error) return null
+    if (result.error) return { data: null, error: result.error.message }
     emit('objectTypes')
-    return result.data
+    return { data: result.data }
   }, [dataClient])
 
-  const update = useCallback(async (id: string, input: UpdateObjectTypeInput): Promise<ObjectType | null> => {
+  const update = useCallback(async (id: string, input: UpdateObjectTypeInput): Promise<{ data: ObjectType | null; error?: string }> => {
     const result = await dataClient.objectTypes.update(id, input)
-    if (result.error) return null
+    if (result.error) return { data: null, error: result.error.message }
     emit('objectTypes')
-    return result.data
+    return { data: result.data }
   }, [dataClient])
 
   const remove = useCallback(async (id: string): Promise<string | null> => {

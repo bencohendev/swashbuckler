@@ -1,14 +1,22 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useObjectTypes } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks'
+import { useObjectTagsBatch, useTags } from '@/features/tags'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { TypeDataTable } from './TypeDataTable'
 import { TypeCardView } from './TypeCardView'
 import { TypeListView } from './TypeListView'
+import { TypeBoardView } from './TypeBoardView'
+import { TypePageFilterBar } from './TypePageFilterBar'
 import { ViewToggle } from './ViewToggle'
 import { useViewMode } from '../stores/viewMode'
+import { useSortConfig } from '../stores/sortConfig'
+import { usePersistedFilters } from '../stores/filterConfig'
+import { filterObjects, isFiltered, EMPTY_FILTERS } from '../lib/filterObjects'
+import { sortObjects } from '../lib/sortObjects'
+import type { SortConfig } from '../lib/sortObjects'
 
 interface TypeTableViewProps {
   slug: string
@@ -17,6 +25,8 @@ interface TypeTableViewProps {
 export function TypeTableView({ slug }: TypeTableViewProps) {
   const { types, isLoading: typesLoading } = useObjectTypes()
   const { mode } = useViewMode(slug)
+  const { sort, setSort } = useSortConfig(slug)
+  const { filters, setFilters } = usePersistedFilters(slug)
 
   const type = useMemo(
     () => types.find((t) => t.slug === slug),
@@ -27,12 +37,34 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     type ? { typeId: type.id, isDeleted: false } : { typeId: '__none__', isDeleted: false }
   )
 
-  const sortedObjects = useMemo(() => {
-    if (mode === 'table') return objectsLoading ? [] : objects
-    return [...(objectsLoading ? [] : objects)].sort(
-      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    )
-  }, [objects, objectsLoading, mode])
+  const rawObjects = useMemo(
+    () => (objectsLoading ? [] : objects),
+    [objectsLoading, objects],
+  )
+
+  const objectIds = useMemo(() => rawObjects.map((o) => o.id), [rawObjects])
+  const { tagsByObject } = useObjectTagsBatch(objectIds)
+  const { tags } = useTags()
+
+  const fields = useMemo(
+    () => type ? [...type.fields].sort((a, b) => a.sort_order - b.sort_order) : [],
+    [type],
+  )
+
+  const filteredObjects = useMemo(
+    () => filterObjects(rawObjects, filters, tagsByObject),
+    [rawObjects, filters, tagsByObject],
+  )
+
+  const sortedObjects = useMemo(
+    () => sortObjects(filteredObjects, sort, fields, tagsByObject),
+    [filteredObjects, sort, fields, tagsByObject],
+  )
+
+  const handleSortChange = useCallback(
+    (next: SortConfig) => setSort(next),
+    [setSort],
+  )
 
   if (typesLoading) {
     return (
@@ -54,25 +86,68 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     )
   }
 
+  const totalCount = rawObjects.length
+  const filteredCount = filteredObjects.length
+  const filtered = isFiltered(filters)
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <TypeIcon icon={type.icon} className="size-6" />
         <h1 className="text-2xl font-semibold">{type.plural_name}</h1>
         <span className="text-muted-foreground">
-          {objectsLoading ? '…' : objects.length}
+          {objectsLoading
+            ? '…'
+            : filtered
+              ? `${filteredCount} of ${totalCount}`
+              : totalCount}
         </span>
         <ViewToggle slug={slug} />
       </div>
 
-      {mode === 'table' && (
-        <TypeDataTable type={type} objects={sortedObjects} />
-      )}
-      {mode === 'list' && (
-        <TypeListView type={type} objects={sortedObjects} />
-      )}
-      {mode === 'card' && (
-        <TypeCardView type={type} objects={sortedObjects} />
+      <TypePageFilterBar
+        type={type}
+        tags={tags}
+        filters={filters}
+        onFiltersChange={setFilters}
+        sort={sort}
+        onSortChange={handleSortChange}
+        totalCount={totalCount}
+        filteredCount={filteredCount}
+      />
+
+      {filtered && filteredCount === 0 ? (
+        <div className="py-12 text-center text-muted-foreground">
+          <p>No {type.plural_name.toLowerCase()} match your filters</p>
+          <button
+            type="button"
+            onClick={() => setFilters(EMPTY_FILTERS)}
+            className="mt-2 text-sm text-primary underline-offset-4 hover:underline"
+          >
+            Clear filters
+          </button>
+        </div>
+      ) : (
+        <>
+          {mode === 'table' && (
+            <TypeDataTable
+              type={type}
+              objects={sortedObjects}
+              tagsByObject={tagsByObject}
+              sort={sort}
+              onSortChange={handleSortChange}
+            />
+          )}
+          {mode === 'list' && (
+            <TypeListView type={type} objects={sortedObjects} />
+          )}
+          {mode === 'card' && (
+            <TypeCardView type={type} objects={sortedObjects} />
+          )}
+          {mode === 'board' && (
+            <TypeBoardView type={type} objects={sortedObjects} />
+          )}
+        </>
       )}
     </div>
   )

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useMemo, useCallback } from 'react'
 import { useGraphLayout } from '../lib/layouts/useGraphLayout'
+import { findNearestInDirection, findCenterNode } from '../lib/spatialNav'
+import type { Direction } from '../lib/spatialNav'
 import { useGraphStore } from '../lib/store'
 import type { GraphNode as GraphNodeType, GraphEdge as GraphEdgeType } from '../lib/types'
 import { GraphNode } from './GraphNode'
@@ -12,15 +14,23 @@ interface GraphCanvasProps {
   edges: GraphEdgeType[]
   width: number
   height: number
+  onNavigate: (id: string) => void
 }
 
 type Mode =
   | { type: 'idle' }
-  | { type: 'drag'; nodeId: string; pointerId: number; didMove: boolean }
+  | { type: 'drag'; nodeId: string; pointerId: number; didMove: boolean; startX: number; startY: number }
   | { type: 'pan'; pointerId: number; startX: number; startY: number; startTx: number; startTy: number }
   | { type: 'pinch'; prevDist: number | null; prevMidX: number; prevMidY: number }
 
-export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
+const DIRECTION_MAP: Record<string, Direction> = {
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+}
+
+export function GraphCanvas({ nodes, edges, width, height, onNavigate }: GraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const gRef = useRef<SVGGElement>(null)
   const modeRef = useRef<Mode>({ type: 'idle' })
@@ -162,7 +172,7 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
       return
     }
 
-    modeRef.current = { type: 'drag', nodeId, pointerId, didMove: false }
+    modeRef.current = { type: 'drag', nodeId, pointerId, didMove: false, startX: clientX, startY: clientY }
     svgRef.current?.setPointerCapture(pointerId)
     const sim = getSimulation()
     if (sim) {
@@ -204,7 +214,13 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
     if (m.type === 'drag') {
       // Only respond to the pointer that started the drag
       if (e.pointerId !== m.pointerId) return
-      m.didMove = true
+      // Require 5px movement before treating as drag (touch jitter tolerance)
+      if (!m.didMove) {
+        const dx = e.clientX - m.startX
+        const dy = e.clientY - m.startY
+        if (dx * dx + dy * dy < 25) return
+        m.didMove = true
+      }
       const pt = toSimCoords(e.clientX, e.clientY)
       const sim = getSimulation()
       if (sim) {
@@ -313,19 +329,72 @@ export function GraphCanvas({ nodes, edges, width, height }: GraphCanvasProps) {
     }
   }, [releaseNode])
 
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<SVGSVGElement>) => {
+    const direction = DIRECTION_MAP[e.key]
+
+    if (direction) {
+      e.preventDefault()
+      if (!selectedNodeId) {
+        // No selection: pick node nearest viewport center
+        const t = transformRef.current
+        const centerX = (width / 2 - t.x) / t.k
+        const centerY = (height / 2 - t.y) / t.k
+        const center = findCenterNode(simulatedNodes, centerX, centerY)
+        if (center) setSelectedNodeId(center.id)
+        return
+      }
+      const next = findNearestInDirection(simulatedNodes, selectedNodeId, direction)
+      if (next) setSelectedNodeId(next.id)
+      return
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (selectedNodeId) onNavigate(selectedNodeId)
+      return
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      if (selectedNodeId) {
+        setSelectedNodeId(null)
+      } else {
+        svgRef.current?.blur()
+      }
+    }
+  }, [selectedNodeId, setSelectedNodeId, simulatedNodes, width, height, onNavigate])
+
   return (
     <svg
       ref={svgRef}
       width={width}
       height={height}
-      role="img"
-      aria-label="Relationship graph visualization"
-      style={{ display: 'block', touchAction: 'none' }}
+      role="application"
+      aria-roledescription="graph"
+      aria-label="Relationship graph. Use arrow keys to navigate between nodes."
+      tabIndex={0}
+      className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      style={{ display: 'block', touchAction: 'none', outline: 'none' }}
+      onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
     >
+      <defs>
+        <marker
+          id="arrowhead"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
+          orient="auto"
+          markerUnits="userSpaceOnUse"
+        >
+          <polygon points="0 0, 8 3, 0 6" fill="var(--muted-foreground)" />
+        </marker>
+      </defs>
       <g ref={gRef}>
         {simulatedEdges.map(edge => {
           const srcId = typeof edge.source === 'object' ? (edge.source as GraphNodeType).id : edge.source as string

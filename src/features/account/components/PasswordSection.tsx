@@ -5,6 +5,7 @@ import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import { Button } from '@/shared/components/ui/Button'
 import { PasswordInput } from '@/shared/components/ui/PasswordInput'
+import { PasswordStrengthMeter } from '@/features/auth/components/PasswordStrengthMeter'
 
 export function PasswordSection({ user }: { user: User }) {
   const hasEmailIdentity = user.identities?.some(i => i.provider === 'email')
@@ -32,8 +33,8 @@ export function PasswordSection({ user }: { user: User }) {
     setError(null)
     setSuccess(false)
 
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters.')
+    if (newPassword.length < 8) {
+      setError('New password must be at least 8 characters.')
       return
     }
 
@@ -98,8 +99,11 @@ export function PasswordSection({ user }: { user: User }) {
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
           />
+          <div className="mt-2">
+            <PasswordStrengthMeter password={newPassword} />
+          </div>
         </div>
         <div>
           <label htmlFor="confirm-password" className="mb-1 block text-sm font-medium">
@@ -110,7 +114,7 @@ export function PasswordSection({ user }: { user: User }) {
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
           />
         </div>
         {error && <p id="password-error" role="alert" className="text-sm text-destructive">{error}</p>}

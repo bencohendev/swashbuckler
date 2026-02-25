@@ -1,6 +1,6 @@
 'use client'
 
-import { TableIcon, ListIcon, LayoutGridIcon } from 'lucide-react'
+import { TableIcon, ListIcon, LayoutGridIcon, KanbanIcon } from 'lucide-react'
 import { useViewMode, type ViewMode } from '../stores/viewMode'
 import { cn } from '@/shared/lib/utils'
 
@@ -8,6 +8,7 @@ const modes: { value: ViewMode; icon: typeof TableIcon; label: string }[] = [
   { value: 'table', icon: TableIcon, label: 'Table view' },
   { value: 'list', icon: ListIcon, label: 'List view' },
   { value: 'card', icon: LayoutGridIcon, label: 'Card view' },
+  { value: 'board', icon: KanbanIcon, label: 'Board view' },
 ]
 
 interface ViewToggleProps {

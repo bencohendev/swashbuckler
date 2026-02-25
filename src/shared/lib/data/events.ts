@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 
-export type EventChannel = 'objects' | 'objectTypes' | 'templates' | 'objectRelations' | 'spaces' | 'spaceShares' | 'tags' | 'pins'
+export type EventChannel = 'objects' | 'objectTypes' | 'globalObjectTypes' | 'templates' | 'objectRelations' | 'spaces' | 'spaceShares' | 'tags' | 'pins'
 type Listener = () => void
 
 const listeners = new Map<EventChannel, Set<Listener>>()
@@ -14,6 +14,7 @@ export function setQueryClient(client: QueryClient): void {
 const channelToQueryPrefix: Record<EventChannel, string[]> = {
   objects: ['objects'],
   objectTypes: ['objectTypes'],
+  globalObjectTypes: ['globalObjectTypes'],
   templates: ['templates'],
   objectRelations: ['relations'],
   spaces: ['spaces'],

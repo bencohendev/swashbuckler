@@ -37,6 +37,7 @@ src/
 │   ├── auth/
 │   ├── collaboration/
 │   ├── editor/
+│   ├── global-types/
 │   ├── graph/
 │   ├── object-types/
 │   ├── objects/
@@ -80,6 +81,9 @@ Dual-storage architecture with a `DataClient` interface:
 016_storage.sql             # uploads bucket + RLS policies
 017_leave_space.sql         # leave space function
 018_realtime.sql            # enable realtime publication
+019_fix_shared_user_insert.sql # fix shared user insert
+020_cascade_delete_types.sql   # cascade delete types
+021_global_types.sql           # per-owner global type slug index
 ```
 
 ## Implemented Features
@@ -114,26 +118,29 @@ Dual-storage architecture with a `DataClient` interface:
 | [Move docs to .readme/](features/move-docs-to-readme.md) | Move documentation from `.claude/docs/` to `.readme/` for GitHub visibility |
 | [Unique Default Names](features/unique-default-names.md) | Incrementing "New Page", "New Page 2", etc. |
 | [Toast Notifications](features/toast-notifications.md) | Non-blocking transient feedback (success, error, info, warning) |
+| [Private Content](features/private-content.md) | Hide content within entries from shared users |
+| Entry Pagination | Max 10 entries per type in sidebar with "See all" link |
 | Confirm Dialogs | Radix AlertDialog replacements for `window.confirm()` |
 | Show Password Toggle | Visibility toggle on password inputs (login, signup, account settings) |
+| [Password Security](features/password-security.md) | Strength meter, 8-char minimum, login rate limiting |
+| [Template Section in Type Settings](features/template-section-in-type-settings.md) | Inline template rename/delete in type edit form |
+| Manage Templates Shortcut | "Manage Templates" option in sidebar type dropdown |
+| [Board View](features/board-view.md) | Kanban board view for type pages — group entries by select field |
+| [Global Types](features/global-types.md) | Reusable type blueprints importable across spaces |
+| [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
+| [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
+| [Type Reorder Keyboard](features/type-reorder-keyboard.md) | Up/down buttons as keyboard alternative to drag-drop in type settings |
+| [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
-| Board view | Kanban for status-based entries |
 | First use tutorial | Onboarding walkthrough for new users |
-| Advanced documentation | In-depth user docs and help content |
-| Graph keyboard navigation | Tab/arrow-key navigation through graph nodes |
-| Type reorder keyboard support | Up/down buttons as keyboard alternative to drag-drop |
-| Password security | Rate-limit login attempts; evaluate password strength requirements |
-| Template section in type settings | Add template management section to the type settings page |
-| Manage templates shortcut | Add "Manage Templates" option to the template menu dropdown |
-| [Global Types](features/global-types.md) | Create types outside of spaces and assign them into spaces |
-| [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
+| [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
+| Auto-focus title on new entry | Focus title field automatically when creating a new entry |
 
 ## Bugs
 

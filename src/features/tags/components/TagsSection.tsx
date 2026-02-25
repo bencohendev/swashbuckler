@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { ChevronRightIcon, TagIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { Tag } from '@/shared/lib/data'
-import { useDataClient } from '@/shared/lib/data'
+import { useTagCounts } from '@/features/tags/hooks/useTags'
 import { SidebarLink } from '@/features/sidebar/components/SidebarLink'
 import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
 import type { CollapseSignal } from '@/features/sidebar/types'
@@ -15,26 +14,8 @@ interface TagsSectionProps {
 }
 
 export function TagsSection({ tags, collapseSignal }: TagsSectionProps) {
-  const dataClient = useDataClient()
   const [collapsed, setCollapsed] = useCollapsible('sidebar-collapsed-tags', collapseSignal)
-  const [tagCounts, setTagCounts] = useState<Map<string, number>>(new Map())
-
-  // Fetch tag counts in parallel
-  useEffect(() => {
-    if (tags.length === 0) return
-
-    async function fetchCounts() {
-      const entries = await Promise.all(
-        tags.map(async (tag) => {
-          const result = await dataClient.tags.getObjectsByTag(tag.id)
-          return [tag.id, result.data.length] as const
-        })
-      )
-      setTagCounts(new Map(entries))
-    }
-
-    fetchCounts()
-  }, [tags, dataClient])
+  const tagCounts = useTagCounts(tags)
 
   if (tags.length === 0) return null
 

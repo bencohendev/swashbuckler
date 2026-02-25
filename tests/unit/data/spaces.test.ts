@@ -22,6 +22,20 @@ describe('Spaces (local data layer)', () => {
       const result = await client.spaces.create({ name: 'Fun', icon: '🎉' })
       expect(result.data!.icon).toBe('🎉')
     })
+
+    it('rejects duplicate space name (exact match)', async () => {
+      await client.spaces.create({ name: 'Work' })
+      const result = await client.spaces.create({ name: 'Work' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('rejects duplicate space name (case-insensitive)', async () => {
+      await client.spaces.create({ name: 'My Space' })
+      const result = await client.spaces.create({ name: 'my space' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
   })
 
   describe('list', () => {
@@ -61,6 +75,29 @@ describe('Spaces (local data layer)', () => {
       const created = await client.spaces.create({ name: 'Test' })
       const result = await client.spaces.update(created.data!.id, { icon: '🚀' })
       expect(result.data!.icon).toBe('🚀')
+    })
+
+    it('rejects rename to duplicate name', async () => {
+      await client.spaces.create({ name: 'Alpha' })
+      const beta = await client.spaces.create({ name: 'Beta' })
+      const result = await client.spaces.update(beta.data!.id, { name: 'Alpha' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('rejects rename to duplicate name (case-insensitive)', async () => {
+      await client.spaces.create({ name: 'Alpha' })
+      const beta = await client.spaces.create({ name: 'Beta' })
+      const result = await client.spaces.update(beta.data!.id, { name: 'alpha' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('allows updating to same name (self-check)', async () => {
+      const created = await client.spaces.create({ name: 'Same' })
+      const result = await client.spaces.update(created.data!.id, { name: 'Same' })
+      expect(result.error).toBeNull()
+      expect(result.data!.name).toBe('Same')
     })
   })
 

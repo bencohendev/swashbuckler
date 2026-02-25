@@ -42,6 +42,13 @@ The app has no mobile support — sidebar is always visible at fixed width, no h
 | `src/shared/components/ui/Dialog.tsx` | Content padding `p-4 md:p-6` |
 | `src/features/search/components/GlobalSearchDialog.tsx` | Top position `top-[10%] md:top-[20%]` |
 
+### Dialog/form overflow fixes
+
+| File | Changes |
+|------|---------|
+| `src/features/object-types/components/FieldBuilder.tsx` | FieldRow wraps to two rows on mobile: row 1 = grip + name input (full width), row 2 = type select + required checkbox + delete (indented past grip). Uses `flex flex-wrap` with `w-full sm:w-auto sm:flex-1` grouping. |
+| `src/features/sharing/components/ShareSpaceDialog.tsx` | Container: `max-w-[calc(100%-2rem)] sm:max-w-lg`, content padding `p-4 sm:p-6`, header padding `px-4 sm:px-6`. Add-share form: email full-width on mobile, select+button on second row. Share entry rows: wrap to two rows — row 1 = avatar + email + delete, row 2 = permission select + exclusions button (indented `pl-11 sm:pl-0`). |
+
 ### Touch targets & component-specific fixes
 
 | File | Changes |
@@ -91,7 +98,9 @@ A `MenuIcon` button with `md:hidden` in the left slot of the header (currently a
 9. Quick capture button positioning
 10. Type pages — default to card view on mobile, horizontal scroll on table view
 11. SpaceSwitcher dropdown clipping fix
-12. Touch target audit — ensure 44px minimum on interactive elements
+12. FieldBuilder field-row wrap for mobile
+13. ShareSpaceDialog container, form row, and share entry row responsive layout
+14. Touch target audit — ensure 44px minimum on interactive elements
 
 ## Verification
 
@@ -108,3 +117,5 @@ A `MenuIcon` button with `md:hidden` in the left slot of the header (currently a
 - SpaceSwitcher dropdown opens fully inside the mobile sidebar drawer
 - Icon buttons and interactive elements are comfortably tappable (44px+)
 - Slash menu renders as bottom panel with backdrop on mobile (no keyboard flicker)
+- Create Type dialog: field rows wrap cleanly at 375px, all controls accessible and tappable
+- Share dialog: add-share form and share entry rows don't overflow at 375px, all controls tappable

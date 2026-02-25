@@ -44,14 +44,24 @@ export const GraphNode = memo(function GraphNode({
       style={{ cursor: 'grab', opacity: isDimmed ? 0.15 : 1, touchAction: 'none' }}
     >
       {emoji ? (
-        <text
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={radius * 1.8}
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
-        >
-          {emoji}
-        </text>
+        <>
+          {(isSelected || isHighlighted) && (
+            <circle
+              r={radius + 4}
+              fill="none"
+              stroke={isSelected ? 'var(--foreground)' : 'var(--primary)'}
+              strokeWidth={isSelected ? 2 : 1.5}
+            />
+          )}
+          <text
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={radius * 1.8}
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+          >
+            {emoji}
+          </text>
+        </>
       ) : (
         <circle
           r={radius}

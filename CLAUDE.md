@@ -25,8 +25,10 @@ After adding, modifying, or fixing features, run these checks:
 
 ## Branching & Worktrees
 
-- All work must be done in a git worktree — never commit directly on `dev`, `main`, or other environment branches
-- At the start of every task, create a worktree with a descriptive branch name before making any code changes
+- **BEFORE any Edit or Write call**, verify you are in a worktree — if not, call `EnterWorktree` first
+- This applies in all contexts: starting a task, exiting plan mode, resuming work — no exceptions
+- Never commit directly on `dev`, `main`, or other environment branches
+- Use a descriptive branch name (e.g., `worktree-add-toast-notifications`)
 - Merge the worktree branch back into the target branch only when work is complete and verified
 
 ## Task Management

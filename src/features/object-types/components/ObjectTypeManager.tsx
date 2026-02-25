@@ -1,19 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { PlusIcon, EditIcon, TrashIcon } from 'lucide-react'
+import { PlusIcon, EditIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-react'
 import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
 import { ObjectTypeForm } from './ObjectTypeForm'
+import { GlobalTypeImporter } from '@/features/global-types/components/GlobalTypeImporter'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
+import { useAuth } from '@/shared/lib/data'
 import type { ObjectType, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
 
 export function ObjectTypeManager() {
   const { types, isLoading, error, create, update, remove } = useObjectTypes()
+  const { isGuest } = useAuth()
   const searchParams = useSearchParams()
   const [editingType, setEditingType] = useState<ObjectType | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -28,14 +31,27 @@ export function ObjectTypeManager() {
     }
   }, [editTypeId, types])
 
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
+
   const handleCreate = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
-    await create(input as CreateObjectTypeInput)
+    setCreateError(null)
+    const result = await create(input as CreateObjectTypeInput)
+    if (result.error) {
+      setCreateError(result.error)
+      return
+    }
     setIsCreating(false)
   }
 
   const handleUpdate = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
     if (!editingType) return
-    await update(editingType.id, input as UpdateObjectTypeInput)
+    setEditError(null)
+    const result = await update(editingType.id, input as UpdateObjectTypeInput)
+    if (result.error) {
+      setEditError(result.error)
+      return
+    }
     setEditingType(null)
   }
 
@@ -50,6 +66,22 @@ export function ObjectTypeManager() {
       toast({ description: `Type "${typeName}" deleted`, variant: 'success' })
     }
   }
+
+  const handleMoveType = useCallback(async (index: number, direction: 'up' | 'down') => {
+    if (
+      (direction === 'up' && index === 0) ||
+      (direction === 'down' && index === types.length - 1)
+    ) return
+
+    const swapIndex = direction === 'up' ? index - 1 : index + 1
+    const current = types[index]
+    const neighbor = types[swapIndex]
+
+    await Promise.all([
+      update(current.id, { sort_order: neighbor.sort_order }),
+      update(neighbor.id, { sort_order: current.sort_order }),
+    ])
+  }, [types, update])
 
   if (isLoading) {
     return (
@@ -75,7 +107,8 @@ export function ObjectTypeManager() {
         <h2 className="mb-4 text-lg font-medium">Create New Type</h2>
         <ObjectTypeForm
           onSave={handleCreate}
-          onCancel={() => setIsCreating(false)}
+          onCancel={() => { setIsCreating(false); setCreateError(null) }}
+          error={createError}
         />
       </div>
     )
@@ -88,7 +121,8 @@ export function ObjectTypeManager() {
         <ObjectTypeForm
           objectType={editingType}
           onSave={handleUpdate}
-          onCancel={() => setEditingType(null)}
+          onCancel={() => { setEditingType(null); setEditError(null) }}
+          error={editError}
         />
       </div>
     )
@@ -100,10 +134,13 @@ export function ObjectTypeManager() {
         <p className="text-sm text-muted-foreground">
           {types.length} type{types.length !== 1 ? 's' : ''}
         </p>
-        <Button onClick={() => setIsCreating(true)}>
-          <PlusIcon className="size-4" />
-          Create Type
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isGuest && <GlobalTypeImporter />}
+          <Button onClick={() => setIsCreating(true)}>
+            <PlusIcon className="size-4" />
+            Create Type
+          </Button>
+        </div>
       </div>
 
       {types.length === 0 ? (
@@ -111,12 +148,32 @@ export function ObjectTypeManager() {
           No types yet. Create one to get started.
         </p>
       ) : <div className="space-y-2">
-        {types.map(type => (
+        {types.map((type, index) => (
           <div
             key={type.id}
             className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
           >
             <div className="flex items-center gap-3">
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => handleMoveType(index, 'up')}
+                  disabled={index === 0}
+                  className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  aria-label={`Move ${type.name} up`}
+                >
+                  <ChevronUpIcon className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMoveType(index, 'down')}
+                  disabled={index === types.length - 1}
+                  className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  aria-label={`Move ${type.name} down`}
+                >
+                  <ChevronDownIcon className="size-4" />
+                </button>
+              </div>
               <div
                 className="flex size-10 items-center justify-center rounded-lg bg-muted"
                 style={type.color ? { backgroundColor: type.color + '20', color: type.color } : undefined}

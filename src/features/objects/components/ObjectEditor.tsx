@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
 import { Editor } from '@/features/editor'
+import { stripPrivateContent } from '@/features/editor/lib/stripPrivateContent'
 import { TagPicker } from '@/features/tags'
 import { PinButton } from '@/features/pins'
 import { PropertyFields } from './PropertyFields'
@@ -34,13 +35,15 @@ import { CoverImage } from './CoverImage'
 
 interface ObjectEditorProps {
   id: string
+  autoFocus?: boolean
   onDelete?: () => void
   onNavigateAway?: () => void
 }
 
-export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps) {
+export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
   const mainRef = useRef<HTMLElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
   const dataClient = useDataClient()
   const storageMode = useStorageMode()
   const { user } = useAuth()
@@ -85,6 +88,15 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
       setTitle(object.title)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync on id change
+  }, [object?.id])
+
+  // Auto-focus and select title text for newly created entries
+  useEffect(() => {
+    if (autoFocus && object && titleRef.current) {
+      titleRef.current.focus()
+      titleRef.current.select()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on initial load
   }, [object?.id])
 
   const handleTitleChange = useCallback(async (newTitle: string) => {
@@ -138,11 +150,20 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
   const handleTemplateDialogSave = useCallback(async (name: string): Promise<boolean> => {
     if (!object) return false
     const result = await saveObjectAsTemplate(object, name)
-    if (result) {
+    if (result.data) {
       toast({ description: `Template "${name}" saved`, variant: 'success' })
+      return true
     }
-    return result !== null
+    return false
   }, [object, saveObjectAsTemplate])
+
+  // Strip private content for view-only non-owners
+  const editorContent = useMemo(() => {
+    if (!isOwner && !canEdit && object?.content) {
+      return stripPrivateContent(object.content)
+    }
+    return object?.content ?? undefined
+  }, [isOwner, canEdit, object?.content])
 
   if (isLoading) {
     return (
@@ -302,6 +323,7 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
             readOnly={!canEdit}
           />
           <input
+            ref={titleRef}
             type="text"
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
@@ -323,11 +345,12 @@ export function ObjectEditor({ id, onDelete, onNavigateAway }: ObjectEditorProps
 
           <Editor
             key={id}
-            initialContent={object.content ?? undefined}
+            initialContent={editorContent}
             onSave={handleContentSave}
             placeholder="Start writing..."
             readOnly={!canEdit}
             isTemplateMode={isTemplateMode}
+            isOwner={isOwner}
             collaborationOptions={collaborationOptions}
           />
 

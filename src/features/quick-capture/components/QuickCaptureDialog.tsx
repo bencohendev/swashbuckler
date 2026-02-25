@@ -53,7 +53,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
 
     if (result) {
       onOpenChange(false)
-      useObjectModal.getState().open(result.id)
+      useObjectModal.getState().open(result.id, { autoFocus: true })
     } else {
       toast({ description: 'Failed to create entry. You may not have permission.', variant: 'destructive' })
     }

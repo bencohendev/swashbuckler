@@ -31,6 +31,13 @@ describe('Tags (local data layer)', () => {
       expect(result.error).not.toBeNull()
       expect(result.error!.code).toBe('DUPLICATE')
     })
+
+    it('rejects duplicate tag name case-insensitively', async () => {
+      await client.tags.create({ name: 'Work' })
+      const result = await client.tags.create({ name: 'work' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
   })
 
   describe('list', () => {
@@ -60,6 +67,29 @@ describe('Tags (local data layer)', () => {
       const created = await client.tags.create({ name: 'Test' })
       const result = await client.tags.update(created.data!.id, { color: '#00ff00' })
       expect(result.data!.color).toBe('#00ff00')
+    })
+
+    it('rejects rename to duplicate name', async () => {
+      await client.tags.create({ name: 'Alpha' })
+      const beta = await client.tags.create({ name: 'Beta' })
+      const result = await client.tags.update(beta.data!.id, { name: 'Alpha' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('rejects rename to duplicate name case-insensitively', async () => {
+      await client.tags.create({ name: 'Alpha' })
+      const beta = await client.tags.create({ name: 'Beta' })
+      const result = await client.tags.update(beta.data!.id, { name: 'alpha' })
+      expect(result.error).not.toBeNull()
+      expect(result.error!.code).toBe('DUPLICATE')
+    })
+
+    it('allows updating to same name (self-check)', async () => {
+      const created = await client.tags.create({ name: 'Same' })
+      const result = await client.tags.update(created.data!.id, { name: 'Same' })
+      expect(result.error).toBeNull()
+      expect(result.data!.name).toBe('Same')
     })
   })
 
