@@ -17,6 +17,8 @@ export function createMockObjectType(overrides: Partial<ObjectType> = {}): Objec
     owner_id: null,
     space_id: LOCAL_DEFAULT_SPACE_ID,
     sort_order: 0,
+    is_archived: false,
+    archived_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,

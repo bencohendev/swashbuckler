@@ -25,6 +25,8 @@ describe('Schema Validation (additional schemas)', () => {
       name: 'My Space',
       icon: '📁',
       owner_id: UUID2,
+      is_archived: false,
+      archived_at: null,
       created_at: NOW,
       updated_at: NOW,
     }
@@ -101,6 +103,8 @@ describe('Schema Validation (additional schemas)', () => {
       owner_id: null,
       space_id: SPACE_ID,
       sort_order: 0,
+      is_archived: false,
+      archived_at: null,
       created_at: NOW,
       updated_at: NOW,
     }

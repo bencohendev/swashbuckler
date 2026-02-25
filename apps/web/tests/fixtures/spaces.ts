@@ -8,6 +8,8 @@ export function createMockSpace(overrides: Partial<Space> = {}): Space {
     name: 'Test Space',
     icon: '📁',
     owner_id: crypto.randomUUID(),
+    is_archived: false,
+    archived_at: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,

@@ -21,10 +21,12 @@ interface UseObjectsReturn {
   update: (id: string, input: UpdateObjectInput) => Promise<DataObject | null>
   remove: (id: string, permanent?: boolean) => Promise<void>
   restore: (id: string) => Promise<DataObject | null>
+  archive: (id: string) => Promise<DataObject | null>
+  unarchive: (id: string) => Promise<DataObject | null>
 }
 
 export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
-  const { enabled = true, parentId, typeId, isDeleted, limit, offset } = options
+  const { enabled = true, parentId, typeId, isDeleted, isArchived, limit, offset } = options
   const dataClient = useDataClient()
   const queryClient = useQueryClient()
   const spaceId = useSpaceId()
@@ -33,9 +35,10 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
     parentId,
     typeId,
     isDeleted,
+    isArchived,
     limit,
     offset,
-  }), [parentId, typeId, isDeleted, limit, offset])
+  }), [parentId, typeId, isDeleted, isArchived, limit, offset])
 
   const { data, isLoading, error: queryError } = useQuery({
     queryKey: queryKeys.objects.list(spaceId ?? undefined, queryOptions),
@@ -82,6 +85,20 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
     return result.data
   }, [dataClient])
 
+  const archive = useCallback(async (id: string): Promise<DataObject | null> => {
+    const result = await dataClient.objects.archive(id)
+    if (result.error) return null
+    emit('objects')
+    return result.data
+  }, [dataClient])
+
+  const unarchive = useCallback(async (id: string): Promise<DataObject | null> => {
+    const result = await dataClient.objects.unarchive(id)
+    if (result.error) return null
+    emit('objects')
+    return result.data
+  }, [dataClient])
+
   return {
     objects: data ?? EMPTY_OBJECTS,
     isLoading,
@@ -91,6 +108,8 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
     update,
     remove,
     restore,
+    archive,
+    unarchive,
   }
 }
 
@@ -131,6 +150,14 @@ export function useObject(id: string | null) {
     emit('objects')
   }, [dataClient, id])
 
+  const archive = useCallback(async (): Promise<DataObject | null> => {
+    if (!id) return null
+    const result = await dataClient.objects.archive(id)
+    if (result.error) return null
+    emit('objects')
+    return result.data
+  }, [dataClient, id])
+
   return {
     object: object ?? null,
     isLoading,
@@ -138,5 +165,6 @@ export function useObject(id: string | null) {
     refetch,
     update,
     remove,
+    archive,
   }
 }

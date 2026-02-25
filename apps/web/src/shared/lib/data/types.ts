@@ -13,6 +13,8 @@ export const spaceSchema = z.object({
   name: z.string().min(1).max(100),
   icon: z.string(),
   owner_id: z.string().uuid(),
+  is_archived: z.boolean(),
+  archived_at: z.string().datetime().nullable(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
 })
@@ -57,6 +59,8 @@ export const objectTypeSchema = z.object({
   owner_id: z.string().uuid().nullable(),
   space_id: z.string().uuid().nullable(),
   sort_order: z.number().int(),
+  is_archived: z.boolean(),
+  archived_at: z.string().datetime().nullable(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
 })
@@ -87,12 +91,18 @@ export const updateObjectTypeSchema = z.object({
 
 export type UpdateObjectTypeInput = z.infer<typeof updateObjectTypeSchema>
 
+export interface ListObjectTypesOptions {
+  isArchived?: boolean
+}
+
 export interface ObjectTypesClient {
-  list(): Promise<DataListResult<ObjectType>>
+  list(options?: ListObjectTypesOptions): Promise<DataListResult<ObjectType>>
   get(id: string): Promise<DataResult<ObjectType>>
   create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>>
   update(id: string, input: UpdateObjectTypeInput): Promise<DataResult<ObjectType>>
   delete(id: string): Promise<DataResult<void>>
+  archive(id: string): Promise<DataResult<ObjectType>>
+  unarchive(id: string): Promise<DataResult<ObjectType>>
 }
 
 export interface GlobalObjectTypesClient {
@@ -119,6 +129,8 @@ export const objectSchema = z.object({
   content: z.any().nullable(),
   is_deleted: z.boolean(),
   deleted_at: z.string().datetime().nullable(),
+  is_archived: z.boolean(),
+  archived_at: z.string().datetime().nullable(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
 })
@@ -158,6 +170,7 @@ export interface ListObjectsOptions {
   parentId?: string | null
   typeId?: string
   isDeleted?: boolean
+  isArchived?: boolean
   limit?: number
   offset?: number
 }
@@ -230,12 +243,18 @@ export interface DataError {
   code?: string
 }
 
+export interface ListSpacesOptions {
+  isArchived?: boolean
+}
+
 export interface SpacesClient {
-  list(): Promise<DataListResult<Space>>
+  list(options?: ListSpacesOptions): Promise<DataListResult<Space>>
   get(id: string): Promise<DataResult<Space>>
   create(input: { name: string; icon?: string }): Promise<DataResult<Space>>
   update(id: string, input: { name?: string; icon?: string }): Promise<DataResult<Space>>
   delete(id: string): Promise<DataResult<void>>
+  archive(id: string): Promise<DataResult<Space>>
+  unarchive(id: string): Promise<DataResult<Space>>
 }
 
 export interface SearchOptions {
@@ -249,6 +268,8 @@ export interface ObjectsClient {
   update(id: string, input: UpdateObjectInput): Promise<DataResult<DataObject>>
   delete(id: string, permanent?: boolean): Promise<DataResult<void>>
   restore(id: string): Promise<DataResult<DataObject>>
+  archive(id: string): Promise<DataResult<DataObject>>
+  unarchive(id: string): Promise<DataResult<DataObject>>
   search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>>
   purgeExpired(): Promise<DataResult<number>>
 }

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
+import { ArchiveIcon, ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { ContextMenu } from 'radix-ui'
 import { cn } from '@/shared/lib/utils'
 import type { DataObject, ObjectType, Template } from '@/shared/lib/data'
@@ -37,6 +37,7 @@ interface TypeSectionProps {
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
   onDelete?: (typeId: string) => Promise<unknown>
+  onArchive?: (typeId: string) => Promise<unknown>
 }
 
 const SIDEBAR_TYPE_LIMIT = 10
@@ -97,6 +98,7 @@ export function TypeSection({
   onCreateBlank,
   onSelectTemplate,
   onDelete,
+  onArchive,
 }: TypeSectionProps) {
   const router = useRouter()
   const [collapsed, setCollapsed] = useCollapsible(getStorageKey(type.id), collapseSignal)
@@ -169,6 +171,18 @@ export function TypeSection({
                       <CopyIcon />
                       Manage templates
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={async () => {
+                      const error = await onArchive?.(type.id)
+                      if (typeof error === 'string') {
+                        toast({ description: `Failed to archive type: ${error}`, variant: 'destructive' })
+                      } else {
+                        toast({ description: `Type "${type.name}" archived`, variant: 'success' })
+                      }
+                    }}>
+                      <ArchiveIcon />
+                      Archive type
+                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
@@ -194,6 +208,20 @@ export function TypeSection({
                   Edit type
                 </ContextMenu.Item>
                 <ContextMenu.Separator className="bg-border -mx-1 my-1 h-px" />
+                <ContextMenu.Item
+                  className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
+                  onSelect={async () => {
+                    const error = await onArchive?.(type.id)
+                    if (typeof error === 'string') {
+                      toast({ description: `Failed to archive type: ${error}`, variant: 'destructive' })
+                    } else {
+                      toast({ description: `Type "${type.name}" archived`, variant: 'success' })
+                    }
+                  }}
+                >
+                  <ArchiveIcon />
+                  Archive type
+                </ContextMenu.Item>
                 <ContextMenu.Item
                   className={cn(menuItemClass, 'text-destructive focus:bg-destructive/10 focus:text-destructive')}
                   onSelect={() => setConfirmDeleteOpen(true)}
