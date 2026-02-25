@@ -6,7 +6,10 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Duplicate names allowed | Spaces (per owner), object types (per space), objects (per type+space), templates (per type+space), and tags (per space) can all have duplicate names — each should enforce uniqueness within its scope |
+| Sidebar skeleton is bad | Loading skeleton for sidebar needs rework — current implementation is a poor UX |
+| New entry title shows text instead of placeholder | When creating a new entry, the title field should show a placeholder instead of pre-filled text |
+| Private block / code block unescapable | Can't escape out of private blocks or code blocks — cursor gets trapped with no way to insert content above or below |
+| Table block missing row/column controls | Table blocks have no UI controls to add or delete rows and columns |
 ## Closed
 
 | Date | Bug | Fix |

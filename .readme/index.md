@@ -140,7 +140,10 @@ Dual-storage architecture with a `DataClient` interface:
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | First use tutorial | Onboarding walkthrough for new users |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
-| Auto-focus title on new entry | Focus title field automatically when creating a new entry |
+| Analytics | Usage analytics and tracking |
+| API audit (backend) | Audit Supabase backend APIs for correctness, security, and consistency |
+| API audit (frontend) | Audit frontend API calls for correctness, error handling, and consistency |
+| Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
 
 ## Bugs
 
