@@ -63,13 +63,13 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <SpaceProvider user={user} isAuthLoading={isAuthLoading}>
+          <CustomThemeApplier />
           <DataProviderWithSpace user={user} isAuthLoading={isAuthLoading}>
             {children}
           </DataProviderWithSpace>
         </SpaceProvider>
       </QueryClientProvider>
       <Toaster />
-      <CustomThemeApplier />
     </ThemeProvider>
   )
 }

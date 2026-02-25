@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { Input } from '@/shared/components/ui/Input'
 import { Label } from '@/shared/components/ui/Label'
 import { Button } from '@/shared/components/ui/Button'
+import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
 import { deriveAllColors } from '../lib/deriveColors'
 import { DEFAULT_PRESETS } from '../lib/defaultThemeColors'
@@ -20,7 +21,8 @@ interface ThemeBuilderProps {
 export function ThemeBuilder({ editingTheme, onClose }: ThemeBuilderProps) {
   const addTheme = useCustomThemeStore(s => s.addTheme)
   const updateTheme = useCustomThemeStore(s => s.updateTheme)
-  const activateTheme = useCustomThemeStore(s => s.activateTheme)
+  const setSpaceTheme = useCustomThemeStore(s => s.setSpaceTheme)
+  const { space } = useCurrentSpace()
   const isEditing = !!editingTheme
 
   const [name, setName] = useState(editingTheme?.name ?? '')
@@ -46,7 +48,9 @@ export function ThemeBuilder({ editingTheme, onClose }: ThemeBuilderProps) {
       updateTheme(editingTheme.id, trimmedName, base, colors)
     } else {
       const theme = addTheme(trimmedName, base, colors)
-      activateTheme(theme.id)
+      if (space) {
+        setSpaceTheme(space.id, { type: 'custom', themeId: theme.id })
+      }
     }
     onClose()
   }

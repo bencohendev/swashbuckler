@@ -14,13 +14,14 @@ import {
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
 import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
-import { useAuth } from "@/shared/lib/data"
+import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import { useSpacePermission } from "@/features/sharing"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useTheme } from "next-themes"
 import { GlobalSearchDialog } from "@/features/search"
 import { QuickCaptureDialog, QuickCaptureButton } from "@/features/quick-capture"
 import { useCustomThemeStore } from "@/features/theme-builder"
+import type { SpaceThemeAssignment } from "@/features/theme-builder"
 
 export function Header({ email }: { email?: string }) {
   const router = useRouter()
@@ -31,9 +32,13 @@ export function Header({ email }: { email?: string }) {
   const avatarUrl: string | undefined = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture
   const [searchOpen, setSearchOpen] = useState(false)
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false)
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const clearActiveTheme = useCustomThemeStore(s => s.clearActiveTheme)
+  const { resolvedTheme } = useTheme()
+  const { space } = useCurrentSpace()
+  const spaceThemes = useCustomThemeStore(s => s.spaceThemes)
+  const setSpaceTheme = useCustomThemeStore(s => s.setSpaceTheme)
   const [mounted, setMounted] = useState(false)
+
+  const assignment = space ? spaceThemes[space.id] : undefined
 
   useEffect(() => {
     setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect -- hydration detection
@@ -95,18 +100,29 @@ export function Header({ email }: { email?: string }) {
           size="icon"
           className="text-muted-foreground"
           onClick={() => {
-            clearActiveTheme()
-            if (theme === 'light') setTheme('dark')
-            else if (theme === 'dark') setTheme('system')
-            else setTheme('light')
+            if (!space) return
+            // If custom theme, switch to light default
+            if (assignment?.type === 'custom') {
+              setSpaceTheme(space.id, { type: 'default', value: 'light' })
+              return
+            }
+            // Cycle: light → dark → system → light
+            const current = assignment?.type === 'default' ? assignment.value : 'system'
+            const next: SpaceThemeAssignment =
+              current === 'light' ? { type: 'default', value: 'dark' } :
+              current === 'dark' ? { type: 'default', value: 'system' } :
+              { type: 'default', value: 'light' }
+            setSpaceTheme(space.id, next)
           }}
-          title={mounted ? `Theme: ${theme}` : "Theme"}
-          aria-label={mounted ? `Theme: ${theme}` : "Toggle theme"}
+          title={mounted ? `Theme: ${assignment?.type === 'default' ? assignment.value : assignment?.type === 'custom' ? 'custom' : 'system'}` : "Theme"}
+          aria-label={mounted ? `Theme: ${assignment?.type === 'default' ? assignment.value : assignment?.type === 'custom' ? 'custom' : 'system'}` : "Toggle theme"}
         >
           {mounted ? (
-            theme === 'system' ? <MonitorIcon className="size-4" /> :
-            resolvedTheme === 'dark' ? <MoonIcon className="size-4" /> :
-            <SunIcon className="size-4" />
+            assignment?.type === 'default' && assignment.value === 'system'
+              ? <MonitorIcon className="size-4" />
+              : resolvedTheme === 'dark'
+                ? <MoonIcon className="size-4" />
+                : <SunIcon className="size-4" />
           ) : (
             <SunIcon className="size-4" />
           )}

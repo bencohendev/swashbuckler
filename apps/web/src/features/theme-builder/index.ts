@@ -1,5 +1,5 @@
 // Types
-export type { CustomTheme, ThemeCoreColors, ThemeResolvedColors, ThemeBase } from './types'
+export type { CustomTheme, ThemeCoreColors, ThemeResolvedColors, ThemeBase, SpaceThemeAssignment } from './types'
 export { CORE_COLOR_KEYS, CORE_COLOR_LABELS } from './types'
 
 // Store

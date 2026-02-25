@@ -22,13 +22,13 @@ Users currently can only switch between Light, Dark, and System themes. This fea
 
 | File | Purpose |
 |------|---------|
-| `types.ts` | `CustomTheme`, `ThemeCoreColors`, `ThemeResolvedColors`, `ThemeBase` types |
-| `stores/customTheme.ts` | Zustand store: CRUD themes, active theme ID, localStorage keys `swashbuckler:customThemes` and `swashbuckler:activeCustomTheme` |
+| `types.ts` | `CustomTheme`, `ThemeCoreColors`, `ThemeResolvedColors`, `ThemeBase`, `SpaceThemeAssignment` types |
+| `stores/customTheme.ts` | Zustand store: CRUD themes, per-space theme assignments, localStorage keys `swashbuckler:customThemes` and `swashbuckler:spaceThemes` |
 | `lib/colorUtils.ts` | Pure helpers: `hexToRgb`, `rgbToHex`, `rgbToHsl`, `hslToRgb`, `lighten`, `darken`, `mix`, `contrastForeground`, `shiftHue` |
 | `lib/deriveColors.ts` | `deriveAllColors(core, base)` maps 8 colors to all ~30 CSS variables |
 | `lib/defaultThemeColors.ts` | Default light/dark core colors as hex (converted from globals.css OKLch values) for "Start from Light/Dark" buttons |
 | `lib/themeScript.ts` | `getThemeScript()` inline JS string for FOUC prevention |
-| `components/CustomThemeApplier.tsx` | Effect-only component: reads store, applies/removes CSS var overrides, syncs with next-themes |
+| `components/CustomThemeApplier.tsx` | Effect-only component: reads current space + per-space assignment, applies/removes CSS var overrides, syncs with next-themes |
 | `components/AppearanceSettings.tsx` | Main page component for Settings > Appearance |
 | `components/ThemeList.tsx` | Grid of saved themes + default Light/Dark cards |
 | `components/ThemeCard.tsx` | Single theme card: color swatches, name, activate/edit/delete |
@@ -47,10 +47,10 @@ Users currently can only switch between Light, Dark, and System themes. This fea
 
 | File | Change |
 |------|--------|
-| `src/app/providers.tsx` | Add `<CustomThemeApplier />` inside `<ThemeProvider>` |
+| `src/app/providers.tsx` | Add `<CustomThemeApplier />` inside `<SpaceProvider>` (moved from outside to enable space context access) |
 | `src/app/layout.tsx` | Add inline `<script dangerouslySetInnerHTML>` for FOUC prevention |
 | `src/app/(main)/settings/page.tsx` | Add Appearance card (PaletteIcon) to settings grid |
-| `src/shared/components/layout/Header.tsx` | Clear active custom theme when header theme toggle is clicked |
+| `src/shared/components/layout/Header.tsx` | Theme toggle cycles light/dark/system per-space; clears custom theme on first click |
 
 ## Color Derivation Logic
 
@@ -99,6 +99,31 @@ From 8 core inputs, derive:
 18. Add Appearance card to `settings/page.tsx`
 19. Update Header.tsx theme toggle to clear custom theme
 20. Update feature plans
+
+## Per-Space Theme Application
+
+Theme **creation** is account-wide (all custom themes are available in every space), but theme **application** is per-space. Switching spaces switches themes.
+
+### Storage
+
+- `swashbuckler:spaceThemes` — `Record<spaceId, SpaceThemeAssignment>` in localStorage
+- `SpaceThemeAssignment` is either `{ type: 'default', value: 'light' | 'dark' | 'system' }` or `{ type: 'custom', themeId: string }`
+- No database migration — stays consistent with localStorage-only theme storage
+
+### Behavior
+
+- **Space switch**: `CustomThemeApplier` reacts to `useCurrentSpace()` changes; applies/clears CSS vars accordingly
+- **Header toggle**: Cycles light → dark → system for the current space. If a custom theme is active, first click switches to light default
+- **Theme list**: Shows "Theme for [Space Name]" context. Active indicators check the current space's assignment
+- **New theme**: On save, automatically assigned to the current space
+- **Deleted theme**: `deleteTheme()` scans `spaceThemes` and removes entries referencing the deleted ID
+- **No assignment**: Falls back to system default (no CSS overrides)
+- **Guest mode**: Works identically — local space ID is a valid key
+- **Shared spaces**: Assignment is in the viewer's localStorage — each user sees their own preference
+
+### Migration
+
+On first read of `spaceThemes`, if the old `swashbuckler:activeCustomTheme` key exists, it's migrated to an entry for the current space and the old key is removed. The FOUC script also handles this fallback.
 
 ## Verification
 
