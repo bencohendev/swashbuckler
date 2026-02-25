@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { PlusIcon, EditIcon, TrashIcon } from 'lucide-react'
+import { PlusIcon, EditIcon, TrashIcon, ArchiveIcon } from 'lucide-react'
 import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
 import { ObjectTypeForm } from './ObjectTypeForm'
@@ -15,12 +15,13 @@ import { useAuth } from '@/shared/lib/data'
 import type { ObjectType, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
 
 export function ObjectTypeManager() {
-  const { types, isLoading, error, create, update, remove } = useObjectTypes()
+  const { types, isLoading, error, create, update, remove, archive } = useObjectTypes()
   const { isGuest } = useAuth()
   const searchParams = useSearchParams()
   const [editingType, setEditingType] = useState<ObjectType | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [pendingDeleteType, setPendingDeleteType] = useState<ObjectType | null>(null)
+  const [pendingArchiveType, setPendingArchiveType] = useState<ObjectType | null>(null)
 
   // Auto-open edit form when ?edit=<typeId> is in the URL
   const editTypeId = searchParams.get('edit')
@@ -64,6 +65,18 @@ export function ObjectTypeManager() {
       toast({ description: `Failed to delete type: ${error}`, variant: 'destructive' })
     } else {
       toast({ description: `Type "${typeName}" deleted`, variant: 'success' })
+    }
+  }
+
+  const handleArchive = async () => {
+    if (!pendingArchiveType) return
+    const typeName = pendingArchiveType.name
+    const error = await archive(pendingArchiveType.id)
+    setPendingArchiveType(null)
+    if (error) {
+      toast({ description: `Failed to archive type: ${error}`, variant: 'destructive' })
+    } else {
+      toast({ description: `Type "${typeName}" archived`, variant: 'success' })
     }
   }
 
@@ -170,6 +183,15 @@ export function ObjectTypeManager() {
               <Button
                 size="icon-sm"
                 variant="ghost"
+                onClick={() => setPendingArchiveType(type)}
+                title="Archive type"
+                className="text-muted-foreground hover:text-muted-foreground/80"
+              >
+                <ArchiveIcon className="size-4" />
+              </Button>
+              <Button
+                size="icon-sm"
+                variant="ghost"
                 onClick={() => setPendingDeleteType(type)}
                 title="Delete type"
                 className="text-destructive hover:text-destructive"
@@ -180,6 +202,14 @@ export function ObjectTypeManager() {
           </div>
         ))}
       </div>}
+      <ConfirmDialog
+        open={!!pendingArchiveType}
+        onOpenChange={(open) => { if (!open) setPendingArchiveType(null) }}
+        title="Archive type"
+        description={`Archive "${pendingArchiveType?.name}"? It will be hidden but can be restored later.`}
+        confirmLabel="Archive"
+        onConfirm={handleArchive}
+      />
       <ConfirmDialog
         open={!!pendingDeleteType}
         onOpenChange={(open) => { if (!open) setPendingDeleteType(null) }}
