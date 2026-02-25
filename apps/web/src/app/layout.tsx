@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Providers } from "./providers"
 import { getThemeScript } from "@/features/theme-builder"
+import { Analytics } from "@vercel/analytics/next"
+
 import "./globals.css"
 
 const geistSans = Geist({
@@ -30,7 +32,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <script dangerouslySetInnerHTML={{ __html: getThemeScript() }} />
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Analytics/>
+        </Providers>
       </body>
     </html>
   )
