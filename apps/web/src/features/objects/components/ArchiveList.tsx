@@ -6,6 +6,7 @@ import { useObjects } from '../hooks/useObjects'
 import { useObjectTypes } from '@/features/object-types'
 import { useSpaces, useDataClient } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { toast } from '@/shared/hooks/useToast'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import type { DataObjectSummary, ObjectType, Space } from '@/shared/lib/data'
@@ -26,7 +27,7 @@ function ArchivedEntriesSection() {
     return (
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+          <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>
     )
@@ -56,7 +57,7 @@ function ArchivedEntriesSection() {
               size="sm"
               variant="ghost"
               onClick={() => handleUnarchive(obj)}
-              disabled={processingId === obj.id}
+              loading={processingId === obj.id}
               title="Unarchive"
               aria-label={`Unarchive "${obj.title}"`}
             >
@@ -90,7 +91,7 @@ function ArchivedTypesSection() {
     return (
       <div className="space-y-2">
         {[1, 2].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+          <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>
     )
@@ -120,7 +121,7 @@ function ArchivedTypesSection() {
               size="sm"
               variant="ghost"
               onClick={() => handleUnarchive(type)}
-              disabled={processingId === type.id}
+              loading={processingId === type.id}
               title="Unarchive type"
               aria-label={`Unarchive "${type.name}" type`}
             >
@@ -173,7 +174,7 @@ function ArchivedSpacesSection() {
               size="sm"
               variant="ghost"
               onClick={() => handleUnarchive(space)}
-              disabled={processingId === space.id}
+              loading={processingId === space.id}
               title="Unarchive space"
               aria-label={`Unarchive "${space.name}" space`}
             >

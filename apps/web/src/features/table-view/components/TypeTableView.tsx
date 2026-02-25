@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useCallback } from 'react'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { useObjectTypes } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks'
 import { useObjectTagsBatch, useTags } from '@/features/tags'
@@ -69,8 +70,8 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   if (typesLoading) {
     return (
       <div className="space-y-4 p-6">
-        <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-        <div className="h-64 animate-pulse rounded-lg bg-muted" />
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     )
   }

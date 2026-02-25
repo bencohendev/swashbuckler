@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { ContextMenu } from 'radix-ui'
 import { cn } from '@/shared/lib/utils'
@@ -14,6 +13,7 @@ import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
 import type { CollapseSignal } from '@/features/sidebar/types'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { useNavigate } from '@/shared/hooks/useNavigate'
 import { toast } from '@/shared/hooks/useToast'
 import {
   DropdownMenu,
@@ -98,7 +98,7 @@ export function TypeSection({
   onSelectTemplate,
   onDelete,
 }: TypeSectionProps) {
-  const router = useRouter()
+  const { push: navigate } = useNavigate()
   const [collapsed, setCollapsed] = useCollapsible(getStorageKey(type.id), collapseSignal)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const visibleObjects = useMemo(() => objects.slice(0, SIDEBAR_TYPE_LIMIT), [objects])
@@ -125,7 +125,7 @@ export function TypeSection({
                 />
               </button>
               <button
-                onClick={() => router.push(`/types/${type.slug}`)}
+                onClick={() => navigate(`/types/${type.slug}`)}
                 className="flex items-center gap-1.5 hover:text-foreground"
               >
                 <TypeIcon icon={type.icon} className="size-3.5" />
@@ -145,7 +145,7 @@ export function TypeSection({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuItem onSelect={() => router.push(`/types/${type.slug}`)}>
+                <DropdownMenuItem onSelect={() => navigate(`/types/${type.slug}`)}>
                   <EyeIcon />
                   Open
                 </DropdownMenuItem>
@@ -161,11 +161,11 @@ export function TypeSection({
                 {!hideManageActions && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => router.push(`/settings/types?edit=${type.id}`)}>
+                    <DropdownMenuItem onSelect={() => navigate(`/settings/types?edit=${type.id}`)}>
                       <SettingsIcon />
                       Type settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => router.push('/settings/templates')}>
+                    <DropdownMenuItem onSelect={() => navigate('/settings/templates')}>
                       <CopyIcon />
                       Manage templates
                     </DropdownMenuItem>
@@ -179,7 +179,7 @@ export function TypeSection({
           <ContextMenu.Content className="bg-popover text-popover-foreground z-50 min-w-[160px] overflow-hidden rounded-md border p-1 shadow-md animate-in fade-in-0 zoom-in-95">
             <ContextMenu.Item
               className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
-              onSelect={() => router.push(`/types/${type.slug}`)}
+              onSelect={() => navigate(`/types/${type.slug}`)}
             >
               <EyeIcon />
               View all {type.plural_name.toLowerCase()}
@@ -188,7 +188,7 @@ export function TypeSection({
               <>
                 <ContextMenu.Item
                   className={cn(menuItemClass, 'focus:bg-accent focus:text-accent-foreground')}
-                  onSelect={() => router.push(`/settings/types?edit=${type.id}`)}
+                  onSelect={() => navigate(`/settings/types?edit=${type.id}`)}
                 >
                   <PencilIcon />
                   Edit type

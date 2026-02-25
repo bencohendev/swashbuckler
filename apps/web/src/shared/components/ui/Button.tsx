@@ -1,6 +1,7 @@
-import { type ComponentProps } from "react"
+import { type ComponentProps, Children, isValidElement } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
+import { LoaderIcon } from "lucide-react"
 
 import { cn } from "@/shared/lib/utils"
 
@@ -43,12 +44,24 @@ export function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  loading = false,
+  disabled,
+  children,
   ...props
 }: ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    loading?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
+  const isIcon = typeof size === "string" && size.startsWith("icon")
+
+  // When loading and not asChild, inject spinner
+  const renderedChildren = loading && !asChild
+    ? isIcon
+      ? <LoaderIcon className="animate-spin" />
+      : injectSpinner(children)
+    : children
 
   return (
     <Comp
@@ -56,7 +69,32 @@ export function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={loading || disabled}
+      aria-busy={loading || undefined}
       {...props}
-    />
+    >
+      {renderedChildren}
+    </Comp>
   )
+}
+
+/** Replace the first SVG child with a spinning loader; keep text labels visible. */
+function injectSpinner(children: React.ReactNode): React.ReactNode {
+  let replaced = false
+  return Children.map(children, (child) => {
+    if (!replaced && isValidElement(child) && isSvgElement(child)) {
+      replaced = true
+      return <LoaderIcon className="animate-spin" />
+    }
+    return child
+  })
+}
+
+function isSvgElement(element: React.ReactElement): boolean {
+  // Lucide icons and native <svg> elements
+  if (element.type === "svg") return true
+  if (typeof element.type === "function") {
+    return "displayName" in element.type
+  }
+  return false
 }

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSidebar } from '@/shared/stores/sidebar'
+import { useNavigation } from '@/shared/stores/navigation'
 import { useDataClient } from '@/shared/lib/data'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 
@@ -20,6 +21,7 @@ export function SidebarLink({ className, onClick, onMouseEnter, href, ...props }
   const pathname = usePathname()
   const pendingPath = useSidebar((s) => s.pendingPath)
   const setPendingPath = useSidebar((s) => s.setPendingPath)
+  const setNavigating = useNavigation((s) => s.setNavigating)
   const queryClient = useQueryClient()
   const dataClient = useDataClient()
 
@@ -30,6 +32,9 @@ export function SidebarLink({ className, onClick, onMouseEnter, href, ...props }
     // Don't set pending path for modifier-key clicks (new tab/window)
     if (!e.metaKey && !e.ctrlKey && !e.shiftKey) {
       setPendingPath(hrefString)
+      if (pathname !== hrefString) {
+        setNavigating(true)
+      }
     }
     onClick?.(e)
   }

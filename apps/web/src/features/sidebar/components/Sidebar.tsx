@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
@@ -20,6 +20,7 @@ import { usePins, PinnedSection } from "@/features/pins"
 import { VariablePromptDialog } from "@/features/templates/components/VariablePromptDialog"
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
+import { useNavigate } from "@/shared/hooks/useNavigate"
 import { toast } from "@/shared/hooks/useToast"
 import type { CollapseSignal } from "../types"
 import { TypeSection } from "./TypeSection"
@@ -129,7 +130,7 @@ function DraggableTypeSection({
 
 export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
+  const { push: navigate } = useNavigate()
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
@@ -261,7 +262,7 @@ export function Sidebar() {
       type_id: typeId,
     })
     if (result) {
-      router.push(`/objects/${result.id}?new=1`)
+      navigate(`/objects/${result.id}?new=1`)
     } else {
       toast({ description: 'Failed to create entry. You may not have permission.', variant: 'destructive' })
     }
@@ -285,12 +286,12 @@ export function Sidebar() {
     if (info && info.hasVariables) {
       const result = await createFromTemplateWithVariables(template.id, {}, buildResolutionContext())
       if (result) {
-        router.push(`/objects/${result.id}?new=1`)
+        navigate(`/objects/${result.id}?new=1`)
       }
     } else {
       const result = await createFromTemplate(template.id)
       if (result) {
-        router.push(`/objects/${result.id}?new=1`)
+        navigate(`/objects/${result.id}?new=1`)
       }
     }
   }
@@ -305,7 +306,7 @@ export function Sidebar() {
     )
     setPendingTemplate(null)
     if (result) {
-      router.push(`/objects/${result.id}?new=1`)
+      navigate(`/objects/${result.id}?new=1`)
     }
   }
 
