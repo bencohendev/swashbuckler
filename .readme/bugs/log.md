@@ -6,13 +6,13 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Unnecessary reorder on types page | Types page has drag-to-reorder functionality that isn't needed — remove it |
-| Type fields show drag icon but can't be dragged | Field rows in type settings display a drag handle icon but dragging doesn't work |
 | Mobile sharing button overflows container | Share button overflows its parent container on mobile viewports |
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Types list has unnecessary reorder chevrons | Removed up/down chevron buttons and handleMoveType callback from ObjectTypeManager |
+| 2026-02-25 | Field row grip icon only moves up on click | Replaced click-to-move with real drag-and-drop using react-dnd (DraggableFieldRow wrapper with midpoint-based hover reordering) |
 | 2026-02-24 | Cursor jumps out of newly created special blocks | Defer both selection and focus together inside a single `setTimeout` callback so plugin normalization finishes before cursor position is set |
 | 2026-02-24 | New entry title shows text instead of placeholder | Show placeholder instead of generated name in title input for new entries |
 | 2026-02-24 | Cursor trapped in code blocks, tables, and private blocks | Add ExitBreakPlugin (Mod+Enter / Mod+Shift+Enter) and TrailingBlockPlugin to ensure users can always escape block-level elements |
