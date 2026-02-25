@@ -433,7 +433,7 @@ export function Sidebar() {
       <DndProvider backend={HTML5Backend}>
         <div
           className={cn(
-            "flex-1 overflow-y-auto",
+            "flex-1 overflow-y-auto overflow-x-hidden",
             collapsed && "md:overflow-hidden"
           )}
         >
