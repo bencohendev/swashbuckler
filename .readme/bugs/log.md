@@ -7,6 +7,9 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 | Bug | Description |
 |-----|-------------|
 | Cursor jumps out of newly created special blocks | When inserting a code block, table, or private block via the slash menu, the cursor lands outside the block instead of inside it. Likely cause: selection is set synchronously in `selectItem` (SlashInput.tsx:370-373) but `focusEditor` defers DOM focus via `setTimeout(0)` — plugin normalization (TrailingBlockPlugin, CodeBlockPlugin) can shift the selection in between. Fix: defer both selection and focus together in the same `setTimeout` callback. |
+| Unnecessary reorder on types page | Types page has drag-to-reorder functionality that isn't needed — remove it |
+| Type fields show drag icon but can't be dragged | Field rows in type settings display a drag handle icon but dragging doesn't work |
+| Mobile sharing button overflows container | Share button overflows its parent container on mobile viewports |
 ## Closed
 
 | Date | Bug | Fix |

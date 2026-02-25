@@ -132,6 +132,11 @@ Dual-storage architecture with a `DataClient` interface:
 | API audit (backend) | Audit Supabase backend APIs for correctness, security, and consistency |
 | API audit (frontend) | Audit frontend API calls for correctness, error handling, and consistency |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
+| Convert entry to template | Button to convert an existing entry into a template |
+| Create from template (quick capture) | Create a new entry from a template via the quick capture button |
+| Archive | Archive entries, types, and spaces (soft-hide without deleting) |
+| Delete space | Allow users to delete a space and its contents |
+| API documentation | API documentation with diagrams |
 
 ## Bugs
 
