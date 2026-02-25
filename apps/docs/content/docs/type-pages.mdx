@@ -1,0 +1,55 @@
+---
+title: Type Pages
+description: Dedicated pages for each type with table, list, card, and board views.
+---
+
+## Overview
+
+Every type in your space has a dedicated page that shows all entries of that type. Access it by clicking the type name in the sidebar. Type pages support four view modes — **Table**, **List**, **Card**, and **Board** — so you can work with your entries in the layout that fits best.
+
+{/* screenshot: Type page showing entries in table view with view mode toggle */}
+
+## View Modes
+
+Switch between views using the segmented control at the top of the type page. Your choice is saved per type and persists across sessions.
+
+### Table View
+
+A spreadsheet-style grid with sortable columns. The table shows the entry title plus a column for each property defined on the type, and an "Updated" timestamp column.
+
+- Click any row to open the entry in the editor
+- Click a column header to sort by that column (see [Filtering & Sorting](/docs/filtering-and-sorting))
+- The table uses semantic HTML (`<table>`, `<th>`, `<caption>`) for accessibility
+
+{/* screenshot: Table view with columns for title, status, due date, and updated */}
+
+### List View
+
+A compact vertical list showing each entry's icon, title, a content preview (first ~80 characters of the body), and the last updated date.
+
+{/* screenshot: List view with entry titles and content previews */}
+
+### Card View
+
+A visual grid of entry cards. Each card shows:
+
+- Cover image (if set)
+- Entry icon and title
+- Content preview (first ~2 lines)
+- Updated date
+
+Cards arrange in a responsive grid — 1 column on narrow screens, up to 3 columns on wider screens.
+
+{/* screenshot: Card view with entry cards showing cover images and titles */}
+
+### Board View
+
+A kanban-style board that groups entries by a select property. See [Board View](/docs/board-view) for full details.
+
+## Title Search
+
+A search bar at the top of the type page filters entries by title (case-insensitive substring match). Press <kbd>Escape</kbd> to clear the search. The header shows a count like "5 of 12 Tasks" when a filter is active.
+
+## Filtering and Sorting
+
+Type pages support powerful filtering and sorting across all view modes. See [Filtering & Sorting](/docs/filtering-and-sorting) for complete details.

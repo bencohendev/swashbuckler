@@ -1,4 +1,31 @@
 {
   "root": true,
-  "pages": ["---Getting Started---", "index"]
+  "pages": [
+    "index",
+    "---Core Concepts---",
+    "spaces",
+    "entries-and-types",
+    "templates",
+    "---Editor---",
+    "editor",
+    "private-content",
+    "relations-and-linking",
+    "---Views---",
+    "dashboard",
+    "type-pages",
+    "board-view",
+    "graph-view",
+    "filtering-and-sorting",
+    "---Organization---",
+    "tags",
+    "search",
+    "quick-capture",
+    "trash-and-archive",
+    "---Collaboration---",
+    "sharing",
+    "realtime-collaboration",
+    "---Customization---",
+    "themes",
+    "export"
+  ]
 }

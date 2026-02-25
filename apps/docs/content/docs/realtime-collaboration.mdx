@@ -1,0 +1,61 @@
+---
+title: Real-Time Collaboration
+description: Edit entries simultaneously with collaborators — remote cursors, live sync, and automatic conflict resolution.
+---
+
+## Overview
+
+When two or more people open the same entry in a shared space, Swashbuckler switches to real-time collaboration mode. Changes sync instantly between all participants — no manual saving, no merge conflicts, no "someone else is editing" locks.
+
+Real-time collaboration uses **Yjs**, a conflict-free replicated data type (CRDT) library, which means edits from multiple users are merged automatically without data loss.
+
+## Activation
+
+Real-time collaboration activates automatically when all of these conditions are met:
+
+- You have a **Swashbuckler account** (not guest mode)
+- You have **edit permission** in the space
+- The space is **shared** (the owner has at least one collaborator)
+
+If any condition isn't met, the editor works in standard solo mode with regular auto-save.
+
+## Remote Cursors
+
+When another user is editing the same entry, you'll see their cursor and selection highlighted in a unique color. Each collaborator gets a consistent color (derived from their user ID) so you can tell who's making which edits.
+
+{/* screenshot: Editor showing two remote cursors with different colors and user labels */}
+
+## Collaborator Avatars
+
+The entry header shows avatar icons for all users currently viewing or editing the entry. This gives you a quick glance at who else is present without needing to look at cursors in the document.
+
+{/* screenshot: Entry header with collaborator avatar stack */}
+
+## Connection Status
+
+A status indicator in the entry header shows your current connection state:
+
+| Status | Indicator | Meaning |
+|--------|-----------|---------|
+| **Synced** | Green | All changes are synchronized with other participants |
+| **Syncing** | Amber | Changes are being sent or received |
+| **Offline** | Red | Connection lost — changes will sync when reconnected |
+
+If you go offline, you can keep editing. Changes accumulate locally and sync automatically when the connection is restored. Yjs handles the merge without conflicts.
+
+## Auto-Save
+
+During real-time collaboration, changes are saved to the database on a **3-second debounce** (compared to 1 second in solo mode). A **leader election** system ensures only one participant writes to the database — the peer with the lowest Yjs client ID acts as the leader.
+
+All other participants' changes flow through the CRDT to the leader's copy, which is then persisted. If the leader disconnects, another participant automatically takes over.
+
+## Cross-Tab Editing
+
+Opening the same entry in multiple browser tabs works correctly. Each tab is a separate Yjs peer, so changes in one tab appear in the other. This works for both single-user multi-tab and multi-user scenarios.
+
+## Important Notes
+
+- **Guest mode**: Real-time collaboration is not available in guest mode. Guest data stays in the browser (IndexedDB) and isn't synced.
+- **View-only users**: Users with view permission see a read-only editor — no cursors are broadcast, and they can't make changes.
+- **Template application**: Applying a template to an existing entry is disabled during active collaboration sessions to avoid conflicts with the shared document state.
+- **Private content**: The space owner's [private blocks and marks](/docs/private-content) are invisible to collaborators during real-time editing. The content exists in the shared CRDT state but is hidden visually.

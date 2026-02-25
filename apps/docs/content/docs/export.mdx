@@ -1,0 +1,61 @@
+---
+title: Export
+description: Download a full JSON export of all your spaces, entries, types, templates, and tags.
+---
+
+## Overview
+
+Swashbuckler lets you export all your data as a single JSON file. The export includes everything across all your spaces — entries, types, templates, tags, relations, and pins.
+
+## How to Export
+
+1. Go to **Settings > Account**
+2. Click the **Export Data** button
+3. A JSON file downloads to your computer, named `swashbuckler-export-YYYY-MM-DD.json`
+
+{/* screenshot: Settings > Account page with the Export Data button */}
+
+## What's Included
+
+The export file contains:
+
+| Data | Description |
+|------|-------------|
+| **Spaces** | All spaces you own (name, icon, settings) |
+| **Entries** | All entries across all spaces (title, content, properties, icon, cover image reference) |
+| **Types** | All types across all spaces (name, fields, icon, color, sort order) |
+| **Templates** | All templates across all spaces (name, content, properties) |
+| **Relations** | All entry-to-entry relations (mentions and manual links) |
+| **Tags** | All tags across all spaces (name, color) |
+| **Entry-tag associations** | Which tags are applied to which entries |
+| **Pins** | Your pinned entries |
+| **Global types** | Account-level type blueprints |
+
+## JSON Format
+
+The export is a single JSON object:
+
+```json
+{
+  "exportedAt": "2025-01-15T14:30:00.000Z",
+  "spaces": [...],
+  "objects": [...],
+  "objectTypes": [...],
+  "templates": [...],
+  "objectRelations": [...],
+  "tags": [...],
+  "objectTags": [...],
+  "pins": [...],
+  "globalObjectTypes": [...]
+}
+```
+
+Each array contains the full records for that data type, with all fields and relationships preserved.
+
+## Notes
+
+- The export is a **point-in-time snapshot** — it captures your data at the moment you click Export
+- The export includes **all spaces** you own, not just the current space
+- **Image files** are not included in the export — the JSON contains references (URLs) to uploaded images, but not the image data itself
+- Entries in the trash or archive are included in the export
+- The export works for both account users and guest users (guest exports come from IndexedDB)

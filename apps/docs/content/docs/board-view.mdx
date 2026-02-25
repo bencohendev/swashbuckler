@@ -1,0 +1,58 @@
+---
+title: Board View
+description: Kanban-style boards that group entries by a select property with drag-and-drop.
+---
+
+## Overview
+
+Board view is a kanban-style layout available on [type pages](/docs/type-pages). It groups entries into columns based on a **select** property, so you can visualize and manage workflows, statuses, categories, or any other single-choice field.
+
+{/* screenshot: Board view showing columns for "To Do", "In Progress", and "Done" with entry cards */}
+
+## Enabling Board View
+
+1. Navigate to a type page from the sidebar
+2. Click **Board** in the view mode toggle at the top
+
+If the type has at least one **select** property, you'll see a **Group by** dropdown to choose which field to use for columns.
+
+## Choosing a Grouping Field
+
+Click the **Group by** dropdown and select a **select** property. Only select-type properties appear in the list (multi-select, checkbox, and other types aren't supported for grouping).
+
+Your grouping choice is saved per type and persists across sessions.
+
+{/* screenshot: "Group by" dropdown showing available select properties */}
+
+## Columns
+
+Each column corresponds to one option from the select field, displayed in the order the options are defined on the field. An **Uncategorized** column appears for entries that don't have a value set for the grouping field.
+
+Each column header shows the option name and a count of entries in that column.
+
+## Drag and Drop
+
+Drag entry cards between columns to change their value for the grouping field. For example, dragging a card from "To Do" to "In Progress" updates the entry's Status property to "In Progress" automatically.
+
+**View-only users** in shared spaces cannot drag cards — the drag handles don't appear, and an `aria-live` announcement explains the restriction.
+
+Drag and drop is not available on mobile devices (touch) — use the entry editor to change property values instead.
+
+{/* screenshot: Dragging a card from one column to another */}
+
+## Empty States
+
+| Situation | What You See |
+|-----------|-------------|
+| Type has no select properties | Message suggesting you add a select property in Settings > Types |
+| No grouping field selected | Prompt to choose a field from the "Group by" dropdown |
+| A column has no entries | Empty column with a subtle placeholder |
+| The stored grouping field was deleted | Falls back to "no grouping field selected" state |
+
+## Accessibility
+
+- Columns use `role="group"` with descriptive labels
+- Cards use `role="list"` and `role="listitem"` semantics
+- Cards are keyboard-focusable — press <kbd>Enter</kbd> to open
+- Drag-and-drop actions are announced via `aria-live` regions
+- View-only restrictions are communicated to screen readers

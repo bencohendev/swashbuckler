@@ -1,0 +1,104 @@
+---
+title: Editor
+description: A full block editor with slash commands, inline formatting, tables, code blocks, images, and auto-save.
+---
+
+## Overview
+
+Swashbuckler's editor is a rich block editor built for flexible writing. It supports slash commands for inserting blocks, a floating toolbar for inline formatting, drag-and-drop reordering, tables with hover menus, syntax-highlighted code blocks, and images. Your work saves automatically.
+
+{/* screenshot: Editor showing a mix of headings, text, a callout, and a code block */}
+
+## Slash Menu
+
+Type `/` anywhere in the editor to open the slash menu. It shows all available block types, organized by category. Start typing to filter — for example, `/head` narrows to heading options.
+
+{/* screenshot: Slash menu open with block type options */}
+
+### Block Types
+
+| Block | Description |
+|-------|-------------|
+| **Paragraph** | Default text block |
+| **Heading 1** | Large section heading |
+| **Heading 2** | Medium section heading |
+| **Heading 3** | Small section heading |
+| **Blockquote** | Indented quote block |
+| **Callout** | Highlighted box for notes, warnings, or tips |
+| **Bullet List** | Unordered list (also start a line with `-` or `*`) |
+| **Numbered List** | Ordered list (also start a line with `1.`) |
+| **Toggle List** | Collapsible list with expand/collapse |
+| **Code Block** | Syntax-highlighted code (see below) |
+| **Table** | Grid with rows and columns (see below) |
+| **Image** | Upload or embed an image (see below) |
+| **Mention** | Reference another entry (see [Relations & Linking](/docs/relations-and-linking)) |
+| **Private** | Owner-only content block (see [Private Content](/docs/private-content)) |
+
+## Inline Formatting
+
+Select text to reveal the floating formatting toolbar. You can also use keyboard shortcuts:
+
+| Format | Shortcut | Description |
+|--------|----------|-------------|
+| **Bold** | <kbd>Cmd</kbd>+<kbd>B</kbd> | Bold text |
+| **Italic** | <kbd>Cmd</kbd>+<kbd>I</kbd> | Italic text |
+| **Code** | <kbd>Cmd</kbd>+<kbd>E</kbd> | Inline code |
+| **Link** | <kbd>Cmd</kbd>+<kbd>K</kbd> | Hyperlink |
+| **Underline** | <kbd>Cmd</kbd>+<kbd>U</kbd> | Underlined text |
+| **Strikethrough** | <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Strikethrough text |
+| **Highlight** | <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> | Highlighted text |
+| **Spoiler** | — | Click-to-reveal hidden text |
+| **Private** | <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> | Owner-only inline text (see [Private Content](/docs/private-content)) |
+
+{/* screenshot: Floating formatting toolbar showing bold, italic, code, and other options */}
+
+## Images
+
+Insert images in three ways:
+
+- **Slash menu** — type `/image` and select Image
+- **Paste** — paste an image from your clipboard directly into the editor
+- **Drag and drop** — drag an image file onto the editor
+
+Uploaded images have a **3 MB size limit** and support JPEG, PNG, GIF, WebP, and SVG formats. Hover over an image to see a toolbar with **Replace** and **Delete** actions.
+
+Guest users can embed images by URL only (no file upload).
+
+{/* screenshot: Image block with hover toolbar showing Replace and Delete buttons */}
+
+## Tables
+
+Insert a table from the slash menu (`/table`). Tables support:
+
+- **Hover menus** — hover over the left edge of a row or the top edge of a column to see a handle. Click it to open a dropdown with:
+  - Insert row above / below
+  - Insert column left / right
+  - Delete row / column
+  - Delete table
+- **Tab navigation** — press <kbd>Tab</kbd> to move between cells
+
+{/* screenshot: Table with row hover menu showing insert/delete options */}
+
+## Code Blocks
+
+Insert a code block from the slash menu (`/code`). Code blocks support syntax highlighting for:
+
+JavaScript, TypeScript, HTML, CSS, JSON, Python, SQL, Go, and Rust.
+
+Select the language from the dropdown in the top-right corner of the code block.
+
+{/* screenshot: Code block with syntax highlighting and language selector */}
+
+## Auto-Save
+
+Your work saves automatically — there's no save button. In solo mode, the editor saves **1 second** after you stop typing. During [real-time collaboration](/docs/realtime-collaboration), saves happen every **3 seconds** and are coordinated by a leader election system.
+
+A status indicator in the entry header shows the current save state. If you close the browser tab with unsaved changes, you'll see a confirmation prompt.
+
+## Drag and Drop
+
+Hover over any block to see a drag handle on the left side. Grab it to reorder blocks within the entry. You can drag headings, paragraphs, lists, images, tables, and any other block type.
+
+## Keyboard Navigation
+
+The editor supports standard keyboard navigation — arrow keys to move between blocks, Enter to create new blocks, Backspace to merge with the previous block, and Tab/Shift+Tab to indent and outdent list items.
