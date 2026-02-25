@@ -1,10 +1,10 @@
 'use client'
 
 import { ObjectItem } from './ObjectItem'
-import type { DataObject, ObjectType } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType } from '@/shared/lib/data'
 
 interface ObjectListProps {
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   objectType?: ObjectType
   isLoading?: boolean
   emptyMessage?: string

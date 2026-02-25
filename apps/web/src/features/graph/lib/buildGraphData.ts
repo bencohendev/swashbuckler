@@ -1,9 +1,9 @@
-import type { DataObject, ObjectType, ObjectRelation } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType, ObjectRelation } from '@/shared/lib/data'
 import type { GraphData, GraphNode, GraphEdge } from './types'
 import { buildTypeColorMap } from './colors'
 
 export function buildGraphData(
-  objects: DataObject[],
+  objects: DataObjectSummary[],
   relations: ObjectRelation[],
   typeMap: Map<string, ObjectType>,
 ): GraphData {

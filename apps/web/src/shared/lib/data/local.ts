@@ -13,6 +13,7 @@ import type {
   Pin,
   Space,
   DataObject,
+  DataObjectSummary,
   ObjectType,
   ObjectRelation,
   Template,
@@ -632,9 +633,14 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
   }
 }
 
+function stripContent({ content: _content, ...rest }: DataObject): DataObjectSummary {
+  void _content
+  return rest
+}
+
 function createObjectsClient(spaceId?: string): ObjectsClient {
   return {
-    async list(options: ListObjectsOptions = {}): Promise<DataListResult<DataObject>> {
+    async list(options: ListObjectsOptions = {}): Promise<DataListResult<DataObjectSummary>> {
       try {
         const database = getDB()
         const collection = database.objects.toCollection()
@@ -679,7 +685,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           results = results.slice(0, options.limit)
         }
 
-        return { data: results, error: null }
+        return { data: results.map(stripContent), error: null }
       } catch (error) {
         return {
           data: [],
@@ -915,6 +921,23 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         )
 
+        return { data: results, error: null }
+      } catch (error) {
+        return {
+          data: [],
+          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+        }
+      }
+    },
+
+    async batchGetSummary(ids: string[]): Promise<DataListResult<Pick<DataObject, 'id' | 'title' | 'icon' | 'type_id'>>> {
+      if (ids.length === 0) return { data: [], error: null }
+      try {
+        const database = getDB()
+        const objects = await database.objects.bulkGet(ids)
+        const results = objects
+          .filter((o): o is DataObject => o !== undefined)
+          .map(({ id, title, icon, type_id }) => ({ id, title, icon, type_id }))
         return { data: results, error: null }
       } catch (error) {
         return {
@@ -1598,7 +1621,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
       }
     },
 
-    async getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>> {
+    async getObjectsByTag(tagId: string): Promise<DataListResult<DataObjectSummary>> {
       try {
         const database = getDB()
         const objectTags = await database.objectTags
@@ -1611,9 +1634,26 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         const results = objects
           .filter((o): o is DataObject => o !== undefined && !o.is_deleted)
           .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-        return { data: results, error: null }
+        return { data: results.map(stripContent), error: null }
       } catch (error) {
         return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async countObjectsByTag(tagId: string): Promise<DataResult<number>> {
+      try {
+        const database = getDB()
+        const objectTags = await database.objectTags
+          .filter(ot => ot.tag_id === tagId)
+          .toArray()
+        const objectIds = objectTags.map(ot => ot.object_id)
+        if (objectIds.length === 0) return { data: 0, error: null }
+
+        const objects = await database.objects.bulkGet(objectIds)
+        const count = objects.filter((o): o is DataObject => o !== undefined && !o.is_deleted).length
+        return { data: count, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
       }
     },
   }

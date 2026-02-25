@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import type { DataObject, ObjectType, FieldDefinition, Tag } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType, FieldDefinition, Tag } from '@/shared/lib/data'
 import { TagBadge } from '@/features/tags'
 import { SortableHeader } from './SortableHeader'
 import { PropertyCell } from './PropertyCell'
@@ -10,13 +10,13 @@ import type { SortConfig } from '../lib/sortObjects'
 
 interface TypeDataTableProps {
   type: ObjectType
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   tagsByObject: Record<string, Tag[]>
   sort: SortConfig
   onSortChange: (sort: SortConfig) => void
 }
 
-function getFieldValue(obj: DataObject, field: FieldDefinition): unknown {
+function getFieldValue(obj: DataObjectSummary, field: FieldDefinition): unknown {
   return obj.properties?.[field.id]
 }
 

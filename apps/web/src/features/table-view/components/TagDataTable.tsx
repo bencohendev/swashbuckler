@@ -2,12 +2,12 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import type { DataObject, ObjectType, Tag } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType, Tag } from '@/shared/lib/data'
 import { useObjectTagsBatch, TagBadge } from '@/features/tags'
 import { SortableHeader, type SortState } from './SortableHeader'
 
 interface TagDataTableProps {
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   typeMap: Map<string, ObjectType>
   emptyMessage?: string
 }

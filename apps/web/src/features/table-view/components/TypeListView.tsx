@@ -1,12 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { DataObject, ObjectType } from '@/shared/lib/data'
-import { extractPlainText } from '../lib/extractPlainText'
+import type { DataObjectSummary, ObjectType } from '@/shared/lib/data'
 
 interface TypeListViewProps {
   type?: ObjectType
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   emptyMessage?: string
 }
 
@@ -23,12 +22,7 @@ export function TypeListView({ type, objects, emptyMessage }: TypeListViewProps)
 
   return (
     <div className="divide-y rounded-lg border">
-      {objects.map((obj) => {
-        const preview = obj.content
-          ? extractPlainText(obj.content, 80)
-          : ''
-
-        return (
+      {objects.map((obj) => (
           <button
             key={obj.id}
             onClick={() => router.push(`/objects/${obj.id}`)}
@@ -36,17 +30,11 @@ export function TypeListView({ type, objects, emptyMessage }: TypeListViewProps)
           >
             {obj.icon && <span className="shrink-0">{obj.icon}</span>}
             <span className="truncate font-medium">{obj.title}</span>
-            {preview && (
-              <span className="hidden truncate text-muted-foreground sm:inline">
-                {preview}
-              </span>
-            )}
             <span className="ml-auto shrink-0 text-xs text-muted-foreground">
               {new Date(obj.updated_at).toLocaleDateString()}
             </span>
           </button>
-        )
-      })}
+      ))}
     </div>
   )
 }

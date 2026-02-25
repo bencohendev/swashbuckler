@@ -9,6 +9,7 @@ export type {
   SharingClient,
   Space,
   DataObject,
+  DataObjectSummary,
   CreateObjectInput,
   UpdateObjectInput,
   ListObjectsOptions,

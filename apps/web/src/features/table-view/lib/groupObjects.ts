@@ -1,17 +1,17 @@
-import type { DataObject } from '@/shared/lib/data'
+import type { DataObjectSummary } from '@/shared/lib/data'
 
 export interface GroupedColumn {
   value: string | null
   label: string
-  objects: DataObject[]
+  objects: DataObjectSummary[]
 }
 
 export function groupObjectsByField(
-  objects: DataObject[],
+  objects: DataObjectSummary[],
   fieldId: string,
   options: string[]
 ): GroupedColumn[] {
-  const buckets = new Map<string | null, DataObject[]>()
+  const buckets = new Map<string | null, DataObjectSummary[]>()
 
   // Initialize a bucket for each option + uncategorized
   for (const opt of options) {

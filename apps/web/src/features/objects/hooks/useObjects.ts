@@ -2,18 +2,18 @@
 
 import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { useDataClient, useSpaceId, type DataObject, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
+import { useDataClient, useSpaceId, type DataObject, type DataObjectSummary, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 
-const EMPTY_OBJECTS: DataObject[] = []
+const EMPTY_OBJECTS: DataObjectSummary[] = []
 
 interface UseObjectsOptions extends ListObjectsOptions {
   enabled?: boolean
 }
 
 interface UseObjectsReturn {
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>

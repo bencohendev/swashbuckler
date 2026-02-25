@@ -45,23 +45,33 @@ export function useObjectRelations(objectId: string | null): UseObjectRelationsR
       }
       const deduplicated = Array.from(byTarget.values())
 
-      // Enrich with object data
-      const enriched: EnrichedRelation[] = await Promise.all(
-        deduplicated.map(async (relation) => {
-          const targetResult = await dataClient.objects.get(relation.target_id)
-          return {
-            ...relation,
-            linkedObject: targetResult.data
-              ? {
-                  id: targetResult.data.id,
-                  title: targetResult.data.title,
-                  icon: targetResult.data.icon,
-                  type_id: targetResult.data.type_id,
-                }
-              : null,
+      // Enrich with object data — check TanStack cache first, then batch-fetch uncached
+      const targetIds = deduplicated.map(r => r.target_id)
+      const objectMap = new Map<string, Pick<DataObject, 'id' | 'title' | 'icon' | 'type_id'>>()
+      const uncachedIds: string[] = []
+
+      for (const tid of targetIds) {
+        const cached = queryClient.getQueryData<DataObject>(queryKeys.objects.detail(tid))
+        if (cached) {
+          objectMap.set(tid, { id: cached.id, title: cached.title, icon: cached.icon, type_id: cached.type_id })
+        } else {
+          uncachedIds.push(tid)
+        }
+      }
+
+      if (uncachedIds.length > 0) {
+        const batchResult = await dataClient.objects.batchGetSummary(uncachedIds)
+        if (!batchResult.error) {
+          for (const obj of batchResult.data) {
+            objectMap.set(obj.id, obj)
           }
-        })
-      )
+        }
+      }
+
+      const enriched: EnrichedRelation[] = deduplicated.map(relation => ({
+        ...relation,
+        linkedObject: objectMap.get(relation.target_id) ?? null,
+      }))
 
       return enriched
     },

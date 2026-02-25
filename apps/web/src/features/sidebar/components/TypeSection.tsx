@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronRightIcon, CopyIcon, EllipsisIcon, EyeIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon } from 'lucide-react'
 import { ContextMenu } from 'radix-ui'
 import { cn } from '@/shared/lib/utils'
-import type { DataObject, ObjectType, Template } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType, Template } from '@/shared/lib/data'
 import { ObjectList } from '@/features/objects/components'
 import { useTemplates } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
@@ -28,7 +28,7 @@ import {
 
 interface TypeSectionProps {
   type: ObjectType
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   isLoading: boolean
   isDragging?: boolean
   hideCreateButton?: boolean

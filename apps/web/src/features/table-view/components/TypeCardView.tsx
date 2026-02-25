@@ -1,12 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import type { DataObject, ObjectType } from '@/shared/lib/data'
-import { extractPlainText } from '../lib/extractPlainText'
+import type { DataObjectSummary, ObjectType } from '@/shared/lib/data'
 
 interface TypeCardViewProps {
   type?: ObjectType
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   emptyMessage?: string
 }
 
@@ -23,12 +22,7 @@ export function TypeCardView({ type, objects, emptyMessage }: TypeCardViewProps)
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {objects.map((obj) => {
-        const preview = obj.content
-          ? extractPlainText(obj.content)
-          : ''
-
-        return (
+      {objects.map((obj) => (
           <button
             key={obj.id}
             onClick={() => router.push(`/objects/${obj.id}`)}
@@ -48,18 +42,12 @@ export function TypeCardView({ type, objects, emptyMessage }: TypeCardViewProps)
                 {obj.icon && <span className="shrink-0">{obj.icon}</span>}
                 <span className="truncate font-medium">{obj.title}</span>
               </div>
-              {preview && (
-                <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {preview}
-                </p>
-              )}
               <p className="mt-auto pt-1.5 text-xs text-muted-foreground">
                 {new Date(obj.updated_at).toLocaleDateString()}
               </p>
             </div>
           </button>
-        )
-      })}
+      ))}
     </div>
   )
 }

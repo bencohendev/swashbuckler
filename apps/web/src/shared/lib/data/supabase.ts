@@ -16,6 +16,7 @@ import type {
   ObjectTag,
   Space,
   DataObject,
+  DataObjectSummary,
   ObjectType,
   ObjectRelation,
   Template,
@@ -42,7 +43,15 @@ import type {
   DataListResult,
 } from './types'
 
-function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): ObjectTypesClient {
+const OBJECT_SUMMARY_COLUMNS = 'id, title, type_id, owner_id, space_id, parent_id, icon, cover_image, properties, is_deleted, deleted_at, created_at, updated_at'
+
+async function resolveUserId(supabase: SupabaseClient, userId?: string): Promise<string | null> {
+  if (userId) return userId
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user?.id ?? null
+}
+
+function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string, userId?: string): ObjectTypesClient {
   return {
     async list(): Promise<DataListResult<ObjectType>> {
       let query = supabase
@@ -81,8 +90,8 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
     },
 
     async create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Must be logged in to create types' } }
       }
 
@@ -91,7 +100,7 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
         ...input,
         fields: input.fields ?? [],
         is_built_in: false,
-        owner_id: user.id,
+        owner_id: resolvedUserId,
         space_id: spaceId ?? null,
         created_at: now,
         updated_at: now,
@@ -151,18 +160,18 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string): Ob
   }
 }
 
-function createGlobalObjectTypesClient(supabase: SupabaseClient): GlobalObjectTypesClient {
+function createGlobalObjectTypesClient(supabase: SupabaseClient, userId?: string): GlobalObjectTypesClient {
   return {
     async list(): Promise<DataListResult<ObjectType>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: [], error: { message: 'Not authenticated' } }
       }
 
       const { data, error } = await supabase
         .from('object_types')
         .select('*')
-        .eq('owner_id', user.id)
+        .eq('owner_id', resolvedUserId)
         .is('space_id', null)
         .order('sort_order', { ascending: true })
 
@@ -189,8 +198,8 @@ function createGlobalObjectTypesClient(supabase: SupabaseClient): GlobalObjectTy
     },
 
     async create(input: CreateObjectTypeInput): Promise<DataResult<ObjectType>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Must be logged in to create global types' } }
       }
 
@@ -199,7 +208,7 @@ function createGlobalObjectTypesClient(supabase: SupabaseClient): GlobalObjectTy
         ...input,
         fields: input.fields ?? [],
         is_built_in: false,
-        owner_id: user.id,
+        owner_id: resolvedUserId,
         space_id: null,
         created_at: now,
         updated_at: now,
@@ -313,12 +322,12 @@ function createGlobalObjectTypesClient(supabase: SupabaseClient): GlobalObjectTy
   }
 }
 
-function createObjectsClient(supabase: SupabaseClient, spaceId?: string): ObjectsClient {
+function createObjectsClient(supabase: SupabaseClient, spaceId?: string, userId?: string): ObjectsClient {
   return {
-    async list(options: ListObjectsOptions = {}): Promise<DataListResult<DataObject>> {
+    async list(options: ListObjectsOptions = {}): Promise<DataListResult<DataObjectSummary>> {
       let query = supabase
         .from('objects')
-        .select('*')
+        .select(OBJECT_SUMMARY_COLUMNS)
         .order('updated_at', { ascending: false })
 
       if (spaceId) {
@@ -353,7 +362,7 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
         return { data: [], error: { message: error.message, code: error.code } }
       }
 
-      return { data: data as DataObject[], error: null }
+      return { data: data as DataObjectSummary[], error: null }
     },
 
     async get(id: string): Promise<DataResult<DataObject>> {
@@ -371,8 +380,8 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
     },
 
     async create(input: CreateObjectInput): Promise<DataResult<DataObject>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Must be logged in to create objects' } }
       }
       if (!spaceId) {
@@ -384,7 +393,7 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
         ...input,
         properties: input.properties || {},
         is_deleted: input.is_deleted ?? false,
-        owner_id: user.id,
+        owner_id: resolvedUserId,
         space_id: spaceId,
         created_at: now,
         updated_at: now,
@@ -483,8 +492,40 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
     },
 
     async search(query: string, options?: SearchOptions): Promise<DataListResult<DataObject>> {
-      // Fetch recent non-deleted objects to search across title + content
-      let searchQuery = supabase
+      const MAX_RESULTS = 50
+
+      // Pass 1: Server-side title search using GIN trigram index
+      let titleQuery = supabase
+        .from('objects')
+        .select('*')
+        .eq('is_deleted', false)
+        .ilike('title', `%${query}%`)
+        .order('updated_at', { ascending: false })
+        .limit(MAX_RESULTS)
+
+      if (spaceId) {
+        titleQuery = titleQuery.eq('space_id', spaceId)
+      }
+
+      if (options?.typeIds && options.typeIds.length > 0) {
+        titleQuery = titleQuery.in('type_id', options.typeIds)
+      }
+
+      const { data: titleHits, error: titleError } = await titleQuery
+
+      if (titleError) {
+        return { data: [], error: { message: titleError.message, code: titleError.code } }
+      }
+
+      const titleResults = (titleHits ?? []) as DataObject[]
+
+      // If title search filled the quota, skip expensive content search
+      if (titleResults.length >= MAX_RESULTS) {
+        return { data: titleResults, error: null }
+      }
+
+      // Pass 2: Content search on remaining capacity
+      let contentQuery = supabase
         .from('objects')
         .select('*')
         .eq('is_deleted', false)
@@ -492,33 +533,53 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string): Object
         .limit(200)
 
       if (spaceId) {
-        searchQuery = searchQuery.eq('space_id', spaceId)
+        contentQuery = contentQuery.eq('space_id', spaceId)
       }
 
       if (options?.typeIds && options.typeIds.length > 0) {
-        searchQuery = searchQuery.in('type_id', options.typeIds)
+        contentQuery = contentQuery.in('type_id', options.typeIds)
       }
 
-      const { data, error } = await searchQuery
+      const { data: contentCandidates, error: contentError } = await contentQuery
+
+      if (contentError) {
+        // Return title results even if content search fails
+        return { data: titleResults, error: null }
+      }
+
+      const titleMatchIds = new Set(titleResults.map(o => o.id))
+      const lowerQuery = query.toLowerCase()
+      const remaining = MAX_RESULTS - titleResults.length
+
+      const contentMatches = (contentCandidates ?? [])
+        .filter((obj: DataObject) => {
+          if (titleMatchIds.has(obj.id)) return false
+          const contentText = extractTextFromContent(obj.content)
+          return contentText.toLowerCase().includes(lowerQuery)
+        })
+        .slice(0, remaining) as DataObject[]
+
+      return { data: [...titleResults, ...contentMatches], error: null }
+    },
+
+    async batchGetSummary(ids: string[]): Promise<DataListResult<Pick<DataObject, 'id' | 'title' | 'icon' | 'type_id'>>> {
+      if (ids.length === 0) return { data: [], error: null }
+
+      const { data, error } = await supabase
+        .from('objects')
+        .select('id, title, icon, type_id')
+        .in('id', ids)
 
       if (error) {
         return { data: [], error: { message: error.message, code: error.code } }
       }
 
-      // Filter client-side for both title and content matches
-      const lowerQuery = query.toLowerCase()
-      const results = (data ?? []).filter((obj: DataObject) => {
-        if (obj.title.toLowerCase().includes(lowerQuery)) return true
-        const contentText = extractTextFromContent(obj.content)
-        return contentText.toLowerCase().includes(lowerQuery)
-      })
-
-      return { data: results.slice(0, 50) as DataObject[], error: null }
+      return { data: data as Pick<DataObject, 'id' | 'title' | 'icon' | 'type_id'>[], error: null }
     },
   }
 }
 
-function createTemplatesClient(supabase: SupabaseClient, spaceId?: string): TemplatesClient {
+function createTemplatesClient(supabase: SupabaseClient, spaceId?: string, userId?: string): TemplatesClient {
   return {
     async list(options: ListTemplatesOptions = {}): Promise<DataListResult<Template>> {
       let query = supabase
@@ -558,8 +619,8 @@ function createTemplatesClient(supabase: SupabaseClient, spaceId?: string): Temp
     },
 
     async create(input: CreateTemplateInput): Promise<DataResult<Template>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Must be logged in to create templates' } }
       }
       if (!spaceId) {
@@ -570,7 +631,7 @@ function createTemplatesClient(supabase: SupabaseClient, spaceId?: string): Temp
       const templateData = {
         ...input,
         properties: input.properties || {},
-        owner_id: user.id,
+        owner_id: resolvedUserId,
         space_id: spaceId,
         created_at: now,
         updated_at: now,
@@ -644,16 +705,18 @@ function createRelationsClient(supabase: SupabaseClient, spaceId?: string): Rela
         return { data: [], error: { message: objectsError.message, code: objectsError.code } }
       }
 
-      const objectIds = new Set((objectRows ?? []).map((r: { id: string }) => r.id))
+      const objectIdArray = (objectRows ?? []).map((r: { id: string }) => r.id)
+      const objectIds = new Set(objectIdArray)
 
       if (objectIds.size === 0) {
         return { data: [], error: null }
       }
 
-      // Fetch all relations
+      // Fetch relations with source_id filter pushed to server
       let relationsQuery = supabase
         .from('object_relations')
         .select('*')
+        .in('source_id', objectIdArray)
         .order('created_at', { ascending: false })
 
       if (options.relationType) {
@@ -666,9 +729,9 @@ function createRelationsClient(supabase: SupabaseClient, spaceId?: string): Rela
         return { data: [], error: { message: relationsError.message, code: relationsError.code } }
       }
 
-      // Filter to relations where both endpoints are in the space
+      // Client-side filter: target must also be in the space
       const filtered = (relations ?? []).filter(
-        (r: ObjectRelation) => objectIds.has(r.source_id) && objectIds.has(r.target_id)
+        (r: ObjectRelation) => objectIds.has(r.target_id)
       )
 
       return { data: filtered, error: null }
@@ -807,7 +870,7 @@ function createRelationsClient(supabase: SupabaseClient, spaceId?: string): Rela
   }
 }
 
-function createSpacesClient(supabase: SupabaseClient): SpacesClient {
+function createSpacesClient(supabase: SupabaseClient, userId?: string): SpacesClient {
   return {
     async list(): Promise<DataListResult<Space>> {
       const { data, error } = await supabase
@@ -837,8 +900,8 @@ function createSpacesClient(supabase: SupabaseClient): SpacesClient {
     },
 
     async create(input: { name: string; icon?: string }): Promise<DataResult<Space>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Must be logged in to create spaces' } }
       }
 
@@ -848,7 +911,7 @@ function createSpacesClient(supabase: SupabaseClient): SpacesClient {
         .insert({
           name: input.name,
           icon: input.icon ?? '📁',
-          owner_id: user.id,
+          owner_id: resolvedUserId,
           created_at: now,
           updated_at: now,
         })
@@ -898,7 +961,7 @@ function createSpacesClient(supabase: SupabaseClient): SpacesClient {
   }
 }
 
-function createSharingClient(supabase: SupabaseClient): SharingClient {
+function createSharingClient(supabase: SupabaseClient, userId?: string): SharingClient {
   return {
     async listShares(spaceId: string): Promise<DataListResult<SpaceShare>> {
       const { data, error } = await supabase
@@ -929,8 +992,8 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
     },
 
     async createShare(input: { space_id: string; shared_with_email: string; permission: SpaceSharePermission }): Promise<DataResult<SpaceShare>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Must be logged in to share spaces' } }
       }
 
@@ -948,7 +1011,7 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
 
       const targetUser = targetUsers[0]
 
-      if (targetUser.id === user.id) {
+      if (targetUser.id === resolvedUserId) {
         return { data: null, error: { message: 'Cannot share a space with yourself' } }
       }
 
@@ -957,7 +1020,7 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
         .from('space_shares')
         .insert({
           space_id: input.space_id,
-          owner_id: user.id,
+          owner_id: resolvedUserId,
           shared_with_id: targetUser.id,
           shared_with_email: input.shared_with_email,
           permission: input.permission,
@@ -1106,8 +1169,8 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
     },
 
     async getSharedSpaces(): Promise<DataListResult<SharedSpace>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: [], error: { message: 'Not authenticated' } }
       }
 
@@ -1115,7 +1178,7 @@ function createSharingClient(supabase: SupabaseClient): SharingClient {
       const { data: shares, error: sharesError } = await supabase
         .from('space_shares')
         .select('id, space_id, permission')
-        .eq('shared_with_id', user.id)
+        .eq('shared_with_id', resolvedUserId)
 
       if (sharesError || !shares || shares.length === 0) {
         return { data: [], error: sharesError ? { message: sharesError.message, code: sharesError.code } : null }
@@ -1313,25 +1376,11 @@ function createTagsClient(supabase: SupabaseClient, spaceId?: string): TagsClien
       return { data: null, error: null }
     },
 
-    async getObjectsByTag(tagId: string): Promise<DataListResult<DataObject>> {
-      const { data: objectTagRows, error: otError } = await supabase
-        .from('object_tags')
-        .select('object_id')
-        .eq('tag_id', tagId)
-
-      if (otError) {
-        return { data: [], error: { message: otError.message, code: otError.code } }
-      }
-
-      const objectIds = (objectTagRows ?? []).map((r: { object_id: string }) => r.object_id)
-      if (objectIds.length === 0) {
-        return { data: [], error: null }
-      }
-
+    async getObjectsByTag(tagId: string): Promise<DataListResult<DataObjectSummary>> {
       const { data, error } = await supabase
         .from('objects')
-        .select('*')
-        .in('id', objectIds)
+        .select(`${OBJECT_SUMMARY_COLUMNS}, object_tags!inner(tag_id)`)
+        .eq('object_tags.tag_id', tagId)
         .eq('is_deleted', false)
         .order('updated_at', { ascending: false })
 
@@ -1339,23 +1388,42 @@ function createTagsClient(supabase: SupabaseClient, spaceId?: string): TagsClien
         return { data: [], error: { message: error.message, code: error.code } }
       }
 
-      return { data: data as DataObject[], error: null }
+      // Strip the joined object_tags from results
+      const results = (data ?? []).map(({ object_tags: _joined, ...rest }: Record<string, unknown>) => {
+        void _joined
+        return rest
+      }) as DataObjectSummary[]
+      return { data: results, error: null }
+    },
+
+    async countObjectsByTag(tagId: string): Promise<DataResult<number>> {
+      const { count, error } = await supabase
+        .from('object_tags')
+        .select('id, objects!inner(id)', { count: 'exact', head: true })
+        .eq('tag_id', tagId)
+        .eq('objects.is_deleted', false)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: count ?? 0, error: null }
     },
   }
 }
 
-function createPinsClient(supabase: SupabaseClient): PinsClient {
+function createPinsClient(supabase: SupabaseClient, userId?: string): PinsClient {
   return {
     async list(): Promise<DataListResult<Pin>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: [], error: { message: 'Not authenticated' } }
       }
 
       const { data, error } = await supabase
         .from('pins')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', resolvedUserId)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -1366,14 +1434,14 @@ function createPinsClient(supabase: SupabaseClient): PinsClient {
     },
 
     async pin(objectId: string): Promise<DataResult<Pin>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Not authenticated' } }
       }
 
       const { data, error } = await supabase
         .from('pins')
-        .upsert({ user_id: user.id, object_id: objectId }, { onConflict: 'user_id,object_id' })
+        .upsert({ user_id: resolvedUserId, object_id: objectId }, { onConflict: 'user_id,object_id' })
         .select()
         .single()
 
@@ -1385,15 +1453,15 @@ function createPinsClient(supabase: SupabaseClient): PinsClient {
     },
 
     async unpin(objectId: string): Promise<DataResult<void>> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
         return { data: null, error: { message: 'Not authenticated' } }
       }
 
       const { error } = await supabase
         .from('pins')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', resolvedUserId)
         .eq('object_id', objectId)
 
       if (error) {
@@ -1404,13 +1472,13 @@ function createPinsClient(supabase: SupabaseClient): PinsClient {
     },
 
     async isPinned(objectId: string): Promise<boolean> {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return false
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) return false
 
       const { data } = await supabase
         .from('pins')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', resolvedUserId)
         .eq('object_id', objectId)
         .maybeSingle()
 
@@ -1419,17 +1487,17 @@ function createPinsClient(supabase: SupabaseClient): PinsClient {
   }
 }
 
-export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: string): DataClient {
+export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: string, userId?: string): DataClient {
   return {
-    objects: createObjectsClient(supabase, spaceId),
-    objectTypes: createObjectTypesClient(supabase, spaceId),
-    globalObjectTypes: createGlobalObjectTypesClient(supabase),
-    templates: createTemplatesClient(supabase, spaceId),
+    objects: createObjectsClient(supabase, spaceId, userId),
+    objectTypes: createObjectTypesClient(supabase, spaceId, userId),
+    globalObjectTypes: createGlobalObjectTypesClient(supabase, userId),
+    templates: createTemplatesClient(supabase, spaceId, userId),
     relations: createRelationsClient(supabase, spaceId),
-    spaces: createSpacesClient(supabase),
-    sharing: createSharingClient(supabase),
+    spaces: createSpacesClient(supabase, userId),
+    sharing: createSharingClient(supabase, userId),
     tags: createTagsClient(supabase, spaceId),
-    pins: createPinsClient(supabase),
+    pins: createPinsClient(supabase, userId),
     isLocal: false,
   }
 }

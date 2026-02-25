@@ -10,7 +10,7 @@ import { cn } from "@/shared/lib/utils"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
-import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
+import type { DataObjectSummary, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects, useNextTitle } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
@@ -53,7 +53,7 @@ function DraggableTypeSection({
 }: {
   index: number
   type: ObjectType
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   isLoading: boolean
   hideCreateButton?: boolean
   collapseSignal?: CollapseSignal
@@ -232,7 +232,7 @@ export function Sidebar() {
 
   const objectsByType = useMemo(() => {
     const filtered = filterObjects(objects)
-    const grouped = new Map<string, DataObject[]>()
+    const grouped = new Map<string, DataObjectSummary[]>()
     for (const obj of filtered) {
       const existing = grouped.get(obj.type_id) ?? []
       existing.push(obj)
