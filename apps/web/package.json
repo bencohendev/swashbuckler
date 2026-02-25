@@ -1,5 +1,5 @@
 {
-  "name": "swashbuckler",
+  "name": "@swashbuckler/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
