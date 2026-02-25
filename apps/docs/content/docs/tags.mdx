@@ -1,0 +1,65 @@
+---
+title: Tags
+description: Flexible cross-type labels with colors, counts, and dedicated tag pages.
+---
+
+## Overview
+
+Tags provide a flexible way to organize entries across types. Unlike properties (which belong to a specific type), tags are global within a space — you can tag a Page, a Task, and a Recipe with the same tag to group related content regardless of type.
+
+Each tag has a **name** and a **color**, and tags are unique per space.
+
+## Adding Tags to Entries
+
+1. Open an entry in the editor
+2. Below the properties section, find the **Tags** area
+3. Click to open the tag picker popover
+4. Search for an existing tag, or type a new name and select **Create "\{name\}"** to create one on the fly
+5. Click a tag to add it — it appears as a colored pill on the entry
+
+Remove a tag by clicking the **X** on its pill.
+
+{/* screenshot: Tag picker popover with search, existing tags, and "Create" option */}
+
+## Tag Colors
+
+Each tag has an assigned color that appears on the tag pill wherever it's shown — in the editor, sidebar, search results, and type pages. Colors are set when the tag is created and can be changed on the tag's dedicated page.
+
+## Sidebar Tags Section
+
+The sidebar has a collapsible **Tags** section that lists all tags in the current space. Each tag shows its:
+
+- Color indicator
+- Name
+- Entry count (how many entries have this tag)
+
+Click a tag in the sidebar to navigate to its dedicated tag page.
+
+{/* screenshot: Sidebar Tags section showing tags with colors and counts */}
+
+## Tag Pages
+
+Each tag has a dedicated page at `/tags/{name}` that shows all entries with that tag, across all types. The page header displays the tag name, color, and total entry count.
+
+From the tag page header, you can:
+
+- **Edit** the tag (change its name or color)
+- **Delete** the tag (removes it from all entries)
+
+{/* screenshot: Tag page showing entries from different types, with edit and delete actions in the header */}
+
+## Tags in Search
+
+Tags appear as a separate **Tags** group in the global search results (<kbd>Cmd</kbd>+<kbd>K</kbd>). Selecting a tag in search navigates to its tag page.
+
+See [Search](/docs/search) for more details.
+
+## Tags in Type Page Filters
+
+On [type pages](/docs/type-pages), tags are available as a filter. Open the filter popover and check the tags you want to include — entries with any of the checked tags will be shown (OR logic within the tags filter).
+
+See [Filtering & Sorting](/docs/filtering-and-sorting) for more details.
+
+## Deleting Tags
+
+Delete a tag from its dedicated tag page by clicking the **Delete** action in the header. Deleting a tag removes it from all entries that have it — the entries themselves are not affected.

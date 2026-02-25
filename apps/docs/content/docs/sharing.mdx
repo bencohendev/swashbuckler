@@ -1,0 +1,92 @@
+---
+title: Sharing
+description: Invite collaborators to your spaces with view or edit permissions, and control access with granular exclusions.
+---
+
+## Overview
+
+Sharing in Swashbuckler is **per-space** — when you share a space, the recipient gets access to all content in that space by default. You can then use **exclusions** to hide specific types, entries, or fields from individual users or from all shared users.
+
+Sharing requires a Swashbuckler account (it's not available in guest mode).
+
+## Inviting Collaborators
+
+1. Go to **Settings > Sharing** (or click the share icon in the sidebar)
+2. Enter the collaborator's **email address**
+3. Choose a permission level: **View** or **Edit**
+4. Click **Share**
+
+The collaborator will see the space appear in their **Shared with you** section in the space switcher.
+
+{/* screenshot: Share dialog with email input, permission selector, and list of current collaborators */}
+
+## Permissions
+
+| Permission | Can Do | Cannot Do |
+|------------|--------|-----------|
+| **View** | Browse entries, read content, use search and graph | Edit content, change properties, create or delete entries, drag in board view |
+| **Edit** | Everything View can do, plus: edit content, create entries, change properties, drag in board view, participate in real-time collaboration | Manage types, templates, sharing settings, or space settings (owner-only) |
+
+## Exclusions
+
+Exclusions let you hide content from shared users at three levels:
+
+### Type-Level Exclusions
+
+Hide an entire type and all its entries from a shared user. The type won't appear in their sidebar, search results, graph view, or anywhere else.
+
+### Entry-Level Exclusions
+
+Hide a specific entry from a shared user. The entry won't appear in the sidebar, type pages, search, graph, or linked entries for that user.
+
+### Field-Level Exclusions
+
+Hide a specific property field on a type from shared users. The field won't appear in the entry editor, type page columns, or filter options for that user.
+
+### Exclusion Scopes
+
+Exclusions can be set at two scopes:
+
+| Scope | Applies To | Managed In |
+|-------|-----------|------------|
+| **Per-user** | A single shared user | Settings > Sharing > per-user exclusion list |
+| **Space-wide** | All current and future shared users | Settings > Sharing > space-wide exclusions section |
+
+Space-wide exclusions are useful when you want to hide something from everyone you share with, without configuring each user individually.
+
+{/* screenshot: Exclusion manager showing type sections with entry and field checkboxes */}
+
+### Managing Exclusions
+
+1. Go to **Settings > Sharing**
+2. For space-wide exclusions, use the **Space-wide exclusions** section at the top
+3. For per-user exclusions, click the **exclusions** button next to a collaborator's name
+
+The exclusion manager shows an expandable list of types. Under each type, you can check/uncheck:
+
+- The **type itself** (hides the type and all its entries)
+- Individual **entries** within the type
+- Individual **fields** on the type
+
+### Hidden Content Behavior
+
+Hidden content is completely invisible to the excluded user — there's no "you don't have access" placeholder or any indication that hidden content exists. Content simply doesn't appear.
+
+The space owner is never affected by exclusions.
+
+## Leaving a Shared Space
+
+If you're a recipient of a shared space (not the owner):
+
+1. Open the space switcher
+2. Click the option to **leave** the shared space
+3. Confirm the action
+
+Leaving removes your access to the space and switches you to your first owned space.
+
+## Sharing and Other Features
+
+- **[Real-Time Collaboration](/docs/realtime-collaboration)**: Automatically activates for shared spaces where the user has edit permission
+- **[Private Content](/docs/private-content)**: The owner can add private blocks and marks that are invisible to shared users
+- **[Themes](/docs/themes)**: Each user sees their own theme preference in shared spaces — themes are personal, not shared
+- **[Pins](/docs/dashboard)**: Pins are per-user — each collaborator has their own pinned entries

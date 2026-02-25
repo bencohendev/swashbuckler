@@ -1,0 +1,62 @@
+---
+title: Private Content
+description: Hide blocks and inline text from shared users while keeping them visible to you.
+---
+
+## Overview
+
+Private content lets you include notes, annotations, or sensitive information in an entry that only you (the space owner) can see. Shared users won't see any indication that private content exists — it's completely invisible to them.
+
+There are two types of private content: **private blocks** (entire sections) and **private inline marks** (spans of text within a paragraph).
+
+## Private Blocks
+
+A private block is a container element that wraps one or more blocks. Everything inside the container is hidden from shared users.
+
+### Inserting a Private Block
+
+1. Type `/private` in the editor and select **Private** from the slash menu
+2. Write your content inside the block
+
+Private blocks are only available to the space owner — the `/private` option doesn't appear in the slash menu for shared users.
+
+{/* screenshot: Private block with dashed purple border, EyeOff icon, and "Private" label */}
+
+### How They Look
+
+For the **owner**: private blocks render with a dashed purple border, an EyeOff icon, and a "Private" label. The content inside is fully editable.
+
+For **shared users**: the block is completely invisible. There's no placeholder, no "hidden content" message — it simply doesn't appear.
+
+## Private Inline Marks
+
+Private inline marks hide a span of text within a paragraph. The surrounding text remains visible; only the marked span is hidden.
+
+### Applying a Private Mark
+
+- **Keyboard shortcut**: Select text and press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>
+- **Autoformat**: Wrap text with triple pipes — `|||hidden text|||`
+
+### How They Look
+
+For the **owner**: privately marked text renders with a dashed purple border and a light purple background, inline with the surrounding text.
+
+For **shared users**: the marked text is invisible. The surrounding text flows together as if the private span doesn't exist.
+
+{/* screenshot: Paragraph with private inline mark showing purple styling for the owner */}
+
+## Security Model
+
+Private content uses **visual hiding** — the content remains in the underlying data structure but is not rendered for shared users.
+
+- **View-only shared users**: Private content is stripped from the data before the editor receives it (via `stripPrivateContent()`), so it never reaches their browser's DOM.
+- **Edit-permission shared users** (during real-time collaboration): Private content is present in the shared Yjs document (required for CRDT sync) but rendered with `display: none` and `contentEditable=\{false\}`, so it's invisible and non-interactive.
+
+This means private content is suitable for personal annotations, draft notes, and content you don't want to share — but it's not a security boundary for highly sensitive information in spaces where collaborators have edit access.
+
+## When to Use Private Content
+
+- **Meeting notes**: Add your own thoughts alongside shared meeting minutes
+- **Review annotations**: Leave private comments on a shared document
+- **Draft sections**: Work on content privately before making it visible (remove the private mark when ready)
+- **Personal reminders**: Add context that's only relevant to you

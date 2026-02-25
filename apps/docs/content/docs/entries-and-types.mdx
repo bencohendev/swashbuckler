@@ -1,0 +1,105 @@
+---
+title: Entries & Types
+description: Define custom types with properties, then create entries to capture your knowledge.
+---
+
+## Overview
+
+Entries are the core units of content in Swashbuckler — notes, tasks, projects, recipes, or anything else you want to track. Every entry belongs to a **type** that defines its structure: what properties it has, its icon, and its color.
+
+Your default space comes with a **Page** type. You can create as many custom types as you need, each tailored to a different kind of content.
+
+## Types
+
+### Creating a Type
+
+1. Go to **Settings > Types**
+2. Click **New Type**
+3. Enter a name and plural name (e.g., "Task" / "Tasks")
+4. Pick an icon and color
+5. Add properties (see below)
+6. Click **Save**
+
+{/* screenshot: Create Type dialog showing name, icon, color, and property fields */}
+
+Your new type appears in the sidebar with its own section. You can also create types directly from [Quick Capture](/docs/quick-capture) when you need one on the fly.
+
+### Managing Types
+
+In **Settings > Types**, you can:
+
+- **Reorder** types by dragging them (or using the up/down arrow buttons for keyboard access) — this controls sidebar order
+- **Edit** a type to change its name, icon, color, or properties
+- **Archive** a type to hide it and all its entries from the sidebar, search, and views (see [Trash & Archive](/docs/trash-and-archive))
+- **Delete** a type permanently — entries of that type are not deleted, but they lose their type association
+
+### Global Types
+
+You can create **global type blueprints** in **Settings > Account > Global Types**. These are reusable templates for types that you can import into any space as independent copies. Importing a global type creates a new space-scoped type with its own fields — changes to the global blueprint don't affect imported copies, and vice versa.
+
+## Properties
+
+Properties define the structured data on each entry. When you create or edit a type, you can add, reorder, and remove properties.
+
+### Property Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **Text** | Short free-form text | "Meeting notes summary" |
+| **Number** | Numeric value | 42, 3.14 |
+| **Date** | Calendar date | 2025-01-15 |
+| **Checkbox** | True/false toggle | Done: yes/no |
+| **Select** | Single choice from defined options | Status: "To Do" / "In Progress" / "Done" |
+| **Multi-select** | Multiple choices from defined options | Tags: "Frontend", "Urgent" |
+| **Relation** | Link to another entry | Related project |
+| **URL** | Web address | https://example.com |
+| **Email** | Email address | user@example.com |
+| **Phone** | Phone number | +1 (555) 123-4567 |
+
+### Adding Properties
+
+1. Edit a type in **Settings > Types**
+2. Click **Add Property**
+3. Enter a name and choose a type
+4. For **Select** and **Multi-select**, add the available options
+5. Optionally mark a property as **required**
+6. Drag to reorder properties — the order here controls the display order on entries and in table views
+
+## Entries
+
+### Creating Entries
+
+There are several ways to create a new entry:
+
+- Click the **+** button next to a type in the sidebar
+- Press <kbd>Cmd</kbd>+<kbd>E</kbd> to open [Quick Capture](/docs/quick-capture)
+- Click the **+** button in the header
+- Use the floating action button (bottom-right corner)
+
+New entries get an auto-incrementing default name (e.g., "New Page", "New Page 2") that you can change immediately.
+
+{/* screenshot: New entry in the editor with title, icon, and properties */}
+
+### Entry Icons
+
+Each entry can have its own emoji icon, independent of its type icon. Click the icon area next to the entry title to open the emoji picker. Entry icons appear in the sidebar, search results, and anywhere the entry is referenced.
+
+### Cover Images
+
+Entries can have a cover image displayed at the top of the editor. Hover over the top of an entry and click **Add Cover** to upload an image (3 MB limit, JPEG/PNG/GIF/WebP/SVG).
+
+{/* screenshot: Entry with a cover image, emoji icon, and title */}
+
+### Nesting Entries
+
+Entries can be nested up to **3 levels deep**. In the sidebar, drag an entry onto another entry of the same type to make it a child. Nested entries appear indented under their parent in the sidebar tree.
+
+### Editing Properties
+
+When you open an entry, its properties appear below the title. Click any property value to edit it inline. Select and multi-select properties show a dropdown; dates open a date picker; checkboxes toggle directly.
+
+{/* screenshot: Entry properties section showing filled-in select, date, and checkbox fields */}
+
+## Entries in Views
+
+Every type has a dedicated page (accessible from the sidebar) that shows all entries of that type. You can view them as a table, list, cards, or kanban board, and filter and sort by any property. See [Type Pages](/docs/type-pages), [Board View](/docs/board-view), and [Filtering & Sorting](/docs/filtering-and-sorting) for details.
