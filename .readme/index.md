@@ -124,6 +124,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Delete Space](features/delete-space.md) | Permanently delete a space and all its contents |
 | Vercel Analytics | Vercel Analytics integration (`@vercel/analytics`) |
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
+| [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
 
 ## Planned Features
 
