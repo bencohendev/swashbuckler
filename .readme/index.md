@@ -119,6 +119,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Type Reorder Keyboard](features/type-reorder-keyboard.md) | Up/down buttons as keyboard alternative to drag-drop in type settings |
 | [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
+| [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
 
 ## Planned Features
 
