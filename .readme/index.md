@@ -127,6 +127,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
 | [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
 | [Loading Indicators](features/loading-indicators.md) | Navigation progress bar, Spinner/Skeleton primitives, Button loading states |
+| [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 
 ## Planned Features
 
@@ -134,7 +135,6 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | First use tutorial | Onboarding walkthrough for new users |
-| [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | API audit (backend) | Audit Supabase backend APIs for correctness, security, and consistency |
 | API audit (frontend) | Audit frontend API calls for correctness, error handling, and consistency |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
