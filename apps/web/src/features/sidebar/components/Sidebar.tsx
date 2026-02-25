@@ -40,7 +40,7 @@ interface DragItem {
 }
 
 const navItems = [
-  { href: "/", label: "Home", icon: HomeIcon },
+  { href: "/dashboard", label: "Home", icon: HomeIcon },
   { href: "/graph", label: "Graph", icon: NetworkIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]

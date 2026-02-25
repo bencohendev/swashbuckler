@@ -34,15 +34,32 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname
+  const hasGuestCookie = request.cookies.has("swashbuckler-guest")
+
+  // Root redirect: authenticated or returning guest → dashboard, else → landing
+  if (pathname === "/") {
+    const url = request.nextUrl.clone()
+    url.pathname = user || hasGuestCookie ? "/dashboard" : "/landing"
+    return NextResponse.redirect(url)
+  }
+
+  // Authenticated users should not see the landing page
+  if (pathname === "/landing" && user) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard"
+    return NextResponse.redirect(url)
+  }
+
   // Auth pages that should redirect authenticated users away
-  const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/signup") ||
-    request.nextUrl.pathname.startsWith("/auth")
+  const isAuthPage = pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/auth")
 
   // Redirect authenticated users away from auth pages
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
-    url.pathname = "/"
+    url.pathname = "/dashboard"
     return NextResponse.redirect(url)
   }
 
