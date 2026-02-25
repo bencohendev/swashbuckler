@@ -128,6 +128,8 @@ Dual-storage architecture with a `DataClient` interface:
 | [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
 | [Loading Indicators](features/loading-indicators.md) | Navigation progress bar, Spinner/Skeleton primitives, Button loading states |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
+| [API Audit (Backend)](features/api-audit-backend.md) | Audit Supabase backend APIs for correctness, security, and consistency |
+| [API Audit (Frontend)](features/api-audit-frontend.md) | Audit frontend API calls for correctness, error handling, and consistency |
 
 ## Planned Features
 
@@ -135,13 +137,8 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | First use tutorial | Onboarding walkthrough for new users |
-| API audit (backend) | Audit Supabase backend APIs for correctness, security, and consistency |
-| API audit (frontend) | Audit frontend API calls for correctness, error handling, and consistency |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
-| Convert entry to template | Button to convert an existing entry into a template |
-| Create from template (quick capture) | Create a new entry from a template via the quick capture button |
 | API documentation | API documentation with diagrams |
-| Account-level themes, space-level application | Create themes at account level but apply them per space |
 | Settings page restructure | Separate space-specific settings from account-wide settings into distinct sections/pages |
 | Landing page | Marketing/landing page for the app |
 | Link to docs from app | Add a link to the documentation site from within the app |
