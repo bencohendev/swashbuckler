@@ -139,6 +139,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Archive | Archive entries, types, and spaces (soft-hide without deleting) |
 | Delete space | Allow users to delete a space and its contents |
 | API documentation | API documentation with diagrams |
+| Loading indicators | Visual feedback when navigating or loading content — spinners, skeletons, or transition states so clicks feel responsive |
 
 ## Bugs
 
