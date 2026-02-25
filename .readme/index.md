@@ -141,6 +141,10 @@ Dual-storage architecture with a `DataClient` interface:
 | Create from template (quick capture) | Create a new entry from a template via the quick capture button |
 | API documentation | API documentation with diagrams |
 | Loading indicators | Visual feedback when navigating or loading content — spinners, skeletons, or transition states so clicks feel responsive |
+| Account-level themes, space-level application | Create themes at account level but apply them per space |
+| Settings page restructure | Separate space-specific settings from account-wide settings into distinct sections/pages |
+| Landing page | Marketing/landing page for the app |
+| Link to docs from app | Add a link to the documentation site from within the app |
 
 ## Bugs
 

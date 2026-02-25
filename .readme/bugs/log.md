@@ -6,6 +6,9 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
+| Theme switcher + custom themes interaction | How does the navbar theme switcher work with custom themes? Needs investigation |
+| OAuth redirect account menu stale | On OAuth redirect, account menu items aren't updating to reflect signed-in state |
+
 ## Closed
 
 | Date | Bug | Fix |
