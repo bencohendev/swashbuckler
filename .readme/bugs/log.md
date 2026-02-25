@@ -11,6 +11,8 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Types list has unnecessary reorder chevrons | Removed up/down chevron buttons and handleMoveType callback from ObjectTypeManager |
+| 2026-02-25 | Field row grip icon only moves up on click | Replaced click-to-move with real drag-and-drop using react-dnd (DraggableFieldRow wrapper with midpoint-based hover reordering) |
 | 2026-02-24 | New entry title shows text instead of placeholder | Show placeholder instead of generated name in title input for new entries |
 | 2026-02-24 | Cursor trapped in code blocks, tables, and private blocks | Add ExitBreakPlugin (Mod+Enter / Mod+Shift+Enter) and TrailingBlockPlugin to ensure users can always escape block-level elements |
 | 2026-02-24 | Table blocks have no row/column controls | Add floating toolbar on hover with add row, add column, delete row, delete column, delete table buttons |

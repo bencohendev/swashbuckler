@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { DndProvider, useDrag, useDrop } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import { PlusIcon, TrashIcon, GripVerticalIcon } from 'lucide-react'
 import { Button } from '@/shared/components/ui/Button'
 import type { FieldDefinition, FieldType } from '@/shared/lib/data'
@@ -14,6 +16,12 @@ const FIELD_TYPE_OPTIONS: { value: FieldType; label: string }[] = [
   { value: 'multi_select', label: 'Multi Select' },
   { value: 'url', label: 'URL' },
 ]
+
+const DRAG_TYPE = 'FIELD_ROW'
+
+interface DragItem {
+  index: number
+}
 
 interface FieldBuilderProps {
   fields: FieldDefinition[]
@@ -45,16 +53,10 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
     onChange(updated)
   }
 
-  const handleMoveField = (index: number, direction: 'up' | 'down') => {
-    if (
-      (direction === 'up' && index === 0) ||
-      (direction === 'down' && index === fields.length - 1)
-    ) return
-
-    const newIndex = direction === 'up' ? index - 1 : index + 1
+  const handleMoveField = (fromIndex: number, toIndex: number) => {
     const updated = [...fields]
-    const [moved] = updated.splice(index, 1)
-    updated.splice(newIndex, 0, moved)
+    const [moved] = updated.splice(fromIndex, 1)
+    updated.splice(toIndex, 0, moved)
     onChange(updated.map((field, i) => ({ ...field, sort_order: i })))
   }
 
@@ -74,47 +76,91 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
         </p>
       )}
 
-      <div className="space-y-2">
-        {fields.map((field, index) => (
-          <FieldRow
-            key={field.id}
-            field={field}
-            index={index}
-            totalFields={fields.length}
-            onUpdate={(updates) => handleUpdateField(index, updates)}
-            onRemove={() => handleRemoveField(index)}
-            onMove={(direction) => handleMoveField(index, direction)}
-          />
-        ))}
-      </div>
+      <DndProvider backend={HTML5Backend}>
+        <div className="space-y-2">
+          {fields.map((field, index) => (
+            <DraggableFieldRow
+              key={field.id}
+              field={field}
+              index={index}
+              onUpdate={(updates) => handleUpdateField(index, updates)}
+              onRemove={() => handleRemoveField(index)}
+              onMove={handleMoveField}
+            />
+          ))}
+        </div>
+      </DndProvider>
     </div>
   )
 }
 
-interface FieldRowProps {
+interface DraggableFieldRowProps {
   field: FieldDefinition
   index: number
-  totalFields: number
   onUpdate: (updates: Partial<FieldDefinition>) => void
   onRemove: () => void
-  onMove: (direction: 'up' | 'down') => void
+  onMove: (from: number, to: number) => void
 }
 
-function FieldRow({ field, index, onUpdate, onRemove, onMove }: FieldRowProps) {
+function DraggableFieldRow({ field, index, onUpdate, onRemove, onMove }: DraggableFieldRowProps) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Use refs so useDrag/useDrop specs never need to reconnect mid-drag
+  const indexRef = useRef(index)
+  const onMoveRef = useRef(onMove)
+
+  useEffect(() => {
+    indexRef.current = index
+    onMoveRef.current = onMove
+  }, [index, onMove])
+
+  const [{ isDragging }, drag] = useDrag({
+    type: DRAG_TYPE,
+    item: (): DragItem => ({ index: indexRef.current }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  })
+
+  const [, drop] = useDrop<DragItem>({
+    accept: DRAG_TYPE,
+    hover: (item, monitor) => {
+      if (!ref.current) return
+      const dragIndex = item.index
+      const hoverIndex = indexRef.current
+      if (dragIndex === hoverIndex) return
+
+      const hoverRect = ref.current.getBoundingClientRect()
+      const hoverMiddleY = (hoverRect.bottom - hoverRect.top) / 2
+      const clientOffset = monitor.getClientOffset()
+      if (!clientOffset) return
+      const hoverClientY = clientOffset.y - hoverRect.top
+
+      // Only move when cursor crosses the midpoint
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return
+
+      onMoveRef.current(dragIndex, hoverIndex)
+      item.index = hoverIndex
+    },
+  })
+
+  useEffect(() => {
+    drag(drop(ref))
+  }, [drag, drop])
+
   const needsOptions = field.type === 'select' || field.type === 'multi_select'
 
   return (
-    <div className="space-y-2 rounded-lg border p-3">
+    <div
+      ref={ref}
+      className="space-y-2 rounded-lg border p-3"
+      style={{ opacity: isDragging ? 0.4 : 1 }}
+    >
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex flex-col">
-          <button
-            type="button"
-            onClick={() => onMove('up')}
-            disabled={index === 0}
-            className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
-          >
-            <GripVerticalIcon className="size-3" />
-          </button>
+        <div
+          className="min-h-11 min-w-11 inline-flex cursor-grab items-center justify-center sm:min-h-0 sm:min-w-0 text-muted-foreground hover:text-foreground"
+          aria-label="Drag to reorder"
+        >
+          <GripVerticalIcon className="size-3" />
         </div>
 
         <input
