@@ -247,7 +247,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
                   )}
                 >
                   <TypeIcon icon={selectedType.icon} className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate">Blank {selectedType.name}</span>
+                  <span className="min-w-0 flex-1 truncate">New {selectedType.name} (no template)</span>
                 </button>
 
                 {/* Templates */}
