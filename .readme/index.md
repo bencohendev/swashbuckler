@@ -119,12 +119,12 @@ Dual-storage architecture with a `DataClient` interface:
 | [Type Reorder Keyboard](features/type-reorder-keyboard.md) | Up/down buttons as keyboard alternative to drag-drop in type settings |
 | [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
+| [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | First use tutorial | Onboarding walkthrough for new users |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
