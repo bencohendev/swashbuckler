@@ -123,12 +123,12 @@ Dual-storage architecture with a `DataClient` interface:
 | [Archive](features/archive.md) | Hide entries, types, and spaces without deleting them |
 | [Delete Space](features/delete-space.md) | Permanently delete a space and all its contents |
 | Vercel Analytics | Vercel Analytics integration (`@vercel/analytics`) |
+| [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | First use tutorial | Onboarding walkthrough for new users |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
