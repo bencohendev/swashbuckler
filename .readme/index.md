@@ -131,17 +131,17 @@ Dual-storage architecture with a `DataClient` interface:
 | [API Audit (Backend)](features/api-audit-backend.md) | Audit Supabase backend APIs for correctness, security, and consistency |
 | [API Audit (Frontend)](features/api-audit-frontend.md) | Audit frontend API calls for correctness, error handling, and consistency |
 | [Settings Hub](features/settings-hub.md) | Split settings into Account and Space sections |
+| [Mobile](features/mobile.md) | Responsive layout for mobile devices |
+| Landing page | Marketing/landing page for the app |
+| [Link to Docs](features/link-to-docs.md) | Help button with docs link and keyboard shortcuts reference |
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | First use tutorial | Onboarding walkthrough for new users |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
 | API documentation | API documentation with diagrams |
-| Landing page | Marketing/landing page for the app |
-| Link to docs from app | Add a link to the documentation site from within the app |
 
 ## Bugs
 
