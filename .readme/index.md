@@ -125,6 +125,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Vercel Analytics | Vercel Analytics integration (`@vercel/analytics`) |
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
+| [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
 
 ## Planned Features
 
