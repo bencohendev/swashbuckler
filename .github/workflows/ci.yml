@@ -17,7 +17,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run lint
+      - run: npx turbo run lint
 
   test:
     name: Test
@@ -29,8 +29,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run test:run
-      - run: npm run test:coverage
+      - run: npx turbo run test:run
+      - run: cd apps/web && npm run test:coverage
         continue-on-error: true
 
   security:
@@ -56,7 +56,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run build
+      - run: npx turbo run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}

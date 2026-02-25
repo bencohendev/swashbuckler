@@ -21,37 +21,24 @@ A knowledge management app with block-based editing, custom types/relations, and
 
 ## Project Structure
 
+Turborepo monorepo: `apps/web/` (main app) + `apps/docs/` (Fumadocs documentation site).
+
 ```
-src/
-├── app/                      # Next.js routes (thin, delegate to features)
-│   ├── (auth)/               # Login, signup
-│   ├── (main)/               # Sidebar + main content layout
-│   │   ├── objects/          # Object list and editor
-│   │   ├── graph/            # Knowledge graph
-│   │   ├── trash/            # Deleted objects
-│   │   ├── tags/[name]/      # Tag pages
-│   │   ├── types/[slug]/     # Type table pages
-│   │   └── settings/         # Types, templates, sharing
-│   └── auth/callback/        # OAuth callback
-├── features/
-│   ├── auth/
-│   ├── collaboration/
-│   ├── editor/
-│   ├── global-types/
-│   ├── graph/
-│   ├── object-types/
-│   ├── objects/
-│   ├── pins/
-│   ├── search/
-│   ├── account/
-│   ├── sharing/
-│   ├── tags/
-│   ├── sidebar/
-│   ├── table-view/
-│   └── templates/
-└── shared/
-    ├── components/ui/        # shadcn components
-    └── lib/data/             # DataClient interface (Supabase + Dexie)
+apps/
+├── web/                          # Main web app (@swashbuckler/web)
+│   ├── src/
+│   │   ├── app/                  # Next.js routes (thin, delegate to features)
+│   │   │   ├── (auth)/           # Login, signup
+│   │   │   ├── (main)/           # Sidebar + main content layout
+│   │   │   └── auth/callback/    # OAuth callback
+│   │   ├── features/             # Feature modules
+│   │   └── shared/               # Shared components, hooks, data layer
+│   ├── tests/                    # Unit, integration, e2e tests
+│   └── supabase/                 # Database migrations
+├── docs/                         # Documentation site (@swashbuckler/docs)
+│   ├── src/app/                  # Fumadocs Next.js app
+│   └── content/docs/             # MDX content
+└── packages/                     # Shared packages (future)
 ```
 
 ## Data Layer
@@ -131,6 +118,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
 | [Type Reorder Keyboard](features/type-reorder-keyboard.md) | Up/down buttons as keyboard alternative to drag-drop in type settings |
 | [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
+| [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 
 ## Planned Features
 
@@ -138,7 +126,6 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
-| [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | First use tutorial | Onboarding walkthrough for new users |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | Analytics | Usage analytics and tracking |

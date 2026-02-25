@@ -15,12 +15,12 @@
 ## Testing & Verification
 
 After adding, modifying, or fixing features, run these checks:
-- **Tests:** `npx vitest run` — don't let existing tests break; update them to match code changes
-- **Types:** `npx tsc --noEmit` — all code must pass typecheck with no errors
-- **Lint:** `npm run lint` — don't introduce new lint errors (pre-existing warnings are tracked separately)
+- **Tests:** `cd apps/web && npx vitest run` — don't let existing tests break; update them to match code changes
+- **Types:** `cd apps/web && npx tsc --noEmit` — all code must pass typecheck with no errors
+- **Lint:** `npm run lint` (from repo root) — don't introduce new lint errors (pre-existing warnings are tracked separately)
 
 ### Test conventions
-- Test fixtures live in `tests/fixtures/` — keep them in sync with current schemas
+- Test fixtures live in `apps/web/tests/fixtures/` — keep them in sync with current schemas
 - Zod 4 requires RFC4122-compliant UUIDs in tests (no synthetic `00000000-...` IDs)
 
 ## Branching & Worktrees
