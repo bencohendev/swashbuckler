@@ -21,7 +21,7 @@ interface SupabaseYjsProviderOptions {
 
 const UPDATE_DEBOUNCE_MS = 50
 /** If no peer responds with sync-step2 within this time, assume we're the sole editor */
-const SYNC_TIMEOUT_MS = 1500
+const SYNC_TIMEOUT_MS = 500
 /** Base delay for reconnection attempts */
 const RECONNECT_BASE_MS = 1000
 /** Maximum reconnection delay */
