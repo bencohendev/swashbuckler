@@ -130,6 +130,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
 | [API Audit (Backend)](features/api-audit-backend.md) | Audit Supabase backend APIs for correctness, security, and consistency |
 | [API Audit (Frontend)](features/api-audit-frontend.md) | Audit frontend API calls for correctness, error handling, and consistency |
+| [Settings Hub](features/settings-hub.md) | Split settings into Account and Space sections |
 
 ## Planned Features
 
@@ -139,7 +140,6 @@ Dual-storage architecture with a `DataClient` interface:
 | First use tutorial | Onboarding walkthrough for new users |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
 | API documentation | API documentation with diagrams |
-| Settings page restructure | Separate space-specific settings from account-wide settings into distinct sections/pages |
 | Landing page | Marketing/landing page for the app |
 | Link to docs from app | Add a link to the documentation site from within the app |
 
