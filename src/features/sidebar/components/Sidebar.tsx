@@ -397,7 +397,7 @@ export function Sidebar() {
             {sidebarLoading ? (
               <div aria-busy="true" aria-label="Loading sidebar content" role="status">
                 {/* Skeleton section 1 */}
-                <div className="px-2">
+                <div className="p-2">
                   <div className="mb-1 flex items-center gap-1">
                     <div className="size-3 animate-pulse rounded bg-muted" />
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
@@ -411,7 +411,7 @@ export function Sidebar() {
                 </div>
                 <hr className="border-border" />
                 {/* Skeleton section 2 */}
-                <div className="px-2">
+                <div className="p-2">
                   <div className="mb-1 flex items-center gap-1">
                     <div className="size-3 animate-pulse rounded bg-muted" />
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
@@ -425,7 +425,7 @@ export function Sidebar() {
                 </div>
                 <hr className="border-border" />
                 {/* Skeleton recent section */}
-                <div className="px-2">
+                <div className="p-2">
                   <div className="mb-1 flex items-center gap-1">
                     <div className="size-3 animate-pulse rounded bg-muted" />
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
