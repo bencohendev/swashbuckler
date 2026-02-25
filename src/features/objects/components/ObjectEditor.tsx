@@ -83,24 +83,25 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   })
 
   // Sync title when object changes (e.g., on initial load or navigation)
+  // For new entries (autoFocus), keep title empty so placeholder shows the generated name
   useEffect(() => {
-    if (object) {
+    if (object && !autoFocus) {
       setTitle(object.title)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync on id change
-  }, [object?.id])
+  }, [object?.id, autoFocus])
 
-  // Auto-focus and select title text for newly created entries
+  // Auto-focus title for newly created entries
   useEffect(() => {
     if (autoFocus && object && titleRef.current) {
       titleRef.current.focus()
-      titleRef.current.select()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on initial load
   }, [object?.id])
 
   const handleTitleChange = useCallback(async (newTitle: string) => {
     setTitle(newTitle)
+    if (!newTitle) return // Don't persist empty — DB keeps generated name
 
     // Auto-save
     setIsTitleSaving(true)
@@ -327,7 +328,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
             type="text"
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Untitled"
+            placeholder={autoFocus && !title && object?.title ? object.title : 'Untitled'}
             readOnly={!canEdit}
             className={`mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground${!canEdit ? ' cursor-default' : ''}`}
           />
