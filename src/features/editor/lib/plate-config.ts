@@ -19,6 +19,8 @@ import { MentionPlugin, MentionInputPlugin } from '@udecode/plate-mention/react'
 import { DndPlugin } from '@udecode/plate-dnd';
 import { AutoformatPlugin } from '@udecode/plate-autoformat/react';
 import { IndentPlugin } from '@udecode/plate-indent/react';
+import { ExitBreakPlugin } from '@udecode/plate-break/react';
+import { TrailingBlockPlugin } from '@udecode/plate-trailing-block';
 import { NodeIdPlugin } from '@udecode/plate-node-id';
 import { SpoilerPlugin } from '../plugins/spoiler-plugin';
 import { PrivateBlockPlugin, PrivateMarkPlugin } from '../plugins/private-plugin';
@@ -63,6 +65,23 @@ export const editorPlugins = [
 
   // Indentation
   IndentPlugin,
+
+  // Exit break — Mod+Enter exits below, Mod+Shift+Enter exits above
+  ExitBreakPlugin.configure({
+    options: {
+      rules: [
+        { hotkey: 'mod+enter', query: { allow: ['code_block', 'table', 'private_block'] } },
+        { hotkey: 'mod+shift+enter', before: true, query: { allow: ['code_block', 'table', 'private_block'] } },
+      ],
+    },
+  }),
+
+  // Trailing block — ensures an empty paragraph always exists at the end
+  TrailingBlockPlugin.configure({
+    options: {
+      type: 'p',
+    },
+  }),
 
   // Commands and mentions
   SlashPlugin.configure({
