@@ -48,7 +48,6 @@ function DraggableTypeSection({
   onCreateBlank,
   onSelectTemplate,
   onDelete,
-  onArchive,
   onMove,
   onDrop,
 }: {
@@ -61,7 +60,6 @@ function DraggableTypeSection({
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
   onDelete: (typeId: string) => Promise<unknown>
-  onArchive: (typeId: string) => Promise<unknown>
   onMove: (from: number, to: number) => void
   onDrop: () => void
 }) {
@@ -124,7 +122,6 @@ function DraggableTypeSection({
         onCreateBlank={onCreateBlank}
         onSelectTemplate={onSelectTemplate}
         onDelete={onDelete}
-        onArchive={onArchive}
       />
     </div>
   )
@@ -146,7 +143,7 @@ export function Sidebar() {
   })
   // All non-deleted, non-archived objects — shared with PinnedSection + RecentSection via props
   const { objects: allObjects } = useObjects({ isDeleted: false, isArchived: false })
-  const { types, create: createType, update: updateType, remove: removeType, archive: archiveType } = useObjectTypes()
+  const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
   const { pinnedIds } = usePins()
   const { tags } = useTags()
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
@@ -501,7 +498,6 @@ export function Sidebar() {
                         onCreateBlank={handleCreateBlank}
                         onSelectTemplate={handleSelectTemplate}
                         onDelete={removeType}
-                        onArchive={archiveType}
                         onMove={handleMoveType}
                         onDrop={handleDropType}
                       />

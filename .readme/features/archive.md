@@ -26,11 +26,11 @@ Dexie schema bumped from v9 to v10 with `is_archived` index on objects and objec
 - On archive: toast confirmation, navigate away from the entry
 
 ### Archive a type
-- **TypeSection** dropdown and context menu include "Archive type" item
+- **ObjectTypeManager** (Settings > Types) shows an archive icon button per type row with confirmation dialog
 - On archive: type and all its entries disappear from the sidebar
 
 ### Archive a space
-- **SpaceSwitcher** dropdown includes "Archive Space" for owned spaces (hidden when only one non-archived owned space remains)
+- **SpacesSettings** (Settings > Spaces) shows an archive icon button per space row with confirmation dialog
 - On archive: space disappears from switcher, app switches to next available space
 
 ### Archive page (`/archive`)
@@ -85,6 +85,5 @@ Dexie schema bumped from v9 to v10 with `is_archived` index on objects and objec
 - `apps/web/src/features/object-types/hooks/useObjectTypes.ts` — options param, archive/unarchive
 - `apps/web/src/features/objects/components/ObjectEditor.tsx` — Archive menu item
 - `apps/web/src/features/sidebar/components/Sidebar.tsx` — archive link, implicit type filtering
-- `apps/web/src/features/sidebar/components/TypeSection.tsx` — archive menu items
-- `apps/web/src/features/sidebar/components/SpaceSwitcher.tsx` — Archive Space option
+- `apps/web/src/features/object-types/components/ObjectTypeManager.tsx` — archive button and confirm dialog
 - `apps/web/src/features/search/components/GlobalSearchDialog.tsx` — exclude archived types
