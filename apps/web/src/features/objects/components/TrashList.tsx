@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { RotateCcwIcon, TrashIcon } from 'lucide-react'
 import { useObjects } from '../hooks/useObjects'
 import { Button } from '@/shared/components/ui/Button'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
 import type { DataObject } from '@/shared/lib/data'
@@ -34,7 +35,7 @@ export function TrashList() {
     return (
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
+          <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>
     )
@@ -70,7 +71,7 @@ export function TrashList() {
               size="sm"
               variant="ghost"
               onClick={() => handleRestore(obj)}
-              disabled={processingId === obj.id}
+              loading={processingId === obj.id}
               title="Restore"
               aria-label={`Restore "${obj.title}"`}
             >

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { CheckIcon, ChevronsUpDownIcon, LogOutIcon, PlusIcon, ShareIcon } from "lucide-react"
 import { useCurrentSpace, useSpaces, useAuth } from "@/shared/lib/data"
 import {
@@ -12,12 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog"
+import { useNavigate } from "@/shared/hooks/useNavigate"
 import { toast } from "@/shared/hooks/useToast"
 import { CreateSpaceDialog, type CreateSpaceInput } from "./CreateSpaceDialog"
 import { ShareSpaceDialog } from "@/features/sharing"
 
 export function SpaceSwitcher() {
-  const router = useRouter()
+  const { push: navigate } = useNavigate()
   const { space, spaces, switchSpace, leaveSpace } = useCurrentSpace()
   const { create } = useSpaces()
   const { user } = useAuth()
@@ -28,7 +28,7 @@ export function SpaceSwitcher() {
   const handleSwitchSpace = (id: string) => {
     if (id === space?.id) return
     switchSpace(id)
-    router.push('/')
+    navigate('/')
   }
 
   const handleCreate = async (input: CreateSpaceInput) => {
@@ -152,7 +152,7 @@ export function SpaceSwitcher() {
           onConfirm={async () => {
             await leaveSpace(space.id)
             toast({ description: `Left "${space.name}"`, variant: 'success' })
-            router.push('/')
+            navigate('/')
           }}
         />
       )}

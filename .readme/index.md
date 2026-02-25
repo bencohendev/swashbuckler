@@ -126,6 +126,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
 | [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
+| [Loading Indicators](features/loading-indicators.md) | Navigation progress bar, Spinner/Skeleton primitives, Button loading states |
 
 ## Planned Features
 
@@ -140,7 +141,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Convert entry to template | Button to convert an existing entry into a template |
 | Create from template (quick capture) | Create a new entry from a template via the quick capture button |
 | API documentation | API documentation with diagrams |
-| Loading indicators | Visual feedback when navigating or loading content — spinners, skeletons, or transition states so clicks feel responsive |
 | Account-level themes, space-level application | Create themes at account level but apply them per space |
 | Settings page restructure | Separate space-specific settings from account-wide settings into distinct sections/pages |
 | Landing page | Marketing/landing page for the app |

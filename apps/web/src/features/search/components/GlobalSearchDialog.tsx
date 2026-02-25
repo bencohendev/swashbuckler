@@ -1,7 +1,6 @@
 'use client'
 
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import { SearchIcon, TagIcon } from 'lucide-react'
 import {
   Dialog,
@@ -9,6 +8,8 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/Dialog'
 import { cn } from '@/shared/lib/utils'
+import { Spinner } from '@/shared/components/ui/Spinner'
+import { useNavigate } from '@/shared/hooks/useNavigate'
 import { useObjectTypes } from '@/features/object-types/hooks/useObjectTypes'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { useGlobalSearch } from '../hooks/useGlobalSearch'
@@ -19,7 +20,7 @@ interface GlobalSearchDialogProps {
 }
 
 export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogProps) {
-  const router = useRouter()
+  const { push: navigate } = useNavigate()
   const { types } = useObjectTypes()
   const { query, setQuery, typeIds, setTypeIds, results, tagResults, isLoading } = useGlobalSearch()
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -57,8 +58,8 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
 
   const navigateTo = useCallback((path: string) => {
     onOpenChange(false)
-    router.push(path)
-  }, [onOpenChange, router])
+    navigate(path)
+  }, [onOpenChange, navigate])
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') {
@@ -109,7 +110,9 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             autoFocus
           />
           {isLoading && (
-            <div role="status" aria-label="Searching" className="size-4 shrink-0 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+            <span role="status" aria-label="Searching" className="shrink-0">
+              <Spinner size="sm" />
+            </span>
           )}
         </div>
 

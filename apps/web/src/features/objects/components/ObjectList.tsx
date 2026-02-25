@@ -1,6 +1,7 @@
 'use client'
 
 import { ObjectItem } from './ObjectItem'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import type { DataObject, ObjectType } from '@/shared/lib/data'
 
 interface ObjectListProps {
@@ -24,13 +25,7 @@ export function ObjectList({
     return (
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className={cn(
-              'animate-pulse rounded-md bg-muted',
-              compact ? 'h-8' : 'h-16'
-            )}
-          />
+          <Skeleton key={i} className={compact ? 'h-8' : 'h-16'} />
         ))}
       </div>
     )
@@ -55,8 +50,4 @@ export function ObjectList({
       ))}
     </div>
   )
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
 }
