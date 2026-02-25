@@ -58,20 +58,20 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => onOpenChange(false)}>
-      <div className="w-full max-w-lg rounded-lg border bg-background shadow-lg" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="w-full max-w-[calc(100%-2rem)] sm:max-w-lg rounded-lg border bg-background shadow-lg" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
             <ShieldIcon className="size-5 text-muted-foreground" />
             <h2 className="text-lg font-semibold">Share &quot;{spaceName}&quot;</h2>
           </div>
-          <button type="button" onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground" aria-label="Close">
+          <button type="button" onClick={() => onOpenChange(false)} className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 text-muted-foreground hover:text-foreground" aria-label="Close">
             <XIcon className="size-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-6 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 type="email"
                 value={email}
@@ -79,7 +79,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                 placeholder="Email address"
                 aria-label="Email address"
                 aria-describedby={error ? "share-error" : undefined}
-                className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring sm:w-auto sm:flex-1"
               />
               <select
                 value={permission}
@@ -111,40 +111,42 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
             ) : (
               shares.map(share => (
                 <div key={share.id}>
-                  <div className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted/50">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-3 py-2 hover:bg-muted/50">
                     <div className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase">
                       {share.shared_with_email[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-sm">{share.shared_with_email}</p>
                     </div>
-                    <select
-                      value={share.permission}
-                      onChange={e => handlePermissionChange(share, e.target.value as SpaceSharePermission)}
-                      aria-label={`Permission for ${share.shared_with_email}`}
-                      className="rounded border bg-background px-2 py-1 text-xs outline-none"
-                    >
-                      <option value="view">View</option>
-                      <option value="edit">Edit</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setExpandedShareId(expandedShareId === share.id ? null : share.id)}
-                      className="flex items-center gap-1 rounded border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                      <EyeOffIcon className="size-3.5" />
-                      Exclusions
-                      <ChevronDownIcon className={`size-3.5 transition-transform ${expandedShareId === share.id ? 'rotate-180' : ''}`} />
-                    </button>
                     <button
                       type="button"
                       onClick={() => setPendingRemoveId(share.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 text-muted-foreground hover:text-destructive"
                       title="Remove access"
                       aria-label={`Remove access for ${share.shared_with_email}`}
                     >
                       <TrashIcon className="size-4" />
                     </button>
+                    <div className="flex items-center gap-3 w-full pl-11 sm:w-auto sm:pl-0">
+                      <select
+                        value={share.permission}
+                        onChange={e => handlePermissionChange(share, e.target.value as SpaceSharePermission)}
+                        aria-label={`Permission for ${share.shared_with_email}`}
+                        className="rounded border bg-background px-2 py-1 text-xs outline-none"
+                      >
+                        <option value="view">View</option>
+                        <option value="edit">Edit</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedShareId(expandedShareId === share.id ? null : share.id)}
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center gap-1 sm:min-h-0 sm:min-w-0 rounded border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <EyeOffIcon className="size-3.5" />
+                        Exclusions
+                        <ChevronDownIcon className={`size-3.5 transition-transform ${expandedShareId === share.id ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
                   </div>
                   {expandedShareId === share.id && (
                     <div className="ml-11 mt-2 mb-3">
