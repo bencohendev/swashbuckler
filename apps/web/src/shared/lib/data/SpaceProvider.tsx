@@ -30,7 +30,7 @@ interface SpacesContextValue {
   spaces: Space[]
   create: (input: CreateSpaceInput) => Promise<{ data: Space | null; error?: string }>
   update: (id: string, input: { name?: string; icon?: string }) => Promise<{ data: Space | null; error?: string }>
-  remove: (id: string) => Promise<void>
+  remove: (id: string) => Promise<string | null>
 }
 
 const SpaceContext = createContext<SpaceContextValue | null>(null)
@@ -274,8 +274,12 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       return { data: result.data }
     },
     remove: async (id: string) => {
-      await spacesClient.delete(id)
+      const result = await spacesClient.delete(id)
+      if (result.error) {
+        return result.error.message
+      }
       emit('spaces')
+      return null
     },
   }), [spaces, spacesClient, supabase, user])
 
