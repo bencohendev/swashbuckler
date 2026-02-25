@@ -3,6 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["SUPABASE_SERVICE_ROLE_KEY"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {
