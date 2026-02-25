@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CheckIcon, SunIcon, MoonIcon, MonitorIcon } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
 import { ThemeCard } from './ThemeCard'
 import type { CustomTheme } from '../types'
@@ -19,30 +19,43 @@ const DEFAULT_THEMES = [
 
 export function ThemeList({ onEdit }: ThemeListProps) {
   const themes = useCustomThemeStore(s => s.themes)
-  const activeThemeId = useCustomThemeStore(s => s.activeThemeId)
-  const activateTheme = useCustomThemeStore(s => s.activateTheme)
+  const spaceThemes = useCustomThemeStore(s => s.spaceThemes)
+  const setSpaceTheme = useCustomThemeStore(s => s.setSpaceTheme)
   const deleteTheme = useCustomThemeStore(s => s.deleteTheme)
-  const clearActiveTheme = useCustomThemeStore(s => s.clearActiveTheme)
-  const { theme, setTheme } = useTheme()
+  const { space } = useCurrentSpace()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect -- hydration detection
   }, [])
 
+  const assignment = space ? spaceThemes[space.id] : undefined
+
   function handleDefaultTheme(value: 'light' | 'dark' | 'system') {
-    clearActiveTheme()
-    setTheme(value)
+    if (!space) return
+    setSpaceTheme(space.id, { type: 'default', value })
+  }
+
+  function handleActivateCustom(id: string) {
+    if (!space) return
+    setSpaceTheme(space.id, { type: 'custom', themeId: id })
   }
 
   return (
     <div className="space-y-6">
+      {/* Space context */}
+      {space && (
+        <p className="text-sm text-muted-foreground">
+          Theme for <span className="font-medium text-foreground">{space.name}</span>
+        </p>
+      )}
+
       {/* Default themes */}
       <div>
         <h3 className="mb-2 text-sm font-medium">Default Themes</h3>
         <div className="grid gap-3 sm:grid-cols-3">
           {DEFAULT_THEMES.map(({ value, label, Icon }) => {
-            const isActive = mounted && !activeThemeId && theme === value
+            const isActive = mounted && assignment?.type === 'default' && assignment.value === value
             return (
               <button
                 key={value}
@@ -73,8 +86,8 @@ export function ThemeList({ onEdit }: ThemeListProps) {
               <ThemeCard
                 key={t.id}
                 theme={t}
-                isActive={activeThemeId === t.id}
-                onActivate={activateTheme}
+                isActive={assignment?.type === 'custom' && assignment.themeId === t.id}
+                onActivate={handleActivateCustom}
                 onEdit={onEdit}
                 onDelete={deleteTheme}
               />
