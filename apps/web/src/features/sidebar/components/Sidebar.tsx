@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { ArchiveIcon, BookOpenIcon, HelpCircleIcon, HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { ArchiveIcon, BookOpenIcon, HelpCircleIcon, HomeIcon, KeyboardIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
@@ -21,9 +21,18 @@ import { VariablePromptDialog } from "@/features/templates/components/VariablePr
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/components/ui/Dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { useNavigate } from "@/shared/hooks/useNavigate"
@@ -130,6 +139,24 @@ function DraggableTypeSection({
         onSelectTemplate={onSelectTemplate}
         onDelete={onDelete}
       />
+    </div>
+  )
+}
+
+function ShortcutRow({ keys, label }: { keys: string[]; label: string }) {
+  return (
+    <div className="flex items-center justify-between py-0.5">
+      <span>{label}</span>
+      <span className="flex items-center gap-0.5">
+        {keys.map((k) => (
+          <kbd
+            key={k}
+            className="inline-flex min-w-5 items-center justify-center rounded border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground"
+          >
+            {k}
+          </kbd>
+        ))}
+      </span>
     </div>
   )
 }
@@ -569,36 +596,74 @@ export function Sidebar() {
         </div>
       </DndProvider>
       {/* Help menu */}
-      <div className={cn("border-t p-2", collapsed && "md:flex md:justify-center")}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              aria-label="Help"
-              className={cn(
-                "flex items-center gap-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors",
-                collapsed
-                  ? "md:size-8 md:justify-center size-10 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 justify-start px-3 py-2"
-                  : "w-full px-3 py-2 text-sm"
-              )}
-            >
-              <HelpCircleIcon className="size-4 shrink-0" />
-              <span className={cn(collapsed && "md:hidden")}>Help</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start">
-            <DropdownMenuItem asChild>
-              <a
-                href="https://docs.swashbuckler.quest"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
+      <div className="border-t p-2 flex justify-center">
+        <Dialog>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                aria-label="Help"
+                className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
-                <BookOpenIcon className="size-4" />
-                Documentation
-              </a>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <HelpCircleIcon className="size-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start">
+              <DropdownMenuItem asChild>
+                <a
+                  href="https://docs.swashbuckler.quest"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <BookOpenIcon className="size-4" />
+                  Documentation
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DialogTrigger asChild>
+                <DropdownMenuItem>
+                  <KeyboardIcon className="size-4" />
+                  Keyboard shortcuts
+                </DropdownMenuItem>
+              </DialogTrigger>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Keyboard shortcuts</DialogTitle>
+              <DialogDescription className="sr-only">
+                A reference of available keyboard shortcuts
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 text-sm">
+              <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">General</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["⌘", "K"]} label="Search" />
+                  <ShortcutRow keys={["⌘", "E"]} label="Quick capture" />
+                  <ShortcutRow keys={["⌘", "\\"]} label="Toggle sidebar" />
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">Editor</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["/"]} label="Slash commands" />
+                  <ShortcutRow keys={["[["]} label="Link to object" />
+                  <ShortcutRow keys={["⌘", "Enter"]} label="Exit block" />
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">Markdown</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["#"]} label="Heading" />
+                  <ShortcutRow keys={[">"]} label="Quote" />
+                  <ShortcutRow keys={["-"]} label="Bullet list" />
+                  <ShortcutRow keys={["1."]} label="Numbered list" />
+                  <ShortcutRow keys={["```"]} label="Code block" />
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       <CreateTypeDialog
         open={createTypeOpen}
