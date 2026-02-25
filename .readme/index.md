@@ -121,6 +121,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | [Archive](features/archive.md) | Hide entries, types, and spaces without deleting them |
+| [Delete Space](features/delete-space.md) | Permanently delete a space and all its contents |
 
 ## Planned Features
 
@@ -136,8 +137,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
 | Convert entry to template | Button to convert an existing entry into a template |
 | Create from template (quick capture) | Create a new entry from a template via the quick capture button |
-| Archive | Archive entries, types, and spaces (soft-hide without deleting) |
-| Delete space | Allow users to delete a space and its contents |
 | API documentation | API documentation with diagrams |
 | Loading indicators | Visual feedback when navigating or loading content — spinners, skeletons, or transition states so clicks feel responsive |
 
