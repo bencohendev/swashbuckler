@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { ArchiveIcon, HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { ArchiveIcon, BookOpenIcon, HelpCircleIcon, HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
@@ -20,6 +20,12 @@ import { usePins, PinnedSection } from "@/features/pins"
 import { VariablePromptDialog } from "@/features/templates/components/VariablePromptDialog"
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/DropdownMenu"
 import { useNavigate } from "@/shared/hooks/useNavigate"
 import { toast } from "@/shared/hooks/useToast"
 import type { CollapseSignal } from "../types"
@@ -562,6 +568,38 @@ export function Sidebar() {
           </div>
         </div>
       </DndProvider>
+      {/* Help menu */}
+      <div className={cn("border-t p-2", collapsed && "md:flex md:justify-center")}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label="Help"
+              className={cn(
+                "flex items-center gap-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors",
+                collapsed
+                  ? "md:size-8 md:justify-center size-10 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 justify-start px-3 py-2"
+                  : "w-full px-3 py-2 text-sm"
+              )}
+            >
+              <HelpCircleIcon className="size-4 shrink-0" />
+              <span className={cn(collapsed && "md:hidden")}>Help</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start">
+            <DropdownMenuItem asChild>
+              <a
+                href="https://docs.swashbuckler.quest"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <BookOpenIcon className="size-4" />
+                Documentation
+              </a>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <CreateTypeDialog
         open={createTypeOpen}
         onOpenChange={setCreateTypeOpen}
