@@ -71,7 +71,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
 
         <div className="p-4 space-y-6 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2">
               <input
                 type="email"
                 value={email}
@@ -79,21 +79,23 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                 placeholder="Email address"
                 aria-label="Email address"
                 aria-describedby={error ? "share-error" : undefined}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring sm:w-auto sm:flex-1"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
               />
-              <select
-                value={permission}
-                onChange={e => setPermission(e.target.value as SpaceSharePermission)}
-                aria-label="Permission level"
-                className="flex-1 sm:flex-initial rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="view">View</option>
-                <option value="edit">Edit</option>
-              </select>
-              <Button type="submit" size="sm" className="flex-1 sm:flex-initial" disabled={isSubmitting || !email.trim()}>
-                <UserPlusIcon className="size-4" />
-                Share
-              </Button>
+              <div className="flex gap-2">
+                <select
+                  value={permission}
+                  onChange={e => setPermission(e.target.value as SpaceSharePermission)}
+                  aria-label="Permission level"
+                  className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="view">View</option>
+                  <option value="edit">Edit</option>
+                </select>
+                <Button type="submit" size="sm" disabled={isSubmitting || !email.trim()}>
+                  <UserPlusIcon className="size-4" />
+                  Share
+                </Button>
+              </div>
             </div>
             {error && <p id="share-error" role="alert" className="text-sm text-destructive">{error}</p>}
           </form>

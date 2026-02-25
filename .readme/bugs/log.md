@@ -6,11 +6,11 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Mobile sharing button overflows container | Share button overflows its parent container on mobile viewports |
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Mobile sharing button overflows container | Stack email input on its own row with select + button below — dialog is too narrow for a single-row layout |
 | 2026-02-25 | Types list has unnecessary reorder chevrons | Removed up/down chevron buttons and handleMoveType callback from ObjectTypeManager |
 | 2026-02-25 | Field row grip icon only moves up on click | Replaced click-to-move with real drag-and-drop using react-dnd (DraggableFieldRow wrapper with midpoint-based hover reordering) |
 | 2026-02-24 | Cursor jumps out of newly created special blocks | Defer both selection and focus together inside a single `setTimeout` callback so plugin normalization finishes before cursor position is set |
