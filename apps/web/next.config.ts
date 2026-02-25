@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -32,6 +33,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: resolve(import.meta.dirname, "../.."),
+  },
   async headers() {
     return [
       {
