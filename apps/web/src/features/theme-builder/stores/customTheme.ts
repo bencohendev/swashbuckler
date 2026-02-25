@@ -4,6 +4,7 @@ import { deriveAllColors } from '../lib/deriveColors'
 
 const THEMES_KEY = 'swashbuckler:customThemes'
 const SPACE_THEMES_KEY = 'swashbuckler:spaceThemes'
+const LAST_CUSTOM_KEY = 'swashbuckler:lastCustomThemeIds'
 const OLD_ACTIVE_KEY = 'swashbuckler:activeCustomTheme'
 
 function readThemes(): CustomTheme[] {
@@ -50,9 +51,24 @@ function persistSpaceThemes(spaceThemes: Record<string, SpaceThemeAssignment>) {
   localStorage.setItem(SPACE_THEMES_KEY, JSON.stringify(spaceThemes))
 }
 
+function readLastCustomThemeIds(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(LAST_CUSTOM_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function persistLastCustomThemeIds(ids: Record<string, string>) {
+  localStorage.setItem(LAST_CUSTOM_KEY, JSON.stringify(ids))
+}
+
 interface CustomThemeState {
   themes: CustomTheme[]
   spaceThemes: Record<string, SpaceThemeAssignment>
+  lastCustomThemeIds: Record<string, string>
 
   addTheme: (name: string, base: ThemeBase, coreColors: ThemeCoreColors) => CustomTheme
   updateTheme: (id: string, name: string, base: ThemeBase, coreColors: ThemeCoreColors) => void
@@ -64,6 +80,7 @@ interface CustomThemeState {
 export const useCustomThemeStore = create<CustomThemeState>((set, get) => ({
   themes: readThemes(),
   spaceThemes: readSpaceThemes(),
+  lastCustomThemeIds: readLastCustomThemeIds(),
 
   addTheme: (name, base, coreColors) => {
     const now = new Date().toISOString()
@@ -114,13 +131,37 @@ export const useCustomThemeStore = create<CustomThemeState>((set, get) => ({
       }
     }
     if (changed) persistSpaceThemes(spaceThemes)
-    set({ themes: next, spaceThemes })
+
+    // Clear any last-custom references to the deleted theme
+    const lastCustomThemeIds = { ...get().lastCustomThemeIds }
+    let lastChanged = false
+    for (const spaceId of Object.keys(lastCustomThemeIds)) {
+      if (lastCustomThemeIds[spaceId] === id) {
+        delete lastCustomThemeIds[spaceId]
+        lastChanged = true
+      }
+    }
+    if (lastChanged) persistLastCustomThemeIds(lastCustomThemeIds)
+
+    set({ themes: next, spaceThemes, lastCustomThemeIds })
   },
 
   setSpaceTheme: (spaceId, assignment) => {
+    // Remember the custom theme when switching away from it
+    const current = get().spaceThemes[spaceId]
+    const lastCustomThemeIds = { ...get().lastCustomThemeIds }
+    if (current?.type === 'custom' && assignment.type !== 'custom') {
+      lastCustomThemeIds[spaceId] = current.themeId
+      persistLastCustomThemeIds(lastCustomThemeIds)
+    } else if (assignment.type === 'custom') {
+      // Clear last-custom when actively choosing a custom theme
+      delete lastCustomThemeIds[spaceId]
+      persistLastCustomThemeIds(lastCustomThemeIds)
+    }
+
     const spaceThemes = { ...get().spaceThemes, [spaceId]: assignment }
     persistSpaceThemes(spaceThemes)
-    set({ spaceThemes })
+    set({ spaceThemes, lastCustomThemeIds })
   },
 
   clearSpaceTheme: (spaceId) => {
