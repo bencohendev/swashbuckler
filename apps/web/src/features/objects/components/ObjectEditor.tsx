@@ -2,11 +2,11 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon } from 'lucide-react'
+import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
-import { useTemplates, SaveAsTemplateDialog } from '@/features/templates'
+import { useTemplates, SaveAsTemplateDialog, ApplyTemplateDialog } from '@/features/templates'
 import { extractMentionIds, LinkedObjects } from '@/features/relations'
 import { useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
 import { useEditorStore } from '@/features/editor/store'
@@ -15,6 +15,12 @@ import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
 import { useSpacePermission, useExclusionFilter, useSpaceShares } from '@/features/sharing'
 import { useCollaboration, useMousePresence, CollaboratorAvatars, ConnectionStatus, RemoteMouseCursors } from '@/features/collaboration'
+import { applyTemplateContent, mergeProperties } from '@/features/templates/lib/applyTemplate'
+import {
+  resolveContentVariables,
+  resolvePropertyVariables,
+  type VariableResolutionContext,
+} from '@/features/templates/lib/variables'
 import { EmojiPicker } from '@/shared/components/EmojiPicker'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
@@ -49,9 +55,9 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const { user } = useAuth()
   const { space, sharedPermission } = useCurrentSpace()
   const supabase = useMemo(() => createClient(), [])
-  const { object, isLoading, error, update, remove } = useObject(id)
+  const { object, isLoading, error, update, remove, archive } = useObject(id)
   const { objectType } = useObjectType(object?.type_id ?? null)
-  const { templates, saveObjectAsTemplate } = useTemplates()
+  const { templates, saveObjectAsTemplate, getTemplateVariables } = useTemplates()
   const { canEdit, isOwner } = useSpacePermission()
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
   const { shares } = useSpaceShares(space?.id ?? null)
@@ -60,6 +66,8 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const [isTitleSaving, setIsTitleSaving] = useState(false)
   const [isTemplateMode, setIsTemplateMode] = useState(false)
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
+  const [isApplyTemplateOpen, setIsApplyTemplateOpen] = useState(false)
+  const [contentVersion, setContentVersion] = useState(0)
   const [confirmTrashOpen, setConfirmTrashOpen] = useState(false)
 
   // Collaborative mode: authenticated user with edit permission on a shared space.
@@ -133,6 +141,16 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     await update({ cover_image: url })
   }, [update])
 
+  const handleArchive = async () => {
+    await archive()
+    toast({ description: 'Archived', variant: 'info' })
+    if (onNavigateAway) {
+      onNavigateAway()
+    } else {
+      router.push('/')
+    }
+  }
+
   const handleDelete = async () => {
     await remove()
     toast({ description: 'Moved to trash', variant: 'info' })
@@ -157,6 +175,48 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     }
     return false
   }, [object, saveObjectAsTemplate])
+
+  const handleApplyTemplate = useCallback(async (templateId: string, contentMode: 'replace' | 'prepend') => {
+    if (!object) return
+    const varInfo = await getTemplateVariables(templateId)
+    if (!varInfo) {
+      toast({ description: 'Failed to load template', variant: 'destructive' })
+      return
+    }
+    const { template, hasVariables } = varInfo
+
+    // Resolve variables if template has any
+    const context: VariableResolutionContext = {
+      userName: user?.email?.split('@')[0] ?? null,
+      spaceName: space?.name ?? null,
+    }
+    const resolvedContent = hasVariables && template.content
+      ? resolveContentVariables(template.content, context, {})
+      : template.content
+    const resolvedProperties = hasVariables && template.properties
+      ? resolvePropertyVariables(template.properties, context, {})
+      : template.properties
+
+    // Merge content
+    const newContent = applyTemplateContent(resolvedContent, object.content, contentMode)
+
+    // Merge properties — fill empty fields from template
+    const newProperties = resolvedProperties
+      ? mergeProperties(resolvedProperties, object.properties)
+      : object.properties
+
+    // Apply icon/cover only if entry has none
+    const updates: Record<string, unknown> = {
+      content: newContent,
+      properties: newProperties,
+    }
+    if (!object.icon && template.icon) updates.icon = template.icon
+    if (!object.cover_image && template.cover_image) updates.cover_image = template.cover_image
+
+    await update(updates)
+    setContentVersion(v => v + 1)
+    toast({ description: 'Template applied', variant: 'success' })
+  }, [object, getTemplateVariables, update, user, space])
 
   // Strip private content for view-only non-owners
   const editorContent = useMemo(() => {
@@ -296,7 +356,21 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
                     <CopyIcon className="size-4" />
                     Save as Template
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsApplyTemplateOpen(true)}
+                    disabled={isCollaborative}
+                    title={isCollaborative ? 'Not available during collaboration' : undefined}
+                  >
+                    <LayoutTemplateIcon className="size-4" />
+                    Apply Template
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  {!object.is_deleted && (
+                    <DropdownMenuItem onClick={handleArchive}>
+                      <ArchiveIcon className="size-4" />
+                      Archive
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem variant="destructive" onClick={() => setConfirmTrashOpen(true)}>
                     <TrashIcon className="size-4" />
                     Move to Trash
@@ -345,7 +419,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
           <TagPicker objectId={id} readOnly={!canEdit} />
 
           <Editor
-            key={id}
+            key={`${id}-${contentVersion}`}
             initialContent={editorContent}
             onSave={handleContentSave}
             placeholder="Start writing..."
@@ -365,6 +439,12 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         defaultName={object.title}
         existingNames={templates.map((t) => t.name)}
         onSave={handleTemplateDialogSave}
+      />
+      <ApplyTemplateDialog
+        open={isApplyTemplateOpen}
+        onOpenChange={setIsApplyTemplateOpen}
+        typeId={object.type_id}
+        onApply={handleApplyTemplate}
       />
       <ConfirmDialog
         open={confirmTrashOpen}

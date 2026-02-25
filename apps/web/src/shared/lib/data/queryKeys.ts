@@ -1,4 +1,4 @@
-import type { ListObjectsOptions } from './types'
+import type { ListObjectsOptions, ListObjectTypesOptions } from './types'
 
 export const queryKeys = {
   objects: {
@@ -8,7 +8,7 @@ export const queryKeys = {
   },
   objectTypes: {
     all: (spaceId?: string) => ['objectTypes', spaceId] as const,
-    list: (spaceId?: string) => ['objectTypes', spaceId, 'list'] as const,
+    list: (spaceId?: string, options?: ListObjectTypesOptions) => ['objectTypes', spaceId, 'list', options] as const,
     detail: (id: string) => ['objectTypes', 'detail', id] as const,
   },
   globalObjectTypes: {

@@ -11,6 +11,8 @@ const mockSpace = (ownerId: string): Space => ({
   name: 'Test Space',
   icon: '📁',
   owner_id: ownerId,
+  is_archived: false,
+  archived_at: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 })

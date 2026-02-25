@@ -38,6 +38,8 @@ export type {
   TagsClient,
   Pin,
   PinsClient,
+  ListObjectTypesOptions,
+  ListSpacesOptions,
   DataResult,
   DataListResult,
   SearchOptions,

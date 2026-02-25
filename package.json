@@ -7,7 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=@swashbuckler/web",
+    "dev:all": "turbo run dev",
+    "dev:docs": "turbo run dev --filter=@swashbuckler/docs",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test:run": "turbo run test:run",

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useTheme } from 'next-themes'
+import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
 import type { ThemeResolvedColors } from '../types'
 
@@ -25,16 +26,34 @@ function clearOverrides() {
 }
 
 export function CustomThemeApplier() {
-  const activeThemeId = useCustomThemeStore(s => s.activeThemeId)
+  const { space } = useCurrentSpace()
+  const spaceThemes = useCustomThemeStore(s => s.spaceThemes)
   const themes = useCustomThemeStore(s => s.themes)
   const { setTheme } = useTheme()
 
   useEffect(() => {
-    const activeTheme = activeThemeId
-      ? themes.find(t => t.id === activeThemeId) ?? null
-      : null
+    if (!space) {
+      clearOverrides()
+      return
+    }
 
+    const assignment = spaceThemes[space.id]
+
+    if (!assignment) {
+      clearOverrides()
+      return
+    }
+
+    if (assignment.type === 'default') {
+      clearOverrides()
+      setTheme(assignment.value)
+      return
+    }
+
+    // Custom theme assignment
+    const activeTheme = themes.find(t => t.id === assignment.themeId) ?? null
     if (!activeTheme) {
+      // Theme was deleted but assignment wasn't cleaned up — clear overrides
       clearOverrides()
       return
     }
@@ -49,7 +68,7 @@ export function CustomThemeApplier() {
     }
 
     return () => clearOverrides()
-  }, [activeThemeId, themes, setTheme])
+  }, [space, spaceThemes, themes, setTheme])
 
   return null
 }

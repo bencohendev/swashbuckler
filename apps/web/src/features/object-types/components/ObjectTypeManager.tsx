@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { PlusIcon, EditIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-react'
+import { PlusIcon, EditIcon, TrashIcon, ArchiveIcon } from 'lucide-react'
 import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
 import { ObjectTypeForm } from './ObjectTypeForm'
@@ -15,12 +15,13 @@ import { useAuth } from '@/shared/lib/data'
 import type { ObjectType, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
 
 export function ObjectTypeManager() {
-  const { types, isLoading, error, create, update, remove } = useObjectTypes()
+  const { types, isLoading, error, create, update, remove, archive } = useObjectTypes()
   const { isGuest } = useAuth()
   const searchParams = useSearchParams()
   const [editingType, setEditingType] = useState<ObjectType | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [pendingDeleteType, setPendingDeleteType] = useState<ObjectType | null>(null)
+  const [pendingArchiveType, setPendingArchiveType] = useState<ObjectType | null>(null)
 
   // Auto-open edit form when ?edit=<typeId> is in the URL
   const editTypeId = searchParams.get('edit')
@@ -67,21 +68,17 @@ export function ObjectTypeManager() {
     }
   }
 
-  const handleMoveType = useCallback(async (index: number, direction: 'up' | 'down') => {
-    if (
-      (direction === 'up' && index === 0) ||
-      (direction === 'down' && index === types.length - 1)
-    ) return
-
-    const swapIndex = direction === 'up' ? index - 1 : index + 1
-    const current = types[index]
-    const neighbor = types[swapIndex]
-
-    await Promise.all([
-      update(current.id, { sort_order: neighbor.sort_order }),
-      update(neighbor.id, { sort_order: current.sort_order }),
-    ])
-  }, [types, update])
+  const handleArchive = async () => {
+    if (!pendingArchiveType) return
+    const typeName = pendingArchiveType.name
+    const error = await archive(pendingArchiveType.id)
+    setPendingArchiveType(null)
+    if (error) {
+      toast({ description: `Failed to archive type: ${error}`, variant: 'destructive' })
+    } else {
+      toast({ description: `Type "${typeName}" archived`, variant: 'success' })
+    }
+  }
 
   if (isLoading) {
     return (
@@ -148,32 +145,12 @@ export function ObjectTypeManager() {
           No types yet. Create one to get started.
         </p>
       ) : <div className="space-y-2">
-        {types.map((type, index) => (
+        {types.map((type) => (
           <div
             key={type.id}
             className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
           >
             <div className="flex items-center gap-3">
-              <div className="flex flex-col">
-                <button
-                  type="button"
-                  onClick={() => handleMoveType(index, 'up')}
-                  disabled={index === 0}
-                  className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-                  aria-label={`Move ${type.name} up`}
-                >
-                  <ChevronUpIcon className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleMoveType(index, 'down')}
-                  disabled={index === types.length - 1}
-                  className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-                  aria-label={`Move ${type.name} down`}
-                >
-                  <ChevronDownIcon className="size-4" />
-                </button>
-              </div>
               <div
                 className="flex size-10 items-center justify-center rounded-lg bg-muted"
                 style={type.color ? { backgroundColor: type.color + '20', color: type.color } : undefined}
@@ -206,6 +183,15 @@ export function ObjectTypeManager() {
               <Button
                 size="icon-sm"
                 variant="ghost"
+                onClick={() => setPendingArchiveType(type)}
+                title="Archive type"
+                className="text-muted-foreground hover:text-muted-foreground/80"
+              >
+                <ArchiveIcon className="size-4" />
+              </Button>
+              <Button
+                size="icon-sm"
+                variant="ghost"
                 onClick={() => setPendingDeleteType(type)}
                 title="Delete type"
                 className="text-destructive hover:text-destructive"
@@ -216,6 +202,14 @@ export function ObjectTypeManager() {
           </div>
         ))}
       </div>}
+      <ConfirmDialog
+        open={!!pendingArchiveType}
+        onOpenChange={(open) => { if (!open) setPendingArchiveType(null) }}
+        title="Archive type"
+        description={`Archive "${pendingArchiveType?.name}"? It will be hidden but can be restored later.`}
+        confirmLabel="Archive"
+        onConfirm={handleArchive}
+      />
       <ConfirmDialog
         open={!!pendingDeleteType}
         onOpenChange={(open) => { if (!open) setPendingDeleteType(null) }}

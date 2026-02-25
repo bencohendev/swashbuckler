@@ -70,7 +70,7 @@ export function TemplateSelector({
         {filteredTypes.map(type => (
           <DropdownMenuItem key={type.id} onClick={() => handleCreateBlank(type.id)}>
             <TypeIcon icon={type.icon} className="size-4" />
-            Blank {type.name}
+            New {type.name} (no template)
           </DropdownMenuItem>
         ))}
 

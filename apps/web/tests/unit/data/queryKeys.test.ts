@@ -27,7 +27,7 @@ describe('queryKeys', () => {
     })
 
     it('list() includes spaceId', () => {
-      expect(queryKeys.objectTypes.list(spaceId)).toEqual(['objectTypes', spaceId, 'list'])
+      expect(queryKeys.objectTypes.list(spaceId)).toEqual(['objectTypes', spaceId, 'list', undefined])
     })
 
     it('detail() includes id', () => {

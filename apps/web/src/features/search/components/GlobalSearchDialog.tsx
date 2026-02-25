@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchIcon, TagIcon } from 'lucide-react'
 import {
@@ -26,7 +26,11 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
-  const totalItems = tagResults.length + results.length
+  // Exclude results whose type is archived
+  const archivedTypeIds = useMemo(() => new Set(types.filter(t => t.is_archived).map(t => t.id)), [types])
+  const visibleResults = useMemo(() => results.filter(r => !archivedTypeIds.has(r.type_id)), [results, archivedTypeIds])
+
+  const totalItems = tagResults.length + visibleResults.length
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -40,7 +44,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
   // Reset selected index when results change
   useEffect(() => {
     setSelectedIndex(0) // eslint-disable-line react-hooks/set-state-in-effect -- reset on data change
-  }, [results, tagResults])
+  }, [visibleResults, tagResults])
 
   // Scroll selected item into view
   useEffect(() => {
@@ -111,7 +115,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
 
         {types.length > 0 && (
           <div className="flex flex-wrap gap-1.5 border-b px-3 py-2">
-            {types.map(type => (
+            {types.filter(t => !t.is_archived).map(type => (
               <button
                 key={type.id}
                 onClick={() => toggleTypeFilter(type.id)}
@@ -171,12 +175,12 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             </>
           )}
 
-          {results.length > 0 && (
+          {visibleResults.length > 0 && (
             <>
               {tagResults.length > 0 && (
                 <div className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">Entries</div>
               )}
-              {results.map((obj, index) => {
+              {visibleResults.map((obj, index) => {
                 const objType = typeMap.get(obj.type_id)
                 const globalIndex = tagResults.length + index
                 return (

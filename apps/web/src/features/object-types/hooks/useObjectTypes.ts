@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   useDataClient,
@@ -8,11 +8,14 @@ import {
   type ObjectType,
   type CreateObjectTypeInput,
   type UpdateObjectTypeInput,
+  type ListObjectTypesOptions,
 } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 
 const EMPTY_TYPES: ObjectType[] = []
+
+type UseObjectTypesOptions = ListObjectTypesOptions
 
 interface UseObjectTypesReturn {
   types: ObjectType[]
@@ -22,17 +25,23 @@ interface UseObjectTypesReturn {
   create: (input: CreateObjectTypeInput) => Promise<{ data: ObjectType | null; error?: string }>
   update: (id: string, input: UpdateObjectTypeInput) => Promise<{ data: ObjectType | null; error?: string }>
   remove: (id: string) => Promise<string | null>
+  archive: (id: string) => Promise<string | null>
+  unarchive: (id: string) => Promise<string | null>
 }
 
-export function useObjectTypes(): UseObjectTypesReturn {
+export function useObjectTypes(options: UseObjectTypesOptions = {}): UseObjectTypesReturn {
   const dataClient = useDataClient()
   const queryClient = useQueryClient()
   const spaceId = useSpaceId()
 
+  const queryOptions = useMemo<ListObjectTypesOptions>(() => ({
+    isArchived: options.isArchived,
+  }), [options.isArchived])
+
   const { data, isLoading, error: queryError } = useQuery({
-    queryKey: queryKeys.objectTypes.list(spaceId ?? undefined),
+    queryKey: queryKeys.objectTypes.list(spaceId ?? undefined, queryOptions),
     queryFn: async () => {
-      const result = await dataClient.objectTypes.list()
+      const result = await dataClient.objectTypes.list(queryOptions)
       if (result.error) throw new Error(result.error.message)
       return result.data
     },
@@ -66,6 +75,22 @@ export function useObjectTypes(): UseObjectTypesReturn {
     return null
   }, [dataClient])
 
+  const archive = useCallback(async (id: string): Promise<string | null> => {
+    const result = await dataClient.objectTypes.archive(id)
+    if (result.error) return result.error.message
+    emit('objectTypes')
+    emit('objects')
+    return null
+  }, [dataClient])
+
+  const unarchive = useCallback(async (id: string): Promise<string | null> => {
+    const result = await dataClient.objectTypes.unarchive(id)
+    if (result.error) return result.error.message
+    emit('objectTypes')
+    emit('objects')
+    return null
+  }, [dataClient])
+
   return {
     types: data ?? EMPTY_TYPES,
     isLoading,
@@ -74,6 +99,8 @@ export function useObjectTypes(): UseObjectTypesReturn {
     create,
     update,
     remove,
+    archive,
+    unarchive,
   }
 }
 

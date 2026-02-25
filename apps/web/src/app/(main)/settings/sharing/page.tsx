@@ -54,7 +54,7 @@ export default function SharingSettingsPage() {
   return (
     <div className="space-y-6">
       <Header />
-      <div className="rounded-lg border p-4">
+      <div className="overflow-hidden rounded-lg border p-4">
         <div className="mb-4 flex items-center gap-2">
           <span className="text-xl">{space.icon}</span>
           <h2 className="text-lg font-semibold">{space.name}</h2>
@@ -134,26 +134,28 @@ function SharingControls({ spaceId }: { spaceId: string }) {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="Email address"
-            className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
-          <select
-            value={permission}
-            onChange={e => setPermission(e.target.value as SpaceSharePermission)}
-            className="rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="view">View</option>
-            <option value="edit">Edit</option>
-          </select>
-          <Button type="submit" size="sm" disabled={isSubmitting || !email.trim()}>
-            <UserPlusIcon className="size-4" />
-            Share
-          </Button>
+          <div className="flex gap-2">
+            <select
+              value={permission}
+              onChange={e => setPermission(e.target.value as SpaceSharePermission)}
+              className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="view">View</option>
+              <option value="edit">Edit</option>
+            </select>
+            <Button type="submit" size="sm" className="flex-1" disabled={isSubmitting || !email.trim()}>
+              <UserPlusIcon className="size-4" />
+              Share
+            </Button>
+          </div>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
       </form>
@@ -197,38 +199,43 @@ function SharingControls({ spaceId }: { spaceId: string }) {
         ) : (
           shares.map(share => (
             <div key={share.id}>
-              <div className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted/50">
-                <div className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase">
-                  {share.shared_with_email[0]}
+              <div className="rounded-md px-3 py-2 hover:bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase">
+                    {share.shared_with_email[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm">{share.shared_with_email}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm">{share.shared_with_email}</p>
+                <div className="mt-2 flex items-center gap-2 pl-11">
+                  <select
+                    value={share.permission}
+                    onChange={e => handlePermissionChange(share, e.target.value as SpaceSharePermission)}
+                    className="rounded border bg-background px-2 py-1 text-xs outline-none"
+                  >
+                    <option value="view">View</option>
+                    <option value="edit">Edit</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedShareId(expandedShareId === share.id ? null : share.id)}
+                    className="flex items-center gap-1 rounded border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <EyeOffIcon className="size-3.5" />
+                    Exclusions
+                    <ChevronDownIcon className={`size-3.5 transition-transform ${expandedShareId === share.id ? 'rotate-180' : ''}`} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingRemoveId(share.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Remove access"
+                    aria-label={`Remove access for ${share.shared_with_email}`}
+                  >
+                    <TrashIcon className="size-4" />
+                  </button>
                 </div>
-                <select
-                  value={share.permission}
-                  onChange={e => handlePermissionChange(share, e.target.value as SpaceSharePermission)}
-                  className="rounded border bg-background px-2 py-1 text-xs outline-none"
-                >
-                  <option value="view">View</option>
-                  <option value="edit">Edit</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={() => setExpandedShareId(expandedShareId === share.id ? null : share.id)}
-                  className="flex items-center gap-1 rounded border px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                >
-                  <EyeOffIcon className="size-3.5" />
-                  Exclusions
-                  <ChevronDownIcon className={`size-3.5 transition-transform ${expandedShareId === share.id ? 'rotate-180' : ''}`} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingRemoveId(share.id)}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Remove access"
-                >
-                  <TrashIcon className="size-4" />
-                </button>
               </div>
               {expandedShareId === share.id && (
                 <div className="ml-11 mt-2 mb-3">

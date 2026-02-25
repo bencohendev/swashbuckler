@@ -71,6 +71,7 @@ Dual-storage architecture with a `DataClient` interface:
 019_fix_shared_user_insert.sql # fix shared user insert
 020_cascade_delete_types.sql   # cascade delete types
 021_global_types.sql           # per-owner global type slug index
+022_archive.sql                # is_archived + archived_at on objects, types, spaces
 ```
 
 ## Implemented Features
@@ -115,23 +116,35 @@ Dual-storage architecture with a `DataClient` interface:
 | [Board View](features/board-view.md) | Kanban board view for type pages — group entries by select field |
 | [Global Types](features/global-types.md) | Reusable type blueprints importable across spaces |
 | [Duplicate Space Types](features/duplicate-space-types.md) | Copy all types from one space into a new space |
-| [Custom Themes](features/custom-themes.md) | User-built themes with color pickers |
+| [Custom Themes](features/custom-themes.md) | User-built themes with color pickers, per-space application |
 | [Type Reorder Keyboard](features/type-reorder-keyboard.md) | Up/down buttons as keyboard alternative to drag-drop in type settings |
 | [Advanced Filtering](features/advanced-filtering.md) | Filter entries by all property types (date, number, text, URL) + persistent sort |
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
+| [Archive](features/archive.md) | Hide entries, types, and spaces without deleting them |
+| [Delete Space](features/delete-space.md) | Permanently delete a space and all its contents |
+| Vercel Analytics | Vercel Analytics integration (`@vercel/analytics`) |
+| [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
+| [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
+| [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | First use tutorial | Onboarding walkthrough for new users |
 | [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
-| Analytics | Usage analytics and tracking |
 | API audit (backend) | Audit Supabase backend APIs for correctness, security, and consistency |
 | API audit (frontend) | Audit frontend API calls for correctness, error handling, and consistency |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
+| Convert entry to template | Button to convert an existing entry into a template |
+| Create from template (quick capture) | Create a new entry from a template via the quick capture button |
+| API documentation | API documentation with diagrams |
+| Loading indicators | Visual feedback when navigating or loading content — spinners, skeletons, or transition states so clicks feel responsive |
+| Account-level themes, space-level application | Create themes at account level but apply them per space |
+| Settings page restructure | Separate space-specific settings from account-wide settings into distinct sections/pages |
+| Landing page | Marketing/landing page for the app |
+| Link to docs from app | Add a link to the documentation site from within the app |
 
 ## Bugs
 

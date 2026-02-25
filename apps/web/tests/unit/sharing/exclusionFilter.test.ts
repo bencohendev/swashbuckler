@@ -75,6 +75,8 @@ const makeType = (id: string, name: string): ObjectType => ({
   owner_id: null,
   space_id: SPACE_ID,
   sort_order: 0,
+  is_archived: false,
+  archived_at: null,
   created_at: NOW,
   updated_at: NOW,
 })
@@ -92,6 +94,8 @@ const makeObject = (id: string, typeId: string, title: string): DataObject => ({
   content: null,
   is_deleted: false,
   deleted_at: null,
+  is_archived: false,
+  archived_at: null,
   created_at: NOW,
   updated_at: NOW,
 })

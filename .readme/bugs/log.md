@@ -6,11 +6,17 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Cursor jumps out of newly created special blocks | When inserting a code block, table, or private block via the slash menu, the cursor lands outside the block instead of inside it. Likely cause: selection is set synchronously in `selectItem` (SlashInput.tsx:370-373) but `focusEditor` defers DOM focus via `setTimeout(0)` — plugin normalization (TrailingBlockPlugin, CodeBlockPlugin) can shift the selection in between. Fix: defer both selection and focus together in the same `setTimeout` callback. |
+| Theme switcher + custom themes interaction | How does the navbar theme switcher work with custom themes? Needs investigation |
+
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | OAuth redirect account menu stale | Derive `isGuest` from client-side `useAuth()` state instead of server `email` prop — use server prop only during hydration loading |
+| 2026-02-25 | Mobile sharing button overflows container | Stack email input on its own row with select + button below — dialog is too narrow for a single-row layout |
+| 2026-02-25 | Types list has unnecessary reorder chevrons | Removed up/down chevron buttons and handleMoveType callback from ObjectTypeManager |
+| 2026-02-25 | Field row grip icon only moves up on click | Replaced click-to-move with real drag-and-drop using react-dnd (DraggableFieldRow wrapper with midpoint-based hover reordering) |
+| 2026-02-24 | Cursor jumps out of newly created special blocks | Defer both selection and focus together inside a single `setTimeout` callback so plugin normalization finishes before cursor position is set |
 | 2026-02-24 | New entry title shows text instead of placeholder | Show placeholder instead of generated name in title input for new entries |
 | 2026-02-24 | Cursor trapped in code blocks, tables, and private blocks | Add ExitBreakPlugin (Mod+Enter / Mod+Shift+Enter) and TrailingBlockPlugin to ensure users can always escape block-level elements |
 | 2026-02-24 | Table blocks have no row/column controls | Add floating toolbar on hover with add row, add column, delete row, delete column, delete table buttons |

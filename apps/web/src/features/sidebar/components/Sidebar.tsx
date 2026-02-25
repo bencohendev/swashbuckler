@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { ArchiveIcon, HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
@@ -139,9 +139,10 @@ export function Sidebar() {
   const { objects, isLoading: objectsLoading, create } = useObjects({
     parentId: null,
     isDeleted: false,
+    isArchived: false,
   })
-  // All non-deleted objects — shared with PinnedSection + RecentSection via props
-  const { objects: allObjects } = useObjects({ isDeleted: false })
+  // All non-deleted, non-archived objects — shared with PinnedSection + RecentSection via props
+  const { objects: allObjects } = useObjects({ isDeleted: false, isArchived: false })
   const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
   const { pinnedIds } = usePins()
   const { tags } = useTags()
@@ -228,7 +229,13 @@ export function Sidebar() {
     })
   }, [updateType])
 
-  const filteredOrderedTypes = useMemo(() => filterTypes(orderedTypes), [filterTypes, orderedTypes])
+  // Compute archived type IDs to hide their entries from flat views
+  const archivedTypeIds = useMemo(() => new Set(types.filter(t => t.is_archived).map(t => t.id)), [types])
+
+  const filteredOrderedTypes = useMemo(() =>
+    filterTypes(orderedTypes).filter(t => !t.is_archived),
+    [filterTypes, orderedTypes]
+  )
 
   const objectsByType = useMemo(() => {
     const filtered = filterObjects(objects)
@@ -240,6 +247,12 @@ export function Sidebar() {
     }
     return grouped
   }, [objects, filterObjects])
+
+  // Filter out objects whose type is archived for flat views (pinned, recent)
+  const visibleAllObjects = useMemo(() =>
+    allObjects.filter(obj => !archivedTypeIds.has(obj.type_id)),
+    [allObjects, archivedTypeIds]
+  )
 
   const handleCreateBlank = async (typeId: string) => {
     const typeDef = types.find(t => t.id === typeId)
@@ -297,8 +310,8 @@ export function Sidebar() {
   }
 
   // Determine which sections have visible content for conditional separators
-  const hasPinnedContent = pinnedIds.size > 0 && allObjects.some(obj => pinnedIds.has(obj.id))
-  const hasRecentContent = allObjects.length > 0
+  const hasPinnedContent = pinnedIds.size > 0 && visibleAllObjects.some(obj => pinnedIds.has(obj.id))
+  const hasRecentContent = visibleAllObjects.length > 0
   const hasTagsContent = tags.length > 0
 
   const [allCollapsed, setAllCollapsed] = useState(false)
@@ -453,7 +466,7 @@ export function Sidebar() {
                       : <ListChevronsDownUpIcon className="size-3" />}
                   </Button>
                 </div>
-                <PinnedSection pinnedIds={pinnedIds} objects={allObjects} collapseSignal={collapseSignal} />
+                <PinnedSection pinnedIds={pinnedIds} objects={visibleAllObjects} collapseSignal={collapseSignal} />
                 {hasPinnedContent && <hr className="border-border" />}
                 {filteredOrderedTypes.length === 0 ? (
                   <div className="px-4 py-6 text-center">
@@ -515,10 +528,22 @@ export function Sidebar() {
                   </Button>
                 )}
                 {hasRecentContent && <hr className="border-border" />}
-                <RecentSection objects={allObjects} collapseSignal={collapseSignal} />
+                <RecentSection objects={visibleAllObjects} collapseSignal={collapseSignal} />
                 {hasTagsContent && <hr className="border-border" />}
                 <TagsSection tags={tags} collapseSignal={collapseSignal} />
                 <hr className="border-border" />
+                <SidebarLink
+                  href="/archive"
+                  className={(isActive) => cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <ArchiveIcon className="size-4" />
+                  Archive
+                </SidebarLink>
                 <SidebarLink
                   href="/trash"
                   className={(isActive) => cn(

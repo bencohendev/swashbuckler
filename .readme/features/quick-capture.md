@@ -11,7 +11,7 @@ Floating button and keyboard shortcut for quickly creating a new entry without n
 | Area | Decision |
 |------|----------|
 | Trigger | Floating button + header button + hotkey (⌘E) |
-| Flow | Pick type → create entry → open in modal |
+| Flow | Pick type → create entry → open in modal (supports [template selection](create-from-template-quick-capture.md)) |
 | Dialog style | Modeled after GlobalSearchDialog with keyboard navigation |
 
 ## Implementation

@@ -1,9 +1,11 @@
 import { create } from 'zustand'
-import type { CustomTheme, ThemeCoreColors, ThemeBase } from '../types'
+import type { CustomTheme, ThemeCoreColors, ThemeBase, SpaceThemeAssignment } from '../types'
 import { deriveAllColors } from '../lib/deriveColors'
 
 const THEMES_KEY = 'swashbuckler:customThemes'
-const ACTIVE_KEY = 'swashbuckler:activeCustomTheme'
+const SPACE_THEMES_KEY = 'swashbuckler:spaceThemes'
+const LAST_CUSTOM_KEY = 'swashbuckler:lastCustomThemeIds'
+const OLD_ACTIVE_KEY = 'swashbuckler:activeCustomTheme'
 
 function readThemes(): CustomTheme[] {
   if (typeof window === 'undefined') return []
@@ -15,37 +17,70 @@ function readThemes(): CustomTheme[] {
   }
 }
 
-function readActiveId(): string | null {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem(ACTIVE_KEY)
+function readSpaceThemes(): Record<string, SpaceThemeAssignment> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(SPACE_THEMES_KEY)
+    if (raw) return JSON.parse(raw)
+
+    // Migration: convert old activeCustomTheme to spaceThemes for current space
+    const oldActiveId = localStorage.getItem(OLD_ACTIVE_KEY)
+    if (oldActiveId) {
+      const currentSpaceId = localStorage.getItem('swashbuckler:currentSpaceId')
+      if (currentSpaceId) {
+        const migrated: Record<string, SpaceThemeAssignment> = {
+          [currentSpaceId]: { type: 'custom', themeId: oldActiveId },
+        }
+        localStorage.setItem(SPACE_THEMES_KEY, JSON.stringify(migrated))
+        localStorage.removeItem(OLD_ACTIVE_KEY)
+        return migrated
+      }
+    }
+
+    return {}
+  } catch {
+    return {}
+  }
 }
 
 function persistThemes(themes: CustomTheme[]) {
   localStorage.setItem(THEMES_KEY, JSON.stringify(themes))
 }
 
-function persistActiveId(id: string | null) {
-  if (id) {
-    localStorage.setItem(ACTIVE_KEY, id)
-  } else {
-    localStorage.removeItem(ACTIVE_KEY)
+function persistSpaceThemes(spaceThemes: Record<string, SpaceThemeAssignment>) {
+  localStorage.setItem(SPACE_THEMES_KEY, JSON.stringify(spaceThemes))
+}
+
+function readLastCustomThemeIds(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(LAST_CUSTOM_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
   }
+}
+
+function persistLastCustomThemeIds(ids: Record<string, string>) {
+  localStorage.setItem(LAST_CUSTOM_KEY, JSON.stringify(ids))
 }
 
 interface CustomThemeState {
   themes: CustomTheme[]
-  activeThemeId: string | null
+  spaceThemes: Record<string, SpaceThemeAssignment>
+  lastCustomThemeIds: Record<string, string>
 
   addTheme: (name: string, base: ThemeBase, coreColors: ThemeCoreColors) => CustomTheme
   updateTheme: (id: string, name: string, base: ThemeBase, coreColors: ThemeCoreColors) => void
   deleteTheme: (id: string) => void
-  activateTheme: (id: string) => void
-  clearActiveTheme: () => void
+  setSpaceTheme: (spaceId: string, assignment: SpaceThemeAssignment) => void
+  clearSpaceTheme: (spaceId: string) => void
 }
 
 export const useCustomThemeStore = create<CustomThemeState>((set, get) => ({
   themes: readThemes(),
-  activeThemeId: readActiveId(),
+  spaceThemes: readSpaceThemes(),
+  lastCustomThemeIds: readLastCustomThemeIds(),
 
   addTheme: (name, base, coreColors) => {
     const now = new Date().toISOString()
@@ -84,18 +119,55 @@ export const useCustomThemeStore = create<CustomThemeState>((set, get) => ({
   deleteTheme: (id) => {
     const next = get().themes.filter(t => t.id !== id)
     persistThemes(next)
-    const activeId = get().activeThemeId === id ? null : get().activeThemeId
-    persistActiveId(activeId)
-    set({ themes: next, activeThemeId: activeId })
+
+    // Remove any space assignments referencing the deleted theme
+    const spaceThemes = { ...get().spaceThemes }
+    let changed = false
+    for (const spaceId of Object.keys(spaceThemes)) {
+      const assignment = spaceThemes[spaceId]
+      if (assignment.type === 'custom' && assignment.themeId === id) {
+        delete spaceThemes[spaceId]
+        changed = true
+      }
+    }
+    if (changed) persistSpaceThemes(spaceThemes)
+
+    // Clear any last-custom references to the deleted theme
+    const lastCustomThemeIds = { ...get().lastCustomThemeIds }
+    let lastChanged = false
+    for (const spaceId of Object.keys(lastCustomThemeIds)) {
+      if (lastCustomThemeIds[spaceId] === id) {
+        delete lastCustomThemeIds[spaceId]
+        lastChanged = true
+      }
+    }
+    if (lastChanged) persistLastCustomThemeIds(lastCustomThemeIds)
+
+    set({ themes: next, spaceThemes, lastCustomThemeIds })
   },
 
-  activateTheme: (id) => {
-    persistActiveId(id)
-    set({ activeThemeId: id })
+  setSpaceTheme: (spaceId, assignment) => {
+    // Remember the custom theme when switching away from it
+    const current = get().spaceThemes[spaceId]
+    const lastCustomThemeIds = { ...get().lastCustomThemeIds }
+    if (current?.type === 'custom' && assignment.type !== 'custom') {
+      lastCustomThemeIds[spaceId] = current.themeId
+      persistLastCustomThemeIds(lastCustomThemeIds)
+    } else if (assignment.type === 'custom') {
+      // Clear last-custom when actively choosing a custom theme
+      delete lastCustomThemeIds[spaceId]
+      persistLastCustomThemeIds(lastCustomThemeIds)
+    }
+
+    const spaceThemes = { ...get().spaceThemes, [spaceId]: assignment }
+    persistSpaceThemes(spaceThemes)
+    set({ spaceThemes, lastCustomThemeIds })
   },
 
-  clearActiveTheme: () => {
-    persistActiveId(null)
-    set({ activeThemeId: null })
+  clearSpaceTheme: (spaceId) => {
+    const spaceThemes = { ...get().spaceThemes }
+    delete spaceThemes[spaceId]
+    persistSpaceThemes(spaceThemes)
+    set({ spaceThemes })
   },
 }))

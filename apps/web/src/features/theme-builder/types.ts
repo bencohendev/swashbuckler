@@ -59,6 +59,10 @@ export const CORE_COLOR_KEYS: (keyof ThemeCoreColors)[] = [
   'border',
 ]
 
+export type SpaceThemeAssignment =
+  | { type: 'default'; value: 'light' | 'dark' | 'system' }
+  | { type: 'custom'; themeId: string }
+
 export const CORE_COLOR_LABELS: Record<keyof ThemeCoreColors, string> = {
   background: 'Background',
   foreground: 'Foreground',
