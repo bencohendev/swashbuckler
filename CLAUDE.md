@@ -35,25 +35,46 @@ After adding, modifying, or fixing features, run these checks:
 
 - Update tasks as they are completed
 
+## Feature Workflow
+
+This is the required workflow for all feature work. **Do not skip steps.**
+
+### 1. Pick Work
+- Use `/find-work` to surface available items (Active features, Not started specs, planned ideas, open bugs)
+- User selects what to work on
+
+### 2. Mark as Active
+- Set the feature spec's `**Status:**` to `Active` (create the spec first if it doesn't exist — see step 3)
+- If the feature is in the Planned table in `index.md` without a spec link, it stays there until a spec is created
+- Commit the status change and merge to `dev` **before starting implementation**
+
+### 3. Ensure a Spec Exists
+- **If a spec exists:** read it, confirm scope with the user, then begin implementation
+- **If no spec exists:** write the spec in `.readme/features/` first, add it to `index.md`, get user approval, then begin
+- Plan mode files in `.claude/plans/` are scratch — after approval, the permanent spec must be in `.readme/features/` and the plan file deleted
+
+### 4. Implement
+- Enter a worktree, implement, verify (tests, types, lint)
+
+### 5. Finish
+- Update the spec with any implementation details or changes from the original plan
+- Set `**Status:**` to `Done`
+- Move the feature from the Planned table to the Implemented table in `index.md` (if it was planned)
+- If the change affects user-facing behavior, update the corresponding page in `apps/docs/content/docs/` (or create one if needed — see User-Facing Documentation below)
+- Commit doc updates and merge to `dev`
+
 ## Documentation
 
 ### Structure
 - Feature specs live in `.readme/features/` with kebab-case names (e.g., `custom-themes.md`)
 - Bug tracking lives in `.readme/bugs/log.md` — all bugs get a row there; complex bugs with root-cause analysis also get individual files in the same directory, linked from the log
-- `.readme/index.md` is the master index — update it when adding features
+- `.readme/index.md` is the master index — update it when adding or completing features
 - `.claude/plans/` is for Claude Code plan mode working files only — no permanent docs
-
-### Document-First Workflow
-- Before implementing a new feature or non-trivial bug fix, create/update its spec in `.readme/`
-- New features get added to `index.md`; bugs get added to `bugs/log.md`
-- Small fixes (typos, one-line patches) are exempt — add a line to `bugs/log.md` if relevant
-- Plan mode files in `.claude/plans/` are drafts. After approval, create the permanent spec in `.readme/` and delete the plan file
 
 ### Feature Status
 - Each spec has a `**Status:**` line at the top: `Done`, `Active`, or `Not started`
-- When new work is planned for an implemented feature, set its status to `Active` and document the new scope
-- When the new scope ships, set it back to `Done`
-- To find features with open work: `grep -l "Status.*Active" .readme/features/`
+- `Active` = work is in progress; `Done` = shipped; `Not started` = specced but not built
+- When new work is planned for a Done feature, set its status to `Active` and document the new scope
 
 ### Maintaining Docs
 - After completing implementation, update the relevant spec with surgical edits
