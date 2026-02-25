@@ -105,13 +105,13 @@ function FieldRow({ field, index, onUpdate, onRemove, onMove }: FieldRowProps) {
 
   return (
     <div className="space-y-2 rounded-lg border p-3">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-col">
           <button
             type="button"
             onClick={() => onMove('up')}
             disabled={index === 0}
-            className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
           >
             <GripVerticalIcon className="size-3" />
           </button>
@@ -123,45 +123,47 @@ function FieldRow({ field, index, onUpdate, onRemove, onMove }: FieldRowProps) {
           onChange={(e) => onUpdate({ name: e.target.value })}
           placeholder="Field name"
           aria-label="Field name"
-          className="flex-1 rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+          className="w-full min-w-0 sm:w-auto sm:flex-1 rounded-md border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
         />
 
-        <select
-          value={field.type}
-          aria-label="Field type"
-          onChange={(e) => {
-            const newType = e.target.value as FieldType
-            onUpdate({ type: newType, options: undefined })
-          }}
-          className="rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-        >
-          {FIELD_TYPE_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2 pl-7 sm:pl-0">
+          <select
+            value={field.type}
+            aria-label="Field type"
+            onChange={(e) => {
+              const newType = e.target.value as FieldType
+              onUpdate({ type: newType, options: undefined })
+            }}
+            className="rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+          >
+            {FIELD_TYPE_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
 
-        <label className="flex items-center gap-1 text-xs text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={field.required ?? false}
-            onChange={(e) => onUpdate({ required: e.target.checked })}
-            className="size-3"
-          />
-          Required
-        </label>
+          <label className="flex items-center gap-1 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={field.required ?? false}
+              onChange={(e) => onUpdate({ required: e.target.checked })}
+              className="size-3"
+            />
+            Required
+          </label>
 
-        <Button
-          type="button"
-          size="icon-xs"
-          variant="ghost"
-          onClick={onRemove}
-          aria-label="Remove field"
-          className="text-destructive hover:text-destructive"
-        >
-          <TrashIcon className="size-3" />
-        </Button>
+          <Button
+            type="button"
+            size="icon-xs"
+            variant="ghost"
+            onClick={onRemove}
+            aria-label="Remove field"
+            className="text-destructive hover:text-destructive"
+          >
+            <TrashIcon className="size-3" />
+          </Button>
+        </div>
       </div>
 
       {needsOptions && (
@@ -206,7 +208,7 @@ function OptionsEditor({ options, onChange }: OptionsEditorProps) {
             <button
               type="button"
               onClick={() => handleRemove(index)}
-              className="text-muted-foreground hover:text-destructive"
+              className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 text-muted-foreground hover:text-destructive"
             >
               &times;
             </button>

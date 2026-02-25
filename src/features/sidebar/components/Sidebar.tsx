@@ -339,7 +339,7 @@ export function Sidebar() {
             onClick={() => setMobileOpen(false)}
             title="Close sidebar"
             aria-label="Close sidebar"
-            className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors md:hidden"
+            className="ml-auto flex size-10 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors md:hidden"
           >
             <XIcon className="size-5" />
           </button>
@@ -370,7 +370,7 @@ export function Sidebar() {
                 title={item.label}
                 aria-label={item.label}
                 className={(isActive) => cn(
-                  "flex size-10 items-center justify-center rounded-md transition-colors md:size-8",
+                  "flex size-10 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 items-center justify-center rounded-md transition-colors md:size-8",
                   isActive
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"

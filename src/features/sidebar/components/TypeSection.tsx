@@ -112,7 +112,7 @@ export function TypeSection({
             <div className="flex flex-1 items-center gap-1 text-xs font-medium text-muted-foreground">
               <button
                 onClick={() => setCollapsed(!collapsed)}
-                className="hover:text-foreground"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 hover:text-foreground"
                 aria-expanded={!collapsed}
                 aria-controls={`type-section-${type.id}`}
                 aria-label={`Toggle ${type.plural_name}`}
