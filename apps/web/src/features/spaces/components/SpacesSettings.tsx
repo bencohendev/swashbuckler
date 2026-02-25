@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon, FolderIcon, Trash2Icon } from 'lucide-react'
+import { ArchiveIcon, ArrowLeftIcon, FolderIcon, Trash2Icon } from 'lucide-react'
 import { useAuth, useCurrentSpace, useSpaces } from '@/shared/lib/data'
 import type { Space } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
@@ -14,7 +14,7 @@ import { toast } from '@/shared/hooks/useToast'
 export function SpacesSettings() {
   const { user, isGuest } = useAuth()
   const { space: currentSpace, spaces: allSpaces, switchSpace } = useCurrentSpace()
-  const { update, remove } = useSpaces()
+  const { update, remove, archiveSpace } = useSpaces()
   const router = useRouter()
 
   const ownedSpaces = isGuest ? allSpaces : allSpaces.filter(s => s.owner_id === user?.id)
@@ -43,7 +43,17 @@ export function SpacesSettings() {
             space={space}
             isCurrent={space.id === currentSpace?.id}
             canDelete={ownedSpaces.length > 1}
+            canArchive={ownedSpaces.length > 1}
             onUpdate={update}
+            onArchive={async (id) => {
+              const result = await archiveSpace(id)
+              if (result.error) {
+                toast({ description: result.error, variant: 'destructive' })
+                return
+              }
+              toast({ description: `"${space.name}" archived`, variant: 'success' })
+              router.push('/')
+            }}
             onDelete={async (id) => {
               if (id === currentSpace?.id) {
                 const next = ownedSpaces.find(s => s.id !== id)
@@ -86,13 +96,16 @@ interface SpaceRowProps {
   space: Space
   isCurrent: boolean
   canDelete: boolean
+  canArchive: boolean
   onUpdate: (id: string, input: { name?: string; icon?: string }) => Promise<{ data: Space | null; error?: string }>
+  onArchive: (id: string) => Promise<void>
   onDelete: (id: string) => Promise<void>
 }
 
-function SpaceRow({ space, isCurrent, canDelete, onUpdate, onDelete }: SpaceRowProps) {
+function SpaceRow({ space, isCurrent, canDelete, canArchive, onUpdate, onArchive, onDelete }: SpaceRowProps) {
   const [name, setName] = useState(space.name)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   const handleNameChange = (newName: string) => {
@@ -151,6 +164,17 @@ function SpaceRow({ space, isCurrent, canDelete, onUpdate, onDelete }: SpaceRowP
           )}
         </div>
 
+        {canArchive && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setArchiveConfirmOpen(true)}
+            aria-label={`Archive ${space.name}`}
+            className="shrink-0 text-muted-foreground hover:text-muted-foreground/80"
+          >
+            <ArchiveIcon className="size-4" />
+          </Button>
+        )}
         {canDelete && (
           <Button
             variant="ghost"
@@ -164,6 +188,14 @@ function SpaceRow({ space, isCurrent, canDelete, onUpdate, onDelete }: SpaceRowP
         )}
       </div>
 
+      <ConfirmDialog
+        open={archiveConfirmOpen}
+        onOpenChange={setArchiveConfirmOpen}
+        title="Archive space"
+        description={`Archive "${space.name}"? It will be hidden but can be restored later.`}
+        confirmLabel="Archive"
+        onConfirm={() => onArchive(space.id)}
+      />
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
