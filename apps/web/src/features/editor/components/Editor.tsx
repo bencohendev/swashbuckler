@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from '@udecode/plate/react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -173,8 +173,7 @@ function CollaborativeEditor({
 }: Required<Pick<EditorProps, 'collaborationOptions'>> & Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, isDirty, lastSaved, setCollaborative } = useEditorStore();
   const { provider, doc, awareness, cursorData } = collaborationOptions;
-  const [isReady, setIsReady] = useState(false);
-  const isReadyRef = useRef(false);
+  const isBoundRef = useRef(false);
 
   const plugins = useMemo(
     () => [
@@ -235,62 +234,45 @@ function CollaborativeEditor({
     return () => setCollaborative(false);
   }, [setCollaborative]);
 
-  // Connect provider FIRST, then seed Y.Doc and bind editor AFTER sync completes.
+  // Seed Y.Doc and bind editor synchronously.
+  // Provider connect/disconnect is handled by useCollaboration.
   //
-  // This prevents content duplication: if we seed a fresh Y.Doc before syncing,
-  // the seeded content (under our new clientID) gets merged with a peer's identical
-  // content (under their clientID), doubling everything. By deferring the seed until
-  // after sync, we only seed if no peer provided content.
+  // Uses a fixed clientID (0) for seeding so every peer produces identical Yjs
+  // structs — when a second peer's seed arrives, Yjs sees the same (client, clock)
+  // pairs and skips them, preventing content duplication.
+  // If sharedType already has content (peer synced before mount), skip seeding.
   useEffect(() => {
-    let cancelled = false;
+    const sharedType = doc.get('content', Y.XmlText)
+    if (sharedType.length === 0) {
+      const content = initialContent || initialEditorValue
+      const realClientID = doc.clientID
+      doc.clientID = 0
+      doc.transact(() => {
+        sharedType.applyDelta(slateNodesToInsertDelta(content))
+      })
+      doc.clientID = realClientID
+    }
 
-    const handleSynced = () => {
-      if (cancelled) return;
+    // Bind editor to Y.Doc (syncs Y.Doc content into Slate)
+    const yjsEd = toYjsEditor(editor)
+    if (!YjsEditor.connected(yjsEd)) {
+      YjsEditor.connect(yjsEd)
+    }
 
-      // Seed Y.Doc only if no peer provided content via sync.
-      // Use a fixed clientID (0) so every peer produces identical Yjs structs.
-      // When a second peer's seed update arrives, Yjs sees the same (client, clock)
-      // pairs and skips them — preventing content duplication.
-      const sharedType = doc.get('content', Y.XmlText)
-      if (sharedType.length === 0) {
-        const content = initialContent || initialEditorValue
-        const realClientID = doc.clientID
-        doc.clientID = 0
-        doc.transact(() => {
-          sharedType.applyDelta(slateNodesToInsertDelta(content))
-        })
-        doc.clientID = realClientID
-      }
-
-      // Bind editor to Y.Doc (syncs Y.Doc content into Slate)
-      const yjsEd = toYjsEditor(editor)
-      if (!YjsEditor.connected(yjsEd)) {
-        YjsEditor.connect(yjsEd)
-      }
-
-      awareness.setLocalStateField('data', cursorData)
-      isReadyRef.current = true;
-      setIsReady(true);
-      // Clear false-positive dirty flag from Y.Doc seeding onChange
-      useEditorStore.getState().markClean();
-    };
-
-    provider.onSync(handleSynced);
-    provider.connect();
+    awareness.setLocalStateField('data', cursorData)
+    isBoundRef.current = true
+    // Clear false-positive dirty flag from Y.Doc seeding onChange
+    useEditorStore.getState().markClean()
 
     return () => {
-      cancelled = true;
-      provider.offSync(handleSynced);
-      provider.disconnect()
       const yjsEd = toYjsEditor(editor)
       if (YjsEditor.connected(yjsEd)) {
         YjsEditor.disconnect(yjsEd)
       }
-      isReadyRef.current = false;
-      setIsReady(false);
+      isBoundRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, doc, provider]);
+  }, [editor, doc]);
 
   // Collaborative auto-save: listen to Y.Doc updates and debounce persistence
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -305,7 +287,7 @@ function CollaborativeEditor({
   const doSave = useCallback(async () => {
     if (!onSaveRef.current || readOnly) return;
     // Don't save before the editor is bound to Y.Doc
-    if (!isReadyRef.current) return;
+    if (!isBoundRef.current) return;
     hasPendingRef.current = false;
 
     // Leader election: only the peer with lowest clientID saves
@@ -357,20 +339,12 @@ function CollaborativeEditor({
       <DndProvider backend={HTML5Backend}>
         <div className="relative min-h-[200px]">
           <Plate editor={editor} onChange={handleChange}>
-            {isReady ? (
-              <>
-                <PlateContent
-                  readOnly={readOnly}
-                  placeholder={placeholder}
-                  className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
-                />
-                <RemoteCursorOverlay awareness={awareness} doc={doc} />
-              </>
-            ) : (
-              <div className="min-h-[200px] flex items-center justify-center">
-                <span className="text-sm text-muted-foreground animate-pulse">Connecting...</span>
-              </div>
-            )}
+            <PlateContent
+              readOnly={readOnly}
+              placeholder={placeholder}
+              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
+            />
+            <RemoteCursorOverlay awareness={awareness} doc={doc} />
           </Plate>
 
           {onSave && (
