@@ -132,7 +132,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [API Audit (Frontend)](features/api-audit-frontend.md) | Audit frontend API calls for correctness, error handling, and consistency |
 | [Settings Hub](features/settings-hub.md) | Split settings into Account and Space sections |
 | [Mobile](features/mobile.md) | Responsive layout for mobile devices |
-| Landing page | Marketing/landing page for the app |
+| [Landing Page](features/landing-page.md) | Marketing/landing page for the app |
 | [Link to Docs](features/link-to-docs.md) | Help button with docs link and keyboard shortcuts reference |
 
 ## Planned Features
