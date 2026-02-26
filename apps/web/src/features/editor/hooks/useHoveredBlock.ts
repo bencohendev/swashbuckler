@@ -1,45 +1,40 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useEditorRef, useReadOnly } from '@udecode/plate/react'
+import { useState, useEffect, useRef, useCallback, type RefObject } from 'react'
+import { useEditorRef } from '@udecode/plate/react'
 import type { TElement } from '@udecode/plate'
-// Import DOMEditor from the TOP-LEVEL slate-dom — NOT through @udecode/slate
-// which has a nested copy with separate WeakMaps.
-import { DOMEditor } from 'slate-dom'
-import { useIsMobile } from '@/shared/hooks/useIsMobile'
 
-interface HoveredBlock {
+export interface HoveredBlock {
   element: TElement
   path: number[]
   rect: { top: number; left: number; height: number }
 }
 
-export function useHoveredBlock(): HoveredBlock | null {
+/**
+ * Track which top-level editor block the mouse is hovering over.
+ *
+ * Avoids `DOMEditor` entirely (the dual slate-dom package issue makes its
+ * WeakMaps unreliable). Instead it finds the editor element via a container
+ * ref and resolves Slate nodes by DOM child-index → `editor.children[i]`.
+ */
+export function useHoveredBlock(
+  containerRef: RefObject<HTMLElement | null>,
+): HoveredBlock | null {
   const editor = useEditorRef()
-  const readOnly = useReadOnly()
-  const isMobile = useIsMobile()
   const [hoveredBlock, setHoveredBlock] = useState<HoveredBlock | null>(null)
   const rafRef = useRef(0)
   const lastDomNodeRef = useRef<HTMLElement | null>(null)
 
   const update = useCallback(
-    (target: EventTarget | null) => {
+    (target: EventTarget | null, editorEl: HTMLElement) => {
       if (!target || !(target instanceof HTMLElement)) {
         setHoveredBlock(null)
         lastDomNodeRef.current = null
         return
       }
 
-      let editorEl: HTMLElement
-      try {
-        // @ts-expect-error — Plate editor type doesn't match slate-dom 0.123.0's DOMEditor
-        editorEl = DOMEditor.toDOMNode(editor, editor)
-      } catch {
-        return
-      }
-
       // Walk up from target to find the closest Slate element node
-      const slateEl = (target as HTMLElement).closest?.(
+      const slateEl = target.closest(
         '[data-slate-node="element"]',
       ) as HTMLElement | null
       if (!slateEl) {
@@ -51,7 +46,7 @@ export function useHoveredBlock(): HoveredBlock | null {
       // Walk up to find the top-level block (direct child of editor element)
       let topLevel = slateEl
       while (topLevel.parentElement && topLevel.parentElement !== editorEl) {
-        const parent = topLevel.parentElement.closest?.(
+        const parent = topLevel.parentElement.closest(
           '[data-slate-node="element"]',
         ) as HTMLElement | null
         if (!parent || parent === editorEl) break
@@ -62,45 +57,49 @@ export function useHoveredBlock(): HoveredBlock | null {
       if (topLevel === lastDomNodeRef.current) return
       lastDomNodeRef.current = topLevel
 
-      try {
-        // @ts-expect-error — same cross-package type mismatch
-        const slateNode = DOMEditor.toSlateNode(editor, topLevel) as TElement
-        // @ts-expect-error — same cross-package type mismatch
-        const path = DOMEditor.findPath(editor, topLevel)
-
-        const blockRect = topLevel.getBoundingClientRect()
-
-        setHoveredBlock({
-          element: slateNode,
-          path,
-          rect: {
-            top: blockRect.top,
-            left: blockRect.left,
-            height: blockRect.height,
-          },
-        })
-      } catch {
+      // Resolve Slate node by DOM child index
+      const index = Array.from(editorEl.children).indexOf(topLevel)
+      if (index === -1) {
         setHoveredBlock(null)
         lastDomNodeRef.current = null
+        return
       }
+
+      const slateNode = editor.children[index] as TElement | undefined
+      if (!slateNode) {
+        setHoveredBlock(null)
+        lastDomNodeRef.current = null
+        return
+      }
+
+      const blockRect = topLevel.getBoundingClientRect()
+
+      setHoveredBlock({
+        element: slateNode,
+        path: [index],
+        rect: {
+          top: blockRect.top,
+          left: blockRect.left,
+          height: blockRect.height,
+        },
+      })
     },
     [editor],
   )
 
   useEffect(() => {
-    if (readOnly || isMobile) return
+    const container = containerRef.current
+    if (!container) return
 
-    let editorEl: HTMLElement
-    try {
-      // @ts-expect-error — same cross-package type mismatch
-      editorEl = DOMEditor.toDOMNode(editor, editor)
-    } catch {
-      return
-    }
+    // Find the editor element — a sibling of our anchor inside the Plate wrapper
+    const editorEl = container.parentElement?.querySelector(
+      '[data-slate-editor="true"]',
+    ) as HTMLElement | null
+    if (!editorEl) return
 
     const onMouseMove = (e: MouseEvent) => {
       cancelAnimationFrame(rafRef.current)
-      rafRef.current = requestAnimationFrame(() => update(e.target))
+      rafRef.current = requestAnimationFrame(() => update(e.target, editorEl))
     }
 
     const onMouseLeave = () => {
@@ -117,9 +116,7 @@ export function useHoveredBlock(): HoveredBlock | null {
       editorEl.removeEventListener('mouseleave', onMouseLeave)
       cancelAnimationFrame(rafRef.current)
     }
-  }, [editor, readOnly, isMobile, update])
-
-  if (readOnly || isMobile) return null
+  }, [containerRef, update])
 
   return hoveredBlock
 }

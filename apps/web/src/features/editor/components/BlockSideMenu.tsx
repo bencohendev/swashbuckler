@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useEditorRef, useReadOnly } from '@udecode/plate/react'
 import type { TElement } from '@udecode/plate'
@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/shared/components/ui/DropdownMenu'
-import { useHoveredBlock } from '../hooks/useHoveredBlock'
+import { useHoveredBlock, type HoveredBlock } from '../hooks/useHoveredBlock'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
 
 function stripIds(node: Record<string, unknown>): Record<string, unknown> {
@@ -24,19 +24,14 @@ function stripIds(node: Record<string, unknown>): Record<string, unknown> {
   return clone
 }
 
-interface LockedBlock {
-  rect: { top: number; left: number; height: number }
-  path: number[]
-  element: TElement
-}
-
 export function BlockSideMenu() {
   const editor = useEditorRef()
   const readOnly = useReadOnly()
   const isMobile = useIsMobile()
-  const hoveredBlock = useHoveredBlock()
+  const anchorRef = useRef<HTMLSpanElement>(null)
+  const hoveredBlock = useHoveredBlock(anchorRef)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [lockedBlock, setLockedBlock] = useState<LockedBlock | null>(null)
+  const [lockedBlock, setLockedBlock] = useState<HoveredBlock | null>(null)
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -55,10 +50,14 @@ export function BlockSideMenu() {
     [hoveredBlock],
   )
 
-  if (readOnly || isMobile) return null
+  // Always render the anchor span so the hook can find the editor element.
+  // Portal the visible menu to document.body to escape overflow containers.
+  const anchor = <span ref={anchorRef} className="hidden" />
+
+  if (readOnly || isMobile) return anchor
 
   const active = isMenuOpen ? lockedBlock : hoveredBlock
-  if (!active) return null
+  if (!active) return anchor
 
   const { rect, path, element } = active
 
@@ -91,45 +90,50 @@ export function BlockSideMenu() {
     editor.tf.removeNodes({ at: path })
   }
 
-  return createPortal(
-    <div
-      className="pointer-events-auto fixed z-50 transition-opacity duration-150"
-      style={{
-        top: rect.top + rect.height / 2 - 12,
-        left: rect.left - 36,
-      }}
-    >
-      <DropdownMenu onOpenChange={handleOpenChange} open={isMenuOpen}>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="flex size-6 items-center justify-center rounded hover:bg-accent"
-            aria-label="Block options"
-          >
-            <GripVertical className="size-4 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" side="left">
-          <DropdownMenuItem onSelect={insertAbove}>
-            <Plus className="mr-2 size-4" />
-            Insert above
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={insertBelow}>
-            <Plus className="mr-2 size-4" />
-            Insert below
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={duplicate}>
-            <Copy className="mr-2 size-4" />
-            Duplicate
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onSelect={deleteBlock}>
-            <Trash2 className="mr-2 size-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>,
-    document.body,
+  return (
+    <>
+      {anchor}
+      {createPortal(
+        <div
+          className="pointer-events-auto fixed z-50 transition-opacity duration-150"
+          style={{
+            top: rect.top + rect.height / 2 - 12,
+            left: rect.left - 36,
+          }}
+        >
+          <DropdownMenu onOpenChange={handleOpenChange} open={isMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex size-6 items-center justify-center rounded hover:bg-accent"
+                aria-label="Block options"
+              >
+                <GripVertical className="size-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="left">
+              <DropdownMenuItem onSelect={insertAbove}>
+                <Plus className="mr-2 size-4" />
+                Insert above
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={insertBelow}>
+                <Plus className="mr-2 size-4" />
+                Insert below
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={duplicate}>
+                <Copy className="mr-2 size-4" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={deleteBlock}>
+                <Trash2 className="mr-2 size-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>,
+        document.body,
+      )}
+    </>
   )
 }
