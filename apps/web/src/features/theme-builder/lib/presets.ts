@@ -1,6 +1,28 @@
 import type { ThemeCoreColors, ThemePresetDefinition } from '../types'
 import { deriveAllColors } from './deriveColors'
 
+const scifiLightCore: ThemeCoreColors = {
+  background: '#e8edf5',
+  foreground: '#0a0e27',
+  primary: '#0088cc',
+  secondary: '#dce3f0',
+  accent: '#c0d0e8',
+  muted: '#d0d8e8',
+  destructive: '#cc2255',
+  border: '#0099dd',
+}
+
+const scifiDarkCore: ThemeCoreColors = {
+  background: '#060a18',
+  foreground: '#d0f0ff',
+  primary: '#00ddff',
+  secondary: '#0c1428',
+  accent: '#121e3a',
+  muted: '#0c1428',
+  destructive: '#ff2266',
+  border: '#1a3050',
+}
+
 const fantasyLightCore: ThemeCoreColors = {
   background: '#f4e4c1',
   foreground: '#2c1810',
@@ -30,6 +52,13 @@ export const THEME_PRESETS: ThemePresetDefinition[] = [
     icon: 'Swords',
     lightColors: deriveAllColors(fantasyLightCore, 'light'),
     darkColors: deriveAllColors(fantasyDarkCore, 'dark'),
+  },
+  {
+    id: 'sci-fi',
+    label: 'Sci-Fi',
+    icon: 'Zap',
+    lightColors: deriveAllColors(scifiLightCore, 'light'),
+    darkColors: deriveAllColors(scifiDarkCore, 'dark'),
   },
 ]
 

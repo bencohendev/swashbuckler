@@ -1,0 +1,247 @@
+/* Sci-Fi Theme — decorative overrides scoped to preset */
+
+/* ─── Typography ─── */
+html[data-preset="sci-fi"] body {
+  font-family: var(--font-scifi-body), 'Courier New', monospace;
+}
+
+html[data-preset="sci-fi"] h1,
+html[data-preset="sci-fi"] h2,
+html[data-preset="sci-fi"] h3,
+html[data-preset="sci-fi"] h4,
+html[data-preset="sci-fi"] h5,
+html[data-preset="sci-fi"] h6,
+html[data-preset="sci-fi"] [data-slot="dialog-title"],
+html[data-preset="sci-fi"] [data-slot="card-title"] {
+  font-family: var(--font-scifi-heading), 'Arial Black', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Editor / main grid overlay ─── */
+html[data-preset="sci-fi"] main {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(0, 136, 204, 0.04) 39px,
+      rgba(0, 136, 204, 0.04) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      rgba(0, 136, 204, 0.04) 39px,
+      rgba(0, 136, 204, 0.04) 40px
+    );
+}
+
+html[data-preset="sci-fi"] [data-plate-editor] {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 136, 204, 0.015) 2px,
+      rgba(0, 136, 204, 0.015) 4px
+    );
+}
+
+/* ─── Sidebar circuit-board pattern ─── */
+html[data-preset="sci-fi"] aside {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 19px,
+      rgba(0, 153, 221, 0.05) 19px,
+      rgba(0, 153, 221, 0.05) 20px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 19px,
+      rgba(0, 153, 221, 0.05) 19px,
+      rgba(0, 153, 221, 0.05) 20px
+    );
+  border-right-width: 1px;
+}
+
+/* ─── Dialogs — sharp neon panels ─── */
+html[data-preset="sci-fi"] [data-slot="dialog-content"] {
+  border-radius: 1px;
+  border-width: 1px;
+  box-shadow:
+    0 0 12px rgba(0, 136, 204, 0.15),
+    0 8px 32px rgba(6, 10, 24, 0.3);
+}
+
+/* ─── Buttons — neon glow ─── */
+html[data-preset="sci-fi"] [data-slot="button"] {
+  border-radius: 1px;
+  transition: box-shadow 0.15s ease;
+}
+
+html[data-preset="sci-fi"] [data-slot="button"]:hover {
+  box-shadow: 0 0 8px rgba(0, 136, 204, 0.3);
+}
+
+html[data-preset="sci-fi"] [data-slot="button"]:active {
+  box-shadow:
+    0 0 12px rgba(0, 136, 204, 0.4),
+    inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Ghost/link buttons — no glow */
+html[data-preset="sci-fi"] [data-slot="button"][data-variant="ghost"],
+html[data-preset="sci-fi"] [data-slot="button"][data-variant="link"] {
+  box-shadow: none;
+}
+
+/* ─── Cards ─── */
+html[data-preset="sci-fi"] [data-slot="card"] {
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(0, 136, 204, 0.08);
+}
+
+/* ─── Header — neon gradient border ─── */
+html[data-preset="sci-fi"] header {
+  border-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border) 20%,
+    var(--primary) 50%,
+    var(--border) 80%,
+    transparent 100%
+  ) 1;
+}
+
+/* ─── Dividers ─── */
+html[data-preset="sci-fi"] hr,
+html[data-preset="sci-fi"] [data-slot="separator"] {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border) 20%,
+    var(--primary) 50%,
+    var(--border) 80%,
+    transparent 100%
+  );
+  position: relative;
+}
+
+html[data-preset="sci-fi"] hr::after,
+html[data-preset="sci-fi"] [data-slot="separator"]::after {
+  content: "\2B21";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--background);
+  padding: 0 8px;
+  font-size: 8px;
+  color: var(--primary);
+  line-height: 1;
+}
+
+/* ─── Inputs ─── */
+html[data-preset="sci-fi"] [data-slot="input"] {
+  border-radius: 1px;
+  border-width: 1px;
+}
+
+/* ─── Scrollbar ─── */
+html[data-preset="sci-fi"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html[data-preset="sci-fi"] ::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+html[data-preset="sci-fi"] ::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 1px;
+  border: 2px solid var(--muted);
+}
+
+html[data-preset="sci-fi"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* ─── Dark variant adjustments ─── */
+html[data-preset="sci-fi"].dark main {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(0, 221, 255, 0.03) 39px,
+      rgba(0, 221, 255, 0.03) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      rgba(0, 221, 255, 0.03) 39px,
+      rgba(0, 221, 255, 0.03) 40px
+    );
+}
+
+html[data-preset="sci-fi"].dark [data-plate-editor] {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 221, 255, 0.02) 2px,
+      rgba(0, 221, 255, 0.02) 4px
+    );
+}
+
+html[data-preset="sci-fi"].dark aside {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 19px,
+      rgba(0, 221, 255, 0.04) 19px,
+      rgba(0, 221, 255, 0.04) 20px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 19px,
+      rgba(0, 221, 255, 0.04) 19px,
+      rgba(0, 221, 255, 0.04) 20px
+    );
+}
+
+html[data-preset="sci-fi"].dark [data-slot="dialog-content"] {
+  box-shadow:
+    0 0 16px rgba(0, 221, 255, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+html[data-preset="sci-fi"].dark [data-slot="button"]:hover {
+  box-shadow: 0 0 10px rgba(0, 221, 255, 0.35);
+}
+
+html[data-preset="sci-fi"].dark [data-slot="button"]:active {
+  box-shadow:
+    0 0 14px rgba(0, 221, 255, 0.45),
+    inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+html[data-preset="sci-fi"].dark [data-slot="button"][data-variant="ghost"],
+html[data-preset="sci-fi"].dark [data-slot="button"][data-variant="link"] {
+  box-shadow: none;
+}
+
+html[data-preset="sci-fi"].dark [data-slot="card"] {
+  box-shadow: 0 0 8px rgba(0, 221, 255, 0.06);
+}

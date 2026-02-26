@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
-import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, PaletteIcon, SearchIcon, SettingsIcon, SunIcon, SwordsIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, PaletteIcon, SearchIcon, SettingsIcon, SunIcon, SwordsIcon, UserIcon, UserPlusIcon, ZapIcon } from "lucide-react"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import { useSpacePermission } from "@/features/sharing"
 import { useSidebar } from "@/shared/stores/sidebar"
@@ -137,7 +137,7 @@ export function Header({ email }: { email?: string }) {
             assignment?.type === 'custom'
               ? <PaletteIcon className="size-4" />
               : activePresetId
-                ? <span className="flex items-center gap-0.5"><SwordsIcon className="size-3.5" />{assignment?.type === 'default' && assignment.value === 'system' ? <MonitorIcon className="size-3.5" /> : resolvedTheme === 'dark' ? <MoonIcon className="size-3.5" /> : <SunIcon className="size-3.5" />}</span>
+                ? <span className="flex items-center gap-0.5">{activePresetId === 'sci-fi' ? <ZapIcon className="size-3.5" /> : <SwordsIcon className="size-3.5" />}{assignment?.type === 'default' && assignment.value === 'system' ? <MonitorIcon className="size-3.5" /> : resolvedTheme === 'dark' ? <MoonIcon className="size-3.5" /> : <SunIcon className="size-3.5" />}</span>
                 : assignment?.type === 'default' && assignment.value === 'system'
                   ? <MonitorIcon className="size-4" />
                   : resolvedTheme === 'dark'

@@ -152,7 +152,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | [Fantasy Theme](features/fantasy-theme.md) | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
-| Sci-Fi Theme | Sci-fi styled UI skin — holographic/neon aesthetic, futuristic panels and controls |
+| [Sci-Fi Theme](features/sci-fi-theme.md) | Sci-fi styled UI skin — cyberpunk/neon aesthetic, futuristic panels and controls |
 
 ### Audits
 

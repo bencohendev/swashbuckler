@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { CheckIcon, SunIcon, MoonIcon, MonitorIcon, ArrowRightIcon, SwordsIcon } from 'lucide-react'
+import { CheckIcon, SunIcon, MoonIcon, MonitorIcon, ArrowRightIcon, SwordsIcon, ZapIcon } from 'lucide-react'
 import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
 import { THEME_PRESETS } from '../lib/presets'
@@ -11,6 +11,7 @@ import type { CustomTheme } from '../types'
 
 const PRESET_ICONS: Record<string, typeof SwordsIcon> = {
   Swords: SwordsIcon,
+  Zap: ZapIcon,
 }
 
 interface ThemeListProps {
