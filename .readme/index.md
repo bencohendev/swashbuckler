@@ -141,13 +141,13 @@ Dual-storage architecture with a `DataClient` interface:
 | [Image Resize](features/image-resize.md) | Drag-handle resize for inline editor images |
 | [Account-Level Themes](features/account-level-themes.md) | Dedicated settings page for custom theme creation/management, selection-only Appearance page |
 | [Type Starter Kits](features/type-starter-kits.md) | Pre-built type collections (RP, recipes, note-taking, etc.) |
+| [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
 | Table Row/Column Resize | Drag-to-resize columns and rows in editor tables |
