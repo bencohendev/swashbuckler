@@ -34,7 +34,7 @@ export function BlockSideMenu() {
   const editor = useEditorRef()
   const readOnly = useReadOnly()
   const isMobile = useIsMobile()
-  const hoveredBlock = useHoveredBlock()
+  const { hoveredBlock, menuProps } = useHoveredBlock()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [lockedBlock, setLockedBlock] = useState<LockedBlock | null>(null)
 
@@ -93,6 +93,7 @@ export function BlockSideMenu() {
 
   return createPortal(
     <div
+      {...menuProps}
       className="pointer-events-auto fixed z-50 transition-opacity duration-150"
       style={{
         top: rect.top + rect.height / 2 - 12,
