@@ -7,6 +7,8 @@ import { createLocalDataClient, ensureLocalDefaultSpace, ensureLocalDefaultTypes
 import { createClient } from '@/shared/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { emit, subscribe } from './events'
+import { STARTER_KITS } from '@/features/starter-kits/data/kits'
+import { importKit } from '@/features/starter-kits/lib/importKit'
 
 const STORAGE_KEY = 'swashbuckler:currentSpaceId'
 
@@ -24,6 +26,7 @@ interface CreateSpaceInput {
   icon?: string
   copyTypesFromSpaceId?: string
   includeTemplates?: boolean
+  starterKitId?: string
 }
 
 interface SpacesContextValue {
@@ -212,7 +215,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     spaces,
     allSpaces: allSpacesIncludingArchived,
     create: async (input: CreateSpaceInput) => {
-      const { copyTypesFromSpaceId, includeTemplates, ...createInput } = input
+      const { copyTypesFromSpaceId, includeTemplates, starterKitId, ...createInput } = input
       const result = await spacesClient.create(createInput)
       if (result.error) {
         return { data: null, error: result.error.message }
@@ -276,6 +279,20 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
           }
         } catch (err) {
           console.error('Failed to copy types/templates:', err)
+        }
+      }
+
+      if (starterKitId && !copyTypesFromSpaceId) {
+        try {
+          const kit = STARTER_KITS.find((k) => k.id === starterKitId)
+          if (kit) {
+            const targetClient: DataClient = user
+              ? createSupabaseDataClient(supabase, newSpace.id, user.id)
+              : createLocalDataClient(newSpace.id)
+            await importKit(kit, targetClient, [])
+          }
+        } catch (err) {
+          console.error('Failed to import starter kit:', err)
         }
       }
 
