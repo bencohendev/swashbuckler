@@ -34,7 +34,7 @@ export default function LandingPage() {
     <div className="relative flex min-h-screen flex-col">
       {/* Flagpole running full page height — aligned to left edge of max-w-3xl content */}
       <div
-        className="pointer-events-none absolute inset-0 mx-auto hidden max-w-3xl px-6 sm:block"
+        className="pointer-events-none absolute inset-x-0 top-[7rem] bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
         aria-hidden="true"
       >
         <div className="h-full w-[16px] bg-[#8B5E3C]" />
