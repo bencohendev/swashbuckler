@@ -13,13 +13,18 @@ import { TypeListView } from './TypeListView'
 import { TypeBoardView } from './TypeBoardView'
 import { TypePageFilterBar } from './TypePageFilterBar'
 import { ViewToggle } from './ViewToggle'
+import { SavedViewSelector } from './SavedViewSelector'
 import { useViewMode } from '../stores/viewMode'
 import { useSortConfig } from '../stores/sortConfig'
 import { usePersistedFilters } from '../stores/filterConfig'
+import { useBoardGrouping } from '../stores/boardGrouping'
+import { useSavedViews } from '../hooks/useSavedViews'
 import { filterObjects, hasActiveFilters, EMPTY_EXPRESSION } from '../lib/filterObjects'
 import type { FilterContext } from '../lib/filterObjects'
+import type { FilterExpression } from '../lib/filterTypes'
 import { sortObjects } from '../lib/sortObjects'
 import type { SortConfig } from '../lib/sortObjects'
+import type { ViewMode } from '../stores/viewMode'
 
 interface TypeTableViewProps {
   slug: string
@@ -27,13 +32,26 @@ interface TypeTableViewProps {
 
 export function TypeTableView({ slug }: TypeTableViewProps) {
   const { types, isLoading: typesLoading } = useObjectTypes()
-  const { mode } = useViewMode(slug)
+  const { mode, setMode } = useViewMode(slug)
   const { sort, setSort } = useSortConfig(slug)
   const { expression, setExpression } = usePersistedFilters(slug)
+  const { groupFieldId, setGroupField } = useBoardGrouping(slug)
 
   const type = useMemo(
     () => types.find((t) => t.slug === slug),
     [types, slug],
+  )
+
+  const { views, createView, updateView, deleteView } = useSavedViews(type?.id)
+
+  const handleApplyView = useCallback(
+    (newExpression: FilterExpression, newSort: SortConfig, newMode: ViewMode, newGroupFieldId: string | null) => {
+      setExpression(newExpression)
+      setSort(newSort)
+      setMode(newMode)
+      setGroupField(newGroupFieldId)
+    },
+    [setExpression, setSort, setMode, setGroupField],
   )
 
   const { objects, isLoading: objectsLoading } = useObjects(
@@ -120,6 +138,20 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
               : totalCount}
         </span>
         <ViewToggle slug={slug} />
+        {type && (
+          <SavedViewSelector
+            typeId={type.id}
+            views={views}
+            expression={expression}
+            sort={sort}
+            viewMode={mode}
+            boardGroupFieldId={groupFieldId}
+            onApplyView={handleApplyView}
+            onCreateView={createView}
+            onUpdateView={updateView}
+            onDeleteView={deleteView}
+          />
+        )}
       </div>
 
       <TypePageFilterBar

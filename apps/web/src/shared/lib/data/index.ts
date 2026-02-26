@@ -39,6 +39,10 @@ export type {
   TagsClient,
   Pin,
   PinsClient,
+  SavedView,
+  CreateSavedViewInput,
+  UpdateSavedViewInput,
+  SavedViewsClient,
   ListObjectTypesOptions,
   ListSpacesOptions,
   DataResult,
@@ -71,6 +75,9 @@ export {
   updateTagSchema,
   objectTagSchema,
   pinSchema,
+  savedViewSchema,
+  createSavedViewSchema,
+  updateSavedViewSchema,
 } from './types'
 
 export { createSupabaseDataClient } from './supabase'

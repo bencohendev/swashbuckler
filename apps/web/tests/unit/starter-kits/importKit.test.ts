@@ -79,6 +79,7 @@ function makeMockClient(): DataClient {
     sharing: {} as DataClient['sharing'],
     tags: {} as DataClient['tags'],
     pins: {} as DataClient['pins'],
+    savedViews: {} as DataClient['savedViews'],
     isLocal: true,
   }
 }
