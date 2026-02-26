@@ -135,6 +135,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Landing Page](features/landing-page.md) | Marketing/landing page for the app |
 | [Link to Docs](features/link-to-docs.md) | Help button with docs link and keyboard shortcuts reference |
 | [Todo Block](features/todo-block.md) |  Checkbox/task list block type for the editor. Each todo item has a clickable checkbox that toggles checked/unchecked state, with visual strikethrough on completed items. |
+| [API Documentation](features/api-documentation.md) | Internal API documentation with architecture diagrams |
 
 
 ## Planned Features
@@ -142,8 +143,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | First use tutorial | Onboarding walkthrough for new users |
-| Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
-| API documentation | API documentation with diagrams |
 
 ## Bugs
 
