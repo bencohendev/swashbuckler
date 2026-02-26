@@ -20,27 +20,25 @@ export function useExclusionFilter() {
     setIsLoading(true)
 
     async function loadExclusions() {
-      const allExclusions: ShareExclusion[] = []
-
-      // Load per-user exclusions
-      const sharesResult = await dataClient.sharing.listShares(space!.id)
-      if (!sharesResult.error && sharesResult.data.length > 0) {
-        const myShare = sharesResult.data.find(s => s.shared_with_id === user?.id)
-        if (myShare) {
+      // N2 fix: Run per-user and space-wide exclusion fetches in parallel
+      const [perUserExclusions, spaceExclusions] = await Promise.all([
+        // Per-user exclusions: shares → find my share → load exclusions
+        (async () => {
+          const sharesResult = await dataClient.sharing.listShares(space!.id)
+          if (sharesResult.error || sharesResult.data.length === 0) return []
+          const myShare = sharesResult.data.find(s => s.shared_with_id === user?.id)
+          if (!myShare) return []
           const result = await dataClient.sharing.listExclusions(myShare.id)
-          if (!result.error) {
-            allExclusions.push(...result.data)
-          }
-        }
-      }
+          return result.error ? [] : result.data
+        })(),
+        // Space-wide exclusions (independent of per-user shares)
+        (async () => {
+          const result = await dataClient.sharing.listSpaceExclusions(space!.id)
+          return result.error ? [] : result.data
+        })(),
+      ])
 
-      // Load space-wide exclusions
-      const spaceResult = await dataClient.sharing.listSpaceExclusions(space!.id)
-      if (!spaceResult.error) {
-        allExclusions.push(...spaceResult.data)
-      }
-
-      setExclusions(allExclusions)
+      setExclusions([...perUserExclusions, ...spaceExclusions])
       setIsLoading(false)
     }
 

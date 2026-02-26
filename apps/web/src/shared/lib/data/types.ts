@@ -11,7 +11,7 @@ export const BUILT_IN_TYPE_IDS = {
 export const spaceSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(100),
-  icon: z.string(),
+  icon: z.string().nullable(),
   owner_id: z.string().uuid(),
   is_archived: z.boolean(),
   archived_at: z.string().datetime().nullable(),
@@ -53,9 +53,8 @@ export const objectTypeSchema = z.object({
   plural_name: z.string().min(1).max(100),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   icon: z.string().max(50),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).nullable(),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/).nullable(),
   fields: z.array(fieldDefinitionSchema),
-  is_built_in: z.boolean(),
   owner_id: z.string().uuid().nullable(),
   space_id: z.string().uuid().nullable(),
   sort_order: z.number().int(),
@@ -72,7 +71,7 @@ export const createObjectTypeSchema = z.object({
   plural_name: z.string().min(1).max(100),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   icon: z.string().max(50),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).nullable().optional(),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/).nullable().optional(),
   fields: z.array(fieldDefinitionSchema).optional(),
   sort_order: z.number().int().optional(),
 })
@@ -84,7 +83,7 @@ export const updateObjectTypeSchema = z.object({
   plural_name: z.string().min(1).max(100).optional(),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).optional(),
   icon: z.string().max(50).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).nullable().optional(),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/).nullable().optional(),
   fields: z.array(fieldDefinitionSchema).optional(),
   sort_order: z.number().int().optional(),
 })
@@ -325,7 +324,7 @@ export const tagSchema = z.object({
   id: z.string().uuid(),
   space_id: z.string().uuid(),
   name: z.string().min(1).max(100),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).nullable(),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/).nullable(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
 })
@@ -334,14 +333,14 @@ export type Tag = z.infer<typeof tagSchema>
 
 export const createTagSchema = z.object({
   name: z.string().min(1).max(100),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).nullable().optional(),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/).nullable().optional(),
 })
 
 export type CreateTagInput = z.infer<typeof createTagSchema>
 
 export const updateTagSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/).nullable().optional(),
+  color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/).nullable().optional(),
 })
 
 export type UpdateTagInput = z.infer<typeof updateTagSchema>
@@ -367,6 +366,7 @@ export interface TagsClient {
   removeTagFromObject(objectId: string, tagId: string): Promise<DataResult<void>>
   getObjectsByTag(tagId: string): Promise<DataListResult<DataObjectSummary>>
   countObjectsByTag(tagId: string): Promise<DataResult<number>>
+  countObjectsByTags(tagIds: string[]): Promise<DataResult<Map<string, number>>>
 }
 
 // --- Sharing schemas ---

@@ -32,7 +32,6 @@ function createObjectType(overrides: Partial<ObjectType> = {}): ObjectType {
     icon: 'file',
     color: null,
     fields: [],
-    is_built_in: false,
     owner_id: null,
     space_id: null,
     sort_order: 0,

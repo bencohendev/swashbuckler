@@ -99,7 +99,6 @@ describe('Schema Validation (additional schemas)', () => {
       icon: 'check-square',
       color: null,
       fields: [],
-      is_built_in: false,
       owner_id: null,
       space_id: SPACE_ID,
       sort_order: 0,

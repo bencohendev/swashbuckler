@@ -19,7 +19,6 @@ const mockPageType: ObjectType = {
   icon: 'file-text',
   color: null,
   fields: [],
-  is_built_in: false,
   owner_id: null,
   space_id: '99b075ae-465d-4843-a324-cc3d48a80d6e',
   sort_order: 0,
