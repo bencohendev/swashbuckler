@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { PenLineIcon, BoxesIcon, NetworkIcon, UsersIcon } from "lucide-react"
 import { GuestButton } from "./GuestButton"
+import { PixelPirateFlag } from "./PixelPirateFlag"
 
 const features = [
   {
@@ -42,6 +43,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         <section className="mx-auto max-w-3xl px-6 py-24 text-center">
+          <PixelPirateFlag />
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
             Your personal knowledge base
           </h1>
