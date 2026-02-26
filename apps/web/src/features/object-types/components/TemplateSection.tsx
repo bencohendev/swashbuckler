@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { PencilIcon, TrashIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FileEditIcon, PencilIcon, TrashIcon } from 'lucide-react'
 import { useTemplates } from '@/features/templates/hooks/useTemplates'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
@@ -14,11 +15,12 @@ interface TemplateSectionProps {
 
 interface TemplateRowProps {
   template: Template
+  onEdit: (id: string) => void
   onRename: (id: string, name: string) => Promise<void>
   onDelete: (id: string) => Promise<void>
 }
 
-function TemplateRow({ template, onRename, onDelete }: TemplateRowProps) {
+function TemplateRow({ template, onEdit, onRename, onDelete }: TemplateRowProps) {
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(template.name)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
@@ -91,6 +93,15 @@ function TemplateRow({ template, onRename, onDelete }: TemplateRowProps) {
           type="button"
           size="icon-sm"
           variant="ghost"
+          onClick={() => onEdit(template.id)}
+          aria-label={`Edit template "${template.name}"`}
+        >
+          <FileEditIcon className="size-3.5" />
+        </Button>
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="ghost"
           onClick={startEditing}
           aria-label={`Rename template "${template.name}"`}
         >
@@ -121,6 +132,7 @@ function TemplateRow({ template, onRename, onDelete }: TemplateRowProps) {
 }
 
 export function TemplateSection({ typeId }: TemplateSectionProps) {
+  const router = useRouter()
   const { templates, isLoading, deleteTemplate, renameTemplate } = useTemplates({ typeId })
 
   if (isLoading) {
@@ -153,6 +165,7 @@ export function TemplateSection({ typeId }: TemplateSectionProps) {
             <TemplateRow
               key={template.id}
               template={template}
+              onEdit={(id) => router.push(`/templates/${id}`)}
               onRename={renameTemplate}
               onDelete={deleteTemplate}
             />
