@@ -17,3 +17,4 @@ export {
 // Components
 export { CustomThemeApplier } from './components/CustomThemeApplier'
 export { AppearanceSettings } from './components/AppearanceSettings'
+export { CustomThemeSettings } from './components/CustomThemeSettings'
