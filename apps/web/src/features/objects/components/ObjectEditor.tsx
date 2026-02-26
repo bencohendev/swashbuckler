@@ -429,17 +429,19 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
           <TagPicker objectId={id} readOnly={!canEdit} />
 
-          <Editor
-            key={`${id}-${contentVersion}`}
-            ref={editorRef}
-            initialContent={editorContent}
-            onSave={handleContentSave}
-            placeholder="Start writing..."
-            readOnly={!canEdit}
-            isTemplateMode={isTemplateMode}
-            isOwner={isOwner}
-            collaborationOptions={collaborationOptions}
-          />
+          <div data-tour="editor-area">
+            <Editor
+              key={`${id}-${contentVersion}`}
+              ref={editorRef}
+              initialContent={editorContent}
+              onSave={handleContentSave}
+              placeholder="Start writing..."
+              readOnly={!canEdit}
+              isTemplateMode={isTemplateMode}
+              isOwner={isOwner}
+              collaborationOptions={collaborationOptions}
+            />
+          </div>
 
           <LinkedObjects objectId={id} readOnly={!canEdit} />
         </div>
