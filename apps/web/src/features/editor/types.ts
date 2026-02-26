@@ -81,6 +81,8 @@ export interface TableRowNode extends BaseNode {
 
 export interface TableCellNode extends BaseNode {
   type: 'td' | 'th';
+  background?: string;
+  color?: string;
 }
 
 // Image node
