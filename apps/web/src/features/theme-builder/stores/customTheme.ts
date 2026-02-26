@@ -147,14 +147,19 @@ export const useCustomThemeStore = create<CustomThemeState>((set, get) => ({
   },
 
   setSpaceTheme: (spaceId, assignment) => {
-    // Remember the custom theme when switching away from it
+    // Remember the custom/preset theme when switching away from it
     const current = get().spaceThemes[spaceId]
     const lastCustomThemeIds = { ...get().lastCustomThemeIds }
-    if (current?.type === 'custom' && assignment.type !== 'custom') {
-      lastCustomThemeIds[spaceId] = current.themeId
+    const isLeavingNonDefault = (current?.type === 'custom' || current?.type === 'preset') &&
+      assignment.type === 'default'
+    const isChoosingNonDefault = assignment.type === 'custom' || assignment.type === 'preset'
+
+    if (isLeavingNonDefault && current) {
+      // Store the full assignment JSON so we can restore either type
+      lastCustomThemeIds[spaceId] = JSON.stringify(current)
       persistLastCustomThemeIds(lastCustomThemeIds)
-    } else if (assignment.type === 'custom') {
-      // Clear last-custom when actively choosing a custom theme
+    } else if (isChoosingNonDefault) {
+      // Clear last-custom when actively choosing a non-default theme
       delete lastCustomThemeIds[spaceId]
       persistLastCustomThemeIds(lastCustomThemeIds)
     }

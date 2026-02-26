@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
+import { getPreset } from '../lib/presets'
 import type { ThemeResolvedColors } from '../types'
 
 const CSS_VAR_KEYS: (keyof ThemeResolvedColors)[] = [
@@ -23,13 +24,21 @@ function clearOverrides() {
   for (const key of CSS_VAR_KEYS) {
     root.style.removeProperty(`--${key}`)
   }
+  root.removeAttribute('data-preset')
+}
+
+function applyColors(colors: ThemeResolvedColors) {
+  const root = document.documentElement
+  for (const key of CSS_VAR_KEYS) {
+    root.style.setProperty(`--${key}`, colors[key])
+  }
 }
 
 export function CustomThemeApplier() {
   const { space } = useCurrentSpace()
   const spaceThemes = useCustomThemeStore(s => s.spaceThemes)
   const themes = useCustomThemeStore(s => s.themes)
-  const { setTheme } = useTheme()
+  const { setTheme, resolvedTheme } = useTheme()
 
   useEffect(() => {
     if (!space) {
@@ -50,10 +59,25 @@ export function CustomThemeApplier() {
       return
     }
 
+    if (assignment.type === 'preset') {
+      const preset = getPreset(assignment.presetId)
+      if (!preset) {
+        clearOverrides()
+        return
+      }
+
+      const isDark = resolvedTheme === 'dark'
+      const colors = isDark ? preset.darkColors : preset.lightColors
+
+      applyColors(colors)
+      document.documentElement.setAttribute('data-preset', preset.id)
+
+      return () => clearOverrides()
+    }
+
     // Custom theme assignment
     const activeTheme = themes.find(t => t.id === assignment.themeId) ?? null
     if (!activeTheme) {
-      // Theme was deleted but assignment wasn't cleaned up — clear overrides
       clearOverrides()
       return
     }
@@ -61,14 +85,10 @@ export function CustomThemeApplier() {
     // Sync next-themes base so Tailwind dark: variants work
     setTheme(activeTheme.base)
 
-    // Apply all resolved colors as CSS custom properties
-    const root = document.documentElement
-    for (const key of CSS_VAR_KEYS) {
-      root.style.setProperty(`--${key}`, activeTheme.resolvedColors[key])
-    }
+    applyColors(activeTheme.resolvedColors)
 
     return () => clearOverrides()
-  }, [space, spaceThemes, themes, setTheme])
+  }, [space, spaceThemes, themes, setTheme, resolvedTheme])
 
   return null
 }

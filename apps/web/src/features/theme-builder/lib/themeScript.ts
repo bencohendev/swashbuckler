@@ -1,4 +1,16 @@
+import { THEME_PRESETS } from './presets'
+
+/** Build a minified JSON map of preset palettes for the inline FOUC script. */
+function buildPresetMap(): string {
+  const map: Record<string, { light: Record<string, string>; dark: Record<string, string> }> = {}
+  for (const p of THEME_PRESETS) {
+    map[p.id] = { light: { ...p.lightColors }, dark: { ...p.darkColors } }
+  }
+  return JSON.stringify(map)
+}
+
 /** Returns minified ES5 JS for FOUC prevention. Runs before React hydrates. */
 export function getThemeScript(): string {
-  return `(function(){try{var spaceId=localStorage.getItem('swashbuckler:currentSpaceId');if(!spaceId)return;var mapRaw=localStorage.getItem('swashbuckler:spaceThemes');var assignment;if(mapRaw){var map=JSON.parse(mapRaw);assignment=map[spaceId];}if(!assignment){var oldId=localStorage.getItem('swashbuckler:activeCustomTheme');if(oldId){assignment={type:'custom',themeId:oldId};}else{return;}}if(assignment.type!=='custom')return;var raw=localStorage.getItem('swashbuckler:customThemes');if(!raw)return;var themes=JSON.parse(raw);var theme;for(var i=0;i<themes.length;i++){if(themes[i].id===assignment.themeId){theme=themes[i];break;}}if(!theme)return;var colors=theme.resolvedColors;var root=document.documentElement;var keys=Object.keys(colors);for(var j=0;j<keys.length;j++){root.style.setProperty('--'+keys[j],colors[keys[j]]);}}catch(e){}})();`
+  const presetMap = buildPresetMap()
+  return `(function(){try{var spaceId=localStorage.getItem('swashbuckler:currentSpaceId');if(!spaceId)return;var mapRaw=localStorage.getItem('swashbuckler:spaceThemes');var assignment;if(mapRaw){var map=JSON.parse(mapRaw);assignment=map[spaceId];}if(!assignment){var oldId=localStorage.getItem('swashbuckler:activeCustomTheme');if(oldId){assignment={type:'custom',themeId:oldId};}else{return;}}if(assignment.type==='preset'){var presets=${presetMap};var p=presets[assignment.presetId];if(!p)return;var isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;var colors=isDark?p.dark:p.light;var root=document.documentElement;var keys=Object.keys(colors);for(var j=0;j<keys.length;j++){root.style.setProperty('--'+keys[j],colors[keys[j]]);}root.setAttribute('data-preset',assignment.presetId);return;}if(assignment.type!=='custom')return;var raw=localStorage.getItem('swashbuckler:customThemes');if(!raw)return;var themes=JSON.parse(raw);var theme;for(var i=0;i<themes.length;i++){if(themes[i].id===assignment.themeId){theme=themes[i];break;}}if(!theme)return;var colors=theme.resolvedColors;var root=document.documentElement;var keys=Object.keys(colors);for(var j=0;j<keys.length;j++){root.style.setProperty('--'+keys[j],colors[keys[j]]);}}catch(e){}})();`
 }

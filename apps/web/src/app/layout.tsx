@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono, Cinzel, Lora } from "next/font/google"
 import { Providers } from "./providers"
 import { getThemeScript } from "@/features/theme-builder"
 import { Analytics } from "@vercel/analytics/next"
@@ -18,6 +18,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
+const cinzel = Cinzel({
+  variable: "--font-fantasy-heading",
+  subsets: ["latin"],
+})
+
+const lora = Lora({
+  variable: "--font-fantasy-body",
+  subsets: ["latin"],
+})
+
 export const metadata: Metadata = {
   title: "Swashbuckler",
   description: "Your personal knowledge base",
@@ -31,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${lora.variable} antialiased`}
       >
         <script dangerouslySetInnerHTML={{ __html: getThemeScript() }} />
         <Providers>
