@@ -67,7 +67,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     type: 'coachmark',
     target: '[data-tour="editor-area"]',
     title: 'Editor',
-    description: 'Rich text editor \u2014 type / for commands, [[ to link entries.',
+    description: 'Rich text editor \u2014 type / for commands, @ to link entries.',
     placement: 'left',
   },
   {
