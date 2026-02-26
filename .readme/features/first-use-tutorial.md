@@ -25,7 +25,7 @@ New users need orientation to discover Swashbuckler's core features. The first-u
 | 3 | `type-sections` | Types | Entries are organized by type |
 | 4 | `search` | Search | Find anything instantly (Cmd+K) |
 | 5 | `quick-capture` | Quick Capture | Capture a quick thought (Cmd+E) |
-| 6 | `editor-area` | Editor | Rich text editor — type / for commands, [[ to link |
+| 6 | `editor-area` | Editor | Rich text editor — type / for commands, @ to link |
 | 7 | `nav-graph` | Graph View | Visualize how entries connect |
 | 8 | `tags-section` | Tags | Organize entries with color-coded tags |
 | 9 | `space-switcher` | Sharing | Share your space for real-time collaboration |

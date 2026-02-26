@@ -11,6 +11,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-26 | Enter key throws "Cannot resolve a DOM node" | LinkPlugin `insertBreak` override ran deferred `focus()` on every Enter; new block's DOM not yet in Slate's WeakMap. Removed the `insertBreak` override — link auto-detection only triggers on space/paste, not Enter |
 | 2026-02-25 | Toggle collapse crashes editor ("Cannot resolve a DOM node") | Always render children in DOM with `hidden` class when collapsed instead of unmounting them, keeping Slate model and DOM in sync |
 | 2026-02-25 | RecentSection infinite loop from unstable Zustand snapshot | Select stable `entries` reference and derive IDs via `useMemo` instead of calling `getRecentIds()` which returns a new array every render |
 | 2026-02-25 | Delete space redirects unnecessarily | Already fixed — `onDelete` checks `id === currentSpace?.id` and only redirects to `/dashboard` if the deleted space was current |

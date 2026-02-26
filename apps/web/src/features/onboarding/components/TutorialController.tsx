@@ -86,6 +86,13 @@ export function TutorialController() {
         setTargetEl(null)
         return
       }
+
+      // Scroll target into view if needed (e.g. tags section below the fold)
+      if (step.target) {
+        const scrollTarget = document.querySelector(step.target)
+        scrollTarget?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+
       const el = resolveTarget()
       // Auto-skip if target is missing
       if (!el) {

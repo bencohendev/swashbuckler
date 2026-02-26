@@ -36,10 +36,12 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
       const img = imgRef.current;
       if (!img) return;
 
+      // Measure the container's parent (block-level) rather than the
+      // inline-block container itself — the container shrinks to fit the
+      // image, which would prevent resizing back up after shrinking.
       const container = img.closest('[data-image-container]');
-      containerWidthRef.current = container
-        ? container.clientWidth
-        : img.parentElement?.clientWidth ?? 800;
+      const measureEl = container?.parentElement ?? img.parentElement;
+      containerWidthRef.current = measureEl?.clientWidth ?? 800;
 
       startXRef.current = e.clientX;
       startWidthRef.current = img.clientWidth;

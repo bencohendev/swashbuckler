@@ -442,6 +442,55 @@ export interface PinsClient {
   isPinned(objectId: string): Promise<boolean>
 }
 
+// --- Saved View schemas ---
+
+export const savedViewSchema = z.object({
+  id: z.string().uuid(),
+  space_id: z.string().uuid(),
+  type_id: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  filters: z.any(), // serialized TypePageFilters (JSON)
+  sort: z.any(),     // SortConfig (JSON)
+  view_mode: z.string(),
+  board_group_field_id: z.string().uuid().nullable(),
+  is_default: z.boolean(),
+  owner_id: z.string().uuid(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+})
+
+export type SavedView = z.infer<typeof savedViewSchema>
+
+export const createSavedViewSchema = z.object({
+  type_id: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  filters: z.any(),
+  sort: z.any(),
+  view_mode: z.string(),
+  board_group_field_id: z.string().uuid().nullable().optional(),
+  is_default: z.boolean().optional(),
+})
+
+export type CreateSavedViewInput = z.infer<typeof createSavedViewSchema>
+
+export const updateSavedViewSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  filters: z.any().optional(),
+  sort: z.any().optional(),
+  view_mode: z.string().optional(),
+  board_group_field_id: z.string().uuid().nullable().optional(),
+  is_default: z.boolean().optional(),
+})
+
+export type UpdateSavedViewInput = z.infer<typeof updateSavedViewSchema>
+
+export interface SavedViewsClient {
+  list(typeId: string): Promise<DataListResult<SavedView>>
+  create(input: CreateSavedViewInput): Promise<DataResult<SavedView>>
+  update(id: string, input: UpdateSavedViewInput): Promise<DataResult<SavedView>>
+  delete(id: string): Promise<DataResult<void>>
+}
+
 // Data client interface (with sharing)
 export interface DataClient {
   objects: ObjectsClient
@@ -453,6 +502,7 @@ export interface DataClient {
   sharing: SharingClient
   tags: TagsClient
   pins: PinsClient
+  savedViews: SavedViewsClient
   isLocal: boolean
 }
 

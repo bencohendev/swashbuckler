@@ -38,4 +38,8 @@ export const queryKeys = {
   shares: {
     list: (spaceId: string) => ['shares', spaceId] as const,
   },
+  savedViews: {
+    all: (spaceId?: string) => ['savedViews', spaceId] as const,
+    list: (spaceId?: string, typeId?: string) => ['savedViews', spaceId, 'list', typeId] as const,
+  },
 }

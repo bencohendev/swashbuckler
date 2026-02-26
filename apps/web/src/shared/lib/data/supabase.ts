@@ -11,7 +11,9 @@ import type {
   SharingClient,
   TagsClient,
   PinsClient,
+  SavedViewsClient,
   Pin,
+  SavedView,
   Tag,
   ObjectTag,
   Space,
@@ -33,6 +35,8 @@ import type {
   CreateShareExclusionInput,
   CreateTagInput,
   UpdateTagInput,
+  CreateSavedViewInput,
+  UpdateSavedViewInput,
   SpaceSharePermission,
   ListObjectsOptions,
   ListObjectTypesOptions,
@@ -1616,6 +1620,107 @@ function createPinsClient(supabase: SupabaseClient, userId?: string): PinsClient
   }
 }
 
+function createSavedViewsClient(supabase: SupabaseClient, spaceId?: string, userId?: string): SavedViewsClient {
+  return {
+    async list(typeId: string): Promise<DataListResult<SavedView>> {
+      const { data, error } = await supabase
+        .from('saved_views')
+        .select('*')
+        .eq('type_id', typeId)
+        .order('created_at')
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as SavedView[], error: null }
+    },
+
+    async create(input: CreateSavedViewInput): Promise<DataResult<SavedView>> {
+      const resolvedUserId = await resolveUserId(supabase, userId)
+      if (!resolvedUserId) {
+        return { data: null, error: { message: 'Not authenticated' } }
+      }
+
+      // If setting as default, unset existing default for this type first
+      if (input.is_default) {
+        await supabase
+          .from('saved_views')
+          .update({ is_default: false })
+          .eq('type_id', input.type_id)
+          .eq('owner_id', resolvedUserId)
+          .eq('is_default', true)
+      }
+
+      const { data, error } = await supabase
+        .from('saved_views')
+        .insert({
+          ...input,
+          space_id: spaceId,
+          owner_id: resolvedUserId,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as SavedView, error: null }
+    },
+
+    async update(id: string, input: UpdateSavedViewInput): Promise<DataResult<SavedView>> {
+      // If setting as default, unset existing default for this type first
+      if (input.is_default) {
+        const resolvedUserId = await resolveUserId(supabase, userId)
+        if (resolvedUserId) {
+          // Get the view to find its type_id
+          const { data: existing } = await supabase
+            .from('saved_views')
+            .select('type_id')
+            .eq('id', id)
+            .single()
+
+          if (existing) {
+            await supabase
+              .from('saved_views')
+              .update({ is_default: false })
+              .eq('type_id', existing.type_id)
+              .eq('owner_id', resolvedUserId)
+              .eq('is_default', true)
+          }
+        }
+      }
+
+      const { data, error } = await supabase
+        .from('saved_views')
+        .update(input)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as SavedView, error: null }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      const { error } = await supabase
+        .from('saved_views')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      return { data: null, error: null }
+    },
+  }
+}
+
 export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: string, userId?: string): DataClient {
   return {
     objects: createObjectsClient(supabase, spaceId, userId),
@@ -1627,6 +1732,7 @@ export function createSupabaseDataClient(supabase: SupabaseClient, spaceId?: str
     sharing: createSharingClient(supabase, userId),
     tags: createTagsClient(supabase, spaceId),
     pins: createPinsClient(supabase, userId),
+    savedViews: createSavedViewsClient(supabase, spaceId, userId),
     isLocal: false,
   }
 }
