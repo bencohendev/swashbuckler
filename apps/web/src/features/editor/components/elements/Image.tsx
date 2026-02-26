@@ -6,6 +6,7 @@ import { PlateElement, useEditorRef, useReadOnly } from '@udecode/plate/react';
 import { ImageIcon, LinkIcon, RefreshCwIcon, Trash2Icon, LoaderIcon } from 'lucide-react';
 import { useAuth } from '@/shared/lib/data';
 import { uploadImage, ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/shared/lib/supabase/upload';
+import { useImageResize } from '../../hooks/useImageResize';
 
 function getImageProps(element: Record<string, unknown>) {
   return {
@@ -13,6 +14,27 @@ function getImageProps(element: Record<string, unknown>) {
     alt: typeof element.alt === 'string' ? element.alt : undefined,
     width: typeof element.width === 'number' ? element.width : undefined,
   };
+}
+
+function ResizeHandle({
+  side,
+  onPointerDown,
+}: {
+  side: 'left' | 'right';
+  onPointerDown: (e: React.PointerEvent) => void;
+}) {
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={`Resize image from ${side}`}
+      tabIndex={-1}
+      onPointerDown={onPointerDown}
+      className={`absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} z-10 flex h-full w-4 cursor-col-resize items-center ${side === 'left' ? 'justify-start pl-1' : 'justify-end pr-1'}`}
+    >
+      <div className="h-12 max-h-[50%] w-1.5 rounded-full bg-primary/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100" />
+    </div>
+  );
 }
 
 export function ImageElement({ element, children, ...props }: PlateElementProps) {
@@ -25,6 +47,23 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
   const [error, setError] = useState<string | null>(null);
   const [embedUrl, setEmbedUrl] = useState('');
   const [showHover, setShowHover] = useState(false);
+
+  const handleResize = useCallback(
+    (newWidth: number) => {
+      const path = editor.api.findPath(element);
+      if (path) {
+        editor.tf.setNodes({ width: newWidth }, { at: path });
+      }
+    },
+    [editor, element],
+  );
+
+  const { imgRef, isResizing, displayWidth, handlePointerDown, handlePointerMove, handlePointerUp } =
+    useImageResize({
+      width,
+      onResize: handleResize,
+      disabled: readOnly,
+    });
 
   const setNodeUrl = useCallback((newUrl: string) => {
     const path = editor.api.findPath(element);
@@ -91,18 +130,45 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
       <div contentEditable={false}>
         {url ? (
           <div
-            className="group relative"
+            className="group relative inline-block"
+            data-image-container=""
             onMouseEnter={() => setShowHover(true)}
-            onMouseLeave={() => setShowHover(false)}
+            onMouseLeave={() => {
+              if (!isResizing) setShowHover(false);
+            }}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={imgRef}
               src={url}
               alt={alt || ''}
-              style={{ width: width ? `${width}px` : 'auto', maxWidth: '100%' }}
-              className="rounded-lg"
+              style={{
+                width: displayWidth ? `${displayWidth}px` : 'auto',
+                maxWidth: '100%',
+              }}
+              className={`rounded-lg ${isResizing ? 'select-none' : ''}`}
+              draggable={false}
             />
-            {!readOnly && showHover && (
+            {!readOnly && (showHover || isResizing) && (
+              <>
+                <ResizeHandle
+                  side="left"
+                  onPointerDown={(e) => handlePointerDown(e, 'left')}
+                />
+                <ResizeHandle
+                  side="right"
+                  onPointerDown={(e) => handlePointerDown(e, 'right')}
+                />
+              </>
+            )}
+            {isResizing && displayWidth != null && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-foreground/80 px-2 py-0.5 text-xs font-medium text-background tabular-nums">
+                {displayWidth}px
+              </div>
+            )}
+            {!readOnly && showHover && !isResizing && (
               <div className="absolute right-2 top-2 flex gap-1">
                 <button
                   type="button"
