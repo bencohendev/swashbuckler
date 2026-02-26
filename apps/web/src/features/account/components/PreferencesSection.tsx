@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { CheckIcon, ChevronsUpDownIcon, MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useSpaces } from '@/shared/lib/data'
+import { useTutorial } from '@/features/onboarding'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
+import { Button } from '@/shared/components/ui/Button'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 
@@ -22,6 +24,7 @@ const THEME_OPTIONS = [
 export function PreferencesSection({ user }: { user: User }) {
   const { theme, setTheme } = useTheme()
   const { spaces } = useSpaces()
+  const restartTutorial = useTutorial((s) => s.restart)
   const [mounted, setMounted] = useState(false)
 
   const metadata = user.user_metadata ?? {}
@@ -104,6 +107,15 @@ export function PreferencesSection({ user }: { user: User }) {
             </p>
           </div>
         )}
+        <div>
+          <span className="mb-1 block text-sm font-medium">Tutorial</span>
+          <Button variant="outline" size="sm" onClick={restartTutorial}>
+            Restart tutorial
+          </Button>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Walk through the app features again.
+          </p>
+        </div>
       </div>
     </div>
   )
