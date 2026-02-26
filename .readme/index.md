@@ -150,7 +150,7 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
-| Table Row/Column Resize | Drag-to-resize columns and rows in editor tables |
+| [Table Column Resize](features/table-column-resize.md) | Drag-to-resize columns in editor tables |
 
 ## Bugs
 
