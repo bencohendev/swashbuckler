@@ -13,13 +13,17 @@ import { Button } from "@/shared/components/ui/Button"
 import { Input } from "@/shared/components/ui/Input"
 import { Label } from "@/shared/components/ui/Label"
 import { EmojiPicker } from "@/shared/components/EmojiPicker"
+import { StarterKitSelector } from "@/features/starter-kits/components/StarterKitSelector"
 import type { Space } from "@/shared/lib/data/types"
+
+type TypeSource = 'empty' | 'copy' | 'kit'
 
 export interface CreateSpaceInput {
   name: string
   icon?: string
   copyTypesFromSpaceId?: string
   includeTemplates?: boolean
+  starterKitId?: string
 }
 
 interface CreateSpaceDialogProps {
@@ -32,8 +36,10 @@ interface CreateSpaceDialogProps {
 export function CreateSpaceDialog({ open, onOpenChange, onCreate, spaces = [] }: CreateSpaceDialogProps) {
   const [name, setName] = useState("")
   const [icon, setIcon] = useState("📁")
+  const [typeSource, setTypeSource] = useState<TypeSource>('empty')
   const [copyFromSpaceId, setCopyFromSpaceId] = useState("")
   const [includeTemplates, setIncludeTemplates] = useState(false)
+  const [starterKitId, setStarterKitId] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -46,8 +52,9 @@ export function CreateSpaceDialog({ open, onOpenChange, onCreate, spaces = [] }:
     const result = await onCreate({
       name: name.trim(),
       icon,
-      copyTypesFromSpaceId: copyFromSpaceId || undefined,
-      includeTemplates: copyFromSpaceId ? includeTemplates : undefined,
+      copyTypesFromSpaceId: typeSource === 'copy' && copyFromSpaceId ? copyFromSpaceId : undefined,
+      includeTemplates: typeSource === 'copy' && copyFromSpaceId ? includeTemplates : undefined,
+      starterKitId: typeSource === 'kit' && starterKitId ? starterKitId : undefined,
     })
     setIsCreating(false)
     if (result.error) {
@@ -56,8 +63,10 @@ export function CreateSpaceDialog({ open, onOpenChange, onCreate, spaces = [] }:
     }
     setName("")
     setIcon("📁")
+    setTypeSource('empty')
     setCopyFromSpaceId("")
     setIncludeTemplates(false)
+    setStarterKitId("")
     setError(null)
     onOpenChange(false)
   }
@@ -104,38 +113,83 @@ export function CreateSpaceDialog({ open, onOpenChange, onCreate, spaces = [] }:
               </button>
             </EmojiPicker>
           </div>
-          {spaces.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="copy-types-from">Copy types from</Label>
-              <select
-                id="copy-types-from"
-                value={copyFromSpaceId}
-                onChange={(e) => {
-                  setCopyFromSpaceId(e.target.value)
-                  if (!e.target.value) setIncludeTemplates(false)
-                }}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">None</option>
-                {spaces.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.icon} {s.name}
-                  </option>
-                ))}
-              </select>
-              {copyFromSpaceId && (
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <fieldset className="space-y-2">
+            <Label asChild><legend>Types</legend></Label>
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="type-source"
+                  value="empty"
+                  checked={typeSource === 'empty'}
+                  onChange={() => setTypeSource('empty')}
+                  className="size-3.5"
+                />
+                Start empty
+              </label>
+              {spaces.length > 0 && (
+                <label className="flex items-center gap-2 text-sm">
                   <input
-                    type="checkbox"
-                    checked={includeTemplates}
-                    onChange={(e) => setIncludeTemplates(e.target.checked)}
+                    type="radio"
+                    name="type-source"
+                    value="copy"
+                    checked={typeSource === 'copy'}
+                    onChange={() => setTypeSource('copy')}
                     className="size-3.5"
                   />
-                  Include templates
+                  Copy from existing space
                 </label>
               )}
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="type-source"
+                  value="kit"
+                  checked={typeSource === 'kit'}
+                  onChange={() => setTypeSource('kit')}
+                  className="size-3.5"
+                />
+                Use a starter kit
+              </label>
             </div>
-          )}
+            {typeSource === 'copy' && spaces.length > 0 && (
+              <div className="space-y-2 pl-6">
+                <select
+                  id="copy-types-from"
+                  value={copyFromSpaceId}
+                  onChange={(e) => {
+                    setCopyFromSpaceId(e.target.value)
+                    if (!e.target.value) setIncludeTemplates(false)
+                  }}
+                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-ring"
+                  aria-label="Space to copy types from"
+                >
+                  <option value="">Select a space…</option>
+                  {spaces.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.icon} {s.name}
+                    </option>
+                  ))}
+                </select>
+                {copyFromSpaceId && (
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={includeTemplates}
+                      onChange={(e) => setIncludeTemplates(e.target.checked)}
+                      className="size-3.5"
+                    />
+                    Include templates
+                  </label>
+                )}
+              </div>
+            )}
+            {typeSource === 'kit' && (
+              <div className="pl-6">
+                <StarterKitSelector value={starterKitId} onChange={setStarterKitId} />
+              </div>
+            )}
+          </fieldset>
           <DialogFooter>
             <Button
               type="button"
