@@ -79,8 +79,8 @@ export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
         </div>
       </div>
 
-      {/* Custom themes */}
-      {themes.length > 0 && (
+      {/* Custom themes — guard with mounted to avoid hydration mismatch (store reads localStorage) */}
+      {mounted && themes.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-medium">Custom Themes</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
