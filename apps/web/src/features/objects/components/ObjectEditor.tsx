@@ -393,7 +393,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         </div>
       </header>
 
-      <main ref={mainRef} className="flex-1 overflow-auto p-4 md:p-6">
+      <main ref={mainRef} className="flex-1 overflow-auto p-4 md:pl-20 md:pr-6 md:py-6">
         <div className="relative mx-auto max-w-3xl pl-14">
           {collaborationOptions && (
             <RemoteMouseCursors awareness={collaborationOptions.awareness} />
