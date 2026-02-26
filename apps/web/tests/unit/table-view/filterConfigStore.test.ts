@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useFilterConfigStore } from '@/features/table-view/stores/filterConfig'
-import { EMPTY_FILTERS, type TypePageFilters } from '@/features/table-view/lib/filterObjects'
+import { EMPTY_EXPRESSION, type FilterExpression } from '@/features/table-view/lib/filterTypes'
 
-const STORAGE_KEY = 'swashbuckler:typeFilterConfig'
+const STORAGE_KEY = 'swashbuckler:filterExpression:v2'
 
 describe('useFilterConfigStore', () => {
   beforeEach(() => {
@@ -10,85 +10,69 @@ describe('useFilterConfigStore', () => {
     localStorage.removeItem(STORAGE_KEY)
   })
 
-  it('getFilters returns EMPTY_FILTERS for unknown slug', () => {
-    const filters = useFilterConfigStore.getState().getFilters('unknown')
-    expect(filters).toEqual(EMPTY_FILTERS)
+  it('getExpression returns EMPTY_EXPRESSION for unknown slug', () => {
+    const expr = useFilterConfigStore.getState().getExpression('unknown')
+    expect(expr).toEqual(EMPTY_EXPRESSION)
   })
 
-  it('round-trip with search filter', () => {
-    const filters: TypePageFilters = { ...EMPTY_FILTERS, search: 'hello' }
-    useFilterConfigStore.getState().setFilters('tasks', filters)
+  it('round-trip with search', () => {
+    const expr: FilterExpression = { ...EMPTY_EXPRESSION, search: 'hello' }
+    useFilterConfigStore.getState().setExpression('tasks', expr)
 
-    const result = useFilterConfigStore.getState().getFilters('tasks')
+    const result = useFilterConfigStore.getState().getExpression('tasks')
     expect(result.search).toBe('hello')
   })
 
-  it('serializes and deserializes Sets correctly', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: {
-        'field-1': new Set(['A', 'B']),
-        'field-2': new Set(['X']),
-      },
-      tagFilter: new Set(['tag-1', 'tag-2']),
+  it('round-trip with groups and conditions', () => {
+    const expr: FilterExpression = {
+      search: '',
+      groups: [{
+        id: 'g1',
+        conditions: [
+          { id: 'c1', target: { kind: 'title' }, operator: 'contains', value: 'test' },
+          { id: 'c2', target: { kind: 'property', fieldId: 'field-1' }, operator: 'eq', value: 42 },
+        ],
+      }],
     }
-    useFilterConfigStore.getState().setFilters('tasks', filters)
+    useFilterConfigStore.getState().setExpression('tasks', expr)
 
-    // Check localStorage has arrays (not Sets)
+    const result = useFilterConfigStore.getState().getExpression('tasks')
+    expect(result.groups).toHaveLength(1)
+    expect(result.groups[0].conditions).toHaveLength(2)
+    expect(result.groups[0].conditions[0].operator).toBe('contains')
+    expect(result.groups[0].conditions[1].value).toBe(42)
+  })
+
+  it('persists to localStorage as plain JSON', () => {
+    const expr: FilterExpression = {
+      search: 'test',
+      groups: [{
+        id: 'g1',
+        conditions: [{ id: 'c1', target: { kind: 'tag' }, operator: 'contains', value: 'tag-1' }],
+      }],
+    }
+    useFilterConfigStore.getState().setExpression('tasks', expr)
+
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)!)
-    expect(Array.isArray(stored.tasks.selectFilters['field-1'])).toBe(true)
-    expect(stored.tasks.selectFilters['field-1']).toEqual(['A', 'B'])
-    expect(Array.isArray(stored.tasks.tagFilter)).toBe(true)
-    expect(stored.tasks.tagFilter).toEqual(['tag-1', 'tag-2'])
-
-    // Check deserialized state has Sets
-    const result = useFilterConfigStore.getState().getFilters('tasks')
-    expect(result.selectFilters['field-1']).toBeInstanceOf(Set)
-    expect(result.selectFilters['field-1'].has('A')).toBe(true)
-    expect(result.selectFilters['field-1'].has('B')).toBe(true)
-    expect(result.tagFilter).toBeInstanceOf(Set)
-    expect(result.tagFilter.has('tag-1')).toBe(true)
-  })
-
-  it('persists date filters', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      dateFilters: { 'date-field': { from: '2025-01-01', to: '2025-12-31' } },
-    }
-    useFilterConfigStore.getState().setFilters('tasks', filters)
-
-    const result = useFilterConfigStore.getState().getFilters('tasks')
-    expect(result.dateFilters['date-field']).toEqual({ from: '2025-01-01', to: '2025-12-31' })
-  })
-
-  it('persists number filters', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      numberFilters: { 'num-field': { min: 10, max: 100 } },
-    }
-    useFilterConfigStore.getState().setFilters('tasks', filters)
-
-    const result = useFilterConfigStore.getState().getFilters('tasks')
-    expect(result.numberFilters['num-field']).toEqual({ min: 10, max: 100 })
-  })
-
-  it('persists text filters', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      textFilters: { 'text-field': 'hello world' },
-    }
-    useFilterConfigStore.getState().setFilters('tasks', filters)
-
-    const result = useFilterConfigStore.getState().getFilters('tasks')
-    expect(result.textFilters['text-field']).toBe('hello world')
+    expect(stored.tasks.search).toBe('test')
+    expect(stored.tasks.groups[0].conditions[0].value).toBe('tag-1')
   })
 
   it('handles multiple slugs independently', () => {
-    useFilterConfigStore.getState().setFilters('tasks', { ...EMPTY_FILTERS, search: 'task query' })
-    useFilterConfigStore.getState().setFilters('notes', { ...EMPTY_FILTERS, search: 'note query' })
+    useFilterConfigStore.getState().setExpression('tasks', { ...EMPTY_EXPRESSION, search: 'task query' })
+    useFilterConfigStore.getState().setExpression('notes', { ...EMPTY_EXPRESSION, search: 'note query' })
 
-    expect(useFilterConfigStore.getState().getFilters('tasks').search).toBe('task query')
-    expect(useFilterConfigStore.getState().getFilters('notes').search).toBe('note query')
-    expect(useFilterConfigStore.getState().getFilters('pages')).toEqual(EMPTY_FILTERS)
+    expect(useFilterConfigStore.getState().getExpression('tasks').search).toBe('task query')
+    expect(useFilterConfigStore.getState().getExpression('notes').search).toBe('note query')
+    expect(useFilterConfigStore.getState().getExpression('pages')).toEqual(EMPTY_EXPRESSION)
+  })
+
+  it('clean reset with new storage key (no old data)', () => {
+    // Old key should not interfere
+    localStorage.setItem('swashbuckler:typeFilterConfig', JSON.stringify({ tasks: { search: 'old' } }))
+    useFilterConfigStore.setState({ configs: {} })
+
+    const result = useFilterConfigStore.getState().getExpression('tasks')
+    expect(result).toEqual(EMPTY_EXPRESSION)
   })
 })
