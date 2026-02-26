@@ -54,7 +54,13 @@ export const editorPlugins = [
   TogglePlugin,
   CalloutPlugin,
   PrivateBlockPlugin,
-  TablePlugin,
+  TablePlugin.configure({
+    options: {
+      minColumnWidth: 48,
+      initialTableWidth: 640,
+      disableMarginLeft: true,
+    },
+  }),
   ImagePlugin.configure({
     options: {
       uploadImage: async (dataUrl: ArrayBuffer | string) => {
@@ -63,7 +69,7 @@ export const editorPlugins = [
       },
     },
   }),
-  LinkPlugin.overrideEditor(({ editor, tf: { insertText, insertData, insertBreak } }) => ({
+  LinkPlugin.overrideEditor(({ editor, tf: { insertText, insertData } }) => ({
     transforms: {
       insertText(text, options) {
         insertText(text, options);
@@ -77,15 +83,6 @@ export const editorPlugins = [
       insertData(data) {
         insertData(data);
         // Pasting a URL also triggers link wrapping
-        if (editor.selection) {
-          setTimeout(() => {
-            editor.tf.focus({ at: editor.selection ?? undefined });
-          }, 0);
-        }
-      },
-      insertBreak() {
-        insertBreak();
-        // Enter after a URL also triggers link auto-detection
         if (editor.selection) {
           setTimeout(() => {
             editor.tf.focus({ at: editor.selection ?? undefined });
