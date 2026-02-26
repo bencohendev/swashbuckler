@@ -10,6 +10,7 @@ import { useTemplates, SaveAsTemplateDialog, ApplyTemplateDialog } from '@/featu
 import { extractMentionIds, LinkedObjects } from '@/features/relations'
 import { useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
 import { useEditorStore } from '@/features/editor/store'
+import { useRecentAccess } from '@/shared/stores/recentAccess'
 import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
 import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
@@ -89,6 +90,12 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     awareness: collaborationOptions?.awareness ?? null,
     enabled: isCollaborative && !!collaborationOptions,
   })
+
+  // Track access for recent-entries ordering
+  const trackAccess = useRecentAccess((s) => s.trackAccess)
+  useEffect(() => {
+    trackAccess(id)
+  }, [id, trackAccess])
 
   // Sync title when object changes (e.g., on initial load or navigation)
   // For new entries (autoFocus), keep title empty so placeholder shows the generated name

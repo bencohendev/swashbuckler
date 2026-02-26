@@ -8,6 +8,7 @@ import { HTML5Backend } from "react-dnd-html5-backend"
 import { ArchiveIcon, BookOpenIcon, HelpCircleIcon, HomeIcon, KeyboardIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar } from "@/shared/stores/sidebar"
+import { useRecentAccess } from "@/shared/stores/recentAccess"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObjectSummary, ObjectType, Template } from "@/shared/lib/data"
@@ -190,6 +191,15 @@ export function Sidebar() {
   const sidebarLoading = !space || (isSharedUser && exclusionFilterLoading)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
+
+  // Init recent-access store when space changes
+  const initRecentAccess = useRecentAccess((s) => s.init)
+  useEffect(() => {
+    if (space) {
+      initRecentAccess(space.id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run on space ID change
+  }, [space?.id, initRecentAccess])
 
   // Keyboard shortcut: Cmd/Ctrl + \ to toggle sidebar
   useEffect(() => {
