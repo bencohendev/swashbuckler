@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useEffect, useMemo, useRef } from 'react';
+import { createContext, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from '@udecode/plate/react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -60,6 +60,10 @@ export interface CollaborationOptions {
   cursorData: { name: string; color: string; avatarUrl?: string }
 }
 
+export interface EditorHandle {
+  applyContent: (content: Value, mode: 'replace' | 'prepend') => void
+}
+
 interface EditorProps {
   initialContent?: Value;
   onSave?: (content: Value) => Promise<void>;
@@ -68,6 +72,7 @@ interface EditorProps {
   isTemplateMode?: boolean;
   isOwner?: boolean;
   collaborationOptions?: CollaborationOptions;
+  ref?: React.Ref<EditorHandle>;
 }
 
 const COMPONENT_OVERRIDES = {
@@ -172,6 +177,7 @@ function CollaborativeEditor({
   isTemplateMode,
   isOwner = true,
   collaborationOptions,
+  ref,
 }: Required<Pick<EditorProps, 'collaborationOptions'>> & Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, isDirty, lastSaved, setCollaborative } = useEditorStore();
   const { provider, doc, awareness, cursorData } = collaborationOptions;
@@ -205,6 +211,22 @@ function CollaborativeEditor({
     // Slate tree and Y.Doc tree, causing "Path doesn't match yText" errors.
     override: { components: COMPONENT_OVERRIDES },
   });
+
+  // Expose imperative handle so parent can apply template content through Slate
+  // transforms, which flow through the Y.Doc to all collaborators.
+  useImperativeHandle(ref, () => ({
+    applyContent: (content: Value, mode: 'replace' | 'prepend') => {
+      if (mode === 'replace') {
+        for (let i = editor.children.length - 1; i >= 0; i--) {
+          editor.tf.removeNodes({ at: [i] })
+        }
+        editor.tf.insertNodes(content, { at: [0] })
+      } else {
+        // Prepend: insert template content before existing content
+        editor.tf.insertNodes(content, { at: [0] })
+      }
+    },
+  }), [editor])
 
   // Keep Zustand store in sync so auto-save can read current content,
   // and manually send cursor position via awareness.

@@ -6,7 +6,6 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Apply Template unavailable for some entries | Users report not being able to apply templates to certain entries. Known: disabled in collaborative mode. Investigate if there are other cases (no templates for type shows empty state but may be confusing) |
 | Sidebar entry reordering slow | Entries sort by `updated_at` descending. Opening an entry doesn't bump `updated_at` — only editing does. So the "move to top" only happens after a save, and then requires a TanStack Query invalidation + re-sort. Consider `last_accessed_at` or optimistic reorder |
 | Cursor lost after inserting inline link | After inserting an inline link in the editor, the cursor/selection is lost. Likely missing `editor.tf.move()` + focus restoration after link node insertion (see mention insertion pattern for correct approach) |
 | Delete space redirects unnecessarily | Deleting a space always navigates to `/` — should only redirect if the deleted space was the current space. If deleting a different space, stay on current page |
@@ -15,6 +14,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Apply Template unavailable in shared spaces | Apply template content through Slate transforms (via `EditorHandle.applyContent`) so changes flow through Y.Doc to collaborators, instead of bypassing Yjs with a direct DB write |
 | 2026-02-25 | Docs reference nested entries | Removed unimplemented nesting section from `entries-and-types.mdx`; nested entries tracked as planned feature |
 | 2026-02-25 | Theme switcher + custom themes interaction | Added palette icon for custom themes, remember last custom theme in cycle so users can switch back |
 | 2026-02-25 | OAuth redirect account menu stale | Derive `isGuest` from client-side `useAuth()` state instead of server `email` prop — use server prop only during hydration loading |
