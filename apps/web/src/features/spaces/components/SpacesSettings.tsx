@@ -46,16 +46,18 @@ export function SpacesSettings() {
             canArchive={ownedSpaces.length > 1}
             onUpdate={update}
             onArchive={async (id) => {
+              const wasCurrent = id === currentSpace?.id
               const result = await archiveSpace(id)
               if (result.error) {
                 toast({ description: result.error, variant: 'destructive' })
                 return
               }
               toast({ description: `"${space.name}" archived`, variant: 'success' })
-              router.push('/dashboard')
+              if (wasCurrent) router.push('/dashboard')
             }}
             onDelete={async (id) => {
-              if (id === currentSpace?.id) {
+              const wasCurrent = id === currentSpace?.id
+              if (wasCurrent) {
                 const next = ownedSpaces.find(s => s.id !== id)
                 if (next) switchSpace(next.id)
               }
@@ -65,7 +67,7 @@ export function SpacesSettings() {
                 return
               }
               toast({ description: 'Space deleted', variant: 'success' })
-              router.push('/dashboard')
+              if (wasCurrent) router.push('/dashboard')
             }}
           />
         ))}
