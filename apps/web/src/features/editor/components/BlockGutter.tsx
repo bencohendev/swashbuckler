@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useEditorRef } from '@udecode/plate/react'
 import type { TElement } from '@udecode/plate'
-import { GripVertical, Plus, Copy, Trash2 } from 'lucide-react'
+import { GripVertical, Plus, Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -21,13 +21,42 @@ function stripIds(node: Record<string, unknown>): Record<string, unknown> {
   return clone
 }
 
+type HandleRef = (
+  elementOrNode:
+    | Element
+    | React.ReactElement
+    | React.RefObject<unknown>
+    | null,
+) => void
+
 interface BlockGutterProps {
   element: TElement
+  handleRef?: HandleRef
 }
 
-export function BlockGutter({ element }: BlockGutterProps) {
+export function BlockGutter({ element, handleRef }: BlockGutterProps) {
   const editor = useEditorRef()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const gripRef = useRef<HTMLButtonElement>(null)
+
+  // Connect the drag handle ref to the grip button
+  useEffect(() => {
+    if (!handleRef || !gripRef.current) return
+    handleRef(gripRef.current)
+    return () => {
+      handleRef(null)
+    }
+  }, [handleRef])
+
+  // Close menu when drag starts from the grip button
+  useEffect(() => {
+    const el = gripRef.current
+    if (!el) return
+
+    const onDragStart = () => setIsMenuOpen(false)
+    el.addEventListener('dragstart', onDragStart)
+    return () => el.removeEventListener('dragstart', onDragStart)
+  }, [])
 
   const getPath = useCallback(() => {
     const index = editor.children.indexOf(element)
@@ -72,6 +101,24 @@ export function BlockGutter({ element }: BlockGutterProps) {
     editor.tf.removeNodes({ at: path })
   }, [editor, getPath])
 
+  const moveUp = useCallback(() => {
+    const path = getPath()
+    if (!path || path[0] <= 0) return
+    editor.tf.moveNodes({ at: path, to: [path[0] - 1] })
+  }, [editor, getPath])
+
+  const moveDown = useCallback(() => {
+    const path = getPath()
+    if (!path || path[0] >= editor.children.length - 1) return
+    // Slate adjusts newPath by -1 when source is before destination,
+    // so we use path[0] + 2 to end up at path[0] + 1.
+    editor.tf.moveNodes({ at: path, to: [path[0] + 2] })
+  }, [editor, getPath])
+
+  const idx = editor.children.indexOf(element)
+  const isFirst = idx <= 0
+  const isLast = idx >= editor.children.length - 1
+
   return (
     <div
       contentEditable={false}
@@ -82,8 +129,9 @@ export function BlockGutter({ element }: BlockGutterProps) {
       <DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
         <DropdownMenuTrigger asChild>
           <button
+            ref={gripRef}
             type="button"
-            className="flex size-6 items-center justify-center rounded hover:bg-accent"
+            className="flex size-6 cursor-grab items-center justify-center rounded hover:bg-accent"
             aria-label="Block options"
           >
             <GripVertical className="size-4 text-muted-foreground" />
@@ -101,6 +149,15 @@ export function BlockGutter({ element }: BlockGutterProps) {
           <DropdownMenuItem onSelect={duplicate}>
             <Copy className="mr-2 size-4" />
             Duplicate
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={moveUp} disabled={isFirst}>
+            <ArrowUp className="mr-2 size-4" />
+            Move up
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={moveDown} disabled={isLast}>
+            <ArrowDown className="mr-2 size-4" />
+            Move down
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onSelect={deleteBlock}>

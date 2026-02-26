@@ -1,14 +1,10 @@
 # Block Side Menu
 
-**Status:** Active
+**Status:** Done
 
 ## Overview
 
-Notion-style hover handle in the left gutter of the editor that provides quick block actions: insert above/below, duplicate, and delete. Also serves as an escape hatch for "trapped" blocks (code blocks, tables, private blocks) where normal cursor navigation is limited.
-
-## Remaining Work
-
-- [ ] Drag-to-reorder blocks via the grip handle (the `group relative` wrapper is already DnD-ready — add `useDndNode` to `BlockGutter`)
+Notion-style hover handle in the left gutter of the editor that provides quick block actions: insert above/below, duplicate, delete, move up/down, and drag-to-reorder. Also serves as an escape hatch for "trapped" blocks (code blocks, tables, private blocks) where normal cursor navigation is limited.
 
 ## Architecture — `render.aboveNodes` Plugin
 
@@ -25,6 +21,7 @@ A `BlockSideMenuPlugin` using Plate's `render.aboveNodes` wraps each top-level b
 - **Insert above** — `editor.tf.insertNodes({ type: 'p', children: [{ text: '' }] }, { at: path })` + focus
 - **Insert below** — insert at `[path[0] + 1]` + focus
 - **Duplicate** — deep clone element, strip `id` fields (so NodeIdPlugin assigns fresh ones for Yjs safety), insert below
+- **Move up/down** — `editor.tf.moveNodes` for keyboard-accessible reorder (disabled at boundaries)
 - **Delete** — `editor.tf.removeNodes({ at: path })`
 
 ### Key Details
@@ -35,5 +32,5 @@ A `BlockSideMenuPlugin` using Plate's `render.aboveNodes` wraps each top-level b
 - **Yjs safety**: Duplicate action strips all `id` fields from cloned nodes
 - **Mobile**: Hidden — `BlockWrapper` returns bare `<>{children}</>` when `useIsMobile()` is true
 - **ReadOnly**: Same — no gutter wrapper in read-only mode
-- **Accessibility**: `aria-label="Block options"` on trigger, Radix DropdownMenu provides keyboard nav
-- **DnD-ready**: The same wrapper can host `useDndNode` drag handles — just add the hook to `BlockGutter`
+- **Accessibility**: `aria-label="Block options"` on trigger, Radix DropdownMenu provides keyboard nav, Move up/down items for non-drag reorder
+- **Drag-to-reorder**: `BlockWrapper` uses `useDraggable({ element })` from `@udecode/plate-dnd`. `previewRef` on the wrapper div makes it both a drop target and drag preview. `handleRef` passed to `BlockGutter`'s grip button as the drag handle. `useDropLine` renders a horizontal indicator at the drop position. `body.dragging` CSS sets `cursor: grabbing` during drag. Dropdown auto-closes when drag starts.
