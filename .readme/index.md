@@ -142,7 +142,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | First use tutorial | Onboarding walkthrough for new users |
-| Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
+| [Block Side Menu](features/block-side-menu.md) | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
 | API documentation | API documentation with diagrams |
 | Saved views and filters | Save current filter/sort configuration as named views on type pages; switch between saved views |
 | Resize images in editor | Drag handles or resize controls on images in the block editor |
