@@ -151,6 +151,7 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Feature | Description |
 |---------|-------------|
+| Fantasy Theme | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
 
 ## Bugs
 
