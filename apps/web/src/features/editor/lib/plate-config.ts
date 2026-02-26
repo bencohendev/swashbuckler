@@ -8,7 +8,7 @@ import {
 import { HeadingPlugin } from '@udecode/plate-heading/react';
 import { BlockquotePlugin } from '@udecode/plate-block-quote/react';
 import { CodeBlockPlugin } from '@udecode/plate-code-block/react';
-import { ListPlugin } from '@udecode/plate-list/react';
+import { ListPlugin, TodoListPlugin } from '@udecode/plate-list/react';
 import { TogglePlugin } from '@udecode/plate-toggle/react';
 import { CalloutPlugin } from '@udecode/plate-callout/react';
 import { TablePlugin } from '@udecode/plate-table/react';
@@ -49,6 +49,7 @@ export const editorPlugins = [
   BlockquotePlugin,
   CodeBlockPlugin,
   ListPlugin,
+  TodoListPlugin,
   TogglePlugin,
   CalloutPlugin,
   PrivateBlockPlugin,
@@ -181,6 +182,12 @@ export const editorPlugins = [
           mode: 'block',
           type: 'code_block',
           match: '```',
+        },
+        // Todo list
+        {
+          mode: 'block',
+          type: 'action_item',
+          match: '[] ',
         },
         // Bulleted list
         {

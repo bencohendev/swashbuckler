@@ -23,7 +23,7 @@ Rich block editor built on Plate.js (Slate.js) with slash commands, mentions, sp
 ## Block Types
 
 - Paragraph, Headings (H1-H3), Blockquote
-- Bulleted list, Numbered list, Toggle list
+- Bulleted list, Numbered list, Todo list, Toggle list
 - Code block (with syntax highlighting)
 - Callout, Table, Image
 - Link, Mention

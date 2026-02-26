@@ -11,3 +11,4 @@ export { LinkElement } from './Link';
 export { MentionElement, MentionInputElement } from './Mention';
 export { SlashInputElement } from './SlashInput';
 export { TemplateVariableElement } from './TemplateVariable';
+export { TodoListElement } from './TodoList';

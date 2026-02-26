@@ -35,6 +35,7 @@ import {
   MentionInputElement,
   SlashInputElement,
   TemplateVariableElement,
+  TodoListElement,
 } from './elements';
 import { PrivateBlockElement } from '../plugins/private-plugin';
 import { useEditorStore } from '../store';
@@ -93,6 +94,7 @@ const COMPONENT_OVERRIDES = {
   slash_input: SlashInputElement,
   template_variable: TemplateVariableElement,
   private_block: PrivateBlockElement,
+  action_item: TodoListElement,
 } as const;
 
 /**
