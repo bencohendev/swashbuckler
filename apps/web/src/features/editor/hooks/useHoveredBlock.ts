@@ -10,20 +10,50 @@ export interface HoveredBlock {
   rect: { top: number; left: number; height: number }
 }
 
+export interface UseHoveredBlockResult {
+  hoveredBlock: HoveredBlock | null
+  /** Spread on the menu container so the hover survives the editor→menu gap. */
+  menuProps: {
+    onMouseEnter: () => void
+    onMouseLeave: () => void
+  }
+}
+
 /**
  * Track which top-level editor block the mouse is hovering over.
  *
  * Avoids `DOMEditor` entirely (the dual slate-dom package issue makes its
  * WeakMaps unreliable). Instead it finds the editor element via a container
  * ref and resolves Slate nodes by DOM child-index → `editor.children[i]`.
+ *
+ * Returns menu interaction props so the handle can be reached across the
+ * gutter gap without the hover state disappearing.
  */
 export function useHoveredBlock(
   containerRef: RefObject<HTMLElement | null>,
-): HoveredBlock | null {
+): UseHoveredBlockResult {
   const editor = useEditorRef()
   const [hoveredBlock, setHoveredBlock] = useState<HoveredBlock | null>(null)
   const rafRef = useRef(0)
   const lastDomNodeRef = useRef<HTMLElement | null>(null)
+  const leaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearHover = useCallback(() => {
+    setHoveredBlock(null)
+    lastDomNodeRef.current = null
+  }, [])
+
+  const cancelPendingHide = useCallback(() => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current)
+      leaveTimeoutRef.current = null
+    }
+  }, [])
+
+  const scheduleClear = useCallback(() => {
+    cancelPendingHide()
+    leaveTimeoutRef.current = setTimeout(clearHover, 200)
+  }, [cancelPendingHide, clearHover])
 
   const update = useCallback(
     (target: EventTarget | null, editorEl: HTMLElement) => {
@@ -98,14 +128,14 @@ export function useHoveredBlock(
     if (!editorEl) return
 
     const onMouseMove = (e: MouseEvent) => {
+      cancelPendingHide()
       cancelAnimationFrame(rafRef.current)
       rafRef.current = requestAnimationFrame(() => update(e.target, editorEl))
     }
 
     const onMouseLeave = () => {
       cancelAnimationFrame(rafRef.current)
-      setHoveredBlock(null)
-      lastDomNodeRef.current = null
+      scheduleClear()
     }
 
     editorEl.addEventListener('mousemove', onMouseMove)
@@ -115,8 +145,15 @@ export function useHoveredBlock(
       editorEl.removeEventListener('mousemove', onMouseMove)
       editorEl.removeEventListener('mouseleave', onMouseLeave)
       cancelAnimationFrame(rafRef.current)
+      cancelPendingHide()
     }
-  }, [containerRef, update])
+  }, [containerRef, update, cancelPendingHide, scheduleClear])
 
-  return hoveredBlock
+  return {
+    hoveredBlock,
+    menuProps: {
+      onMouseEnter: cancelPendingHide,
+      onMouseLeave: scheduleClear,
+    },
+  }
 }

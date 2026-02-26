@@ -29,7 +29,7 @@ export function BlockSideMenu() {
   const readOnly = useReadOnly()
   const isMobile = useIsMobile()
   const anchorRef = useRef<HTMLSpanElement>(null)
-  const hoveredBlock = useHoveredBlock(anchorRef)
+  const { hoveredBlock, menuProps } = useHoveredBlock(anchorRef)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [lockedBlock, setLockedBlock] = useState<HoveredBlock | null>(null)
 
@@ -95,6 +95,7 @@ export function BlockSideMenu() {
       {anchor}
       {createPortal(
         <div
+          {...menuProps}
           className="pointer-events-auto fixed z-50 transition-opacity duration-150"
           style={{
             top: rect.top + rect.height / 2 - 12,
