@@ -187,9 +187,10 @@ function CellResizeHandle() {
   return (
     <ResizeHandle
       {...rightProps}
-      className="absolute right-0 top-0 z-20 flex h-full w-1 cursor-col-resize select-none items-center justify-center"
+      className="group/resize absolute -right-1 top-0 z-20 flex h-full w-2 cursor-col-resize select-none items-center justify-center"
+      contentEditable={false}
     >
-      <div className="h-full w-[3px] rounded-full bg-primary opacity-0 transition-opacity hover:opacity-100 [[data-resizing]_&]:opacity-100" />
+      <div className="pointer-events-none h-full w-[3px] rounded-full bg-primary opacity-0 transition-opacity group-hover/resize:opacity-100" />
     </ResizeHandle>
   );
 }
