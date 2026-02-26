@@ -112,7 +112,7 @@ export function BlockGutter({ element, handleRef }: BlockGutterProps) {
   return (
     <div
       contentEditable={false}
-      className={`absolute left-0 top-1 flex h-6 items-center gap-0.5 transition-opacity duration-150 ${
+      className={`absolute -left-14 top-1 flex h-6 items-center gap-0.5 transition-opacity duration-150 ${
         isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}
     >
