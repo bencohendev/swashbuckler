@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import type { TElement } from '@udecode/plate';
 import type { PlateElementProps } from '@udecode/plate/react';
 import { PlateElement, useEditorRef, useReadOnly } from '@udecode/plate/react';
 import {
@@ -10,13 +11,17 @@ import {
   deleteColumn,
   deleteTable,
 } from '@udecode/plate-table';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Paintbrush, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuLabel,
 } from '@/shared/components/ui/DropdownMenu';
 
 type TableEditor = Parameters<typeof insertTableRow>[0];
@@ -31,17 +36,193 @@ interface ColPosition {
   width: number;
 }
 
+interface TableElementNode {
+  children: { type: string; children: { type: string }[] }[];
+  [key: string]: unknown;
+}
+
+function stripIds(node: Record<string, unknown>): Record<string, unknown> {
+  const clone = { ...node };
+  delete clone.id;
+  if (Array.isArray(clone.children)) {
+    clone.children = (clone.children as Record<string, unknown>[]).map(
+      stripIds,
+    );
+  }
+  return clone;
+}
+
+const BACKGROUND_COLORS = [
+  { label: 'Light Gray', value: '#f1f1ef' },
+  { label: 'Light Brown', value: '#f4eeee' },
+  { label: 'Light Orange', value: '#faebdd' },
+  { label: 'Light Yellow', value: '#fbf3db' },
+  { label: 'Light Green', value: '#ddedea' },
+  { label: 'Light Blue', value: '#ddebf1' },
+  { label: 'Light Purple', value: '#eae4f2' },
+  { label: 'Light Pink', value: '#f4dfeb' },
+  { label: 'Light Red', value: '#fbe4e4' },
+  { label: 'Light Teal', value: '#d3e5ef' },
+];
+
+const TEXT_COLORS = [
+  { label: 'Gray', value: '#787774' },
+  { label: 'Brown', value: '#9f6b53' },
+  { label: 'Orange', value: '#d9730d' },
+  { label: 'Yellow', value: '#cb912f' },
+  { label: 'Green', value: '#448361' },
+  { label: 'Blue', value: '#337ea9' },
+  { label: 'Purple', value: '#9065b0' },
+  { label: 'Pink', value: '#c14c8a' },
+  { label: 'Red', value: '#d44c47' },
+  { label: 'Teal', value: '#2b6e99' },
+];
+
+function ColorPaletteSubmenu({
+  cellPaths,
+  editor,
+  currentBackground,
+  currentColor,
+}: {
+  cellPaths: number[][];
+  editor: TableEditor;
+  currentBackground?: string;
+  currentColor?: string;
+}) {
+  const applyBackground = (value: string | undefined) => {
+    for (const path of cellPaths) {
+      editor.tf.setNodes({ background: value ?? null } as Record<string, unknown>, { at: path });
+    }
+  };
+
+  const applyColor = (value: string | undefined) => {
+    for (const path of cellPaths) {
+      editor.tf.setNodes({ color: value ?? null } as Record<string, unknown>, { at: path });
+    }
+  };
+
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <Paintbrush className="size-4" />
+        Color
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-[220px]">
+        <DropdownMenuLabel>Background</DropdownMenuLabel>
+        <div className="grid grid-cols-5 gap-1 px-2 pb-1">
+          <button
+            type="button"
+            className="flex size-6 items-center justify-center rounded border border-border"
+            aria-label="Default background"
+            onClick={() => applyBackground(undefined)}
+          >
+            {!currentBackground && <Check className="size-3 text-muted-foreground" />}
+          </button>
+          {BACKGROUND_COLORS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              className="flex size-6 items-center justify-center rounded border border-border"
+              style={{ backgroundColor: c.value }}
+              aria-label={c.label}
+              onClick={() => applyBackground(c.value)}
+            >
+              {currentBackground === c.value && <Check className="size-3" />}
+            </button>
+          ))}
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Text color</DropdownMenuLabel>
+        <div className="grid grid-cols-5 gap-1 px-2 pb-1">
+          <button
+            type="button"
+            className="flex size-6 items-center justify-center rounded border border-border"
+            aria-label="Default text color"
+            onClick={() => applyColor(undefined)}
+          >
+            {!currentColor && <Check className="size-3 text-muted-foreground" />}
+          </button>
+          {TEXT_COLORS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              className="flex size-6 items-center justify-center rounded border border-border"
+              style={{ backgroundColor: c.value }}
+              aria-label={c.label}
+              onClick={() => applyColor(c.value)}
+            >
+              {currentColor === c.value && <Check className="size-3 text-white" />}
+            </button>
+          ))}
+        </div>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  );
+}
+
 function RowHandleMenu({
   rowIndex,
   tablePath,
   editor,
+  element,
   onOpenChange,
 }: {
   rowIndex: number;
   tablePath: number[];
   editor: TableEditor;
+  element: TableElementNode;
   onOpenChange: (open: boolean) => void;
 }) {
+  const row = element.children[rowIndex];
+  const cellCount = row?.children.length ?? 0;
+  const isFirstRow = rowIndex === 0;
+  const isHeaderRow =
+    isFirstRow && row?.children.every((cell) => cell.type === 'th');
+
+  const cellPaths = Array.from({ length: cellCount }, (_, i) => [
+    ...tablePath,
+    rowIndex,
+    i,
+  ]);
+
+  const firstCell = row?.children[0] as Record<string, unknown> | undefined;
+
+  const toggleHeaderRow = () => {
+    const newType = isHeaderRow ? 'td' : 'th';
+    for (const path of cellPaths) {
+      editor.tf.setNodes({ type: newType } as Record<string, unknown>, { at: path });
+    }
+  };
+
+  const duplicateRow = () => {
+    const rowNode = element.children[rowIndex];
+    if (!rowNode) return;
+    const cloned = stripIds(
+      JSON.parse(JSON.stringify(rowNode)) as Record<string, unknown>,
+    );
+    editor.tf.insertNodes(cloned as TElement, {
+      at: [...tablePath, rowIndex + 1],
+    });
+  };
+
+  const clearContents = () => {
+    for (const path of cellPaths) {
+      const cell = editor.api.node(path);
+      if (!cell) continue;
+      const [cellNode] = cell;
+      const cellChildren = (cellNode as Record<string, unknown>)
+        .children as unknown[];
+      // Remove all children then insert empty paragraph
+      for (let j = cellChildren.length - 1; j >= 0; j--) {
+        editor.tf.removeNodes({ at: [...path, j] });
+      }
+      editor.tf.insertNodes(
+        { type: 'p', children: [{ text: '' }] } as TElement,
+        { at: [...path, 0] },
+      );
+    }
+  };
+
   return (
     <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
@@ -54,6 +235,18 @@ function RowHandleMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="left">
+        {isFirstRow && (
+          <DropdownMenuItem onSelect={toggleHeaderRow}>
+            {isHeaderRow ? 'Remove header row' : 'Header row'}
+          </DropdownMenuItem>
+        )}
+        <ColorPaletteSubmenu
+          cellPaths={cellPaths}
+          editor={editor}
+          currentBackground={(firstCell?.background as string) ?? undefined}
+          currentColor={(firstCell?.color as string) ?? undefined}
+        />
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
             insertTableRow(editor, {
@@ -62,14 +255,19 @@ function RowHandleMenu({
             });
           }}
         >
-          Insert row above
+          Insert above
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
             insertTableRow(editor, { at: [...tablePath, rowIndex] });
           }}
         >
-          Insert row below
+          Insert below
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={duplicateRow}>Duplicate</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={clearContents}>
+          Clear contents
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -97,13 +295,66 @@ function ColumnHandleMenu({
   colIndex,
   tablePath,
   editor,
+  element,
   onOpenChange,
 }: {
   colIndex: number;
   tablePath: number[];
   editor: TableEditor;
+  element: TableElementNode;
   onOpenChange: (open: boolean) => void;
 }) {
+  const rows = element.children;
+  const isFirstCol = colIndex === 0;
+  const isHeaderCol =
+    isFirstCol &&
+    rows.every((row) => row.children[0]?.type === 'th');
+
+  const cellPaths = rows.map((_, rowIdx) => [
+    ...tablePath,
+    rowIdx,
+    colIndex,
+  ]);
+
+  const firstCell = rows[0]?.children[colIndex] as Record<string, unknown> | undefined;
+
+  const toggleHeaderCol = () => {
+    const newType = isHeaderCol ? 'td' : 'th';
+    for (const path of cellPaths) {
+      editor.tf.setNodes({ type: newType } as Record<string, unknown>, { at: path });
+    }
+  };
+
+  const duplicateColumn = () => {
+    for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+      const cellNode = rows[rowIdx]?.children[colIndex];
+      if (!cellNode) continue;
+      const cloned = stripIds(
+        JSON.parse(JSON.stringify(cellNode)) as Record<string, unknown>,
+      );
+      editor.tf.insertNodes(cloned as TElement, {
+        at: [...tablePath, rowIdx, colIndex + 1],
+      });
+    }
+  };
+
+  const clearContents = () => {
+    for (const path of cellPaths) {
+      const cell = editor.api.node(path);
+      if (!cell) continue;
+      const [cellNode] = cell;
+      const cellChildren = (cellNode as Record<string, unknown>)
+        .children as unknown[];
+      for (let j = cellChildren.length - 1; j >= 0; j--) {
+        editor.tf.removeNodes({ at: [...path, j] });
+      }
+      editor.tf.insertNodes(
+        { type: 'p', children: [{ text: '' }] } as TElement,
+        { at: [...path, 0] },
+      );
+    }
+  };
+
   return (
     <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
@@ -116,6 +367,18 @@ function ColumnHandleMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
+        {isFirstCol && (
+          <DropdownMenuItem onSelect={toggleHeaderCol}>
+            {isHeaderCol ? 'Remove header column' : 'Header column'}
+          </DropdownMenuItem>
+        )}
+        <ColorPaletteSubmenu
+          cellPaths={cellPaths}
+          editor={editor}
+          currentBackground={(firstCell?.background as string) ?? undefined}
+          currentColor={(firstCell?.color as string) ?? undefined}
+        />
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
             insertTableColumn(editor, {
@@ -124,7 +387,7 @@ function ColumnHandleMenu({
             });
           }}
         >
-          Insert column left
+          Insert left
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
@@ -133,7 +396,14 @@ function ColumnHandleMenu({
             });
           }}
         >
-          Insert column right
+          Insert right
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={duplicateColumn}>
+          Duplicate
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={clearContents}>
+          Clear contents
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -216,28 +486,35 @@ export function TableElement({
 
   const showHandles = !readOnly && (isHovered || openMenuCount > 0);
 
+  const tableElement = element as unknown as TableElementNode;
+
   return (
     <PlateElement {...props} element={element} className="my-4">
       <div
-        className="relative -ml-[30px] -mt-[28px] pl-[30px] pt-[28px]"
+        className="relative"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
+        {/* Column handles — zero-height strip on top border */}
         {!readOnly && tablePath && (
           <div
             contentEditable={false}
-            className={`absolute left-[30px] right-0 top-0 h-[28px] transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+            className={`absolute left-0 right-0 top-0 z-10 h-0 transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
           >
             {colPositions.map((col, i) => (
               <div
                 key={i}
                 className="absolute"
-                style={{ left: col.left + col.width / 2 - 12 }}
+                style={{
+                  left: col.left + col.width / 2,
+                  transform: 'translate(-50%, -50%)',
+                }}
               >
                 <ColumnHandleMenu
                   colIndex={i}
                   tablePath={tablePath}
                   editor={editor}
+                  element={tableElement}
                   onOpenChange={handleMenuOpenChange}
                 />
               </div>
@@ -245,21 +522,26 @@ export function TableElement({
           </div>
         )}
 
+        {/* Row handles — zero-width strip on left border */}
         {!readOnly && tablePath && (
           <div
             contentEditable={false}
-            className={`absolute left-0 top-[28px] bottom-0 w-[30px] transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+            className={`absolute left-0 top-0 bottom-0 z-10 w-0 transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
           >
             {rowPositions.map((row, i) => (
               <div
                 key={i}
                 className="absolute"
-                style={{ top: row.top + row.height / 2 - 12 }}
+                style={{
+                  top: row.top + row.height / 2,
+                  transform: 'translate(-50%, -50%)',
+                }}
               >
                 <RowHandleMenu
                   rowIndex={i}
                   tablePath={tablePath}
                   editor={editor}
+                  element={tableElement}
                   onOpenChange={handleMenuOpenChange}
                 />
               </div>
@@ -289,21 +571,39 @@ export function TableRowElement(props: PlateElementProps) {
 }
 
 export function TableCellElement(props: PlateElementProps) {
+  const cellElement = props.element as unknown as {
+    background?: string;
+    color?: string;
+  };
+  const style: React.CSSProperties = {};
+  if (cellElement.background) style.backgroundColor = cellElement.background;
+  if (cellElement.color) style.color = cellElement.color;
+
   return (
     <PlateElement
       {...props}
       as="td"
       className="border border-gray-200 p-2 dark:border-gray-700"
+      style={style}
     />
   );
 }
 
 export function TableHeaderCellElement(props: PlateElementProps) {
+  const cellElement = props.element as unknown as {
+    background?: string;
+    color?: string;
+  };
+  const style: React.CSSProperties = {};
+  if (cellElement.background) style.backgroundColor = cellElement.background;
+  if (cellElement.color) style.color = cellElement.color;
+
   return (
     <PlateElement
       {...props}
       as="th"
       className="border border-gray-200 bg-gray-50 p-2 font-semibold dark:border-gray-700 dark:bg-gray-800"
+      style={style}
     />
   );
 }
