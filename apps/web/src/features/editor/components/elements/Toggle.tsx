@@ -24,7 +24,12 @@ export function ToggleElement({ children, ...props }: PlateElementProps) {
           )}
         </button>
         <div className="flex-1">
-          {isOpen ? children : <div className="text-gray-400">...</div>}
+          <div className={isOpen ? undefined : 'hidden'}>{children}</div>
+          {!isOpen && (
+            <div contentEditable={false} className="text-gray-400">
+              ...
+            </div>
+          )}
         </div>
       </div>
     </PlateElement>
