@@ -146,6 +146,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | Fantasy Theme | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
+| Sci-Fi Theme | Sci-fi styled UI skin — holographic/neon aesthetic, futuristic panels and controls |
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Account-Level Themes](features/account-level-themes.md) | Move custom theme creation to Account Settings |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
