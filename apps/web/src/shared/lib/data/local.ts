@@ -59,7 +59,6 @@ const DEFAULT_TYPES: ObjectType[] = [
     icon: 'file-text',
     color: null,
     fields: [],
-    is_built_in: false,
     owner_id: null,
     space_id: LOCAL_DEFAULT_SPACE_ID,
     sort_order: 0,
@@ -71,7 +70,8 @@ const DEFAULT_TYPES: ObjectType[] = [
 ]
 
 // Legacy built-in types for Dexie v2 migration (upgrading from v1)
-const LEGACY_BUILT_IN_TYPES: ObjectType[] = [
+// Uses old schema shape with is_built_in field (dropped in migration 027)
+const LEGACY_BUILT_IN_TYPES: (ObjectType & { is_built_in: boolean })[] = [
   {
     id: BUILT_IN_TYPE_IDS.page,
     name: 'Page',
@@ -337,6 +337,19 @@ class SwashbucklerDB extends Dexie {
       pins: 'id, object_id',
       savedViews: 'id, type_id, space_id, owner_id, is_default',
     })
+
+    // Version 12: Add compound index on objectTags for uniqueness enforcement (D2)
+    this.version(12).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, is_archived, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, is_archived, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id, [object_id+tag_id]',
+      pins: 'id, object_id',
+      savedViews: 'id, type_id, space_id, owner_id, is_default',
+    })
   }
 }
 
@@ -423,7 +436,6 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           icon: input.icon,
           color: input.color ?? null,
           fields: input.fields ?? [],
-          is_built_in: false,
           owner_id: null,
           space_id: spaceId ?? null,
           sort_order: sortOrder,
@@ -508,6 +520,8 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
         }
 
         await database.templates.where('type_id').equals(id).delete()
+        // C3: Cascade-delete saved views for this type
+        await database.savedViews.where('type_id').equals(id).delete()
         await database.objectTypes.delete(id)
         return { data: null, error: null }
       } catch (error) {
@@ -609,7 +623,6 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
           icon: input.icon,
           color: input.color ?? null,
           fields: input.fields ?? [],
-          is_built_in: false,
           owner_id: null,
           space_id: null,
           sort_order: sortOrder,
@@ -704,7 +717,6 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
             ...field,
             id: generateUUID(),
           })),
-          is_built_in: false,
           owner_id: globalType.owner_id,
           space_id: targetSpaceId,
           sort_order: globalType.sort_order,
@@ -1531,6 +1543,20 @@ function createLocalSpacesClient(): SpacesClient {
           if (relatedPins.length > 0) {
             await database.pins.bulkDelete(relatedPins.map(p => p.id))
           }
+          // C1: Cascade-delete object relations referencing objects in this space
+          const relatedRelations = await database.objectRelations
+            .filter(r => objectIds.has(r.source_id) || objectIds.has(r.target_id))
+            .toArray()
+          if (relatedRelations.length > 0) {
+            await database.objectRelations.bulkDelete(relatedRelations.map(r => r.id))
+          }
+          // Cascade: delete object tags referencing objects in this space
+          const relatedObjTags = await database.objectTags
+            .filter(ot => objectIds.has(ot.object_id))
+            .toArray()
+          if (relatedObjTags.length > 0) {
+            await database.objectTags.bulkDelete(relatedObjTags.map(ot => ot.id))
+          }
           await database.objects.bulkDelete(objectsInSpace.map(o => o.id))
         }
         const typesInSpace = await database.objectTypes.filter(t => t.space_id === id).toArray()
@@ -1552,6 +1578,11 @@ function createLocalSpacesClient(): SpacesClient {
             await database.objectTags.bulkDelete(relatedObjectTags.map(ot => ot.id))
           }
           await database.tags.bulkDelete(tagsInSpace.map(t => t.id))
+        }
+        // C2: Cascade-delete saved views in this space
+        const viewsInSpace = await database.savedViews.filter(v => v.space_id === id).toArray()
+        if (viewsInSpace.length > 0) {
+          await database.savedViews.bulkDelete(viewsInSpace.map(v => v.id))
         }
         await database.spaces.delete(id)
         return { data: null, error: null }
@@ -1824,6 +1855,43 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         const objects = await database.objects.bulkGet(objectIds)
         const count = objects.filter((o): o is DataObject => o !== undefined && !o.is_deleted).length
         return { data: count, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async countObjectsByTags(tagIds: string[]): Promise<DataResult<Map<string, number>>> {
+      try {
+        if (tagIds.length === 0) {
+          return { data: new Map(), error: null }
+        }
+        const database = getDB()
+        const tagIdSet = new Set(tagIds)
+        const allObjectTags = await database.objectTags
+          .filter(ot => tagIdSet.has(ot.tag_id))
+          .toArray()
+
+        if (allObjectTags.length === 0) {
+          return { data: new Map(), error: null }
+        }
+
+        // Bulk-get all referenced objects once
+        const uniqueObjectIds = [...new Set(allObjectTags.map(ot => ot.object_id))]
+        const objects = await database.objects.bulkGet(uniqueObjectIds)
+        const nonDeletedIds = new Set(
+          objects
+            .filter((o): o is DataObject => o !== undefined && !o.is_deleted)
+            .map(o => o.id)
+        )
+
+        // Count per tag, only counting non-deleted objects
+        const counts = new Map<string, number>()
+        for (const ot of allObjectTags) {
+          if (nonDeletedIds.has(ot.object_id)) {
+            counts.set(ot.tag_id, (counts.get(ot.tag_id) ?? 0) + 1)
+          }
+        }
+        return { data: counts, error: null }
       } catch (error) {
         return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
       }

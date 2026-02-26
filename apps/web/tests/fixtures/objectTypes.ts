@@ -13,7 +13,6 @@ export function createMockObjectType(overrides: Partial<ObjectType> = {}): Objec
     icon: 'box',
     color: null,
     fields: [],
-    is_built_in: false,
     owner_id: null,
     space_id: LOCAL_DEFAULT_SPACE_ID,
     sort_order: 0,

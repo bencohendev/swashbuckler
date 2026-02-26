@@ -1,6 +1,6 @@
 # Database Audit
 
-**Status:** Active
+**Status:** Done
 
 ## Overview
 
@@ -276,10 +276,55 @@ Total migration count: 25 (001-025).
 
 | # | Finding | Reason |
 |---|---------|--------|
-| S8 | `is_built_in` dead column | Cosmetic — no runtime impact |
-| S12 | Color regex allows 5/7 digit hex | Unlikely to be triggered |
+| ~~S8~~ | ~~`is_built_in` dead column~~ | **Fixed** — column dropped in migration 027 |
+| ~~S12~~ | ~~Color regex allows 5/7 digit hex~~ | **Fixed** — regex now only allows 3/4/6/8 digits |
 | RT2 | Unscoped realtime subscriptions | Supabase's intended pattern; scoping adds complexity |
 | RT3 | Yjs message chunking | Theoretical limit, unlikely with typical documents |
 | E4 | Dexie transaction wrapping | Single-threaded execution mitigates; multi-tab edge case |
 | S10/S11 | DB-level length/URL validation | Zod handles this; only direct SQL bypasses |
 | D3 | `owner_id: 'local'` not a UUID | Works in practice; only fails if validated through strict schema |
+
+---
+
+## Fixes Applied
+
+### Migration 026 (`026_indexes_triggers_hardening.sql`)
+- **S2**: `objects.owner_id` set NOT NULL + INSERT policy hardened with `owner_id = auth.uid()` check
+- **S3/S4**: `updated_at` triggers added for `spaces` and `space_shares`
+- **I1/I2/I3**: Composite index `objects_space_active_idx(space_id, type_id, updated_at DESC) WHERE is_deleted = false AND is_archived = false`
+- **I4**: Composite index `object_relations_source_type_idx(source_id, relation_type)`
+- **I5**: Partial indexes on `share_exclusions(excluded_type_id)` and `(excluded_object_id)`
+- **R4**: Composite index `space_shares(space_id, shared_with_id)`
+- **I6**: Dropped stale `object_types_owner_global_slug_idx`
+- **I7**: Dropped redundant low-selectivity `object_relations_type_idx`
+- **I8**: Replaced full boolean `objects_is_deleted_idx` with partial `WHERE is_deleted = true`
+
+### Migration 027 (`027_constraints_cleanup.sql`)
+- **S5**: CHECK constraint on `object_relations.relation_type` — `('link', 'mention')`
+- **S9**: CHECK constraint on `saved_views.view_mode` — `('table', 'list', 'card', 'board')`
+- **S13**: Case-insensitive tag uniqueness via `tags_space_name_lower_idx`
+- **S7**: `object_types.owner_id` set NOT NULL
+- **S8**: Dropped dead `is_built_in` column from `object_types` (+ updated RLS policy)
+- **S15**: Changed `saved_views.id` default to `gen_random_uuid()`
+- **RT1**: Added `saved_views` to `supabase_realtime` publication
+
+### Code Changes
+- **C1/C2**: Dexie space delete now cascades `objectRelations` and `savedViews`
+- **C3**: Dexie type delete now cascades `savedViews`
+- **D2**: Added `[object_id+tag_id]` compound index on Dexie `objectTags` (version 12)
+- **S14**: `OBJECT_SUMMARY_COLUMNS` now includes `is_archived, archived_at`
+- **N1**: `useTagCounts` rewritten to use single batched `countObjectsByTags()` query
+- **N2**: `useExclusionFilter` runs per-user and space-wide queries in parallel
+- **N3**: `relations.listAll()` rewritten as single JOIN query (was two-query waterfall)
+- **N6**: `getSharedSpaces()` rewritten to use Supabase JOIN (was two-query waterfall)
+- **RT1**: Added `saved_views` to realtime subscription channel
+- **S12**: Color regex fixed to only allow valid CSS hex lengths (3, 4, 6, 8)
+- **S16**: `spaces.icon` Zod schema changed to `.nullable()` to match DB
+- **S8**: Removed `is_built_in` from `ObjectType` schema, all code, test fixtures
+
+### Not Addressed
+- **N5** (Sidebar consolidation) and **N7** (server-side content search): Larger refactors scoped as separate features
+- **S6** (pins.user_id) and **S7** (object_types.owner_id Zod): Kept nullable in Zod since local/Dexie mode needs null values; DB constraint handles enforcement for Supabase
+- **D1** (is_default: 1 vs true): Verified Dexie handles boolean-to-key conversion correctly; no change needed
+- **E1/E2/E5**: Deferred — require product decisions
+- **RT2/RT3/E4/S10/S11/D3**: Deferred — low value

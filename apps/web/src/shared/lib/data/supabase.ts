@@ -49,7 +49,7 @@ import type {
   DataListResult,
 } from './types'
 
-const OBJECT_SUMMARY_COLUMNS = 'id, title, type_id, owner_id, space_id, parent_id, icon, cover_image, properties, is_deleted, deleted_at, created_at, updated_at'
+const OBJECT_SUMMARY_COLUMNS = 'id, title, type_id, owner_id, space_id, parent_id, icon, cover_image, properties, is_deleted, deleted_at, is_archived, archived_at, created_at, updated_at'
 
 async function resolveUserId(supabase: SupabaseClient, userId?: string): Promise<string | null> {
   if (userId) return userId
@@ -109,7 +109,6 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string, use
       const typeData = {
         ...input,
         fields: input.fields ?? [],
-        is_built_in: false,
         owner_id: resolvedUserId,
         space_id: spaceId ?? null,
         created_at: now,
@@ -249,7 +248,6 @@ function createGlobalObjectTypesClient(supabase: SupabaseClient, userId?: string
       const typeData = {
         ...input,
         fields: input.fields ?? [],
-        is_built_in: false,
         owner_id: resolvedUserId,
         space_id: null,
         created_at: now,
@@ -345,7 +343,6 @@ function createGlobalObjectTypesClient(supabase: SupabaseClient, userId?: string
           icon: globalType.icon,
           color: globalType.color,
           fields: newFields,
-          is_built_in: false,
           owner_id: globalType.owner_id,
           space_id: targetSpaceId,
           sort_order: globalType.sort_order,
@@ -784,52 +781,48 @@ function createTemplatesClient(supabase: SupabaseClient, spaceId?: string, userI
 function createRelationsClient(supabase: SupabaseClient, spaceId?: string): RelationsClient {
   return {
     async listAll(options: ListAllRelationsOptions = {}): Promise<DataListResult<ObjectRelation>> {
-      // First get the set of non-deleted object IDs in the current space
-      let objectsQuery = supabase
-        .from('objects')
-        .select('id')
-        .eq('is_deleted', false)
-
-      if (spaceId) {
-        objectsQuery = objectsQuery.eq('space_id', spaceId)
-      }
-
-      const { data: objectRows, error: objectsError } = await objectsQuery
-
-      if (objectsError) {
-        return { data: [], error: { message: objectsError.message, code: objectsError.code } }
-      }
-
-      const objectIdArray = (objectRows ?? []).map((r: { id: string }) => r.id)
-      const objectIds = new Set(objectIdArray)
-
-      if (objectIds.size === 0) {
-        return { data: [], error: null }
-      }
-
-      // Fetch relations with source_id filter pushed to server
-      let relationsQuery = supabase
+      // N3 fix: Use inner joins via Supabase foreign key relationships
+      // to fetch only relations where both source and target are non-deleted
+      // objects in the current space, in a single query.
+      let query = supabase
         .from('object_relations')
-        .select('*')
-        .in('source_id', objectIdArray)
+        .select('id, source_id, target_id, relation_type, source_property, context, created_at, source:objects!object_relations_source_id_fkey!inner(id), target:objects!object_relations_target_id_fkey!inner(id)')
         .order('created_at', { ascending: false })
 
+      if (spaceId) {
+        query = query
+          .eq('source.space_id' as string, spaceId)
+          .eq('source.is_deleted' as string, false)
+          .eq('target.space_id' as string, spaceId)
+          .eq('target.is_deleted' as string, false)
+      } else {
+        query = query
+          .eq('source.is_deleted' as string, false)
+          .eq('target.is_deleted' as string, false)
+      }
+
       if (options.relationType) {
-        relationsQuery = relationsQuery.eq('relation_type', options.relationType)
+        query = query.eq('relation_type', options.relationType)
       }
 
-      const { data: relations, error: relationsError } = await relationsQuery
+      const { data, error } = await query
 
-      if (relationsError) {
-        return { data: [], error: { message: relationsError.message, code: relationsError.code } }
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
       }
 
-      // Client-side filter: target must also be in the space
-      const filtered = (relations ?? []).filter(
-        (r: ObjectRelation) => objectIds.has(r.target_id)
-      )
+      // Map to ObjectRelation shape (strip the joined objects)
+      const relations: ObjectRelation[] = (data ?? []).map((r) => ({
+        id: r.id,
+        source_id: r.source_id,
+        target_id: r.target_id,
+        relation_type: r.relation_type,
+        source_property: r.source_property,
+        context: r.context,
+        created_at: r.created_at,
+      }))
 
-      return { data: filtered, error: null }
+      return { data: relations, error: null }
     },
 
     async list(options: ListRelationsOptions): Promise<DataListResult<ObjectRelation>> {
@@ -1307,37 +1300,31 @@ function createSharingClient(supabase: SupabaseClient, userId?: string): Sharing
         return { data: [], error: { message: 'Not authenticated' } }
       }
 
-      // Get shares where the current user is the recipient
-      const { data: shares, error: sharesError } = await supabase
+      // N6 fix: Single JOIN query instead of two-query waterfall
+      const { data, error } = await supabase
         .from('space_shares')
-        .select('id, space_id, permission')
+        .select('id, permission, spaces(*)')
         .eq('shared_with_id', resolvedUserId)
 
-      if (sharesError || !shares || shares.length === 0) {
-        return { data: [], error: sharesError ? { message: sharesError.message, code: sharesError.code } : null }
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
       }
 
-      // Fetch the actual space data separately
-      const spaceIds = shares.map(s => s.space_id)
-      const { data: spacesData, error: spacesError } = await supabase
-        .from('spaces')
-        .select('*')
-        .in('id', spaceIds)
-
-      if (spacesError || !spacesData) {
-        return { data: [], error: spacesError ? { message: spacesError.message, code: spacesError.code } : null }
+      if (!data || data.length === 0) {
+        return { data: [], error: null }
       }
 
-      // Merge space data with share info
-      const shareInfoBySpaceId = new Map(shares.map(s => [s.space_id, { share_id: s.id, permission: s.permission }]))
-      const sharedSpaces: SharedSpace[] = spacesData.map(space => {
-        const info = shareInfoBySpaceId.get(space.id)
-        return {
-          ...space,
-          share_id: info?.share_id ?? '',
-          permission: (info?.permission ?? 'view') as SpaceSharePermission,
-        }
-      })
+      const sharedSpaces: SharedSpace[] = data
+        .filter((row) => row.spaces)
+        .map((row) => {
+          // Supabase returns joined to-one relations as an object (not array)
+          const space = row.spaces as unknown as Space
+          return {
+            ...space,
+            share_id: row.id,
+            permission: (row.permission ?? 'view') as SpaceSharePermission,
+          }
+        })
 
       return { data: sharedSpaces, error: null }
     },
@@ -1541,6 +1528,30 @@ function createTagsClient(supabase: SupabaseClient, spaceId?: string): TagsClien
       }
 
       return { data: count ?? 0, error: null }
+    },
+
+    async countObjectsByTags(tagIds: string[]): Promise<DataResult<Map<string, number>>> {
+      if (tagIds.length === 0) {
+        return { data: new Map(), error: null }
+      }
+
+      // Single query: fetch all object_tags for the given tags, joined with
+      // non-deleted objects, then group client-side
+      const { data, error } = await supabase
+        .from('object_tags')
+        .select('tag_id, objects!inner(id)')
+        .in('tag_id', tagIds)
+        .eq('objects.is_deleted' as string, false)
+
+      if (error) {
+        return { data: null, error: { message: error.message, code: error.code } }
+      }
+
+      const counts = new Map<string, number>()
+      for (const row of data ?? []) {
+        counts.set(row.tag_id, (counts.get(row.tag_id) ?? 0) + 1)
+      }
+      return { data: counts, error: null }
     },
   }
 }

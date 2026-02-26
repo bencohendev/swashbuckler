@@ -71,7 +71,6 @@ const makeType = (id: string, name: string): ObjectType => ({
   icon: 'file',
   color: null,
   fields: [],
-  is_built_in: false,
   owner_id: null,
   space_id: SPACE_ID,
   sort_order: 0,

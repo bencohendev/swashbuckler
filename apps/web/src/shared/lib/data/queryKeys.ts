@@ -23,6 +23,7 @@ export const queryKeys = {
     objectTagsBatch: (objectIds: string[]) => ['tags', 'objectTagsBatch', objectIds] as const,
     objectsByTag: (tagId: string) => ['tags', 'objectsByTag', tagId] as const,
     countByTag: (tagId: string) => ['tags', 'countByTag', tagId] as const,
+    countsByTags: (tagIds: string[]) => ['tags', 'countsByTags', tagIds] as const,
   },
   pins: {
     list: (spaceId?: string) => ['pins', spaceId] as const,
