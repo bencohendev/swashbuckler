@@ -11,6 +11,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Cursor lost after inserting inline link | Override LinkPlugin transforms (insertText, insertData, insertBreak) with deferred focus restoration after withLink's URL auto-wrapping |
 | 2026-02-25 | Theme switcher + custom themes interaction | Added palette icon for custom themes, remember last custom theme in cycle so users can switch back |
 | 2026-02-25 | OAuth redirect account menu stale | Derive `isGuest` from client-side `useAuth()` state instead of server `email` prop — use server prop only during hydration loading |
 | 2026-02-25 | Mobile sharing button overflows container | Stack email input on its own row with select + button below — dialog is too narrow for a single-row layout |
