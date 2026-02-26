@@ -6,6 +6,7 @@ import {
   StarIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  RefreshCwIcon,
   TrashIcon,
 } from 'lucide-react'
 import {
@@ -48,6 +49,10 @@ interface SavedViewSelectorProps {
   }) => Promise<SavedView>
   onUpdateView: (id: string, input: {
     name?: string
+    filters?: FilterExpression
+    sort?: SortConfig
+    view_mode?: ViewMode
+    board_group_field_id?: string | null
     is_default?: boolean
   }) => Promise<SavedView>
   onDeleteView: (id: string) => Promise<void>
@@ -89,6 +94,15 @@ export function SavedViewSelector({
     if (!renameView) return
     await onUpdateView(renameView.id, { name, is_default: isDefault })
   }, [renameView, onUpdateView])
+
+  const handleOverwrite = useCallback(async (view: SavedView) => {
+    await onUpdateView(view.id, {
+      filters: expression,
+      sort,
+      view_mode: viewMode,
+      board_group_field_id: boardGroupFieldId,
+    })
+  }, [onUpdateView, expression, sort, viewMode, boardGroupFieldId])
 
   const handleToggleDefault = useCallback(async (view: SavedView) => {
     await onUpdateView(view.id, { is_default: !view.is_default })
@@ -148,6 +162,10 @@ export function SavedViewSelector({
                       <DropdownMenuItem onSelect={() => setRenameView(view)}>
                         <PencilIcon className="size-3.5" />
                         Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleOverwrite(view)}>
+                        <RefreshCwIcon className="size-3.5" />
+                        Update with current
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => handleToggleDefault(view)}>
                         <StarIcon className="size-3.5" />
