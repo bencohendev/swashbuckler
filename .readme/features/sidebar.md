@@ -92,6 +92,22 @@ Each section keeps its own local `collapsed` state via the shared `useCollapsibl
 - `src/features/sidebar/hooks/useCollapsible.ts` — shared hook replacing duplicated `useState`/`useEffect` pattern
 - `src/features/sidebar/components/Sidebar.tsx` — toolbar buttons and signal state
 
+## Recent Access Tracking
+
+The Recent section orders entries by last-accessed time rather than `updated_at`, giving instant reorder on click/navigation instead of waiting for a save + query invalidation.
+
+### How it works
+
+A Zustand store (`src/shared/stores/recentAccess.ts`) maintains an ordered list of recently accessed entry IDs per space, persisted in localStorage (`swashbuckler:recentAccess:{spaceId}`). Capped at 50 entries.
+
+- **SidebarLink** calls `trackAccess(objectId)` on click for instant reorder
+- **ObjectEditor** calls `trackAccess(id)` on mount/id-change for direct URL navigation and browser back/forward
+- **Sidebar** calls `init(spaceId)` on space change to load per-space data
+- **RecentSection** maps tracked IDs to objects first, then fills remaining slots with `updated_at`-sorted fallback (covers entries not yet tracked, e.g. fresh localStorage)
+- **useObjects** calls `removeEntry(id)` on delete/archive to clean up stale entries
+
+TypeSections are unchanged — they continue sorting by `updated_at DESC`.
+
 ## Verification
 
 - [x] Hierarchical tree renders entries by type
