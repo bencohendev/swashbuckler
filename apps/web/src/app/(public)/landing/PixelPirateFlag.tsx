@@ -61,29 +61,27 @@ export function PixelPirateFlag() {
   }
 
   return (
-    <div className="flex justify-center mb-8" aria-hidden="true">
-      <div className="flex items-start">
-        {columns.map((col, colIdx) => {
-          const isPole = colIdx < POLE_COLS
-          return (
-            <div
-              key={colIdx}
-              className={isPole ? undefined : "flag-wave-col"}
-              style={
-                isPole ? undefined : ({ "--col": colIdx - POLE_COLS } as React.CSSProperties)
-              }
-            >
-              {col.map((colorIdx, rowIdx) => (
-                <div
-                  key={rowIdx}
-                  className="size-[4px] sm:size-[6px]"
-                  style={{ backgroundColor: PALETTE[colorIdx] }}
-                />
-              ))}
-            </div>
-          )
-        })}
-      </div>
+    <div className="flex items-start" aria-hidden="true">
+      {columns.map((col, colIdx) => {
+        const isPole = colIdx < POLE_COLS
+        return (
+          <div
+            key={colIdx}
+            className={isPole ? undefined : "flag-wave-col"}
+            style={
+              isPole ? undefined : ({ "--col": colIdx - POLE_COLS } as React.CSSProperties)
+            }
+          >
+            {col.map((colorIdx, rowIdx) => (
+              <div
+                key={rowIdx}
+                className="size-[6px] sm:size-[8px]"
+                style={{ backgroundColor: PALETTE[colorIdx] }}
+              />
+            ))}
+          </div>
+        )
+      })}
     </div>
   )
 }

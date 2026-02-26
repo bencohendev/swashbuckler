@@ -46,20 +46,18 @@ export function PixelBeachScene() {
   }
 
   return (
-    <div className="flex justify-center">
-      <div className="flex items-start">
-        {columns.map((col, colIdx) => (
-          <div key={colIdx}>
-            {col.map((colorIdx, rowIdx) => (
-              <div
-                key={rowIdx}
-                className="size-[4px] sm:size-[6px]"
-                style={{ backgroundColor: PALETTE[colorIdx] }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
+    <div className="flex items-start">
+      {columns.map((col, colIdx) => (
+        <div key={colIdx}>
+          {col.map((colorIdx, rowIdx) => (
+            <div
+              key={rowIdx}
+              className="size-[6px] sm:size-[8px]"
+              style={{ backgroundColor: PALETTE[colorIdx] }}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
