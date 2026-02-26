@@ -3,7 +3,7 @@ import { EMPTY_FILTERS, type TypePageFilters } from '../lib/filterObjects'
 
 const STORAGE_KEY = 'swashbuckler:typeFilterConfig'
 
-interface SerializedFilters {
+export interface SerializedFilters {
   search: string
   selectFilters: Record<string, string[]>
   checkboxFilters: Record<string, boolean | undefined>
@@ -13,7 +13,7 @@ interface SerializedFilters {
   textFilters: Record<string, string>
 }
 
-function serialize(filters: TypePageFilters): SerializedFilters {
+export function serializeFilters(filters: TypePageFilters): SerializedFilters {
   const selectFilters: Record<string, string[]> = {}
   for (const [key, set] of Object.entries(filters.selectFilters)) {
     selectFilters[key] = [...set]
@@ -29,7 +29,7 @@ function serialize(filters: TypePageFilters): SerializedFilters {
   }
 }
 
-function deserialize(raw: SerializedFilters): TypePageFilters {
+export function deserializeFilters(raw: SerializedFilters): TypePageFilters {
   const selectFilters: Record<string, Set<string>> = {}
   for (const [key, arr] of Object.entries(raw.selectFilters ?? {})) {
     selectFilters[key] = new Set(arr)
@@ -53,7 +53,7 @@ function readInitial(): Record<string, TypePageFilters> {
     const parsed = JSON.parse(raw) as Record<string, SerializedFilters>
     const result: Record<string, TypePageFilters> = {}
     for (const [slug, serialized] of Object.entries(parsed)) {
-      result[slug] = deserialize(serialized)
+      result[slug] = deserializeFilters(serialized)
     }
     return result
   } catch {
@@ -75,7 +75,7 @@ export const useFilterConfigStore = create<FilterConfigState>((set, get) => ({
       const next = { ...state.configs, [slug]: filters }
       const serialized: Record<string, SerializedFilters> = {}
       for (const [key, val] of Object.entries(next)) {
-        serialized[key] = serialize(val)
+        serialized[key] = serializeFilters(val)
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized))
       return { configs: next }

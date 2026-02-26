@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 
-export type EventChannel = 'objects' | 'objectTypes' | 'globalObjectTypes' | 'templates' | 'objectRelations' | 'spaces' | 'spaceShares' | 'tags' | 'pins'
+export type EventChannel = 'objects' | 'objectTypes' | 'globalObjectTypes' | 'templates' | 'objectRelations' | 'spaces' | 'spaceShares' | 'tags' | 'pins' | 'savedViews'
 type Listener = () => void
 
 const listeners = new Map<EventChannel, Set<Listener>>()
@@ -21,6 +21,7 @@ const channelToQueryPrefix: Record<EventChannel, string[]> = {
   spaceShares: ['spaceShares'],
   tags: ['tags'],
   pins: ['pins'],
+  savedViews: ['savedViews'],
 }
 
 // BroadcastChannel for cross-tab sync

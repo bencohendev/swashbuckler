@@ -12,12 +12,17 @@ import { TypeListView } from './TypeListView'
 import { TypeBoardView } from './TypeBoardView'
 import { TypePageFilterBar } from './TypePageFilterBar'
 import { ViewToggle } from './ViewToggle'
+import { SavedViewSelector } from './SavedViewSelector'
 import { useViewMode } from '../stores/viewMode'
 import { useSortConfig } from '../stores/sortConfig'
 import { usePersistedFilters } from '../stores/filterConfig'
+import { useBoardGrouping } from '../stores/boardGrouping'
+import { useSavedViews } from '../hooks/useSavedViews'
 import { filterObjects, isFiltered, EMPTY_FILTERS } from '../lib/filterObjects'
+import type { TypePageFilters } from '../lib/filterObjects'
 import { sortObjects } from '../lib/sortObjects'
 import type { SortConfig } from '../lib/sortObjects'
+import type { ViewMode } from '../stores/viewMode'
 
 interface TypeTableViewProps {
   slug: string
@@ -25,13 +30,26 @@ interface TypeTableViewProps {
 
 export function TypeTableView({ slug }: TypeTableViewProps) {
   const { types, isLoading: typesLoading } = useObjectTypes()
-  const { mode } = useViewMode(slug)
+  const { mode, setMode } = useViewMode(slug)
   const { sort, setSort } = useSortConfig(slug)
   const { filters, setFilters } = usePersistedFilters(slug)
+  const { groupFieldId, setGroupField } = useBoardGrouping(slug)
 
   const type = useMemo(
     () => types.find((t) => t.slug === slug),
     [types, slug]
+  )
+
+  const { views, createView, updateView, deleteView } = useSavedViews(type?.id)
+
+  const handleApplyView = useCallback(
+    (newFilters: TypePageFilters, newSort: SortConfig, newMode: ViewMode, newGroupFieldId: string | null) => {
+      setFilters(newFilters)
+      setSort(newSort)
+      setMode(newMode)
+      setGroupField(newGroupFieldId)
+    },
+    [setFilters, setSort, setMode, setGroupField],
   )
 
   const { objects, isLoading: objectsLoading } = useObjects(
@@ -104,6 +122,20 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
               : totalCount}
         </span>
         <ViewToggle slug={slug} />
+        {type && (
+          <SavedViewSelector
+            typeId={type.id}
+            views={views}
+            filters={filters}
+            sort={sort}
+            viewMode={mode}
+            boardGroupFieldId={groupFieldId}
+            onApplyView={handleApplyView}
+            onCreateView={createView}
+            onUpdateView={updateView}
+            onDeleteView={deleteView}
+          />
+        )}
       </div>
 
       <TypePageFilterBar
