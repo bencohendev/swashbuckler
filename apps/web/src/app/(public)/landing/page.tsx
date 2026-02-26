@@ -51,12 +51,14 @@ export default function LandingPage() {
       <main className="flex-1">
         <section className="relative z-10 mx-auto max-w-3xl px-6 py-24 text-center">
           <PixelPirateFlag />
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Your personal knowledge base
+          <p className="text-lg text-muted-foreground">
+            Avast ye matey, welcome to
+          </p>
+          <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
+            Swashbuckler
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Organize ideas with a block editor, custom types, and a visual
-            graph.
+          <p className="mt-3 text-base text-muted-foreground/80">
+            Your personal knowledge base
           </p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link
