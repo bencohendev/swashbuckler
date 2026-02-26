@@ -137,13 +137,13 @@ Dual-storage architecture with a `DataClient` interface:
 | [Todo Block](features/todo-block.md) |  Checkbox/task list block type for the editor. Each todo item has a clickable checkbox that toggles checked/unchecked state, with visual strikethrough on completed items. |
 | [Block Side Menu](features/block-side-menu.md) | Notion-style hover handle in editor gutter with insert, duplicate, and delete actions |
 | [First-Use Tutorial](features/first-use-tutorial.md) | Onboarding walkthrough for new users |
+| [API Documentation](features/api-documentation.md) | Internal API documentation with architecture diagrams |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| API documentation | API documentation with diagrams |
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Image Resize](features/image-resize.md) | Drag-handle resize for inline editor images |
 | [Account-Level Themes](features/account-level-themes.md) | Move custom theme creation to Account Settings |
