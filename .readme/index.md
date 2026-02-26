@@ -144,13 +144,13 @@ Dual-storage architecture with a `DataClient` interface:
 | [Type Starter Kits](features/type-starter-kits.md) | Pre-built type collections (RP, recipes, note-taking, etc.) |
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
+| [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
 
 ## Bugs
 
