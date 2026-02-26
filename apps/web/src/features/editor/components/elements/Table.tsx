@@ -219,15 +219,14 @@ export function TableElement({
   return (
     <PlateElement {...props} element={element} className="my-4">
       <div
-        className="relative"
+        className="relative -ml-[30px] -mt-[28px] pl-[30px] pt-[28px]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {showHandles && tablePath && (
+        {!readOnly && tablePath && (
           <div
             contentEditable={false}
-            className="absolute left-0 right-0 transition-opacity duration-150"
-            style={{ top: -28 }}
+            className={`absolute left-[30px] right-0 top-0 h-[28px] transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
           >
             {colPositions.map((col, i) => (
               <div
@@ -246,11 +245,10 @@ export function TableElement({
           </div>
         )}
 
-        {showHandles && tablePath && (
+        {!readOnly && tablePath && (
           <div
             contentEditable={false}
-            className="absolute top-0 bottom-0 transition-opacity duration-150"
-            style={{ left: -30 }}
+            className={`absolute left-0 top-[28px] bottom-0 w-[30px] transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
           >
             {rowPositions.map((row, i) => (
               <div
