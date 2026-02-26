@@ -11,6 +11,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | RecentSection infinite loop from unstable Zustand snapshot | Select stable `entries` reference and derive IDs via `useMemo` instead of calling `getRecentIds()` which returns a new array every render |
 | 2026-02-25 | Delete space redirects unnecessarily | Already fixed — `onDelete` checks `id === currentSpace?.id` and only redirects to `/dashboard` if the deleted space was current |
 | 2026-02-25 | Cursor lost after inserting inline link | Override LinkPlugin transforms (insertText, insertData, insertBreak) with deferred focus restoration after withLink's URL auto-wrapping |
 | 2026-02-25 | Sidebar entry reordering slow | Client-side Zustand store (`recentAccess.ts`) tracks access times per space in localStorage; Recent section orders by access time with `updated_at` fallback |
