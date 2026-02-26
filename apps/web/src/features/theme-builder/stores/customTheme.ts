@@ -74,6 +74,7 @@ interface CustomThemeState {
   updateTheme: (id: string, name: string, base: ThemeBase, coreColors: ThemeCoreColors) => void
   deleteTheme: (id: string) => void
   setSpaceTheme: (spaceId: string, assignment: SpaceThemeAssignment) => void
+  togglePreset: (spaceId: string, presetId: string) => void
   clearSpaceTheme: (spaceId: string) => void
 }
 
@@ -147,26 +148,56 @@ export const useCustomThemeStore = create<CustomThemeState>((set, get) => ({
   },
 
   setSpaceTheme: (spaceId, assignment) => {
-    // Remember the custom/preset theme when switching away from it
     const current = get().spaceThemes[spaceId]
     const lastCustomThemeIds = { ...get().lastCustomThemeIds }
-    const isLeavingNonDefault = (current?.type === 'custom' || current?.type === 'preset') &&
-      assignment.type === 'default'
-    const isChoosingNonDefault = assignment.type === 'custom' || assignment.type === 'preset'
 
-    if (isLeavingNonDefault && current) {
-      // Store the full assignment JSON so we can restore either type
-      lastCustomThemeIds[spaceId] = JSON.stringify(current)
+    // Remember the custom theme ID when switching away from it
+    if (current?.type === 'custom' && assignment.type === 'default') {
+      lastCustomThemeIds[spaceId] = current.themeId
       persistLastCustomThemeIds(lastCustomThemeIds)
-    } else if (isChoosingNonDefault) {
-      // Clear last-custom when actively choosing a non-default theme
+    } else if (assignment.type === 'custom') {
+      // Clear last-custom when actively choosing a custom theme
       delete lastCustomThemeIds[spaceId]
       persistLastCustomThemeIds(lastCustomThemeIds)
+    }
+
+    // When cycling default themes, preserve existing presetId
+    if (assignment.type === 'default' && current?.type === 'default' && current.presetId && !('presetId' in assignment)) {
+      assignment = { ...assignment, presetId: current.presetId }
     }
 
     const spaceThemes = { ...get().spaceThemes, [spaceId]: assignment }
     persistSpaceThemes(spaceThemes)
     set({ spaceThemes, lastCustomThemeIds })
+  },
+
+  togglePreset: (spaceId, presetId) => {
+    const current = get().spaceThemes[spaceId]
+
+    let next: SpaceThemeAssignment
+    if (current?.type === 'default') {
+      // Toggle preset on/off
+      next = current.presetId === presetId
+        ? { type: 'default', value: current.value }
+        : { type: 'default', value: current.value, presetId }
+    } else if (!current) {
+      // No assignment — create default with preset
+      next = { type: 'default', value: 'system', presetId }
+    } else {
+      // Custom theme active — switch to default with preset
+      const lastCustomThemeIds = { ...get().lastCustomThemeIds }
+      lastCustomThemeIds[spaceId] = current.themeId
+      persistLastCustomThemeIds(lastCustomThemeIds)
+      next = { type: 'default', value: 'system', presetId }
+      const spaceThemes = { ...get().spaceThemes, [spaceId]: next }
+      persistSpaceThemes(spaceThemes)
+      set({ spaceThemes, lastCustomThemeIds })
+      return
+    }
+
+    const spaceThemes = { ...get().spaceThemes, [spaceId]: next }
+    persistSpaceThemes(spaceThemes)
+    set({ spaceThemes })
   },
 
   clearSpaceTheme: (spaceId) => {

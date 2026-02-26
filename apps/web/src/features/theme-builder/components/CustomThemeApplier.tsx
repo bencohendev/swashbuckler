@@ -54,25 +54,21 @@ export function CustomThemeApplier() {
     }
 
     if (assignment.type === 'default') {
-      clearOverrides()
       setTheme(assignment.value)
-      return
-    }
 
-    if (assignment.type === 'preset') {
-      const preset = getPreset(assignment.presetId)
-      if (!preset) {
-        clearOverrides()
-        return
+      if (assignment.presetId) {
+        const preset = getPreset(assignment.presetId)
+        if (preset) {
+          const isDark = resolvedTheme === 'dark'
+          const colors = isDark ? preset.darkColors : preset.lightColors
+          applyColors(colors)
+          document.documentElement.setAttribute('data-preset', preset.id)
+          return () => clearOverrides()
+        }
       }
 
-      const isDark = resolvedTheme === 'dark'
-      const colors = isDark ? preset.darkColors : preset.lightColors
-
-      applyColors(colors)
-      document.documentElement.setAttribute('data-preset', preset.id)
-
-      return () => clearOverrides()
+      clearOverrides()
+      return
     }
 
     // Custom theme assignment

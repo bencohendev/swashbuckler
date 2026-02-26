@@ -42,22 +42,9 @@ export function Header({ email }: { email?: string }) {
   const [mounted, setMounted] = useState(false)
 
   const assignment = space ? spaceThemes[space.id] : undefined
-  const lastRaw = space ? lastCustomThemeIds[space.id] : undefined
-  // Parse the stored last non-default assignment (JSON or legacy plain ID)
-  const lastNonDefault: SpaceThemeAssignment | undefined = (() => {
-    if (!lastRaw) return undefined
-    try {
-      const parsed = JSON.parse(lastRaw)
-      if (parsed && typeof parsed === 'object' && 'type' in parsed) return parsed
-    } catch { /* legacy plain ID */ }
-    // Legacy: plain theme ID string
-    return { type: 'custom' as const, themeId: lastRaw }
-  })()
-  // Only offer the non-default theme in the cycle if it still exists
-  const hasLastNonDefault = lastNonDefault != null && (
-    lastNonDefault.type === 'preset' ||
-    (lastNonDefault.type === 'custom' && themes.some(t => t.id === lastNonDefault.themeId))
-  )
+  const lastCustomThemeId = space ? lastCustomThemeIds[space.id] : undefined
+  const hasLastCustom = lastCustomThemeId != null && themes.some(t => t.id === lastCustomThemeId)
+  const activePresetId = assignment?.type === 'default' ? assignment.presetId : undefined
 
   useEffect(() => {
     setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect -- hydration detection
@@ -121,28 +108,36 @@ export function Header({ email }: { email?: string }) {
           className="text-muted-foreground"
           onClick={() => {
             if (!space) return
-            // If custom or preset theme, switch to light default
-            if (assignment?.type === 'custom' || assignment?.type === 'preset') {
+            // If custom theme, switch to light default
+            if (assignment?.type === 'custom') {
               setSpaceTheme(space.id, { type: 'default', value: 'light' })
               return
             }
-            // Cycle: light → dark → system → [last non-default] → light
+            // Cycle: light → dark → system → [last custom] → light (preserves presetId)
             const current = assignment?.type === 'default' ? assignment.value : 'system'
             const next: SpaceThemeAssignment =
               current === 'light' ? { type: 'default', value: 'dark' } :
               current === 'dark' ? { type: 'default', value: 'system' } :
-              current === 'system' && hasLastNonDefault ? lastNonDefault! :
+              current === 'system' && hasLastCustom ? { type: 'custom', themeId: lastCustomThemeId! } :
               { type: 'default', value: 'light' }
             setSpaceTheme(space.id, next)
           }}
-          title={mounted ? `Theme: ${assignment?.type === 'default' ? assignment.value : assignment?.type === 'custom' ? 'custom' : assignment?.type === 'preset' ? 'fantasy' : 'system'}` : "Theme"}
-          aria-label={mounted ? `Theme: ${assignment?.type === 'default' ? assignment.value : assignment?.type === 'custom' ? 'custom' : assignment?.type === 'preset' ? 'fantasy' : 'system'}` : "Toggle theme"}
+          title={mounted ? (() => {
+            if (assignment?.type === 'custom') return 'Theme: custom'
+            const base = assignment?.type === 'default' ? assignment.value : 'system'
+            return activePresetId ? `Theme: ${activePresetId} (${base})` : `Theme: ${base}`
+          })() : "Theme"}
+          aria-label={mounted ? (() => {
+            if (assignment?.type === 'custom') return 'Theme: custom'
+            const base = assignment?.type === 'default' ? assignment.value : 'system'
+            return activePresetId ? `Theme: ${activePresetId} (${base})` : `Theme: ${base}`
+          })() : "Toggle theme"}
         >
           {mounted ? (
-            assignment?.type === 'preset'
-              ? <SwordsIcon className="size-4" />
-              : assignment?.type === 'custom'
-                ? <PaletteIcon className="size-4" />
+            assignment?.type === 'custom'
+              ? <PaletteIcon className="size-4" />
+              : activePresetId
+                ? <span className="flex items-center gap-0.5"><SwordsIcon className="size-3.5" />{assignment?.type === 'default' && assignment.value === 'system' ? <MonitorIcon className="size-3.5" /> : resolvedTheme === 'dark' ? <MoonIcon className="size-3.5" /> : <SunIcon className="size-3.5" />}</span>
                 : assignment?.type === 'default' && assignment.value === 'system'
                   ? <MonitorIcon className="size-4" />
                   : resolvedTheme === 'dark'
