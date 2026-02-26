@@ -18,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
@@ -236,9 +237,12 @@ function RowHandleMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="left">
         {isFirstRow && (
-          <DropdownMenuItem onSelect={toggleHeaderRow}>
-            {isHeaderRow ? 'Remove header row' : 'Header row'}
-          </DropdownMenuItem>
+          <DropdownMenuCheckboxItem
+            checked={isHeaderRow}
+            onSelect={toggleHeaderRow}
+          >
+            Header row
+          </DropdownMenuCheckboxItem>
         )}
         <ColorPaletteSubmenu
           cellPaths={cellPaths}
@@ -368,9 +372,12 @@ function ColumnHandleMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         {isFirstCol && (
-          <DropdownMenuItem onSelect={toggleHeaderCol}>
-            {isHeaderCol ? 'Remove header column' : 'Header column'}
-          </DropdownMenuItem>
+          <DropdownMenuCheckboxItem
+            checked={isHeaderCol}
+            onSelect={toggleHeaderCol}
+          >
+            Header column
+          </DropdownMenuCheckboxItem>
         )}
         <ColorPaletteSubmenu
           cellPaths={cellPaths}
