@@ -57,7 +57,6 @@ export const editorPlugins = [
   TablePlugin.configure({
     options: {
       minColumnWidth: 48,
-      initialTableWidth: 640,
       disableMarginLeft: true,
     },
   }),

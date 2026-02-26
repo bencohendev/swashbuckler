@@ -197,9 +197,11 @@ function CellResizeHandle() {
 function TableElementContent({
   children,
   tablePath,
+  element,
 }: {
   children: React.ReactNode;
   tablePath: number[];
+  element: PlateElementProps['element'];
 }) {
   const editor = useEditorRef();
   const readOnly = useReadOnly();
@@ -208,6 +210,23 @@ function TableElementContent({
   const [openMenuCount, setOpenMenuCount] = useState(0);
   const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
   const [colPositions, setColPositions] = useState<ColPosition[]>([]);
+
+  // Seed colSizes from actual DOM measurements when the table lacks them.
+  // This avoids the "jump on first drag" bug caused by initialTableWidth
+  // seeding pixel values that don't match the actual rendered width.
+  const colSizes = (element as unknown as { colSizes?: number[] }).colSizes;
+  const hasColSizes = colSizes && colSizes.length > 0 && colSizes.some((s) => s > 0);
+  useEffect(() => {
+    if (hasColSizes) return;
+    const table = tableRef.current;
+    if (!table) return;
+
+    const firstRowCells = table.querySelectorAll('tr:first-child > td, tr:first-child > th');
+    if (firstRowCells.length === 0) return;
+
+    const measuredSizes = Array.from(firstRowCells).map((cell) => cell.getBoundingClientRect().width);
+    editor.tf.setNodes({ colSizes: measuredSizes } as Record<string, unknown>, { at: tablePath });
+  }, [hasColSizes, editor, tablePath]);
 
   useEffect(() => {
     const table = tableRef.current;
@@ -328,7 +347,7 @@ export function TableElement({
   return (
     <PlateElement {...props} element={element} className="my-4">
       <TableProvider>
-        <TableElementContent tablePath={tablePath}>
+        <TableElementContent tablePath={tablePath} element={element}>
           {children}
         </TableElementContent>
       </TableProvider>
