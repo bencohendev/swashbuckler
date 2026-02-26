@@ -6,6 +6,10 @@
 -- S5: CHECK constraint on object_relations.relation_type
 -- ============================================================
 
+-- Clean up any legacy 'parent' relation_type rows (comment in 003 mentioned
+-- 'parent' but the app only uses 'link' and 'mention')
+DELETE FROM object_relations WHERE relation_type NOT IN ('link', 'mention');
+
 ALTER TABLE object_relations
   ADD CONSTRAINT object_relations_type_check
   CHECK (relation_type IN ('link', 'mention'));
@@ -50,9 +54,12 @@ BEGIN
   END LOOP;
 END $$;
 
--- Drop old case-sensitive index and create case-insensitive one
-DROP INDEX IF EXISTS tags_space_name_idx;
-CREATE UNIQUE INDEX tags_space_name_lower_idx ON tags(space_id, LOWER(name));
+-- Drop old case-sensitive unique constraint (created as UNIQUE(space_id, name) in 013_tags.sql)
+-- PostgreSQL auto-names it tags_space_id_name_key
+ALTER TABLE tags DROP CONSTRAINT IF EXISTS tags_space_id_name_key;
+
+-- Create new case-insensitive unique index
+CREATE UNIQUE INDEX IF NOT EXISTS tags_space_name_lower_idx ON tags(space_id, LOWER(name));
 
 -- ============================================================
 -- S7: Make object_types.owner_id NOT NULL
@@ -65,8 +72,9 @@ SET owner_id = s.owner_id
 FROM spaces s
 WHERE ot.space_id = s.id AND ot.owner_id IS NULL;
 
--- Delete any orphaned types with no space and no owner
-DELETE FROM object_types WHERE owner_id IS NULL AND space_id IS NULL;
+-- Safety net: delete any remaining types with NULL owner_id
+-- (orphans from deleted spaces or legacy data)
+DELETE FROM object_types WHERE owner_id IS NULL;
 
 ALTER TABLE object_types ALTER COLUMN owner_id SET NOT NULL;
 
@@ -98,4 +106,12 @@ ALTER TABLE saved_views ALTER COLUMN id SET DEFAULT gen_random_uuid();
 -- RT1: Add saved_views to realtime publication
 -- ============================================================
 
-ALTER PUBLICATION supabase_realtime ADD TABLE saved_views;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'saved_views'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE saved_views;
+  END IF;
+END $$;

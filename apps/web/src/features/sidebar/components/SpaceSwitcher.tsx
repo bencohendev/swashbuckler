@@ -66,7 +66,7 @@ export function SpaceSwitcher() {
                 onClick={() => handleSwitchSpace(s.id)}
                 className="gap-2"
               >
-                <span className="text-base">{s.icon}</span>
+                <span className="text-base">{s.icon ?? '📁'}</span>
                 <span className="flex-1 truncate">{s.name}</span>
                 {s.id === space?.id && (
                   <CheckIcon className="size-4 text-primary" />
@@ -84,7 +84,7 @@ export function SpaceSwitcher() {
                   onClick={() => handleSwitchSpace(s.id)}
                   className="gap-2"
                 >
-                  <span className="text-base">{s.icon}</span>
+                  <span className="text-base">{s.icon ?? '📁'}</span>
                   <span className="flex-1 truncate">{s.name}</span>
                   <span className="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
                     Shared

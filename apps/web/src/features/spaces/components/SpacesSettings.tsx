@@ -146,7 +146,7 @@ function SpaceRow({ space, isCurrent, canDelete, canArchive, onUpdate, onArchive
             className="flex size-9 shrink-0 items-center justify-center rounded-md text-xl hover:bg-muted"
             aria-label={`Change icon for ${space.name}`}
           >
-            {space.icon}
+            {space.icon ?? '📁'}
           </button>
         </EmojiPicker>
 

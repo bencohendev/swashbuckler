@@ -11,6 +11,10 @@ SET owner_id = s.owner_id
 FROM spaces s
 WHERE o.space_id = s.id AND o.owner_id IS NULL;
 
+-- Safety net: delete any remaining orphaned objects with NULL owner_id
+-- (e.g., if their space was deleted but cascade didn't clean up)
+DELETE FROM objects WHERE owner_id IS NULL;
+
 ALTER TABLE objects ALTER COLUMN owner_id SET NOT NULL;
 
 -- Replace INSERT policy to enforce owner_id
