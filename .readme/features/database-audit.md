@@ -1,6 +1,6 @@
 # Database Audit
 
-**Status:** Done
+**Status:** Active
 
 ## Overview
 
@@ -323,8 +323,28 @@ Total migration count: 25 (001-025).
 - **S8**: Removed `is_built_in` from `ObjectType` schema, all code, test fixtures
 
 ### Not Addressed
-- **N5** (Sidebar consolidation) and **N7** (server-side content search): Larger refactors scoped as separate features
-- **S6** (pins.user_id) and **S7** (object_types.owner_id Zod): Kept nullable in Zod since local/Dexie mode needs null values; DB constraint handles enforcement for Supabase
+
+**Separate features (larger refactors):**
+- **N5** — Sidebar fires 3 overlapping `useObjects` queries; should consolidate to one query and derive subsets client-side
+- **N7** — Content search fetches 200 full objects for client-side matching; should use server-side `tsvector` search
+
+**Performance at scale (acceptable now, revisit under load):**
+- **N4/R3** — `is_object_excluded()` RLS function called per-row; consider inlining as `NOT EXISTS` subquery at scale
+- **E3** — No size limit on `content`/`properties` JSONB columns; latent performance concern with N7
+
+**Kept as-is (by design):**
+- **S6** (pins.user_id) and **S7** (object_types.owner_id) Zod schemas: Kept nullable in Zod since local/Dexie mode creates these with null values; DB constraint handles enforcement for Supabase
 - **D1** (is_default: 1 vs true): Verified Dexie handles boolean-to-key conversion correctly; no change needed
-- **E1/E2/E5**: Deferred — require product decisions
-- **RT2/RT3/E4/S10/S11/D3**: Deferred — low value
+- **S17** (`createObjectSchema` allows `is_deleted` at creation): Intentional for import/restore flows
+
+**Needs product decision:**
+- **E1** — No optimistic locking; last-write-wins for shared-space metadata edits
+- **E2** — Archived items block name/slug reuse
+- **E5** — Type deletion cascades objects immediately, bypassing soft-delete/trash flow
+
+**Deferred — low value:**
+- **RT2** — Unscoped realtime subscriptions (Supabase's intended pattern)
+- **RT3** — No Yjs broadcast message chunking (unlikely to hit limits)
+- **E4** — Dexie compound operations lack transactions (single-threaded mitigates)
+- **S10/S11** — DB-level length/URL validation (Zod handles; only direct SQL bypasses)
+- **D3** — `owner_id: 'local'` not a valid UUID (works in practice)
