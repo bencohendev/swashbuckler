@@ -7,6 +7,7 @@ import { ProfileSection } from './ProfileSection'
 import { PasswordSection } from './PasswordSection'
 import { ConnectedAccountsSection } from './ConnectedAccountsSection'
 import { PreferencesSection } from './PreferencesSection'
+import { CustomThemesSection } from './CustomThemesSection'
 import { GlobalTypesSection } from '@/features/global-types/components/GlobalTypesSection'
 import { DataExportSection } from './DataExportSection'
 import { DeleteAccountSection } from './DeleteAccountSection'
@@ -35,6 +36,7 @@ export function AccountSettings() {
       <PasswordSection user={user} />
       <ConnectedAccountsSection user={user} />
       <PreferencesSection user={user} />
+      <CustomThemesSection />
       <GlobalTypesSection />
       <DataExportSection />
       <DeleteAccountSection user={user} />
