@@ -31,8 +31,14 @@ const features = [
 
 export default function LandingPage() {
   return (
-    <>
-      <header className="flex items-center justify-between px-6 py-4 border-b">
+    <div className="relative flex min-h-screen flex-col">
+      {/* Flagpole running full page height */}
+      <div
+        className="pointer-events-none absolute top-0 bottom-0 w-[8px] sm:w-[12px] bg-[#8B5E3C] left-[calc(50%_-_64px)] sm:left-[calc(50%_-_96px)]"
+        aria-hidden="true"
+      />
+
+      <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b bg-background">
         <span className="text-lg font-bold tracking-tight">Swashbuckler</span>
         <Link
           href="/login"
@@ -42,13 +48,7 @@ export default function LandingPage() {
         </Link>
       </header>
 
-      <main className="relative flex-1">
-        {/* Flagpole running full height of main */}
-        <div
-          className="pointer-events-none absolute top-0 bottom-0 w-[8px] sm:w-[12px] bg-[#8B5E3C] left-[calc(50%_-_64px)] sm:left-[calc(50%_-_96px)]"
-          aria-hidden="true"
-        />
-
+      <main className="flex-1">
         <section className="relative z-10 mx-auto max-w-3xl px-6 py-24 text-center">
           <PixelPirateFlag />
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
@@ -86,21 +86,19 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Beach scene at bottom */}
-        <section
-          className="relative z-10 bg-[#D2B48C] py-4"
-          aria-hidden="true"
-        >
-          <PixelBeachScene />
-        </section>
       </main>
 
-      <footer className="border-t px-6 py-4 text-center text-sm text-muted-foreground">
-        &copy; Swashbuckler &middot;{" "}
-        <Link href="/docs" className="underline hover:text-foreground transition-colors">
-          Docs
-        </Link>
+      <footer className="relative z-10 bg-[#D2B48C] pt-8 pb-4">
+        <div aria-hidden="true">
+          <PixelBeachScene />
+        </div>
+        <p className="mt-4 px-6 text-center text-sm text-[#5D3A1A]">
+          &copy; Swashbuckler &middot;{" "}
+          <Link href="/docs" className="underline hover:text-[#3A2210] transition-colors">
+            Docs
+          </Link>
+        </p>
       </footer>
-    </>
+    </div>
   )
 }
