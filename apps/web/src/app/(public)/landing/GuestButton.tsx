@@ -6,7 +6,7 @@ export function GuestButton() {
   const router = useRouter()
 
   const handleClick = () => {
-    document.cookie = "swashbuckler-guest=1; path=/; max-age=31536000"
+    document.cookie = "swashbuckler-guest=1; path=/; max-age=31536000; SameSite=Lax; Secure"
     router.push("/dashboard")
   }
 

@@ -2,6 +2,7 @@
 
 import { CheckIcon, MinusIcon } from 'lucide-react'
 import type { FieldType } from '@/shared/lib/data'
+import { isSafeUrl } from '@/shared/lib/url'
 
 interface PropertyCellProps {
   value: unknown
@@ -66,12 +67,13 @@ export function PropertyCell({ value, fieldType }: PropertyCellProps) {
     case 'url': {
       const url = String(value)
       const display = url.replace(/^https?:\/\//, '').slice(0, 40)
+      const safe = isSafeUrl(url)
       return (
         <a
-          href={url}
+          href={safe ? url : undefined}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline"
+          className={safe ? 'text-primary hover:underline' : 'text-muted-foreground'}
           onClick={(e) => e.stopPropagation()}
         >
           {display}

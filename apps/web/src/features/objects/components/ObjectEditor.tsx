@@ -78,6 +78,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const isCollaborative = storageMode === 'supabase' && canEdit && isSharedSpace
 
   const collaborationOptions = useCollaboration({
+    spaceId: space?.id ?? '',
     documentId: id,
     supabase,
     userId: user?.id ?? '',

@@ -14,6 +14,7 @@ interface BroadcastPayload {
 
 interface SupabaseYjsProviderOptions {
   supabase: SupabaseClient
+  spaceId: string
   documentId: string
   doc: Y.Doc
   awareness: Awareness
@@ -39,6 +40,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
   isReconnecting = false
 
   private supabase: SupabaseClient
+  private spaceId: string
   private documentId: string
   // Unique per provider instance so cross-tab same-user editing works
   private instanceId = crypto.randomUUID()
@@ -55,6 +57,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
 
   constructor(options: SupabaseYjsProviderOptions) {
     this.supabase = options.supabase
+    this.spaceId = options.spaceId
     this.documentId = options.documentId
     this.document = options.doc
     this.awareness = options.awareness
@@ -63,7 +66,7 @@ export class SupabaseYjsProvider implements UnifiedProvider {
   connect(): void {
     if (this.destroyed || this.isConnected || this.channel) return
 
-    const channelName = `collab:${this.documentId}`
+    const channelName = `collab:${this.spaceId}:${this.documentId}`
     this.channel = this.supabase.channel(channelName)
 
     this.channel

@@ -2,9 +2,11 @@
 
 import type { PlateElementProps } from '@udecode/plate/react';
 import { PlateElement } from '@udecode/plate/react';
+import { isSafeUrl } from '@/shared/lib/url';
 
 function getUrl(element: Record<string, unknown>): string | undefined {
-  return typeof element.url === 'string' ? element.url : undefined;
+  if (typeof element.url !== 'string') return undefined;
+  return isSafeUrl(element.url) ? element.url : undefined;
 }
 
 export function LinkElement({ element, children, ...props }: PlateElementProps) {

@@ -225,6 +225,31 @@ OWASP-style security review of the Swashbuckler codebase. Covers authentication 
 3. Code review: manual inspection of auth flows, permission checks, input handling
 4. Dynamic testing: attempt permission bypasses, XSS payloads in editor, malformed inputs
 
+## Findings
+
+| # | Severity | Area | Finding | Fix |
+|---|----------|------|---------|-----|
+| C1 | Critical | XSS | URL property fields render `href` without protocol validation — `javascript:` URIs execute | Added `isSafeUrl()` guard in `PropertyCell.tsx` |
+| C2 | Critical | XSS | Editor link elements render `href` without protocol validation | Added `isSafeUrl()` guard in `Link.tsx` |
+| H1 | High | Auth | OAuth callback `next` param allows open redirect (e.g. `//evil.com`) | Validate `next` starts with `/` and not `//` in `auth/callback/route.ts` |
+| H2 | High | IDOR | `search_objects` and `get_graph_data` RPCs accept client-controllable `user_id` param with SECURITY DEFINER | Dropped both unused RPCs via migration 024 |
+| H3 | High | Realtime | Broadcast channels named only by `documentId` — any authenticated user who knows the ID can join | Scoped channels to `collab:${spaceId}:${documentId}` |
+| M1 | Medium | Headers | No Content-Security-Policy header configured | Added full CSP to `next.config.ts` security headers |
+| M2 | Medium | Auth | Login rate limiting is client-side only | Deferred — requires server-side middleware or Supabase rate-limit config |
+| M3 | Medium | Uploads | `image/svg+xml` in MIME allowlist creates latent XSS risk | Removed SVG from allowlist + storage bucket migration 025 |
+| M4 | Medium | Sharing | Field exclusions enforced in UI only, not at RLS level | Deferred — requires RLS policy changes |
+| M5 | Medium | Sharing | `find_user_by_email` RPC enables user enumeration | Deferred — low impact since Supabase auth handles email privacy |
+| L1 | Low | Validation | Object type `slug` field accepts arbitrary strings (no pattern enforcement) | Added regex `/^[a-z0-9]+(-[a-z0-9]+)*$/` to Zod schemas |
+| L2 | Low | Validation | Tag/type `color` field accepts arbitrary strings (potential CSS injection via style attrs) | Added regex `/^#[0-9a-fA-F]{3,8}$/` to Zod schemas |
+| L3 | Low | Auth | Guest cookie missing `SameSite` and `Secure` flags | Added `SameSite=Lax; Secure` to `GuestButton.tsx` |
+| L4 | Low | Errors | Account delete endpoint leaks internal error messages | Changed to generic "Failed to delete account" message |
+
+### Deferred Items
+
+- **M2 (Server-side rate limiting):** Requires Supabase rate-limit configuration or custom Next.js middleware. Not addressable with client-side code alone.
+- **M4 (RLS-enforced field exclusions):** Field-level exclusions would need column-level security or a filtered view layer in Supabase. Current UI enforcement is sufficient for the threat model (shared users are trusted contacts).
+- **M5 (User enumeration via `find_user_by_email`):** Low practical impact since the RPC requires authentication and Supabase handles email privacy at the auth layer. Could be addressed by returning a generic response regardless of whether the user exists.
+
 ## Deliverables
 
 - Findings table with severity (Critical / High / Medium / Low / Info)
