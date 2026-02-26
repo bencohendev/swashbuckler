@@ -145,6 +145,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
+| [Database Audit](features/database-audit.md) | Schema design, index coverage, N+1 queries, cascade completeness, migration hygiene, Dexie parity |
 
 
 ## Planned Features
@@ -153,13 +154,15 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | [Fantasy Theme](features/fantasy-theme.md) | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
 | [Sci-Fi Theme](features/sci-fi-theme.md) | Sci-fi styled UI skin — cyberpunk/neon aesthetic, futuristic panels and controls |
+| Optimistic Locking | Prevent silent overwrites when two users edit the same entry's metadata in a shared space (from [Database Audit](features/database-audit.md) E1) |
+| Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
+| Soft-Delete on Type Deletion | Type deletion should soft-delete its objects into trash instead of immediate cascade (from [Database Audit](features/database-audit.md) E5) |
 
 ### Audits
 
 | Audit | Description |
 |-------|-------------|
 | [Security Audit](features/security-audit.md) | OWASP-style review: auth, input validation, XSS/CSRF, sharing boundaries, realtime security, CSP |
-| [Database Audit](features/database-audit.md) | Schema design, index coverage, N+1 queries, cascade completeness, migration hygiene, Dexie parity |
 | [SSR vs Client Audit](features/ssr-vs-client-audit.md) | Rendering strategy, `'use client'` boundaries, SSR data fetching, hydration risks, bundle size |
 | [Client API Audit](features/client-api-audit.md) | DataClient design, TanStack Query config, query keys, mutation/invalidation, error handling, waterfalls |
 | [React Hooks Audit](features/react-hooks-audit.md) | useEffect correctness, memoization, stale closures, Zustand patterns, infinite loop risks, cleanup |

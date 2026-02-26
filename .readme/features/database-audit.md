@@ -1,6 +1,6 @@
 # Database Audit
 
-**Status:** Active
+**Status:** Done
 
 ## Overview
 
@@ -344,10 +344,10 @@ Total migration count: 25 (001-025).
 - **D1** (is_default: 1 vs true): Verified Dexie handles boolean-to-key conversion correctly; no change needed
 - **S17** (`createObjectSchema` allows `is_deleted` at creation): Intentional for import/restore flows
 
-**Needs product decision:**
-- **E1** — No optimistic locking; last-write-wins for shared-space metadata edits
-- **E2** — Archived items block name/slug reuse
-- **E5** — Type deletion cascades objects immediately, bypassing soft-delete/trash flow
+**Needs product decision (moved to Planned Features in index.md):**
+- **E1** — Optimistic locking for shared-space metadata edits
+- **E2** — Archive should release name/slug for reuse
+- **E5** — Type deletion should soft-delete objects instead of cascade
 
 **Deferred — low value:**
 - **RT2** — Unscoped realtime subscriptions (Supabase's intended pattern; scoping requires re-subscribing on space switch)
