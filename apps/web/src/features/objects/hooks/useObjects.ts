@@ -5,6 +5,7 @@ import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-quer
 import { useDataClient, useSpaceId, type DataObject, type DataObjectSummary, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { useRecentAccess } from '@/shared/stores/recentAccess'
 
 const EMPTY_OBJECTS: DataObjectSummary[] = []
 
@@ -30,6 +31,7 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
   const dataClient = useDataClient()
   const queryClient = useQueryClient()
   const spaceId = useSpaceId()
+  const removeRecentEntry = useRecentAccess((s) => s.removeEntry)
 
   const queryOptions = useMemo<ListObjectsOptions>(() => ({
     parentId,
@@ -75,8 +77,9 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
   const remove = useCallback(async (id: string, permanent = false): Promise<void> => {
     const result = await dataClient.objects.delete(id, permanent)
     if (result.error) return
+    removeRecentEntry(id)
     emit('objects')
-  }, [dataClient])
+  }, [dataClient, removeRecentEntry])
 
   const restore = useCallback(async (id: string): Promise<DataObject | null> => {
     const result = await dataClient.objects.restore(id)
@@ -88,9 +91,10 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
   const archive = useCallback(async (id: string): Promise<DataObject | null> => {
     const result = await dataClient.objects.archive(id)
     if (result.error) return null
+    removeRecentEntry(id)
     emit('objects')
     return result.data
-  }, [dataClient])
+  }, [dataClient, removeRecentEntry])
 
   const unarchive = useCallback(async (id: string): Promise<DataObject | null> => {
     const result = await dataClient.objects.unarchive(id)
