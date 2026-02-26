@@ -19,7 +19,8 @@ interface RecentSectionProps {
 export function RecentSection({ objects, collapseSignal }: RecentSectionProps) {
   const [collapsed, setCollapsed] = useCollapsible('sidebar-collapsed-recent', collapseSignal)
 
-  const recentIds = useRecentAccess((s) => s.getRecentIds(RECENT_LIMIT))
+  const entries = useRecentAccess((s) => s.entries)
+  const recentIds = useMemo(() => entries.slice(0, RECENT_LIMIT).map((e) => e.id), [entries])
 
   const recentObjects = useMemo(() => {
     const objectMap = new Map(objects.map((o) => [o.id, o]))

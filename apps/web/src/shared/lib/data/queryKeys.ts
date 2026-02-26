@@ -30,6 +30,7 @@ export const queryKeys = {
   templates: {
     all: (spaceId?: string) => ['templates', spaceId] as const,
     list: (spaceId?: string, typeId?: string) => ['templates', spaceId, 'list', typeId] as const,
+    detail: (id: string) => ['templates', 'detail', id] as const,
   },
   relations: {
     list: (objectId: string) => ['relations', objectId] as const,

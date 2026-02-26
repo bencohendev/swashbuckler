@@ -41,7 +41,7 @@ import { PrivateBlockElement } from '../plugins/private-plugin';
 import { useEditorStore } from '../store';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { RemoteCursorOverlay } from '@/features/collaboration/components/RemoteCursorOverlay';
-import { BlockSideMenu } from './BlockSideMenu';
+
 
 /** Narrow a Plate editor to YjsEditor. Safe because YjsPlugin wraps it with withTYjs. */
 function toYjsEditor(editor: unknown): YjsEditorType {
@@ -151,9 +151,8 @@ function SoloEditor({
             <PlateContent
               readOnly={readOnly}
               placeholder={placeholder}
-              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
+              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert md:pl-8"
             />
-            <BlockSideMenu />
           </Plate>
 
           {onSave && (
@@ -368,10 +367,9 @@ function CollaborativeEditor({
             <PlateContent
               readOnly={readOnly}
               placeholder={placeholder}
-              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
+              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert md:pl-8"
             />
             <RemoteCursorOverlay awareness={awareness} doc={doc} />
-            <BlockSideMenu />
           </Plate>
 
           {onSave && (
