@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { ArchiveIcon, BookOpenIcon, HelpCircleIcon, HomeIcon, KeyboardIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { ArchiveIcon, BookOpenIcon, CompassIcon, HelpCircleIcon, HomeIcon, KeyboardIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar } from "@/shared/stores/sidebar"
+import { useRecentAccess } from "@/shared/stores/recentAccess"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import type { DataObjectSummary, ObjectType, Template } from "@/shared/lib/data"
@@ -41,6 +42,7 @@ import type { CollapseSignal } from "../types"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
 import { RecentSection } from "./RecentSection"
+import { useTutorial } from "@/features/onboarding"
 
 const DRAG_TYPE = "OBJECT_TYPE"
 
@@ -167,6 +169,7 @@ export function Sidebar() {
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
+  const restartTutorial = useTutorial((s) => s.restart)
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects, isLoading: exclusionFilterLoading, isSharedUser } = useExclusionFilter()
@@ -190,6 +193,15 @@ export function Sidebar() {
   const sidebarLoading = !space || (isSharedUser && exclusionFilterLoading)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
+
+  // Init recent-access store when space changes
+  const initRecentAccess = useRecentAccess((s) => s.init)
+  useEffect(() => {
+    if (space) {
+      initRecentAccess(space.id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run on space ID change
+  }, [space?.id, initRecentAccess])
 
   // Keyboard shortcut: Cmd/Ctrl + \ to toggle sidebar
   useEffect(() => {
@@ -405,6 +417,7 @@ export function Sidebar() {
       {/* Navigation */}
       <div className="border-b">
         <nav
+          data-tour="sidebar-nav"
           className={cn(
             "flex items-center px-2 py-2 mx-auto max-w-40 justify-between",
             collapsed && "md:flex-col md:gap-1 md:mx-0 md:max-w-none md:justify-start"
@@ -416,6 +429,7 @@ export function Sidebar() {
                 href={item.href}
                 title={item.label}
                 aria-label={item.label}
+                {...(item.href === '/graph' ? { 'data-tour': 'nav-graph' } : {})}
                 className={(isActive) => cn(
                   "flex size-10 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 items-center justify-center rounded-md transition-colors md:size-8",
                   isActive
@@ -437,7 +451,7 @@ export function Sidebar() {
             collapsed && "md:overflow-hidden"
           )}
         >
-          <div className={cn(
+          <div data-tour="type-sections" className={cn(
             "w-64 space-y-3 p-2 transition-transform duration-200",
             collapsed && "md:-translate-x-full"
           )}>
@@ -564,7 +578,9 @@ export function Sidebar() {
                 {hasRecentContent && <hr className="border-border" />}
                 <RecentSection objects={visibleAllObjects} collapseSignal={collapseSignal} />
                 {hasTagsContent && <hr className="border-border" />}
-                <TagsSection tags={tags} collapseSignal={collapseSignal} />
+                <div data-tour="tags-section">
+                  <TagsSection tags={tags} collapseSignal={collapseSignal} />
+                </div>
                 <hr className="border-border" />
                 <SidebarLink
                   href="/archive"
@@ -601,6 +617,7 @@ export function Sidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
+                data-tour="help-menu"
                 aria-label="Help"
                 className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
@@ -617,6 +634,11 @@ export function Sidebar() {
                   <BookOpenIcon className="size-4" />
                   Documentation
                 </a>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={restartTutorial}>
+                <CompassIcon className="size-4" />
+                Take a tour
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DialogTrigger asChild>

@@ -38,7 +38,7 @@ Template icon and cover image are applied only if the entry has none.
 - **No templates for type**: Empty state with guidance to save a template first
 - **Entry has no content**: Both modes produce the same result (just template content)
 - **Template has no content**: Only properties/icon/cover applied; content unchanged
-- **Collaborative mode**: Action is disabled (would conflict with Yjs CRDT state)
+- **Collaborative mode**: Content is applied through Slate transforms so changes flow through the Y.Doc to all connected peers; metadata (properties, icon, cover) is saved directly
 
 ## Key Files
 
@@ -46,5 +46,6 @@ Template icon and cover image are applied only if the entry has none.
 |------|------|
 | `src/features/templates/components/ApplyTemplateDialog.tsx` | Two-step dialog (selection → options) |
 | `src/features/templates/lib/applyTemplate.ts` | `applyTemplateContent()` and `mergeProperties()` utilities |
-| `src/features/objects/components/ObjectEditor.tsx` | Menu item, handler, editor re-key |
+| `src/features/editor/components/Editor.tsx` | `EditorHandle.applyContent()` for collaborative mode |
+| `src/features/objects/components/ObjectEditor.tsx` | Menu item, handler, editor re-key (solo) / editor handle (collab) |
 | `src/features/templates/lib/applyTemplate.test.ts` | Unit tests for merge utilities |

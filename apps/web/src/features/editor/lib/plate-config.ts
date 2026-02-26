@@ -8,7 +8,7 @@ import {
 import { HeadingPlugin } from '@udecode/plate-heading/react';
 import { BlockquotePlugin } from '@udecode/plate-block-quote/react';
 import { CodeBlockPlugin } from '@udecode/plate-code-block/react';
-import { ListPlugin } from '@udecode/plate-list/react';
+import { ListPlugin, TodoListPlugin } from '@udecode/plate-list/react';
 import { TogglePlugin } from '@udecode/plate-toggle/react';
 import { CalloutPlugin } from '@udecode/plate-callout/react';
 import { TablePlugin } from '@udecode/plate-table/react';
@@ -49,6 +49,7 @@ export const editorPlugins = [
   BlockquotePlugin,
   CodeBlockPlugin,
   ListPlugin,
+  TodoListPlugin,
   TogglePlugin,
   CalloutPlugin,
   PrivateBlockPlugin,
@@ -61,7 +62,37 @@ export const editorPlugins = [
       },
     },
   }),
-  LinkPlugin,
+  LinkPlugin.overrideEditor(({ editor, tf: { insertText, insertData, insertBreak } }) => ({
+    transforms: {
+      insertText(text, options) {
+        insertText(text, options);
+        // withLink wraps URL text on space — restore DOM focus after restructuring
+        if (text === ' ' && editor.selection) {
+          setTimeout(() => {
+            editor.tf.focus({ at: editor.selection ?? undefined });
+          }, 0);
+        }
+      },
+      insertData(data) {
+        insertData(data);
+        // Pasting a URL also triggers link wrapping
+        if (editor.selection) {
+          setTimeout(() => {
+            editor.tf.focus({ at: editor.selection ?? undefined });
+          }, 0);
+        }
+      },
+      insertBreak() {
+        insertBreak();
+        // Enter after a URL also triggers link auto-detection
+        if (editor.selection) {
+          setTimeout(() => {
+            editor.tf.focus({ at: editor.selection ?? undefined });
+          }, 0);
+        }
+      },
+    },
+  })),
 
   // Indentation
   IndentPlugin,
@@ -181,6 +212,12 @@ export const editorPlugins = [
           mode: 'block',
           type: 'code_block',
           match: '```',
+        },
+        // Todo list
+        {
+          mode: 'block',
+          type: 'action_item',
+          match: '[] ',
         },
         // Bulleted list
         {

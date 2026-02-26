@@ -10,6 +10,7 @@ import { useTemplates, SaveAsTemplateDialog, ApplyTemplateDialog } from '@/featu
 import { extractMentionIds, LinkedObjects } from '@/features/relations'
 import { useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
 import { useEditorStore } from '@/features/editor/store'
+import { useRecentAccess } from '@/shared/stores/recentAccess'
 import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
 import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
@@ -32,7 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
-import { Editor } from '@/features/editor'
+import { Editor, type EditorHandle } from '@/features/editor'
 import { stripPrivateContent } from '@/features/editor/lib/stripPrivateContent'
 import { TagPicker } from '@/features/tags'
 import { PinButton } from '@/features/pins'
@@ -50,6 +51,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const router = useRouter()
   const mainRef = useRef<HTMLElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
+  const editorRef = useRef<EditorHandle>(null)
   const dataClient = useDataClient()
   const storageMode = useStorageMode()
   const { user } = useAuth()
@@ -89,6 +91,12 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     awareness: collaborationOptions?.awareness ?? null,
     enabled: isCollaborative && !!collaborationOptions,
   })
+
+  // Track access for recent-entries ordering
+  const trackAccess = useRecentAccess((s) => s.trackAccess)
+  useEffect(() => {
+    trackAccess(id)
+  }, [id, trackAccess])
 
   // Sync title when object changes (e.g., on initial load or navigation)
   // For new entries (autoFocus), keep title empty so placeholder shows the generated name
@@ -206,17 +214,24 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
       : object.properties
 
     // Apply icon/cover only if entry has none
-    const updates: Record<string, unknown> = {
-      content: newContent,
+    const metadataUpdates: Record<string, unknown> = {
       properties: newProperties,
     }
-    if (!object.icon && template.icon) updates.icon = template.icon
-    if (!object.cover_image && template.cover_image) updates.cover_image = template.cover_image
+    if (!object.icon && template.icon) metadataUpdates.icon = template.icon
+    if (!object.cover_image && template.cover_image) metadataUpdates.cover_image = template.cover_image
 
-    await update(updates)
-    setContentVersion(v => v + 1)
+    if (isCollaborative && editorRef.current) {
+      // In collaborative mode, apply content through Slate transforms so changes
+      // flow through the Y.Doc to all connected peers. Metadata is saved directly.
+      editorRef.current.applyContent(newContent, contentMode)
+      await update(metadataUpdates)
+    } else {
+      // Solo mode: save everything to DB and re-mount the editor
+      await update({ ...metadataUpdates, content: newContent })
+      setContentVersion(v => v + 1)
+    }
     toast({ description: 'Template applied', variant: 'success' })
-  }, [object, getTemplateVariables, update, user, space])
+  }, [object, getTemplateVariables, update, user, space, isCollaborative])
 
   // Strip private content for view-only non-owners
   const editorContent = useMemo(() => {
@@ -356,11 +371,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
                     <CopyIcon className="size-4" />
                     Save as Template
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setIsApplyTemplateOpen(true)}
-                    disabled={isCollaborative}
-                    title={isCollaborative ? 'Not available during collaboration' : undefined}
-                  >
+                  <DropdownMenuItem onClick={() => setIsApplyTemplateOpen(true)}>
                     <LayoutTemplateIcon className="size-4" />
                     Apply Template
                   </DropdownMenuItem>
@@ -420,6 +431,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
           <Editor
             key={`${id}-${contentVersion}`}
+            ref={editorRef}
             initialContent={editorContent}
             onSave={handleContentSave}
             placeholder="Start writing..."

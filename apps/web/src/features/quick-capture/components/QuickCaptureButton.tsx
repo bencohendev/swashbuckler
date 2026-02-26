@@ -12,6 +12,7 @@ interface QuickCaptureButtonProps {
 export function QuickCaptureButton({ onClick, className }: QuickCaptureButtonProps) {
   return (
     <Button
+      data-tour="quick-capture"
       onClick={onClick}
       size="icon"
       className={cn("fixed bottom-4 right-4 z-40 size-12 rounded-full shadow-lg md:bottom-6 md:right-6", className)}

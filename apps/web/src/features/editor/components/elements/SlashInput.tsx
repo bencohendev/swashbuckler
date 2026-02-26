@@ -13,6 +13,7 @@ import {
   List,
   ListOrdered,
   ChevronRight,
+  ListTodo,
   AlertCircle,
   Table,
   Image as ImageIcon,
@@ -82,6 +83,14 @@ const menuItems: SlashMenuItem[] = [
     description: 'Ordered list with numbers',
     icon: <ListOrdered className="size-4" />,
     type: 'ol',
+    category: 'Lists',
+  },
+  {
+    key: 'action_item',
+    label: 'To-do list',
+    description: 'Track tasks with checkboxes',
+    icon: <ListTodo className="size-4" />,
+    type: 'action_item',
     category: 'Lists',
   },
   {
@@ -316,6 +325,12 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
               children: [{ type: 'lic', children: [{ text: '' }] }],
             },
           ],
+        }
+      } else if (type === 'action_item') {
+        node = {
+          type: 'action_item',
+          checked: false,
+          children: [{ text: '' }],
         }
       } else if (type === 'toggle') {
         node = {

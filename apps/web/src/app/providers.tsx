@@ -9,6 +9,7 @@ import { DataProvider, SpaceProvider, useCurrentSpace } from '@/shared/lib/data'
 import { setQueryClient } from '@/shared/lib/data/events'
 import { Toaster } from '@/shared/components/ui/Toast'
 import { CustomThemeApplier } from '@/features/theme-builder'
+import { TutorialController } from '@/features/onboarding'
 
 interface ProvidersProps {
   children: ReactNode
@@ -66,6 +67,7 @@ export function Providers({ children }: ProvidersProps) {
           <CustomThemeApplier />
           <DataProviderWithSpace user={user} isAuthLoading={isAuthLoading}>
             {children}
+            <TutorialController />
           </DataProviderWithSpace>
         </SpaceProvider>
       </QueryClientProvider>

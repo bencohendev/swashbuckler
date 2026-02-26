@@ -6,6 +6,7 @@ import { cn } from '@/shared/lib/utils'
 import type { DataObjectSummary } from '@/shared/lib/data'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
 import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
+import { useRecentAccess } from '@/shared/stores/recentAccess'
 import type { CollapseSignal } from '@/features/sidebar/types'
 
 const RECENT_LIMIT = 5
@@ -18,11 +19,34 @@ interface RecentSectionProps {
 export function RecentSection({ objects, collapseSignal }: RecentSectionProps) {
   const [collapsed, setCollapsed] = useCollapsible('sidebar-collapsed-recent', collapseSignal)
 
+  const entries = useRecentAccess((s) => s.entries)
+  const recentIds = useMemo(() => entries.slice(0, RECENT_LIMIT).map((e) => e.id), [entries])
+
   const recentObjects = useMemo(() => {
-    return [...objects]
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-      .slice(0, RECENT_LIMIT)
-  }, [objects])
+    const objectMap = new Map(objects.map((o) => [o.id, o]))
+
+    // Start with tracked entries that still exist in the object list
+    const ordered: DataObjectSummary[] = []
+    for (const id of recentIds) {
+      const obj = objectMap.get(id)
+      if (obj) {
+        ordered.push(obj)
+        objectMap.delete(id)
+      }
+    }
+
+    // Fill remaining slots with updated_at-sorted fallback
+    if (ordered.length < RECENT_LIMIT) {
+      const remaining = [...objectMap.values()]
+        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      for (const obj of remaining) {
+        if (ordered.length >= RECENT_LIMIT) break
+        ordered.push(obj)
+      }
+    }
+
+    return ordered
+  }, [objects, recentIds])
 
   if (recentObjects.length === 0) return null
 

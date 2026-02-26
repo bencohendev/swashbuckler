@@ -92,6 +92,7 @@ export function Header({ email }: { email?: string }) {
       <div className="hidden md:block" />
       <div className="flex items-center gap-2">
         <Button
+          data-tour="search"
           variant="ghost"
           size="icon"
           className="text-muted-foreground"

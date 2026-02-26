@@ -135,15 +135,21 @@ Dual-storage architecture with a `DataClient` interface:
 | [Landing Page](features/landing-page.md) | Marketing/landing page for the app |
 | [Link to Docs](features/link-to-docs.md) | Help button with docs link and keyboard shortcuts reference |
 | [Todo Block](features/todo-block.md) |  Checkbox/task list block type for the editor. Each todo item has a clickable checkbox that toggles checked/unchecked state, with visual strikethrough on completed items. |
+| [Block Side Menu](features/block-side-menu.md) | Notion-style hover handle in editor gutter with insert, duplicate, and delete actions |
+| [First-Use Tutorial](features/first-use-tutorial.md) | Onboarding walkthrough for new users |
+| [API Documentation](features/api-documentation.md) | Internal API documentation with architecture diagrams |
+| [Image Resize](features/image-resize.md) | Drag-handle resize for inline editor images |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| First use tutorial | Onboarding walkthrough for new users |
-| Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
-| API documentation | API documentation with diagrams |
+| [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
+| [Account-Level Themes](features/account-level-themes.md) | Move custom theme creation to Account Settings |
+| [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
+| [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
+| [Type Starter Kits](features/type-starter-kits.md) | Pre-built type collections (RP, recipes, note-taking, etc.) |
 
 ## Bugs
 

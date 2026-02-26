@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useEffect, useMemo, useRef } from 'react';
+import { createContext, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from '@udecode/plate/react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -35,11 +35,13 @@ import {
   MentionInputElement,
   SlashInputElement,
   TemplateVariableElement,
+  TodoListElement,
 } from './elements';
 import { PrivateBlockElement } from '../plugins/private-plugin';
 import { useEditorStore } from '../store';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { RemoteCursorOverlay } from '@/features/collaboration/components/RemoteCursorOverlay';
+import { BlockSideMenu } from './BlockSideMenu';
 
 /** Narrow a Plate editor to YjsEditor. Safe because YjsPlugin wraps it with withTYjs. */
 function toYjsEditor(editor: unknown): YjsEditorType {
@@ -59,6 +61,10 @@ export interface CollaborationOptions {
   cursorData: { name: string; color: string; avatarUrl?: string }
 }
 
+export interface EditorHandle {
+  applyContent: (content: Value, mode: 'replace' | 'prepend') => void
+}
+
 interface EditorProps {
   initialContent?: Value;
   onSave?: (content: Value) => Promise<void>;
@@ -67,6 +73,7 @@ interface EditorProps {
   isTemplateMode?: boolean;
   isOwner?: boolean;
   collaborationOptions?: CollaborationOptions;
+  ref?: React.Ref<EditorHandle>;
 }
 
 const COMPONENT_OVERRIDES = {
@@ -93,6 +100,7 @@ const COMPONENT_OVERRIDES = {
   slash_input: SlashInputElement,
   template_variable: TemplateVariableElement,
   private_block: PrivateBlockElement,
+  action_item: TodoListElement,
 } as const;
 
 /**
@@ -145,6 +153,7 @@ function SoloEditor({
               placeholder={placeholder}
               className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
             />
+            <BlockSideMenu />
           </Plate>
 
           {onSave && (
@@ -170,6 +179,7 @@ function CollaborativeEditor({
   isTemplateMode,
   isOwner = true,
   collaborationOptions,
+  ref,
 }: Required<Pick<EditorProps, 'collaborationOptions'>> & Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, isDirty, lastSaved, setCollaborative } = useEditorStore();
   const { provider, doc, awareness, cursorData } = collaborationOptions;
@@ -203,6 +213,22 @@ function CollaborativeEditor({
     // Slate tree and Y.Doc tree, causing "Path doesn't match yText" errors.
     override: { components: COMPONENT_OVERRIDES },
   });
+
+  // Expose imperative handle so parent can apply template content through Slate
+  // transforms, which flow through the Y.Doc to all collaborators.
+  useImperativeHandle(ref, () => ({
+    applyContent: (content: Value, mode: 'replace' | 'prepend') => {
+      if (mode === 'replace') {
+        for (let i = editor.children.length - 1; i >= 0; i--) {
+          editor.tf.removeNodes({ at: [i] })
+        }
+        editor.tf.insertNodes(content, { at: [0] })
+      } else {
+        // Prepend: insert template content before existing content
+        editor.tf.insertNodes(content, { at: [0] })
+      }
+    },
+  }), [editor])
 
   // Keep Zustand store in sync so auto-save can read current content,
   // and manually send cursor position via awareness.
@@ -345,6 +371,7 @@ function CollaborativeEditor({
               className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
             />
             <RemoteCursorOverlay awareness={awareness} doc={doc} />
+            <BlockSideMenu />
           </Plate>
 
           {onSave && (

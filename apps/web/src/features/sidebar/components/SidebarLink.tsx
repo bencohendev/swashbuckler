@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSidebar } from '@/shared/stores/sidebar'
 import { useNavigation } from '@/shared/stores/navigation'
+import { useRecentAccess } from '@/shared/stores/recentAccess'
 import { useDataClient } from '@/shared/lib/data'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 
@@ -28,12 +29,18 @@ export function SidebarLink({ className, onClick, onMouseEnter, href, ...props }
   const hrefString = typeof href === 'string' ? href : href.pathname ?? ''
   const isActive = pathname === hrefString || pendingPath === hrefString
 
+  const trackAccess = useRecentAccess((s) => s.trackAccess)
+
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     // Don't set pending path for modifier-key clicks (new tab/window)
     if (!e.metaKey && !e.ctrlKey && !e.shiftKey) {
       setPendingPath(hrefString)
       if (pathname !== hrefString) {
         setNavigating(true)
+      }
+      const match = hrefString.match(OBJECT_PATH_RE)
+      if (match) {
+        trackAccess(match[1])
       }
     }
     onClick?.(e)
