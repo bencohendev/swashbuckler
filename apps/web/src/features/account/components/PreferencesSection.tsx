@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useTheme } from 'next-themes'
+import { CheckIcon, ChevronsUpDownIcon, MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useSpaces } from '@/shared/lib/data'
 import { useTutorial } from '@/features/onboarding'
 import {
@@ -14,12 +15,24 @@ import { Button } from '@/shared/components/ui/Button'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 
+const THEME_OPTIONS = [
+  { value: 'light', label: 'Light', Icon: SunIcon },
+  { value: 'dark', label: 'Dark', Icon: MoonIcon },
+  { value: 'system', label: 'System', Icon: MonitorIcon },
+] as const
+
 export function PreferencesSection({ user }: { user: User }) {
+  const { theme, setTheme } = useTheme()
   const { spaces } = useSpaces()
   const restartTutorial = useTutorial((s) => s.restart)
+  const [mounted, setMounted] = useState(false)
 
   const metadata = user.user_metadata ?? {}
   const [defaultSpaceId, setDefaultSpaceId] = useState<string>(metadata.default_space_id ?? '')
+
+  useEffect(() => {
+    setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect -- hydration detection
+  }, [])
 
   async function handleDefaultSpaceChange(spaceId: string) {
     setDefaultSpaceId(spaceId)
@@ -38,6 +51,26 @@ export function PreferencesSection({ user }: { user: User }) {
     <div className="rounded-lg border p-6">
       <h2 className="mb-4 text-lg font-semibold">Preferences</h2>
       <div className="space-y-4">
+        <div>
+          <label className="mb-2 block text-sm font-medium">Theme</label>
+          <div className="flex gap-2">
+            {THEME_OPTIONS.map(({ value, label, Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTheme(value)}
+                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  mounted && theme === value
+                    ? 'border-primary bg-primary/5 text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}
+              >
+                <Icon className="size-4" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         {spaces.length > 1 && (
           <div>
             <span className="mb-1 block text-sm font-medium">

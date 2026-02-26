@@ -1,16 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { CheckIcon, SunIcon, MoonIcon, MonitorIcon, ArrowRightIcon } from 'lucide-react'
+import { CheckIcon, SunIcon, MoonIcon, MonitorIcon } from 'lucide-react'
 import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
 import { ThemeCard } from './ThemeCard'
 import type { CustomTheme } from '../types'
 
 interface ThemeListProps {
-  onEdit?: (theme: CustomTheme) => void
-  selectionOnly?: boolean
+  onEdit: (theme: CustomTheme) => void
 }
 
 const DEFAULT_THEMES = [
@@ -19,7 +17,7 @@ const DEFAULT_THEMES = [
   { value: 'system' as const, label: 'System', Icon: MonitorIcon },
 ]
 
-export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
+export function ThemeList({ onEdit }: ThemeListProps) {
   const themes = useCustomThemeStore(s => s.themes)
   const spaceThemes = useCustomThemeStore(s => s.spaceThemes)
   const setSpaceTheme = useCustomThemeStore(s => s.setSpaceTheme)
@@ -90,22 +88,11 @@ export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
                 theme={t}
                 isActive={assignment?.type === 'custom' && assignment.themeId === t.id}
                 onActivate={handleActivateCustom}
-                {...(!selectionOnly && {
-                  onEdit,
-                  onDelete: deleteTheme,
-                })}
+                onEdit={onEdit}
+                onDelete={deleteTheme}
               />
             ))}
           </div>
-          {selectionOnly && (
-            <Link
-              href="/settings/account"
-              className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-            >
-              Manage themes in Account Settings
-              <ArrowRightIcon className="size-3.5" />
-            </Link>
-          )}
         </div>
       )}
     </div>
