@@ -11,6 +11,11 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Delete space redirects unnecessarily | Already fixed — `onDelete` checks `id === currentSpace?.id` and only redirects to `/dashboard` if the deleted space was current |
+| 2026-02-25 | Cursor lost after inserting inline link | Override LinkPlugin transforms (insertText, insertData, insertBreak) with deferred focus restoration after withLink's URL auto-wrapping |
+| 2026-02-25 | Sidebar entry reordering slow | Client-side Zustand store (`recentAccess.ts`) tracks access times per space in localStorage; Recent section orders by access time with `updated_at` fallback |
+| 2026-02-25 | Apply Template unavailable in shared spaces | Apply template content through Slate transforms (via `EditorHandle.applyContent`) so changes flow through Y.Doc to collaborators, instead of bypassing Yjs with a direct DB write |
+| 2026-02-25 | Docs reference nested entries | Removed unimplemented nesting section from `entries-and-types.mdx`; nested entries tracked as planned feature |
 | 2026-02-25 | Theme switcher + custom themes interaction | Added palette icon for custom themes, remember last custom theme in cycle so users can switch back |
 | 2026-02-25 | OAuth redirect account menu stale | Derive `isGuest` from client-side `useAuth()` state instead of server `email` prop — use server prop only during hydration loading |
 | 2026-02-25 | Mobile sharing button overflows container | Stack email input on its own row with select + button below — dialog is too narrow for a single-row layout |
