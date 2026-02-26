@@ -19,7 +19,7 @@ function BlockWrapper({ children, element }: BlockWrapperProps) {
   }
 
   return (
-    <div className="group relative">
+    <div className="group relative pl-8">
       <BlockGutter element={element} />
       {children}
     </div>
