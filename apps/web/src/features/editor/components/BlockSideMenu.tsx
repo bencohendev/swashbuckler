@@ -24,7 +24,7 @@ function stripIds(node: Record<string, unknown>): Record<string, unknown> {
 }
 
 interface LockedBlock {
-  rect: { top: number; height: number }
+  rect: { top: number; left: number; height: number }
   path: number[]
   element: TElement
 }
@@ -93,10 +93,10 @@ export function BlockSideMenu() {
   return (
     <div
       contentEditable={false}
-      className="pointer-events-auto absolute z-10 transition-opacity duration-150"
+      className="pointer-events-auto fixed z-10 transition-opacity duration-150"
       style={{
         top: rect.top + rect.height / 2 - 12,
-        left: -36,
+        left: rect.left - 36,
       }}
     >
       <DropdownMenu onOpenChange={handleOpenChange} open={isMenuOpen}>

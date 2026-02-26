@@ -11,7 +11,7 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile'
 interface HoveredBlock {
   element: TElement
   path: number[]
-  rect: { top: number; height: number }
+  rect: { top: number; left: number; height: number }
 }
 
 export function useHoveredBlock(): HoveredBlock | null {
@@ -68,14 +68,14 @@ export function useHoveredBlock(): HoveredBlock | null {
         // @ts-expect-error — same cross-package type mismatch
         const path = DOMEditor.findPath(editor, topLevel)
 
-        const editorRect = editorEl.getBoundingClientRect()
         const blockRect = topLevel.getBoundingClientRect()
 
         setHoveredBlock({
           element: slateNode,
           path,
           rect: {
-            top: blockRect.top - editorRect.top,
+            top: blockRect.top,
+            left: blockRect.left,
             height: blockRect.height,
           },
         })
