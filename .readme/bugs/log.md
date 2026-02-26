@@ -6,7 +6,6 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Docs reference nested entries | Docs site (`entries-and-types.mdx`) describes 3-level entry nesting with drag-to-nest, but the UI doesn't implement it. DB has `parent_id` column but sidebar has no nesting UX. Either implement or remove from docs |
 | Apply Template unavailable for some entries | Users report not being able to apply templates to certain entries. Known: disabled in collaborative mode. Investigate if there are other cases (no templates for type shows empty state but may be confusing) |
 | Sidebar entry reordering slow | Entries sort by `updated_at` descending. Opening an entry doesn't bump `updated_at` — only editing does. So the "move to top" only happens after a save, and then requires a TanStack Query invalidation + re-sort. Consider `last_accessed_at` or optimistic reorder |
 | Cursor lost after inserting inline link | After inserting an inline link in the editor, the cursor/selection is lost. Likely missing `editor.tf.move()` + focus restoration after link node insertion (see mention insertion pattern for correct approach) |
@@ -16,6 +15,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Docs reference nested entries | Removed unimplemented nesting section from `entries-and-types.mdx`; nested entries tracked as planned feature |
 | 2026-02-25 | Theme switcher + custom themes interaction | Added palette icon for custom themes, remember last custom theme in cycle so users can switch back |
 | 2026-02-25 | OAuth redirect account menu stale | Derive `isGuest` from client-side `useAuth()` state instead of server `email` prop — use server prop only during hydration loading |
 | 2026-02-25 | Mobile sharing button overflows container | Stack email input on its own row with select + button below — dialog is too narrow for a single-row layout |
