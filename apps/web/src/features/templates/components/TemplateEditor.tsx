@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon, SmilePlusIcon, ImageIcon } from 'lucide-react'
-import type { Value } from '@udecode/plate'
 import { useTemplate } from '../hooks/useTemplate'
 import { useObjectType } from '@/features/object-types'
 import { useEditorStore } from '@/features/editor/store'
@@ -19,6 +18,7 @@ import { toast } from '@/shared/hooks/useToast'
 import { Editor } from '@/features/editor'
 import { PropertyFields } from '@/features/objects/components/PropertyFields'
 import { CoverImage } from '@/features/objects/components/CoverImage'
+import type { UpdateTemplateInput } from '@/shared/lib/data'
 
 interface TemplateEditorProps {
   id: string
@@ -29,44 +29,76 @@ export function TemplateEditor({ id }: TemplateEditorProps) {
   const titleRef = useRef<HTMLInputElement>(null)
   const { template, isLoading, error, update } = useTemplate(id)
   const { objectType } = useObjectType(template?.type_id ?? null)
-  const { isDirty: editorDirty, isSaving: editorSaving, lastSaved: editorLastSaved } = useEditorStore()
+  const { isDirty: editorDirty } = useEditorStore()
   const [title, setTitle] = useState('')
-  const [isTitleSaving, setIsTitleSaving] = useState(false)
+  const [localProperties, setLocalProperties] = useState<Record<string, unknown>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
-  // Sync title when template loads
+  // Sync title and properties when template loads
   useEffect(() => {
     if (template) {
       setTitle(template.name)
+      setLocalProperties(template.properties ?? {})
     }
   }, [template?.id]) // eslint-disable-line react-hooks/exhaustive-deps -- only sync on id change
 
-  const handleTitleChange = useCallback(async (newTitle: string) => {
+  // Track dirty state
+  const titleChanged = template ? title !== template.name : false
+  const propertiesChanged = template
+    ? JSON.stringify(localProperties) !== JSON.stringify(template.properties ?? {})
+    : false
+  const hasPendingChanges = editorDirty || titleChanged || propertiesChanged
+
+  const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)
-    if (!newTitle.trim()) return
-
-    setIsTitleSaving(true)
-    await update({ name: newTitle.trim() })
-    setIsTitleSaving(false)
-  }, [update])
-
-  const handleContentSave = useCallback(async (content: Value) => {
-    const result = await update({ content })
-    if (!result) throw new Error('Failed to save template content')
-  }, [update])
+  }, [])
 
   const handleIconChange = useCallback(async (emoji: string) => {
     await update({ icon: emoji })
   }, [update])
 
-  const handlePropertyChange = useCallback(async (fieldId: string, value: unknown) => {
-    if (!template) return
-    const updatedProperties = { ...template.properties, [fieldId]: value }
-    await update({ properties: updatedProperties })
-  }, [template, update])
+  const handlePropertyChange = useCallback((fieldId: string, value: unknown) => {
+    setLocalProperties(prev => ({ ...prev, [fieldId]: value }))
+  }, [])
 
   const handleCoverChange = useCallback(async (url: string | null) => {
     await update({ cover_image: url })
   }, [update])
+
+  const handleSave = useCallback(async () => {
+    if (!template) return
+    setIsSaving(true)
+    try {
+      const payload: UpdateTemplateInput = {}
+      if (title !== template.name && title.trim()) payload.name = title.trim()
+      if (editorDirty) payload.content = useEditorStore.getState().content
+      if (JSON.stringify(localProperties) !== JSON.stringify(template.properties ?? {})) {
+        payload.properties = localProperties
+      }
+      if (Object.keys(payload).length > 0) {
+        await update(payload)
+      }
+      // Sync local title to trimmed value that was persisted
+      if (payload.name) setTitle(payload.name)
+      useEditorStore.getState().markClean()
+      setLastSaved(new Date())
+    } catch {
+      toast({ description: 'Failed to save template', variant: 'destructive' })
+    } finally {
+      setIsSaving(false)
+    }
+  }, [template, title, editorDirty, localProperties, update])
+
+  // Warn before tab close if unsaved changes
+  useEffect(() => {
+    if (!hasPendingChanges) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [hasPendingChanges])
 
   if (isLoading) {
     return (
@@ -126,11 +158,19 @@ export function TemplateEditor({ id }: TemplateEditorProps) {
           <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
             Template
           </span>
-          <span role="status" aria-live="polite" className={`text-xs font-medium ${editorDirty ? 'text-amber-600' : 'text-muted-foreground'}`}>
-            {isTitleSaving || editorSaving ? 'Saving...' : editorDirty ? 'Unsaved changes' : editorLastSaved ? `Saved ${editorLastSaved.toLocaleTimeString()}` : ''}
+          <span role="status" aria-live="polite" className={`text-xs font-medium ${hasPendingChanges ? 'text-amber-600' : 'text-muted-foreground'}`}>
+            {isSaving ? 'Saving...' : hasPendingChanges ? 'Unsaved changes' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : ''}
           </span>
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={!hasPendingChanges || isSaving}
+            aria-label="Save template"
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
           {!template.cover_image && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -186,7 +226,7 @@ export function TemplateEditor({ id }: TemplateEditorProps) {
         {objectType && objectType.fields.length > 0 && (
           <PropertyFields
             fields={objectType.fields}
-            values={template.properties}
+            values={localProperties}
             onChange={handlePropertyChange}
           />
         )}
@@ -194,7 +234,6 @@ export function TemplateEditor({ id }: TemplateEditorProps) {
         <Editor
           key={id}
           initialContent={template.content ?? undefined}
-          onSave={handleContentSave}
           placeholder="Start writing template content..."
           isTemplateMode
           isOwner
