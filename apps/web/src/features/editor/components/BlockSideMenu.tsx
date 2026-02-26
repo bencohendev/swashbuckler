@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useEditorRef, useReadOnly } from '@udecode/plate/react'
 import type { TElement } from '@udecode/plate'
 import { GripVertical, Plus, Copy, Trash2 } from 'lucide-react'
@@ -90,10 +91,9 @@ export function BlockSideMenu() {
     editor.tf.removeNodes({ at: path })
   }
 
-  return (
+  return createPortal(
     <div
-      contentEditable={false}
-      className="pointer-events-auto fixed z-10 transition-opacity duration-150"
+      className="pointer-events-auto fixed z-50 transition-opacity duration-150"
       style={{
         top: rect.top + rect.height / 2 - 12,
         left: rect.left - 36,
@@ -129,6 +129,7 @@ export function BlockSideMenu() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </div>,
+    document.body,
   )
 }
