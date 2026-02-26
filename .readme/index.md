@@ -145,7 +145,6 @@ Dual-storage architecture with a `DataClient` interface:
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
-| [Database Audit](features/database-audit.md) | Schema design, index coverage, N+1 queries, cascade completeness, migration hygiene, Dexie parity |
 
 
 ## Planned Features
@@ -162,6 +161,7 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Audit | Description |
 |-------|-------------|
+| [Database Audit](features/database-audit.md) | Schema design, index coverage, N+1 queries, cascade completeness, migration hygiene, Dexie parity |
 | [Security Audit](features/security-audit.md) | OWASP-style review: auth, input validation, XSS/CSRF, sharing boundaries, realtime security, CSP |
 | [SSR vs Client Audit](features/ssr-vs-client-audit.md) | Rendering strategy, `'use client'` boundaries, SSR data fetching, hydration risks, bundle size |
 | [Client API Audit](features/client-api-audit.md) | DataClient design, TanStack Query config, query keys, mutation/invalidation, error handling, waterfalls |
