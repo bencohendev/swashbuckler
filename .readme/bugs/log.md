@@ -6,6 +6,11 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
+| Docs reference nested entries | Docs site (`entries-and-types.mdx`) describes 3-level entry nesting with drag-to-nest, but the UI doesn't implement it. DB has `parent_id` column but sidebar has no nesting UX. Either implement or remove from docs |
+| Apply Template unavailable for some entries | Users report not being able to apply templates to certain entries. Known: disabled in collaborative mode. Investigate if there are other cases (no templates for type shows empty state but may be confusing) |
+| Sidebar entry reordering slow | Entries sort by `updated_at` descending. Opening an entry doesn't bump `updated_at` — only editing does. So the "move to top" only happens after a save, and then requires a TanStack Query invalidation + re-sort. Consider `last_accessed_at` or optimistic reorder |
+| Cursor lost after inserting inline link | After inserting an inline link in the editor, the cursor/selection is lost. Likely missing `editor.tf.move()` + focus restoration after link node insertion (see mention insertion pattern for correct approach) |
+| Delete space redirects unnecessarily | Deleting a space always navigates to `/` — should only redirect if the deleted space was the current space. If deleting a different space, stay on current page |
 
 ## Closed
 
