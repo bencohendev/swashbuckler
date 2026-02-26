@@ -75,7 +75,7 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
   const handleFileSelect = useCallback(async (file: File) => {
     setError(null);
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setError('File type not supported. Use JPEG, PNG, GIF, WebP, or SVG.');
+      setError('File type not supported. Use JPEG, PNG, GIF, or WebP.');
       return;
     }
     if (file.size > MAX_IMAGE_SIZE) {
