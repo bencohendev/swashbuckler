@@ -14,7 +14,6 @@ Core entry system with customizable types, properties, and CRUD operations. Entr
 | Type identity | UUID FK to `object_types` table (not string enum) |
 | Default types | Page seeded per-space on account creation (no built-in types) |
 | Properties | JSONB schema on object_types, JSONB values on objects |
-| Nesting | 3 levels max via `parent_id` |
 | Relations | Bi-directional via `object_relations` table |
 | Relation types | `mention` (auto-synced from editor) and `link` (manual via UI) |
 
@@ -110,7 +109,6 @@ All types are regular user-owned, per-space records. There are no global built-i
 
 - [x] Create entry with any type
 - [x] Edit property types
-- [x] 3-level nesting works
 - [x] Delete moves to trash
 - [x] Object relations (mention + link) work
 - [x] Custom types with plural names
