@@ -1,6 +1,6 @@
 # Table Column Resize
 
-**Status:** Active
+**Status:** Done
 
 ## Overview
 

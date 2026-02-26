@@ -124,6 +124,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Delete Space](features/delete-space.md) | Permanently delete a space and all its contents |
 | Vercel Analytics | Vercel Analytics integration (`@vercel/analytics`) |
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
+| [Table Column Resize](features/table-column-resize.md) | Drag-to-resize columns in editor tables |
 | [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
 | [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
 | [Loading Indicators](features/loading-indicators.md) | Navigation progress bar, Spinner/Skeleton primitives, Button loading states |
@@ -150,7 +151,6 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
-| [Table Column Resize](features/table-column-resize.md) | Drag-to-resize columns in editor tables |
 
 ## Bugs
 
