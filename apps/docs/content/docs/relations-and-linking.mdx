@@ -1,0 +1,80 @@
+---
+title: Relations & Linking
+description: Connect entries with @mentions and manual links to build a knowledge graph.
+---
+
+## Overview
+
+Swashbuckler lets you connect entries together in two ways: **mentions** (inline references in the editor) and **manual links** (explicit connections added below the editor). Both types of connection appear in the [Graph View](/docs/graph-view) and are tracked as relations between entries.
+
+## Mentions
+
+Mentions are inline references to other entries, inserted directly in your writing.
+
+### Creating a Mention
+
+1. Type `@` in the editor to open the mention search dropdown
+2. Start typing to filter entries — results are grouped by type
+3. Select an entry to insert the mention
+
+The mention appears as a clickable chip in your text. Clicking it opens the referenced entry.
+
+{/* screenshot: Mention dropdown showing entries grouped by type */}
+
+### Creating New Entries from Mentions
+
+If the entry you want to mention doesn't exist yet:
+
+1. Type `@` and enter the name
+2. Select **Create new** at the bottom of the dropdown
+3. Choose a type for the new entry
+4. The new entry is created and inserted as a mention in one step
+
+{/* screenshot: Mention dropdown with "Create new" option at the bottom */}
+
+### Auto-Sync
+
+Mentions are automatically synced as **relations** when the entry saves. Swashbuckler scans the editor content for mention nodes, compares them to existing relations, and creates or removes relations to stay in sync. This means:
+
+- Adding a mention automatically creates a relation
+- Removing a mention from the text automatically removes the relation
+- You don't need to manage mention relations manually
+
+## Manual Links
+
+Manual links are explicit connections between entries, managed in the **Linked Entries** section below the editor.
+
+### Adding a Link
+
+1. Open an entry in the editor
+2. Scroll below the editor content to the **Linked Entries** section
+3. Click the search field and type to find an entry
+4. Select an entry to add it as a link
+
+{/* screenshot: Linked Entries section with search field and linked entry cards */}
+
+### Removing a Link
+
+Click the **remove** button on a linked entry card in the Linked Entries section.
+
+## Mentions vs. Manual Links
+
+| | Mentions | Manual Links |
+|--|----------|--------------|
+| **Where** | Inline in the editor content | Linked Entries section below the editor |
+| **Creation** | Type `@` in the editor | Search and add in the Linked Entries section |
+| **Sync** | Automatic — adding/removing a mention updates relations on save | Manual — you add and remove links explicitly |
+| **Graph View** | Appears as a connection | Appears as a connection |
+| **Context** | Shows where the reference appears in your writing | Standalone connection without inline context |
+
+Both types of connection are treated equally in the [Graph View](/docs/graph-view) and relation queries.
+
+## Relation Properties
+
+Types can have **relation** properties — structured fields that link to other entries. When you add a relation property to a type, each entry of that type can reference other entries through that property. These work alongside mentions and manual links to provide another way to connect entries.
+
+See [Entries & Types](/docs/entries-and-types) for details on property types.
+
+## Viewing Connections
+
+All connections (from mentions, manual links, and relation properties) are visualized in the [Graph View](/docs/graph-view). Each entry is a node, and each connection is an edge. You can explore your knowledge graph to discover patterns and navigate between related entries.

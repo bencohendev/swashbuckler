@@ -1,0 +1,86 @@
+---
+title: Trash & Archive
+description: Soft-delete entries to the trash or archive entries, types, and spaces to hide them without deleting.
+---
+
+## Overview
+
+Swashbuckler offers two ways to remove content from view without permanent deletion: **Trash** (soft delete with automatic cleanup) and **Archive** (hide indefinitely with easy restore). Trash and archive are mutually exclusive — an entry can be trashed or archived, but not both at the same time.
+
+## Trash
+
+Trashing an entry is a soft delete. The entry is removed from the sidebar, search results, pinned items, and all views, but it's recoverable for 30 days.
+
+### Sending to Trash
+
+- Open an entry and click **More Options** > **Delete**
+- The entry moves to the trash immediately
+
+### Trash Page
+
+Access the trash from the **Trash** link in the sidebar. The trash page shows all trashed entries with:
+
+- Entry name, type, and icon
+- When it was trashed
+- **Restore** button — moves the entry back to its original state
+- **Delete permanently** button — removes the entry forever (cannot be undone)
+
+{/* screenshot: Trash page showing trashed entries with restore and permanent delete actions */}
+
+### Automatic Cleanup
+
+Trashed entries are **automatically purged after 30 days**. If you need to keep something, restore it before the 30-day window closes.
+
+## Archive
+
+Archiving hides content without any automatic cleanup. Archived items stay hidden until you explicitly unarchive them. You can archive **entries**, **types**, and **spaces**.
+
+### Archiving Entries
+
+- Open an entry and click **More Options** > **Archive**
+- The entry is hidden from the sidebar, search, pinned items, recent items, and all views
+
+The Archive option doesn't appear if the entry is already trashed.
+
+### Archiving Types
+
+- Go to **Settings > Types**
+- Click the **archive icon** next to a type
+- Confirm the action
+
+Archiving a type hides the type and **all its entries** from the sidebar, search, and views. Individual entries don't need to be archived separately — the type-level archive handles everything.
+
+### Archiving Spaces
+
+- Go to **Settings > Spaces**
+- Click the **archive icon** next to a space
+- Confirm the action
+
+An archived space disappears from the space switcher. If your current space is archived, the app automatically switches to your first remaining owned space.
+
+You cannot archive your last remaining space.
+
+## Archive Page
+
+Access the archive from the **Archive** link in the sidebar (or Settings). The archive page shows three sections:
+
+| Section | Contents |
+|---------|----------|
+| **Entries** | Individually archived entries with name, icon, and archive date |
+| **Types** | Archived types with name, icon, and archive date |
+| **Spaces** | Archived spaces with name, icon, and archive date |
+
+Each item has an **Unarchive** button to restore it.
+
+{/* screenshot: Archive page showing three sections with unarchive buttons */}
+
+## Trash vs. Archive
+
+| | Trash | Archive |
+|--|-------|---------|
+| **What can be trashed/archived** | Entries only | Entries, types, and spaces |
+| **Automatic cleanup** | Purged after 30 days | Stays archived indefinitely |
+| **Hidden from** | Sidebar, search, views, pins | Sidebar, search, views, pins, recent |
+| **Restore** | From the Trash page | From the Archive page |
+| **Permanent deletion** | Available on the Trash page | Not directly — unarchive first, then trash if needed |
+| **Mutual exclusion** | Cannot archive a trashed entry | Cannot trash an archived entry |

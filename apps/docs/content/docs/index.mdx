@@ -1,15 +1,118 @@
 ---
 title: Getting Started
-description: Welcome to the Swashbuckler documentation.
+description: A hands-on walkthrough of Swashbuckler's core loop — from creating your first space to linking entries together.
 ---
 
 ## What is Swashbuckler?
 
-Swashbuckler is a flexible knowledge management tool that lets you create, organize, and connect your notes, documents, and ideas.
+Swashbuckler is a flexible knowledge management tool for creating, organizing, and connecting your notes, documents, and ideas. Instead of forcing you into a fixed structure, Swashbuckler lets you define your own **types** — like Projects, Tasks, Recipes, or anything else — each with custom properties, icons, and templates.
 
-## Quick Start
+Write with a rich block editor that supports slash commands, mentions, tables, code blocks, and more. Link entries together with `@` mentions or manual relations, then visualize the connections in an interactive graph view. Organize with tags, filter and sort with powerful type-level views, and pin your most important entries to the dashboard for quick access.
 
-1. Visit [swashbuckler.quest](https://swashbuckler.quest) to get started
-2. Create a space to organize your content
-3. Add objects using custom types and templates
-4. Link related objects together with mentions and relations
+Swashbuckler works entirely in-browser as a guest, or you can create an account to sync across devices, share spaces with collaborators, and edit in real time.
+
+## Visit and Sign Up
+
+Head to [swashbuckler.quest](https://swashbuckler.quest) to get started. You can:
+
+- **Create an account** with email and password to sync your data and unlock collaboration features
+- **Continue as guest** to try everything locally — your data stays in the browser with no account required
+
+Guest mode supports all features except sharing and real-time collaboration. You can create an account later and your local data will be preserved.
+
+{/* screenshot: Landing page with sign-up form and "Continue as Guest" option */}
+
+## Your First Space
+
+Spaces are top-level workspaces that keep your content organized and isolated. Think of them like separate notebooks — each space has its own types, entries, templates, and tags.
+
+When you create an account or start as a guest, a default space is created for you automatically. To create additional spaces:
+
+1. Click the **space switcher** in the sidebar header
+2. Select **Create Space**
+3. Give it a name and pick an emoji icon
+4. Your new space is ready — switch between spaces anytime using the switcher
+
+{/* screenshot: Space switcher dropdown showing default space and "Create Space" option */}
+
+## Create a Type
+
+Types define the structure of your entries. Your default space comes with a **Page** type, but the real power is in creating your own.
+
+1. Go to **Settings > Types** (gear icon in the sidebar)
+2. Click **New Type**
+3. Give it a name (e.g., "Task") and pick an icon
+4. Add properties to define the structure:
+   - Click **Add Property** and choose a type — try **Select** for a "Status" field, then add options like "To Do", "In Progress", and "Done"
+   - Add another property — try **Date** for a "Due Date" field
+5. Click **Save**
+
+Your new type appears in the sidebar. You can always come back to Settings to add, reorder, or remove properties.
+
+{/* screenshot: Type creation dialog with "Task" type showing Status and Due Date properties */}
+
+## Create Your First Entry
+
+Now that you have a type, create an entry:
+
+1. Click the **+** button next to a type in the sidebar, or press <kbd>Cmd</kbd>+<kbd>E</kbd> to open Quick Capture
+2. If using Quick Capture, pick the type you want
+3. Give your entry a title
+4. Optionally set an emoji icon by clicking the icon area next to the title
+5. Fill in any properties (like Status or Due Date)
+
+{/* screenshot: New entry with title, emoji icon, and properties filled in */}
+
+## Write with the Editor
+
+Click into the body of your entry to start writing. The editor is a full block editor with:
+
+- **Slash menu** — type `/` to insert blocks like headings, bullet lists, callouts, code blocks, tables, and more
+- **Inline formatting** — select text to see the floating toolbar with bold, italic, code, links, highlights, and other formatting options
+- **Drag and drop** — reorder blocks by dragging the handle that appears on hover
+
+Try it out:
+1. Type `/` and select **Heading 1** to add a section title
+2. Press Enter and type a bullet list (start a line with `-` or type `/` and select **Bullet List**)
+3. Type `/` and insert a **Callout** block for a highlighted note
+4. Select some text and click the **Bold** button or press <kbd>Cmd</kbd>+<kbd>B</kbd>
+
+Your work saves automatically — no save button needed.
+
+{/* screenshot: Editor showing a heading, bullet list, and callout block with the slash menu open */}
+
+## Mention and Link Entries
+
+Connect your entries together to build a knowledge graph:
+
+**Mentions** — Type `@` in the editor to search for and mention another entry inline. Mentions are automatically synced as relations when the entry saves, so they show up in the graph view and in the Linked Entries section.
+
+**Manual links** — Scroll below the editor to the **Linked Entries** section. Search for an entry and add it as a link. Manual links work the same as mentions for the graph and relations, but they live outside the editor content.
+
+{/* screenshot: Editor with an @mention dropdown and the Linked Entries section below */}
+
+## Pin to the Dashboard
+
+Found an entry you want quick access to? Pin it:
+
+1. Open the entry
+2. Click the **pin icon** in the entry header
+3. The entry now appears in the **Pinned** section on your dashboard
+
+The dashboard also shows a **Recent** section with your most recently edited entries, so you can always pick up where you left off.
+
+{/* screenshot: Dashboard showing Pinned and Recent sections */}
+
+## What's Next?
+
+You've covered the core loop — spaces, types, entries, editing, linking, and the dashboard. Swashbuckler has much more to offer:
+
+- **[Entries & Types](/docs/entries-and-types)** — Deep dive into the property system and entry management
+- **[Templates](/docs/templates)** — Save and reuse entry structures with built-in variables
+- **[Editor](/docs/editor)** — Full reference for all block types, formatting options, and shortcuts
+- **[Board View](/docs/board-view)** — Kanban-style boards grouped by select properties
+- **[Graph View](/docs/graph-view)** — Visualize connections between entries
+- **[Tags](/docs/tags)** — Flexible cross-type organization
+- **[Search](/docs/search)** — Find anything with <kbd>Cmd</kbd>+<kbd>K</kbd>
+- **[Sharing](/docs/sharing)** — Invite collaborators to your spaces
+- **[Themes](/docs/themes)** — Customize colors with the theme builder

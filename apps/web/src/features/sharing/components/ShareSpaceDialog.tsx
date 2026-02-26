@@ -91,7 +91,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                   <option value="view">View</option>
                   <option value="edit">Edit</option>
                 </select>
-                <Button type="submit" size="sm" disabled={isSubmitting || !email.trim()}>
+                <Button type="submit" size="sm" loading={isSubmitting} disabled={!email.trim()}>
                   <UserPlusIcon className="size-4" />
                   Share
                 </Button>

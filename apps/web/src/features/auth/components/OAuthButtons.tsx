@@ -25,29 +25,19 @@ export function OAuthButtons() {
         variant="outline"
         onClick={() => handleOAuthLogin("google")}
         disabled={isLoading !== null}
+        loading={isLoading === "google"}
       >
-        {isLoading === "google" ? (
-          <span className="animate-pulse">Connecting...</span>
-        ) : (
-          <>
-            <GoogleIcon className="size-4" />
-            Continue with Google
-          </>
-        )}
+        <GoogleIcon className="size-4" />
+        Continue with Google
       </Button>
       <Button
         variant="outline"
         onClick={() => handleOAuthLogin("github")}
         disabled={isLoading !== null}
+        loading={isLoading === "github"}
       >
-        {isLoading === "github" ? (
-          <span className="animate-pulse">Connecting...</span>
-        ) : (
-          <>
-            <GithubIcon className="size-4" />
-            Continue with GitHub
-          </>
-        )}
+        <GithubIcon className="size-4" />
+        Continue with GitHub
       </Button>
     </div>
   )

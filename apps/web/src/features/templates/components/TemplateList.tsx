@@ -6,6 +6,7 @@ import { useTemplates } from '../hooks/useTemplates'
 import { useObjectTypes } from '@/features/object-types'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { Button } from '@/shared/components/ui/Button'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
 import {
@@ -49,7 +50,7 @@ function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon-sm" variant="ghost" disabled={isDeleting}>
+          <Button size="icon-sm" variant="ghost" loading={isDeleting}>
             <MoreHorizontalIcon className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -85,7 +86,7 @@ export function TemplateList() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-20 animate-pulse rounded-lg bg-muted" />
+          <Skeleton key={i} className="h-20 rounded-lg" />
         ))}
       </div>
     )

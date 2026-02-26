@@ -6,12 +6,12 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Theme switcher + custom themes interaction | How does the navbar theme switcher work with custom themes? Needs investigation |
 
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Theme switcher + custom themes interaction | Added palette icon for custom themes, remember last custom theme in cycle so users can switch back |
 | 2026-02-25 | OAuth redirect account menu stale | Derive `isGuest` from client-side `useAuth()` state instead of server `email` prop — use server prop only during hydration loading |
 | 2026-02-25 | Mobile sharing button overflows container | Stack email input on its own row with select + button below — dialog is too narrow for a single-row layout |
 | 2026-02-25 | Types list has unnecessary reorder chevrons | Removed up/down chevron buttons and handleMoveType callback from ObjectTypeManager |

@@ -2,14 +2,14 @@
 
 import { useRef, useEffect } from 'react'
 import { useDrop } from 'react-dnd'
-import type { DataObject, FieldDefinition } from '@/shared/lib/data'
+import type { DataObjectSummary, FieldDefinition } from '@/shared/lib/data'
 import { BoardCard, type BoardCardDragItem } from './BoardCard'
 import { cn } from '@/shared/lib/utils'
 
 interface BoardColumnProps {
   value: string | null
   label: string
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   fields: FieldDefinition[]
   canEdit: boolean
   onDrop: (objectId: string, newValue: string | null) => void

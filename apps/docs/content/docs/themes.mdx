@@ -1,0 +1,91 @@
+---
+title: Themes
+description: Switch between light, dark, and system modes, or build custom themes with the visual theme builder.
+---
+
+## Overview
+
+Swashbuckler supports **light**, **dark**, and **system** color modes out of the box. Beyond the built-in modes, you can create fully custom themes with the **theme builder** — pick 8 core colors, choose a light or dark base, and see a live preview. Custom themes can be applied per-space, so each workspace can have its own look.
+
+## Built-In Modes
+
+Toggle between light, dark, and system modes using the **theme button** in the app header:
+
+| Mode | Icon | Behavior |
+|------|------|----------|
+| **Light** | Sun | Light backgrounds, dark text |
+| **Dark** | Moon | Dark backgrounds, light text |
+| **System** | Monitor | Follows your operating system's preference |
+
+Click the button to cycle through the three modes. Your choice is saved automatically.
+
+If a custom theme is active, the first click clears the custom theme and returns to the built-in light/dark/system cycle.
+
+## Custom Theme Builder
+
+Create your own color themes in **Settings > Appearance**.
+
+### Creating a Theme
+
+1. Go to **Settings > Appearance**
+2. Click **New Theme**
+3. The theme builder opens with live preview
+
+{/* screenshot: Theme builder with color pickers and live preview */}
+
+### Core Colors
+
+The builder lets you customize 8 core colors:
+
+| Color | What It Controls |
+|-------|------------------|
+| **Background** | Main page background |
+| **Foreground** | Primary text color |
+| **Primary** | Buttons, links, active states |
+| **Secondary** | Secondary buttons, subtle backgrounds |
+| **Accent** | Highlights, hover states |
+| **Muted** | Disabled states, placeholder text, subtle borders |
+| **Destructive** | Delete buttons, error states |
+| **Border** | Lines, separators, input borders |
+
+The remaining ~22 CSS variables (foreground variants, sidebar colors, chart colors, etc.) are **auto-derived** from your 8 core picks, so you don't need to configure every detail.
+
+### Base Selection
+
+Each theme is either **light-based** or **dark-based**. Choose the base that matches your background color — this controls whether the app applies light or dark mode styling underneath your custom colors.
+
+### Live Preview
+
+As you adjust colors, the preview updates in real time so you can see exactly how your theme will look before saving.
+
+### Saving
+
+Give your theme a name and click **Save**. The theme is stored in your browser and available from the theme list.
+
+## Managing Themes
+
+In **Settings > Appearance**, your custom themes appear in a grid. Each theme card shows:
+
+- Color swatches previewing the theme's palette
+- **Activate** — apply the theme
+- **Edit** — reopen the theme builder to adjust colors
+- **Delete** — permanently remove the theme
+
+{/* screenshot: Theme grid showing custom theme cards with swatches and action buttons */}
+
+## Per-Space Application
+
+Custom themes can be applied per-space — each workspace can have a different theme. When you switch spaces, the theme switches too.
+
+To set a theme for a space, activate it while viewing that space. The association is saved in your browser (via localStorage), so each user in a shared space sees their own preferred theme.
+
+## Shared Spaces
+
+Theme preferences are personal — they're stored in your browser, not in the shared space data. Collaborators in the same space can each use different themes without affecting each other.
+
+## Resetting to Default
+
+To go back to the built-in light/dark/system modes:
+
+- Click the theme toggle button in the header (first click clears the custom theme)
+- Or go to **Settings > Appearance** and click **Reset to Default**

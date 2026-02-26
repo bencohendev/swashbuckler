@@ -126,25 +126,24 @@ Dual-storage architecture with a `DataClient` interface:
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
 | [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
+| [Loading Indicators](features/loading-indicators.md) | Navigation progress bar, Spinner/Skeleton primitives, Button loading states |
+| [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
+| [API Audit (Backend)](features/api-audit-backend.md) | Audit Supabase backend APIs for correctness, security, and consistency |
+| [API Audit (Frontend)](features/api-audit-frontend.md) | Audit frontend API calls for correctness, error handling, and consistency |
+| [Settings Hub](features/settings-hub.md) | Split settings into Account and Space sections |
+| [Mobile](features/mobile.md) | Responsive layout for mobile devices |
+| [Landing Page](features/landing-page.md) | Marketing/landing page for the app |
+| [Link to Docs](features/link-to-docs.md) | Help button with docs link and keyboard shortcuts reference |
+| [Todo Block](features/todo-block.md) |  Checkbox/task list block type for the editor. Each todo item has a clickable checkbox that toggles checked/unchecked state, with visual strikethrough on completed items. |
+
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Mobile](features/mobile.md) | Responsive layout for mobile devices |
 | First use tutorial | Onboarding walkthrough for new users |
-| [Social Login](features/social-login.md) | Google & GitHub OAuth sign-in via Supabase Auth |
-| API audit (backend) | Audit Supabase backend APIs for correctness, security, and consistency |
-| API audit (frontend) | Audit frontend API calls for correctness, error handling, and consistency |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
-| Convert entry to template | Button to convert an existing entry into a template |
-| Create from template (quick capture) | Create a new entry from a template via the quick capture button |
 | API documentation | API documentation with diagrams |
-| Loading indicators | Visual feedback when navigating or loading content — spinners, skeletons, or transition states so clicks feel responsive |
-| Account-level themes, space-level application | Create themes at account level but apply them per space |
-| Settings page restructure | Separate space-specific settings from account-wide settings into distinct sections/pages |
-| Landing page | Marketing/landing page for the app |
-| Link to docs from app | Add a link to the documentation site from within the app |
 
 ## Bugs
 

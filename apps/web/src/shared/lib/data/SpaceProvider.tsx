@@ -56,14 +56,14 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
   const spacesClient: SpacesClient = useMemo(() => {
     if (user) {
-      return createSupabaseDataClient(supabase).spaces
+      return createSupabaseDataClient(supabase, undefined, user.id).spaces
     }
     return createLocalDataClient().spaces
   }, [user, supabase])
 
   const sharingClient: SharingClient = useMemo(() => {
     if (user) {
-      return createSupabaseDataClient(supabase).sharing
+      return createSupabaseDataClient(supabase, undefined, user.id).sharing
     }
     return createLocalDataClient().sharing
   }, [user, supabase])
@@ -224,7 +224,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
         try {
           const createClient = (spaceId: string): DataClient =>
             user
-              ? createSupabaseDataClient(supabase, spaceId)
+              ? createSupabaseDataClient(supabase, spaceId, user.id)
               : createLocalDataClient(spaceId)
 
           const sourceClient = createClient(copyTypesFromSpaceId)

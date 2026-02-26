@@ -1,0 +1,58 @@
+---
+title: Quick Capture
+description: Create entries from anywhere with a keyboard shortcut, header button, or floating action button.
+---
+
+## Overview
+
+Quick Capture is the fastest way to create a new entry in Swashbuckler. It opens a dialog where you pick a type (and optionally a template), then drops you straight into the editor with a new entry ready to go.
+
+## Triggers
+
+| Trigger | Where |
+|---------|-------|
+| <kbd>Cmd</kbd>+<kbd>E</kbd> | Global keyboard shortcut — works from anywhere in the app |
+| **Header button** | The **+** button in the app header |
+| **Floating button** | The circular **+** button in the bottom-right corner |
+
+{/* screenshot: Quick Capture dialog showing type picker with available types */}
+
+## How It Works
+
+### Step 1: Pick a Type
+
+The dialog opens showing all types in the current space. Select the type you want to create an entry for.
+
+Types with templates show a **chevron indicator** — selecting one of these drills into a template picker.
+
+### Step 2: Pick a Template (Optional)
+
+If the type has templates, the dialog drills into a second level showing:
+
+- **New \{Type\} (no template)** — creates a blank entry
+- A list of available templates
+
+Select an option to proceed.
+
+If the selected template has custom variables, a **variable prompt dialog** appears asking you to fill them in before the entry is created.
+
+{/* screenshot: Template picker showing blank option and templates for a type */}
+
+### Step 3: Edit
+
+The new entry opens in the editor immediately. Start writing, fill in properties, and set an icon.
+
+## Keyboard Navigation
+
+Quick Capture is fully keyboard-navigable:
+
+| Key | Action |
+|-----|--------|
+| **Arrow Up / Down** | Move between options |
+| **Enter** | Select the highlighted option (or drill into templates) |
+| **Escape** | Close the dialog (or go back from the template picker to the type list) |
+| **Backspace** | Go back from the template picker to the type list |
+
+## Creating New Types
+
+If you need a type that doesn't exist yet, you can create one directly from the Quick Capture dialog. Look for the **New Type** action at the bottom of the type list.

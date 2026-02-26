@@ -1,16 +1,16 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { SidebarLink } from "./SidebarLink"
 import { DndProvider, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { ArchiveIcon, HomeIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
+import { ArchiveIcon, BookOpenIcon, HelpCircleIcon, HomeIcon, KeyboardIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, NetworkIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useIsMobile } from "@/shared/hooks/useIsMobile"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
-import type { DataObject, ObjectType, Template } from "@/shared/lib/data"
+import type { DataObjectSummary, ObjectType, Template } from "@/shared/lib/data"
 import { useObjects, useNextTitle } from "@/features/objects/hooks"
 import { useTemplates } from "@/features/templates"
 import { useObjectTypes, CreateTypeDialog } from "@/features/object-types"
@@ -20,6 +20,22 @@ import { usePins, PinnedSection } from "@/features/pins"
 import { VariablePromptDialog } from "@/features/templates/components/VariablePromptDialog"
 import type { VariableResolutionContext } from "@/features/templates/lib/variables"
 import { Button } from "@/shared/components/ui/Button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/components/ui/Dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/DropdownMenu"
+import { useNavigate } from "@/shared/hooks/useNavigate"
 import { toast } from "@/shared/hooks/useToast"
 import type { CollapseSignal } from "../types"
 import { TypeSection } from "./TypeSection"
@@ -33,7 +49,7 @@ interface DragItem {
 }
 
 const navItems = [
-  { href: "/", label: "Home", icon: HomeIcon },
+  { href: "/dashboard", label: "Home", icon: HomeIcon },
   { href: "/graph", label: "Graph", icon: NetworkIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ]
@@ -53,7 +69,7 @@ function DraggableTypeSection({
 }: {
   index: number
   type: ObjectType
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   isLoading: boolean
   hideCreateButton?: boolean
   collapseSignal?: CollapseSignal
@@ -127,9 +143,27 @@ function DraggableTypeSection({
   )
 }
 
+function ShortcutRow({ keys, label }: { keys: string[]; label: string }) {
+  return (
+    <div className="flex items-center justify-between py-0.5">
+      <span>{label}</span>
+      <span className="flex items-center gap-0.5">
+        {keys.map((k) => (
+          <kbd
+            key={k}
+            className="inline-flex min-w-5 items-center justify-center rounded border bg-muted px-1 py-0.5 font-mono text-xs text-muted-foreground"
+          >
+            {k}
+          </kbd>
+        ))}
+      </span>
+    </div>
+  )
+}
+
 export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
+  const { push: navigate } = useNavigate()
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
@@ -239,7 +273,7 @@ export function Sidebar() {
 
   const objectsByType = useMemo(() => {
     const filtered = filterObjects(objects)
-    const grouped = new Map<string, DataObject[]>()
+    const grouped = new Map<string, DataObjectSummary[]>()
     for (const obj of filtered) {
       const existing = grouped.get(obj.type_id) ?? []
       existing.push(obj)
@@ -261,7 +295,7 @@ export function Sidebar() {
       type_id: typeId,
     })
     if (result) {
-      router.push(`/objects/${result.id}?new=1`)
+      navigate(`/objects/${result.id}?new=1`)
     } else {
       toast({ description: 'Failed to create entry. You may not have permission.', variant: 'destructive' })
     }
@@ -285,12 +319,12 @@ export function Sidebar() {
     if (info && info.hasVariables) {
       const result = await createFromTemplateWithVariables(template.id, {}, buildResolutionContext())
       if (result) {
-        router.push(`/objects/${result.id}?new=1`)
+        navigate(`/objects/${result.id}?new=1`)
       }
     } else {
       const result = await createFromTemplate(template.id)
       if (result) {
-        router.push(`/objects/${result.id}?new=1`)
+        navigate(`/objects/${result.id}?new=1`)
       }
     }
   }
@@ -305,7 +339,7 @@ export function Sidebar() {
     )
     setPendingTemplate(null)
     if (result) {
-      router.push(`/objects/${result.id}?new=1`)
+      navigate(`/objects/${result.id}?new=1`)
     }
   }
 
@@ -399,7 +433,7 @@ export function Sidebar() {
       <DndProvider backend={HTML5Backend}>
         <div
           className={cn(
-            "flex-1 overflow-y-auto",
+            "flex-1 overflow-y-auto overflow-x-hidden",
             collapsed && "md:overflow-hidden"
           )}
         >
@@ -561,6 +595,76 @@ export function Sidebar() {
           </div>
         </div>
       </DndProvider>
+      {/* Help menu */}
+      <div className="border-t p-2 flex justify-center">
+        <Dialog>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                aria-label="Help"
+                className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <HelpCircleIcon className="size-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start">
+              <DropdownMenuItem asChild>
+                <a
+                  href="https://docs.swashbuckler.quest"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <BookOpenIcon className="size-4" />
+                  Documentation
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DialogTrigger asChild>
+                <DropdownMenuItem>
+                  <KeyboardIcon className="size-4" />
+                  Keyboard shortcuts
+                </DropdownMenuItem>
+              </DialogTrigger>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Keyboard shortcuts</DialogTitle>
+              <DialogDescription className="sr-only">
+                A reference of available keyboard shortcuts
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 text-sm">
+              <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">General</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["⌘", "K"]} label="Search" />
+                  <ShortcutRow keys={["⌘", "E"]} label="Quick capture" />
+                  <ShortcutRow keys={["⌘", "\\"]} label="Toggle sidebar" />
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">Editor</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["/"]} label="Slash commands" />
+                  <ShortcutRow keys={["[["]} label="Link to object" />
+                  <ShortcutRow keys={["⌘", "Enter"]} label="Exit block" />
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">Markdown</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["#"]} label="Heading" />
+                  <ShortcutRow keys={[">"]} label="Quote" />
+                  <ShortcutRow keys={["-"]} label="Bullet list" />
+                  <ShortcutRow keys={["1."]} label="Numbered list" />
+                  <ShortcutRow keys={["```"]} label="Code block" />
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
       <CreateTypeDialog
         open={createTypeOpen}
         onOpenChange={setCreateTypeOpen}

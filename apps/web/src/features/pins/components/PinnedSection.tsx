@@ -3,14 +3,14 @@
 import { useMemo } from 'react'
 import { ChevronRightIcon, PinIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import type { DataObject } from '@/shared/lib/data'
+import type { DataObjectSummary } from '@/shared/lib/data'
 import { ObjectItem } from '@/features/objects/components/ObjectItem'
 import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
 import type { CollapseSignal } from '@/features/sidebar/types'
 
 interface PinnedSectionProps {
   pinnedIds: Set<string>
-  objects: DataObject[]
+  objects: DataObjectSummary[]
   collapseSignal?: CollapseSignal
 }
 

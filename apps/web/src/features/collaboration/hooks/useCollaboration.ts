@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import * as Y from 'yjs'
 import { Awareness } from 'y-protocols/awareness'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -31,7 +31,7 @@ export function useCollaboration({
   avatarUrl,
   enabled,
 }: UseCollaborationOptions): CollaborationOptions | undefined {
-  return useMemo(() => {
+  const collab = useMemo(() => {
     if (!enabled) return undefined
 
     const doc = new Y.Doc()
@@ -59,4 +59,16 @@ export function useCollaboration({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable: only recreate on doc/user/enabled
   }, [documentId, userId, enabled])
+
+  // Auto-connect provider on creation, disconnect on cleanup.
+  // Uses disconnect() (not destroy()) so React Strict Mode re-mount works.
+  useEffect(() => {
+    if (!collab) return
+    collab.provider.connect()
+    return () => {
+      collab.provider.disconnect()
+    }
+  }, [collab])
+
+  return collab
 }

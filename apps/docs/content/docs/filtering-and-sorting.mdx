@@ -1,0 +1,83 @@
+---
+title: Filtering & Sorting
+description: Filter entries by any property and sort by any field across all type page views.
+---
+
+## Overview
+
+Every [type page](/docs/type-pages) supports filtering and sorting. Filters narrow down which entries are shown, and sorting controls the order. Both work across all four view modes (table, list, card, and board) and persist per type in your browser.
+
+## Filtering
+
+Click the **Filter** button at the top of a type page to open the filter popover. A badge shows how many active filters are applied.
+
+{/* screenshot: Filter popover with multiple property filters configured */}
+
+### Filter Types
+
+Filters are available for every property type on the current type:
+
+| Property Type | Filter UI | Behavior |
+|---------------|-----------|----------|
+| **Select** | Checkboxes for each option | Shows entries matching any checked option (OR logic) |
+| **Multi-select** | Checkboxes for each option | Shows entries where any selected option is present (OR logic) |
+| **Checkbox** | Three options: Any / Yes / No | Filters by checked state |
+| **Tags** | Checkboxes for each tag | Shows entries with any checked tag (OR logic) |
+| **Date** | From / To date pickers | Shows entries within the date range (inclusive) |
+| **Number** | Min / Max inputs | Shows entries within the number range (inclusive) |
+| **Text** | Text input | Shows entries where the field contains the substring (case-insensitive) |
+| **URL** | Text input | Shows entries where the URL contains the substring (case-insensitive) |
+
+### Filter Logic
+
+- **Between different properties**: filters use **AND** logic — an entry must match all active filters to appear
+- **Within a single select/multi-select/tags filter**: options use **OR** logic — matching any checked option is sufficient
+
+### Filter Pills
+
+Active filters appear as removable pills below the filter button. Click the **X** on any pill to remove that specific filter. Click **Clear filters** to remove all filters at once.
+
+When filters are active, the header shows a count like "5 of 12 Tasks" so you always know how many entries are hidden.
+
+{/* screenshot: Filter pills showing active filters with X buttons */}
+
+### Empty Filtered State
+
+When no entries match your filters, a message appears: "No \{type plural name\} match your filters" with a **Clear filters** link.
+
+## Sorting
+
+Click the **Sort** dropdown to choose a field and direction.
+
+### Sortable Fields
+
+You can sort by:
+
+- **Title** (alphabetical)
+- **Tags** (alphabetical by tag names)
+- **Updated** (most recent first/last)
+- **Created** (most recent first/last)
+- Any **custom property** defined on the type
+
+Each field supports ascending and descending order.
+
+### Default Sort
+
+The default sort is **Updated** (descending) — most recently edited entries appear first.
+
+### Table Column Headers
+
+In table view, clicking a column header toggles sort by that column. The current sort column shows a directional arrow. Column header sorts stay in sync with the Sort dropdown — they're two ways to control the same thing.
+
+{/* screenshot: Table view with sort arrow on a column header */}
+
+## Persistence
+
+Both filter and sort selections are saved per type in your browser's localStorage. When you return to a type page, your previous filter and sort settings are restored automatically. Switching between view modes preserves the current filter and sort state.
+
+## Accessibility
+
+- Filter changes are announced via an `aria-live` region (e.g., "Showing 5 of 12 entries")
+- Sort direction is communicated via `aria-sort` attributes on table columns
+- Filter pills are keyboard-navigable with clear labels
+- The Clear filters link is reachable via keyboard

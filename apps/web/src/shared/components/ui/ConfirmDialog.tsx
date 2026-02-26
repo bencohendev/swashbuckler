@@ -67,10 +67,10 @@ export function ConfirmDialog({
             <AlertDialog.Action asChild onClick={(e) => e.preventDefault()}>
               <Button
                 variant={destructive ? 'destructive' : 'default'}
-                disabled={isPending}
+                loading={isPending}
                 onClick={handleConfirm}
               >
-                {isPending ? 'Please wait...' : confirmLabel}
+                {confirmLabel}
               </Button>
             </AlertDialog.Action>
           </div>

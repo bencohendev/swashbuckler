@@ -1,0 +1,52 @@
+---
+title: Search
+description: Find entries and tags instantly with Cmd+K global search.
+---
+
+## Overview
+
+Press <kbd>Cmd</kbd>+<kbd>K</kbd> (or <kbd>Ctrl</kbd>+<kbd>K</kbd> on Windows/Linux) anywhere in the app to open global search. Search across entry names, body content, and tags — all within the current space.
+
+{/* screenshot: Global search dialog with query results showing entries and tags */}
+
+## What's Searched
+
+Search scans three areas:
+
+- **Entry names** — matches against entry titles
+- **Body content** — searches the plain text extracted from Plate.js editor content (headings, paragraphs, list items, etc.)
+- **Tags** — matches against tag names
+
+Results are grouped into an **Entries** section and a **Tags** section.
+
+## Type Filtering
+
+Filter search results by type using the filter pills at the top of the search dialog. Click a type to toggle it — only entries of the selected types will appear. Tags are always shown regardless of type filter.
+
+{/* screenshot: Search with type filter pills active */}
+
+## Keyboard Navigation
+
+The search dialog is fully keyboard-navigable:
+
+| Key | Action |
+|-----|--------|
+| <kbd>Cmd</kbd>+<kbd>K</kbd> | Open search |
+| **Arrow Up / Down** | Move between results |
+| **Enter** | Open the selected result |
+| **Escape** | Close search |
+
+Start typing immediately — the search field is focused when the dialog opens.
+
+## What's Excluded
+
+Search results don't include:
+
+- **Archived entries** and entries belonging to archived types
+- **Trashed entries** (entries in the [trash](/docs/trash-and-archive))
+- **Entries from other spaces** — search is scoped to the current space only
+
+## Navigating Results
+
+- Click an **entry** result (or press Enter) to open it in the editor
+- Click a **tag** result to navigate to its [dedicated tag page](/docs/tags)

@@ -81,7 +81,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     userId: user?.id ?? '',
     userName: user?.email?.split('@')[0] ?? 'Anonymous',
     avatarUrl: user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture,
-    enabled: isCollaborative && !isLoading,
+    enabled: isCollaborative,
   })
 
   useMousePresence({
@@ -147,7 +147,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     if (onNavigateAway) {
       onNavigateAway()
     } else {
-      router.push('/')
+      router.push('/dashboard')
     }
   }
 
@@ -157,7 +157,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     if (onDelete) {
       onDelete()
     } else {
-      router.push('/')
+      router.push('/dashboard')
     }
   }
 
@@ -255,7 +255,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     return (
       <div className="p-6">
         <p className="text-destructive">{error || 'Entry not found'}</p>
-        <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/'))} className="mt-4">
+        <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/dashboard'))} className="mt-4">
           Go back
         </Button>
       </div>
@@ -266,7 +266,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     return (
       <div className="p-6">
         <p className="text-muted-foreground">This content is not available.</p>
-        <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/'))} className="mt-4">
+        <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/dashboard'))} className="mt-4">
           Go back
         </Button>
       </div>

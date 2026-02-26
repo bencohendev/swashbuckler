@@ -3,7 +3,7 @@
 import { useMemo, useCallback, useRef, useState, useEffect } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import type { DataObject, ObjectType } from '@/shared/lib/data'
+import type { DataObjectSummary, ObjectType } from '@/shared/lib/data'
 import { useObjects } from '@/features/objects/hooks'
 import { useSpacePermission } from '@/features/sharing/hooks/useSpacePermission'
 import { useBoardGrouping } from '../stores/boardGrouping'
@@ -13,7 +13,7 @@ import { BoardFieldSelector } from './BoardFieldSelector'
 
 interface TypeBoardViewProps {
   type: ObjectType
-  objects: DataObject[]
+  objects: DataObjectSummary[]
 }
 
 export function TypeBoardView({ type, objects }: TypeBoardViewProps) {

@@ -52,7 +52,7 @@ export function SpacesSettings() {
                 return
               }
               toast({ description: `"${space.name}" archived`, variant: 'success' })
-              router.push('/')
+              router.push('/dashboard')
             }}
             onDelete={async (id) => {
               if (id === currentSpace?.id) {
@@ -65,7 +65,7 @@ export function SpacesSettings() {
                 return
               }
               toast({ description: 'Space deleted', variant: 'success' })
-              router.push('/')
+              router.push('/dashboard')
             }}
           />
         ))}

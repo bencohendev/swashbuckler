@@ -146,11 +146,11 @@ export function useTagCounts(tags: Tag[]): Map<string, number> {
 
   const results = useQueries({
     queries: tags.map((tag) => ({
-      queryKey: queryKeys.tags.objectsByTag(tag.id),
+      queryKey: queryKeys.tags.countByTag(tag.id),
       queryFn: async () => {
-        const result = await dataClient.tags.getObjectsByTag(tag.id)
+        const result = await dataClient.tags.countObjectsByTag(tag.id)
         if (result.error) throw new Error(result.error.message)
-        return { tagId: tag.id, count: result.data.length }
+        return { tagId: tag.id, count: result.data ?? 0 }
       },
     })),
   })

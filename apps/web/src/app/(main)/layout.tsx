@@ -4,6 +4,7 @@ import { Sidebar } from "@/features/sidebar/components"
 import { Header } from "@/shared/components/layout"
 import { GuestBanner } from "@/shared/components/GuestBanner"
 import { ObjectEditorModal } from "@/features/objects/components/ObjectEditorModal"
+import { NavigationProgress } from "@/shared/components/NavigationProgress"
 
 export default async function MainLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -11,6 +12,7 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
 
   return (
     <div className="flex h-screen">
+      <NavigationProgress />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:shadow-lg focus:border">
         Skip to main content
       </a>

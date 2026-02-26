@@ -1,0 +1,109 @@
+---
+title: Templates
+description: Save entry structures as reusable templates with built-in and custom variables.
+---
+
+## Overview
+
+Templates let you save an entry's structure — its content, properties, icon, and cover image — as a reusable starting point for new entries. They're scoped per type and per space, so each type can have its own set of templates.
+
+Templates also support **variables** — placeholders that get filled in automatically or prompted when you create an entry from the template.
+
+## Saving an Entry as a Template
+
+1. Open any entry in the editor
+2. Click **More Options** (three-dot menu) in the entry header
+3. Select **Save as Template**
+4. Give the template a name (must be unique within the type)
+5. Click **Save**
+
+The template captures the entry's current content, properties, icon, and cover image. Changes to the original entry after saving don't affect the template.
+
+{/* screenshot: "Save as Template" dialog with name input */}
+
+## Creating Entries from Templates
+
+When creating a new entry, you can choose a template:
+
+### From the Sidebar
+1. Click the **+** button next to a type
+2. If the type has templates, you'll see a list — pick one, or choose **New \{Type\} (no template)** for a blank entry
+
+### From Quick Capture
+1. Press <kbd>Cmd</kbd>+<kbd>E</kbd> or click the Quick Capture button
+2. Select a type — if it has templates, the dialog drills into a template picker
+3. Choose a template or select the blank option
+
+If the template has custom variables, a prompt dialog appears asking you to fill them in before the entry is created.
+
+{/* screenshot: Template picker showing blank option and available templates */}
+
+## Template Variables
+
+Variables are placeholders in a template's content that get resolved when an entry is created. They appear as amber-colored chips in the editor when template mode is active.
+
+### Built-in Variables
+
+| Variable | Resolves To | Example |
+|----------|-------------|---------|
+| `{{date}}` | Current date | January 15, 2025 |
+| `{{time}}` | Current time | 2:30 PM |
+| `{{datetime}}` | Current date and time | January 15, 2025 2:30 PM |
+| `{{user}}` | Current user's name | Jane |
+| `{{space}}` | Current space name | Work Projects |
+
+Built-in variables are resolved automatically — no user input needed.
+
+### Custom Variables
+
+Custom variables have a name you define (e.g., `{{client_name}}`, `{{project_code}}`). When someone creates an entry from the template, they're prompted to fill in each custom variable before the entry is created.
+
+### Inserting Variables
+
+1. Open an entry and enable **template mode** by clicking the braces icon (`{}`) in the editor header
+2. Type `/` to open the slash menu
+3. Select a built-in variable or **Custom Variable** to insert one
+4. For custom variables, enter a name when prompted
+
+Variables only appear in the slash menu when template mode is active.
+
+{/* screenshot: Editor in template mode with variable chips and the slash menu showing variable options */}
+
+## Applying Templates to Existing Entries
+
+You can apply a template to an entry that already has content:
+
+1. Open the entry
+2. Click **More Options** > **Apply Template**
+3. Select a template from the list
+4. Choose a content mode:
+   - **Replace** — replaces the entry's content entirely with the template's content
+   - **Keep** — appends the template's content below the entry's existing content
+
+Properties from the template are merged into the entry's empty fields only — existing property values are not overwritten. The icon and cover image are applied only if the entry doesn't already have them.
+
+Applying templates is not available during [real-time collaboration](/docs/realtime-collaboration) sessions.
+
+{/* screenshot: Apply Template dialog showing template selection and Replace/Keep options */}
+
+## Managing Templates
+
+### In Type Settings
+
+Go to **Settings > Types**, edit a type, and scroll to the **Templates** section. Here you can:
+
+- **Rename** a template inline
+- **Delete** a template
+
+{/* screenshot: Templates section in type settings showing rename and delete actions */}
+
+### In Settings > Templates
+
+The **Settings > Templates** page shows all templates across all types in the current space. Use it for a bird's-eye view of your templates.
+
+## Tips
+
+- Templates are great for recurring structures — meeting notes, weekly reviews, project briefs, bug reports
+- Use `{{date}}` and `{{user}}` to auto-stamp entries with context
+- Custom variables work well for fields that change every time but follow a pattern (e.g., client name, sprint number)
+- The blank option is always available when creating entries, even if templates exist for a type

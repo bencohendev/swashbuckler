@@ -1,6 +1,6 @@
 # Social Login (Google & GitHub OAuth)
 
-**Status:** Not started
+**Status:** Done
 
 ## Overview
 
