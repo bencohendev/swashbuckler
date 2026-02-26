@@ -32,11 +32,13 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="relative flex min-h-screen flex-col">
-      {/* Flagpole running full page height */}
+      {/* Flagpole running full page height — aligned to left edge of max-w-3xl content */}
       <div
-        className="pointer-events-none absolute top-0 bottom-0 w-[8px] sm:w-[12px] bg-[#8B5E3C] left-[calc(50%_-_64px)] sm:left-[calc(50%_-_96px)]"
+        className="pointer-events-none absolute inset-0 mx-auto hidden max-w-3xl px-6 sm:block"
         aria-hidden="true"
-      />
+      >
+        <div className="h-full w-[16px] bg-[#8B5E3C]" />
+      </div>
 
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b bg-background">
         <span className="text-lg font-bold tracking-tight">Swashbuckler</span>
@@ -49,25 +51,31 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="relative z-10 mx-auto max-w-3xl px-6 py-24 text-center">
-          <PixelPirateFlag />
-          <p className="text-lg text-muted-foreground">
-            Avast ye matey, welcome to
-          </p>
-          <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
-            Swashbuckler
-          </h1>
-          <p className="mt-3 text-base text-muted-foreground/80">
-            Your personal knowledge base
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <Link
-              href="/signup"
-              className="inline-flex h-10 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
-            >
-              Get Started
-            </Link>
-            <GuestButton />
+        <section className="relative z-10 mx-auto max-w-3xl px-6 py-24">
+          <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:gap-12">
+            <div className="shrink-0">
+              <PixelPirateFlag />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-lg text-muted-foreground">
+                Avast ye matey, welcome to
+              </p>
+              <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
+                Swashbuckler
+              </h1>
+              <p className="mt-3 text-base text-muted-foreground/80">
+                Your personal knowledge base
+              </p>
+              <div className="mt-8 flex items-center justify-center gap-4 sm:justify-start">
+                <Link
+                  href="/signup"
+                  className="inline-flex h-10 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+                >
+                  Get Started
+                </Link>
+                <GuestButton />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -91,7 +99,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="relative z-10 bg-[#D2B48C] pt-8 pb-4">
-        <div aria-hidden="true">
+        <div className="mx-auto max-w-3xl px-6" aria-hidden="true">
           <PixelBeachScene />
         </div>
         <p className="mt-4 px-6 text-center text-sm text-[#5D3A1A]">
