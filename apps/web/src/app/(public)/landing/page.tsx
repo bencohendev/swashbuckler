@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { PenLineIcon, BoxesIcon, NetworkIcon, UsersIcon } from "lucide-react"
 import { GuestButton } from "./GuestButton"
+import { PixelBeachScene } from "./PixelBeachScene"
 import { PixelPirateFlag } from "./PixelPirateFlag"
 
 const features = [
@@ -41,8 +42,14 @@ export default function LandingPage() {
         </Link>
       </header>
 
-      <main className="flex-1">
-        <section className="mx-auto max-w-3xl px-6 py-24 text-center">
+      <main className="relative flex-1">
+        {/* Flagpole running full height of main */}
+        <div
+          className="pointer-events-none absolute top-0 bottom-0 w-[8px] sm:w-[12px] bg-[#8B5E3C] left-[calc(50%_-_64px)] sm:left-[calc(50%_-_96px)]"
+          aria-hidden="true"
+        />
+
+        <section className="relative z-10 mx-auto max-w-3xl px-6 py-24 text-center">
           <PixelPirateFlag />
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
             Your personal knowledge base
@@ -62,7 +69,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-6 pb-24">
+        <section className="relative z-10 mx-auto max-w-5xl px-6 pb-24">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((feature) => (
               <div
@@ -77,6 +84,14 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Beach scene at bottom */}
+        <section
+          className="relative z-10 bg-[#D2B48C] py-4"
+          aria-hidden="true"
+        >
+          <PixelBeachScene />
         </section>
       </main>
 
