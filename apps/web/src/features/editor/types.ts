@@ -72,6 +72,7 @@ export interface CalloutNode extends BaseNode {
 // Table nodes
 export interface TableNode extends BaseNode {
   type: 'table';
+  colSizes?: number[];
 }
 
 export interface TableRowNode extends BaseNode {

@@ -53,7 +53,13 @@ export const editorPlugins = [
   TogglePlugin,
   CalloutPlugin,
   PrivateBlockPlugin,
-  TablePlugin,
+  TablePlugin.configure({
+    options: {
+      minColumnWidth: 48,
+      initialTableWidth: 640,
+      disableMarginLeft: true,
+    },
+  }),
   ImagePlugin.configure({
     options: {
       uploadImage: async (dataUrl: ArrayBuffer | string) => {
