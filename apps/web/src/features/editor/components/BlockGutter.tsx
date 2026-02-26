@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { createPortal } from 'react-dom'
-import { useEditorRef, useReadOnly } from '@udecode/plate/react'
+import { useEditorRef } from '@udecode/plate/react'
 import type { TElement } from '@udecode/plate'
 import { GripVertical, Plus, Copy, Trash2 } from 'lucide-react'
 import {
@@ -12,8 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/shared/components/ui/DropdownMenu'
-import { useHoveredBlock } from '../hooks/useHoveredBlock'
-import { useIsMobile } from '@/shared/hooks/useIsMobile'
 
 function stripIds(node: Record<string, unknown>): Record<string, unknown> {
   const clone = { ...node }
@@ -24,83 +21,65 @@ function stripIds(node: Record<string, unknown>): Record<string, unknown> {
   return clone
 }
 
-interface LockedBlock {
-  rect: { top: number; left: number; height: number }
-  path: number[]
+interface BlockGutterProps {
   element: TElement
 }
 
-export function BlockSideMenu() {
+export function BlockGutter({ element }: BlockGutterProps) {
   const editor = useEditorRef()
-  const readOnly = useReadOnly()
-  const isMobile = useIsMobile()
-  const { hoveredBlock, menuProps } = useHoveredBlock()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [lockedBlock, setLockedBlock] = useState<LockedBlock | null>(null)
 
-  const handleOpenChange = useCallback(
-    (open: boolean) => {
-      if (open && hoveredBlock) {
-        setLockedBlock({
-          rect: hoveredBlock.rect,
-          path: hoveredBlock.path,
-          element: hoveredBlock.element,
-        })
-      }
-      if (!open) {
-        setLockedBlock(null)
-      }
-      setIsMenuOpen(open)
-    },
-    [hoveredBlock],
-  )
+  const getPath = useCallback(() => {
+    const index = editor.children.indexOf(element)
+    if (index === -1) return null
+    return [index]
+  }, [editor, element])
 
-  if (readOnly || isMobile) return null
-
-  const active = isMenuOpen ? lockedBlock : hoveredBlock
-  if (!active) return null
-
-  const { rect, path, element } = active
-
-  const insertAbove = () => {
+  const insertAbove = useCallback(() => {
+    const path = getPath()
+    if (!path) return
     editor.tf.insertNodes(
       { type: 'p', children: [{ text: '' }] },
       { at: path },
     )
     editor.tf.select(editor.api.start(path))
-  }
+  }, [editor, getPath])
 
-  const insertBelow = () => {
-    const nextPath = [...path.slice(0, -1), path[path.length - 1] + 1]
+  const insertBelow = useCallback(() => {
+    const path = getPath()
+    if (!path) return
+    const nextPath = [path[0] + 1]
     editor.tf.insertNodes(
       { type: 'p', children: [{ text: '' }] },
       { at: nextPath },
     )
     editor.tf.select(editor.api.start(nextPath))
-  }
+  }, [editor, getPath])
 
-  const duplicate = () => {
+  const duplicate = useCallback(() => {
+    const path = getPath()
+    if (!path) return
     const cloned = stripIds(
       JSON.parse(JSON.stringify(element)) as Record<string, unknown>,
     )
-    const nextPath = [...path.slice(0, -1), path[path.length - 1] + 1]
+    const nextPath = [path[0] + 1]
     editor.tf.insertNodes(cloned as TElement, { at: nextPath })
-  }
+  }, [editor, element, getPath])
 
-  const deleteBlock = () => {
+  const deleteBlock = useCallback(() => {
+    const path = getPath()
+    if (!path) return
     editor.tf.removeNodes({ at: path })
-  }
+  }, [editor, getPath])
 
-  return createPortal(
+  return (
     <div
-      {...menuProps}
-      className="pointer-events-auto fixed z-50 transition-opacity duration-150"
-      style={{
-        top: rect.top + rect.height / 2 - 12,
-        left: rect.left - 36,
-      }}
+      contentEditable={false}
+      className={`absolute -left-8 top-0 flex h-6 items-center transition-opacity duration-150 ${
+        isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+      }`}
     >
-      <DropdownMenu onOpenChange={handleOpenChange} open={isMenuOpen}>
+      <DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
@@ -130,7 +109,6 @@ export function BlockSideMenu() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>,
-    document.body,
+    </div>
   )
 }

@@ -25,6 +25,7 @@ import { NodeIdPlugin } from '@udecode/plate-node-id';
 import { SpoilerPlugin } from '../plugins/spoiler-plugin';
 import { PrivateBlockPlugin, PrivateMarkPlugin } from '../plugins/private-plugin';
 import { TemplateVariablePlugin } from '../plugins/template-variable-plugin';
+import { BlockSideMenuPlugin } from '../plugins/block-side-menu-plugin';
 
 // Plugin configuration for the editor
 export const editorPlugins = [
@@ -139,6 +140,9 @@ export const editorPlugins = [
       enableScroller: true,
     },
   }),
+
+  // Block side menu (grip handle + actions per top-level block)
+  BlockSideMenuPlugin,
 
   // Autoformat (markdown-style shortcuts)
   AutoformatPlugin.configure({
