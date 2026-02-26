@@ -89,6 +89,7 @@ export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
                 key={t.id}
                 theme={t}
                 isActive={assignment?.type === 'custom' && assignment.themeId === t.id}
+                showPreview={selectionOnly}
                 onActivate={handleActivateCustom}
                 {...(!selectionOnly && {
                   onEdit,
