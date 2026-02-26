@@ -1,6 +1,6 @@
 # Sharing UI Redesign
 
-**Status:** Not started
+**Status:** Done
 
 ## Summary
 

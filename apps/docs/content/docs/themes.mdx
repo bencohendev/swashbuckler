@@ -23,11 +23,11 @@ If a custom theme is active, the first click clears the custom theme and returns
 
 ## Custom Theme Builder
 
-Create your own color themes in **Settings > Appearance**.
+Create your own color themes in **Settings > Custom Themes**.
 
 ### Creating a Theme
 
-1. Go to **Settings > Appearance**
+1. Go to **Settings > Custom Themes**
 2. Click **New Theme**
 3. The theme builder opens with live preview
 
@@ -64,20 +64,26 @@ Give your theme a name and click **Save**. The theme is stored in your browser a
 
 ## Managing Themes
 
-In **Settings > Appearance**, your custom themes appear in a grid. Each theme card shows:
+In **Settings > Custom Themes**, your custom themes appear in a grid. Each theme card shows:
 
 - Color swatches previewing the theme's palette
-- **Activate** — apply the theme
 - **Edit** — reopen the theme builder to adjust colors
 - **Delete** — permanently remove the theme
 
-{/* screenshot: Theme grid showing custom theme cards with swatches and action buttons */}
+{/* screenshot: Theme grid showing custom theme cards with edit and delete buttons */}
 
-## Per-Space Application
+## Selecting a Theme Per Space
 
-Custom themes can be applied per-space — each workspace can have a different theme. When you switch spaces, the theme switches too.
+Custom themes are applied per-space — each workspace can have a different theme. When you switch spaces, the theme switches too.
 
-To set a theme for a space, activate it while viewing that space. The association is saved in your browser (via localStorage), so each user in a shared space sees their own preferred theme.
+To set a theme for a space:
+
+1. Go to **Settings > Appearance** (under Space settings)
+2. Choose a built-in mode or click **Activate** on a custom theme
+
+The Appearance page shows a live preview of each custom theme so you can see how it looks before activating. A link at the bottom takes you to **Custom Themes** if you need to create or edit themes.
+
+Theme assignments are saved in your browser (via localStorage), so each user in a shared space sees their own preferred theme.
 
 ## Shared Spaces
 
@@ -88,4 +94,4 @@ Theme preferences are personal — they're stored in your browser, not in the sh
 To go back to the built-in light/dark/system modes:
 
 - Click the theme toggle button in the header (first click clears the custom theme)
-- Or go to **Settings > Appearance** and click **Reset to Default**
+- Or go to **Settings > Appearance** and select one of the built-in modes

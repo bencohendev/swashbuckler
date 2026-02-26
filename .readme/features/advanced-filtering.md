@@ -4,65 +4,100 @@
 
 ## Overview
 
-Extends type pages with filtering for all property types (date, number, text, URL) and a universal sort control that persists across sessions. Builds on existing search, select, checkbox, and tag filters.
+Expression-tree-based filter system for type pages with rich operators per field type, OR logic via filter groups (DNF), relation filters, system date filtering (created_at/updated_at), and a Notion-style row-based UI.
+
+## Architecture
+
+### Expression Tree Model
+
+Filters use a `FilterExpression` structure in Disjunctive Normal Form (DNF):
+
+```
+FilterExpression
+├── search: string (global title search, AND'd with groups)
+└── groups: FilterGroup[] (OR'd together)
+    └── conditions: FilterCondition[] (AND'd together)
+        ├── target: FilterFieldTarget (property | system | title | tag | relation)
+        ├── operator: string (per-type operators)
+        └── value / value2: unknown
+```
+
+All types are plain JSON-serializable — no Sets, Maps, or class instances.
+
+### Operator Registry
+
+Single source of truth mapping field types to available operators:
+
+| Field Type | Operators | Count |
+|---|---|---|
+| text, url, title | contains, does_not_contain, equals, not_equals, starts_with, ends_with, is_empty, is_not_empty | 8 |
+| number | eq, neq, gt, lt, gte, lte, is_empty, is_not_empty | 8 |
+| date, system_date | is, is_before, is_after, is_on_or_before, is_on_or_after, is_between, is_empty, is_not_empty | 8 |
+| select | is, is_not, is_empty, is_not_empty | 4 |
+| multi_select | contains, does_not_contain, is_empty, is_not_empty | 4 |
+| checkbox | is_checked, is_not_checked | 2 |
+| tag | contains, does_not_contain, is_empty (has no tags), is_not_empty (has tags) | 4 |
+| relation | links_to, links_to_type, has_links, has_no_links | 4 |
+
+### Filter Logic
+
+- **Search**: Global title substring filter, AND'd with group conditions
+- **Within a group**: Conditions use AND logic
+- **Between groups**: Groups use OR logic (DNF)
+- **Empty groups**: Auto-removed when last condition is deleted
+
+### Relation Filters
+
+- **links_to**: Object has a relation (source or target) to a specific entry
+- **links_to_type**: Object has a relation to any entry of a given type
+- **has_links**: Object has at least one relation
+- **has_no_links**: Object has no relations
+
+### System Date Fields
+
+`created_at` and `updated_at` are available as filterable fields with all date operators.
 
 ## Decisions
 
 | Decision | Choice | Why |
 |----------|--------|-----|
-| Filter persistence | Zustand + localStorage per slug | Matches existing viewMode store pattern; filters survive navigation and refresh |
-| Sort persistence | Same pattern, separate store | Sort and filter config change independently; separate keys simplify logic |
-| Date comparison | ISO string comparison (YYYY-MM-DD) | All date values are stored as ISO strings; lexicographic comparison works correctly |
-| Number comparison | Native numeric `>=`/`<=` | Straightforward range semantics; NaN/missing values excluded |
-| Text/URL filter | Case-insensitive substring match | Consistent with existing title search behavior |
-| Set serialization | Arrays in localStorage, Sets in memory | JSON can't serialize Sets; convert on read/write |
-| Sort extraction | Shared `sortObjects()` utility | All four view modes (table, list, card, board) use the same sort logic |
+| Expression model | DNF (AND-groups OR'd together) | Matches Notion's filter model; intuitive "any of these groups" semantics |
+| Persistence | Zustand + localStorage, new key `swashbuckler:filterExpression:v2` | Clean break from old Set-based format; no migration needed |
+| Serialization | Plain JSON (no serialize/deserialize) | FilterExpression is already JSON-serializable |
+| Date comparison | ISO string YYYY-MM-DD lexicographic | Same as previous; all dates stored as ISO strings |
+| Text matching | Case-insensitive | Consistent with title search |
+| Relation data | Shared TanStack Query cache with graph (`['relations', 'all', spaceId]`) | Avoids duplicate network requests |
+| UI pattern | Notion-style row builder in popover | More scalable than type-grouped sections; supports arbitrary condition combinations |
 
 ## Implementation
 
 | File | Purpose |
 |------|---------|
-| `src/features/table-view/lib/filterObjects.ts` | `TypePageFilters` interface, `isFiltered()`, `filterObjects()` — extended with `dateFilters`, `numberFilters`, `textFilters` |
-| `src/features/table-view/lib/sortObjects.ts` | `SortConfig` type, `DEFAULT_SORT`, `sortObjects()` pure function — handles all field types + tags |
-| `src/features/table-view/stores/filterConfig.ts` | Zustand store for persisted filter state per type slug (Sets serialized as arrays) |
-| `src/features/table-view/stores/sortConfig.ts` | Zustand store for persisted sort config per type slug |
-| `src/features/table-view/components/TypeTableView.tsx` | Wires persisted stores, applies `filterObjects()` then `sortObjects()` for all view modes |
-| `src/features/table-view/components/TypeDataTable.tsx` | Accepts `sort`/`onSortChange` props from parent (no local sort state) |
-| `src/features/table-view/components/TypePageFilterBar.tsx` | Sort dropdown, date/number/text/URL filter sections in popover, filter pills |
-
-## Filter Types
-
-| Type | UI Control | Logic |
-|------|-----------|-------|
-| Search | Text input (existing) | Case-insensitive title substring |
-| Select / Multi-select | Checkbox group (existing) | Value in selected set; multi-select: any value matches |
-| Checkbox | True/False/Any toggle (existing) | Exact boolean match |
-| Tags | Checkbox group (existing) | Any selected tag present on entry |
-| Date | From/To date inputs | ISO string `>=` from, `<=` to; missing value excluded |
-| Number | Min/Max number inputs | Numeric `>=` min, `<=` max; missing value excluded |
-| Text | Substring input | Case-insensitive `includes`; missing value excluded |
-| URL | Substring input | Same as text filter |
-
-All filters combine with AND logic. Within select/tag filters, values use OR logic.
-
-## Sort
-
-- Sort dropdown in filter bar with field picker + asc/desc toggle
-- Supports: Title, Tags, Updated, Created, and all custom field types
-- Table column headers sync with sort dropdown
-- Default: `updated_at` descending
-- Persists per type slug in localStorage
+| `src/features/table-view/lib/filterTypes.ts` | `FilterExpression`, `FilterGroup`, `FilterCondition`, `FilterFieldTarget` types + immutable helper functions |
+| `src/features/table-view/lib/operatorRegistry.ts` | Operator definitions per field type, `getOperators()`, `getDefaultOperator()`, `operatorNeedsValue()`, `getOperatorLabel()` |
+| `src/features/table-view/lib/filterObjects.ts` | `filterObjects()` evaluation engine with `FilterContext`, re-exports from filterTypes |
+| `src/features/table-view/lib/sortObjects.ts` | Sort logic (unchanged) |
+| `src/features/table-view/stores/filterConfig.ts` | Zustand store for persisted `FilterExpression` per type slug |
+| `src/features/table-view/stores/sortConfig.ts` | Sort config store (unchanged) |
+| `src/features/table-view/components/TypePageFilterBar.tsx` | Composition root: search + sort + filter builder + pills + live region |
+| `src/features/table-view/components/FilterBuilder.tsx` | Notion-style row builder popover content |
+| `src/features/table-view/components/FilterConditionRow.tsx` | Single condition row: [Where/and] [field] [operator] [value] [x] |
+| `src/features/table-view/components/FilterValueInput.tsx` | Polymorphic value input based on field type + operator |
+| `src/features/table-view/components/FilterPills.tsx` | Active filter pills with operator labels |
+| `src/features/table-view/components/SortPopover.tsx` | Extracted sort UI (field picker + direction toggle) |
+| `src/features/table-view/components/TypeTableView.tsx` | Wires FilterExpression, useAllRelations, builds FilterContext |
+| `src/features/relations/hooks/useAllRelations.ts` | Bulk-loads all relations, shares cache with graph hook |
 
 ## Verification
 
-- [x] Date range filter narrows entries by from/to date
-- [x] Number range filter narrows entries by min/max
-- [x] Text filter matches case-insensitive substring in text fields
-- [x] URL filter matches case-insensitive substring in URL fields
-- [x] Entries with missing property values are excluded when that filter is active
-- [x] Sort dropdown applies across table, list, card, and board views
-- [x] Table column header clicks update the sort dropdown state
-- [x] Filters and sort persist after navigating away and returning
-- [x] Filter pills display for new filter types with clear buttons
-- [x] "Clear all" resets all filters including new types
-- [x] All 501 tests pass, 0 type errors, 0 lint errors
+- [x] Every operator for every field type works correctly (~42 operator tests)
+- [x] AND within groups, OR between groups
+- [x] Empty/null handling for all types
+- [x] System date fields (created_at, updated_at) filterable
+- [x] Title as a filterable field (not just search)
+- [x] Relation filters (links_to, links_to_type, has_links, has_no_links)
+- [x] hasActiveFilters() function
+- [x] Search + expression combination
+- [x] Filter store round-trip persistence, multiple slugs, clean reset
+- [x] Operator registry: correct counts, defaults, labels, needsValue flags
+- [x] All 555 tests pass, 0 type errors

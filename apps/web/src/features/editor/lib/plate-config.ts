@@ -25,6 +25,7 @@ import { NodeIdPlugin } from '@udecode/plate-node-id';
 import { SpoilerPlugin } from '../plugins/spoiler-plugin';
 import { PrivateBlockPlugin, PrivateMarkPlugin } from '../plugins/private-plugin';
 import { TemplateVariablePlugin } from '../plugins/template-variable-plugin';
+import { BlockSideMenuPlugin } from '../plugins/block-side-menu-plugin';
 
 // Plugin configuration for the editor
 export const editorPlugins = [
@@ -53,7 +54,12 @@ export const editorPlugins = [
   TogglePlugin,
   CalloutPlugin,
   PrivateBlockPlugin,
-  TablePlugin,
+  TablePlugin.configure({
+    options: {
+      minColumnWidth: 48,
+      disableMarginLeft: true,
+    },
+  }),
   ImagePlugin.configure({
     options: {
       uploadImage: async (dataUrl: ArrayBuffer | string) => {
@@ -62,7 +68,7 @@ export const editorPlugins = [
       },
     },
   }),
-  LinkPlugin.overrideEditor(({ editor, tf: { insertText, insertData, insertBreak } }) => ({
+  LinkPlugin.overrideEditor(({ editor, tf: { insertText, insertData } }) => ({
     transforms: {
       insertText(text, options) {
         insertText(text, options);
@@ -76,15 +82,6 @@ export const editorPlugins = [
       insertData(data) {
         insertData(data);
         // Pasting a URL also triggers link wrapping
-        if (editor.selection) {
-          setTimeout(() => {
-            editor.tf.focus({ at: editor.selection ?? undefined });
-          }, 0);
-        }
-      },
-      insertBreak() {
-        insertBreak();
-        // Enter after a URL also triggers link auto-detection
         if (editor.selection) {
           setTimeout(() => {
             editor.tf.focus({ at: editor.selection ?? undefined });
@@ -139,6 +136,9 @@ export const editorPlugins = [
       enableScroller: true,
     },
   }),
+
+  // Block side menu (grip handle + actions per top-level block)
+  BlockSideMenuPlugin,
 
   // Autoformat (markdown-style shortcuts)
   AutoformatPlugin.configure({

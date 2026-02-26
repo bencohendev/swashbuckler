@@ -124,6 +124,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Delete Space](features/delete-space.md) | Permanently delete a space and all its contents |
 | Vercel Analytics | Vercel Analytics integration (`@vercel/analytics`) |
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
+| [Table Column Resize](features/table-column-resize.md) | Drag-to-resize columns in editor tables |
 | [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |
 | [Create from Template (Quick Capture)](features/create-from-template-quick-capture.md) | Template selection in quick capture dialog (Cmd+E) |
 | [Loading Indicators](features/loading-indicators.md) | Navigation progress bar, Spinner/Skeleton primitives, Button loading states |
@@ -139,17 +140,17 @@ Dual-storage architecture with a `DataClient` interface:
 | [First-Use Tutorial](features/first-use-tutorial.md) | Onboarding walkthrough for new users |
 | [API Documentation](features/api-documentation.md) | Internal API documentation with architecture diagrams |
 | [Image Resize](features/image-resize.md) | Drag-handle resize for inline editor images |
+| [Account-Level Themes](features/account-level-themes.md) | Dedicated settings page for custom theme creation/management, selection-only Appearance page |
+| [Type Starter Kits](features/type-starter-kits.md) | Pre-built type collections (RP, recipes, note-taking, etc.) |
+| [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
+| [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
+| [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
-| [Account-Level Themes](features/account-level-themes.md) | Move custom theme creation to Account Settings |
-| [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
-| [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
-| [Type Starter Kits](features/type-starter-kits.md) | Pre-built type collections (RP, recipes, note-taking, etc.) |
 
 ## Bugs
 

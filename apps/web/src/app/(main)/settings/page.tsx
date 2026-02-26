@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { FileStackIcon, FolderIcon, PaletteIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
+import { FileStackIcon, FolderIcon, PaletteIcon, SwatchBookIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
 import { useCurrentSpace } from '@/shared/lib/data'
 import type { LucideIcon } from 'lucide-react'
 
@@ -25,13 +25,19 @@ const accountItems: SettingsItem[] = [
     description: 'Manage your spaces',
     icon: FolderIcon,
   },
+  {
+    href: '/settings/themes',
+    label: 'Custom Themes',
+    description: 'Create and manage custom themes',
+    icon: SwatchBookIcon,
+  },
 ]
 
 const spaceItems: SettingsItem[] = [
   {
     href: '/settings/appearance',
     label: 'Appearance',
-    description: 'Customize themes and color schemes',
+    description: 'Choose a theme for this space',
     icon: PaletteIcon,
   },
   {

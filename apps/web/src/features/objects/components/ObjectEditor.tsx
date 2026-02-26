@@ -393,8 +393,8 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         </div>
       </header>
 
-      <main ref={mainRef} className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="relative">
+      <main ref={mainRef} className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
+        <div className="relative mx-auto max-w-[1024px]">
           {collaborationOptions && (
             <RemoteMouseCursors awareness={collaborationOptions.awareness} />
           )}
@@ -429,17 +429,19 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
           <TagPicker objectId={id} readOnly={!canEdit} />
 
-          <Editor
-            key={`${id}-${contentVersion}`}
-            ref={editorRef}
-            initialContent={editorContent}
-            onSave={handleContentSave}
-            placeholder="Start writing..."
-            readOnly={!canEdit}
-            isTemplateMode={isTemplateMode}
-            isOwner={isOwner}
-            collaborationOptions={collaborationOptions}
-          />
+          <div data-tour="editor-area">
+            <Editor
+              key={`${id}-${contentVersion}`}
+              ref={editorRef}
+              initialContent={editorContent}
+              onSave={handleContentSave}
+              placeholder="Start writing..."
+              readOnly={!canEdit}
+              isTemplateMode={isTemplateMode}
+              isOwner={isOwner}
+              collaborationOptions={collaborationOptions}
+            />
+          </div>
 
           <LinkedObjects objectId={id} readOnly={!canEdit} />
         </div>

@@ -10,7 +10,9 @@ import type {
   SharingClient,
   TagsClient,
   PinsClient,
+  SavedViewsClient,
   Pin,
+  SavedView,
   Space,
   DataObject,
   DataObjectSummary,
@@ -28,6 +30,8 @@ import type {
   UpdateTemplateInput,
   CreateTagInput,
   UpdateTagInput,
+  CreateSavedViewInput,
+  UpdateSavedViewInput,
   ListObjectsOptions,
   ListObjectTypesOptions,
   ListSpacesOptions,
@@ -114,6 +118,7 @@ class SwashbucklerDB extends Dexie {
   tags!: EntityTable<Tag, 'id'>
   objectTags!: EntityTable<ObjectTag, 'id'>
   pins!: EntityTable<Pin, 'id'>
+  savedViews!: EntityTable<SavedView, 'id'>
 
   constructor() {
     super('swashbuckler')
@@ -318,6 +323,19 @@ class SwashbucklerDB extends Dexie {
         space.is_archived = false
         space.archived_at = null
       })
+    })
+
+    // Version 11: Add savedViews table
+    this.version(11).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, is_archived, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, is_archived, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id',
+      pins: 'id, object_id',
+      savedViews: 'id, type_id, space_id, owner_id, is_default',
     })
   }
 }
@@ -1879,6 +1897,105 @@ function createLocalPinsClient(): PinsClient {
   }
 }
 
+function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
+  return {
+    async list(typeId: string): Promise<DataListResult<SavedView>> {
+      try {
+        const database = getDB()
+        const results = await database.savedViews
+          .where('type_id')
+          .equals(typeId)
+          .toArray()
+        results.sort((a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+        return { data: results, error: null }
+      } catch (error) {
+        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async create(input: CreateSavedViewInput): Promise<DataResult<SavedView>> {
+      try {
+        const database = getDB()
+        const now = new Date().toISOString()
+
+        // If setting as default, unset existing defaults for this type
+        if (input.is_default) {
+          const existingDefaults = await database.savedViews
+            .where({ type_id: input.type_id, is_default: 1 })
+            .toArray()
+          for (const view of existingDefaults) {
+            await database.savedViews.update(view.id, { is_default: false })
+          }
+        }
+
+        const savedView: SavedView = {
+          id: generateUUID(),
+          space_id: spaceId ?? LOCAL_DEFAULT_SPACE_ID,
+          type_id: input.type_id,
+          name: input.name,
+          filters: input.filters,
+          sort: input.sort,
+          view_mode: input.view_mode,
+          board_group_field_id: input.board_group_field_id ?? null,
+          is_default: input.is_default ?? false,
+          owner_id: 'local',
+          created_at: now,
+          updated_at: now,
+        }
+        await database.savedViews.add(savedView)
+        return { data: savedView, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async update(id: string, input: UpdateSavedViewInput): Promise<DataResult<SavedView>> {
+      try {
+        const database = getDB()
+
+        // If setting as default, unset existing defaults for this type
+        if (input.is_default) {
+          const existing = await database.savedViews.get(id)
+          if (existing) {
+            const otherDefaults = await database.savedViews
+              .where('type_id')
+              .equals(existing.type_id)
+              .filter(v => v.is_default && v.id !== id)
+              .toArray()
+            for (const view of otherDefaults) {
+              await database.savedViews.update(view.id, { is_default: false })
+            }
+          }
+        }
+
+        await database.savedViews.update(id, {
+          ...input,
+          updated_at: new Date().toISOString(),
+        })
+        const updated = await database.savedViews.get(id)
+        if (!updated) {
+          return { data: null, error: { message: 'Saved view not found' } }
+        }
+        return { data: updated, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+
+    async delete(id: string): Promise<DataResult<void>> {
+      try {
+        const database = getDB()
+        await database.savedViews.delete(id)
+        return { data: null, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
+  }
+}
+
 function createNoOpSharingClient(): SharingClient {
   const notAvailable = { message: 'Sharing is not available in guest mode' }
   return {
@@ -1908,6 +2025,7 @@ export function createLocalDataClient(spaceId?: string): DataClient {
     sharing: createNoOpSharingClient(),
     tags: createLocalTagsClient(spaceId),
     pins: createLocalPinsClient(),
+    savedViews: createLocalSavedViewsClient(spaceId),
     isLocal: true,
   }
 }
@@ -1922,6 +2040,7 @@ export async function clearLocalData(): Promise<void> {
   await database.tags.clear()
   await database.objectTags.clear()
   await database.pins.clear()
+  await database.savedViews.clear()
   // Re-seed default types (Page only)
   await database.objectTypes.bulkAdd(DEFAULT_TYPES)
 }
@@ -1935,6 +2054,7 @@ export async function exportLocalData(): Promise<{
   tags: Tag[]
   objectTags: ObjectTag[]
   pins: Pin[]
+  savedViews: SavedView[]
 }> {
   const database = getDB()
   const objects = await database.objects.toArray()
@@ -1945,7 +2065,8 @@ export async function exportLocalData(): Promise<{
   const tags = await database.tags.toArray()
   const objectTags = await database.objectTags.toArray()
   const pins = await database.pins.toArray()
-  return { objects, objectTypes, templates, objectRelations, spaces, tags, objectTags, pins }
+  const savedViews = await database.savedViews.toArray()
+  return { objects, objectTypes, templates, objectRelations, spaces, tags, objectTags, pins, savedViews }
 }
 
 export async function ensureLocalDefaultTypes(): Promise<void> {

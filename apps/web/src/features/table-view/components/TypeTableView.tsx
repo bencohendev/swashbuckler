@@ -5,6 +5,7 @@ import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { useObjectTypes } from '@/features/object-types'
 import { useObjects } from '@/features/objects/hooks'
 import { useObjectTagsBatch, useTags } from '@/features/tags'
+import { useAllRelations } from '@/features/relations'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { TypeDataTable } from './TypeDataTable'
 import { TypeCardView } from './TypeCardView'
@@ -12,12 +13,18 @@ import { TypeListView } from './TypeListView'
 import { TypeBoardView } from './TypeBoardView'
 import { TypePageFilterBar } from './TypePageFilterBar'
 import { ViewToggle } from './ViewToggle'
+import { SavedViewSelector } from './SavedViewSelector'
 import { useViewMode } from '../stores/viewMode'
 import { useSortConfig } from '../stores/sortConfig'
 import { usePersistedFilters } from '../stores/filterConfig'
-import { filterObjects, isFiltered, EMPTY_FILTERS } from '../lib/filterObjects'
+import { useBoardGrouping } from '../stores/boardGrouping'
+import { useSavedViews } from '../hooks/useSavedViews'
+import { filterObjects, hasActiveFilters, EMPTY_EXPRESSION } from '../lib/filterObjects'
+import type { FilterContext } from '../lib/filterObjects'
+import type { FilterExpression } from '../lib/filterTypes'
 import { sortObjects } from '../lib/sortObjects'
 import type { SortConfig } from '../lib/sortObjects'
+import type { ViewMode } from '../stores/viewMode'
 
 interface TypeTableViewProps {
   slug: string
@@ -25,17 +32,30 @@ interface TypeTableViewProps {
 
 export function TypeTableView({ slug }: TypeTableViewProps) {
   const { types, isLoading: typesLoading } = useObjectTypes()
-  const { mode } = useViewMode(slug)
+  const { mode, setMode } = useViewMode(slug)
   const { sort, setSort } = useSortConfig(slug)
-  const { filters, setFilters } = usePersistedFilters(slug)
+  const { expression, setExpression } = usePersistedFilters(slug)
+  const { groupFieldId, setGroupField } = useBoardGrouping(slug)
 
   const type = useMemo(
     () => types.find((t) => t.slug === slug),
-    [types, slug]
+    [types, slug],
+  )
+
+  const { views, createView, updateView, deleteView } = useSavedViews(type?.id)
+
+  const handleApplyView = useCallback(
+    (newExpression: FilterExpression, newSort: SortConfig, newMode: ViewMode, newGroupFieldId: string | null) => {
+      setExpression(newExpression)
+      setSort(newSort)
+      setMode(newMode)
+      setGroupField(newGroupFieldId)
+    },
+    [setExpression, setSort, setMode, setGroupField],
   )
 
   const { objects, isLoading: objectsLoading } = useObjects(
-    type ? { typeId: type.id, isDeleted: false } : { typeId: '__none__', isDeleted: false }
+    type ? { typeId: type.id, isDeleted: false } : { typeId: '__none__', isDeleted: false },
   )
 
   const rawObjects = useMemo(
@@ -46,6 +66,20 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   const objectIds = useMemo(() => rawObjects.map((o) => o.id), [rawObjects])
   const { tagsByObject } = useObjectTagsBatch(objectIds)
   const { tags } = useTags()
+  const { relationsByObject } = useAllRelations()
+
+  const objectTypeByObjectId = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const obj of rawObjects) {
+      map[obj.id] = obj.type_id
+    }
+    return map
+  }, [rawObjects])
+
+  const filterCtx = useMemo<FilterContext>(
+    () => ({ tagsByObject, relationsByObject, objectTypeByObjectId }),
+    [tagsByObject, relationsByObject, objectTypeByObjectId],
+  )
 
   const fields = useMemo(
     () => type ? [...type.fields].sort((a, b) => a.sort_order - b.sort_order) : [],
@@ -53,8 +87,8 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   )
 
   const filteredObjects = useMemo(
-    () => filterObjects(rawObjects, filters, tagsByObject),
-    [rawObjects, filters, tagsByObject],
+    () => filterObjects(rawObjects, expression, filterCtx),
+    [rawObjects, expression, filterCtx],
   )
 
   const sortedObjects = useMemo(
@@ -89,7 +123,7 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
 
   const totalCount = rawObjects.length
   const filteredCount = filteredObjects.length
-  const filtered = isFiltered(filters)
+  const filtered = hasActiveFilters(expression)
 
   return (
     <div className="space-y-4">
@@ -98,19 +132,33 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
         <h1 className="text-2xl font-semibold">{type.plural_name}</h1>
         <span className="text-muted-foreground">
           {objectsLoading
-            ? '…'
+            ? '\u2026'
             : filtered
               ? `${filteredCount} of ${totalCount}`
               : totalCount}
         </span>
         <ViewToggle slug={slug} />
+        {type && (
+          <SavedViewSelector
+            typeId={type.id}
+            views={views}
+            expression={expression}
+            sort={sort}
+            viewMode={mode}
+            boardGroupFieldId={groupFieldId}
+            onApplyView={handleApplyView}
+            onCreateView={createView}
+            onUpdateView={updateView}
+            onDeleteView={deleteView}
+          />
+        )}
       </div>
 
       <TypePageFilterBar
         type={type}
         tags={tags}
-        filters={filters}
-        onFiltersChange={setFilters}
+        expression={expression}
+        onExpressionChange={setExpression}
         sort={sort}
         onSortChange={handleSortChange}
         totalCount={totalCount}
@@ -122,7 +170,7 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
           <p>No {type.plural_name.toLowerCase()} match your filters</p>
           <button
             type="button"
-            onClick={() => setFilters(EMPTY_FILTERS)}
+            onClick={() => setExpression(EMPTY_EXPRESSION)}
             className="mt-2 text-sm text-primary underline-offset-4 hover:underline"
           >
             Clear filters

@@ -8,6 +8,7 @@ import { useObjectTypes } from '../hooks/useObjectTypes'
 import { TypeIcon } from './TypeIcon'
 import { ObjectTypeForm } from './ObjectTypeForm'
 import { GlobalTypeImporter } from '@/features/global-types/components/GlobalTypeImporter'
+import { StarterKitBrowser } from '@/features/starter-kits/components/StarterKitBrowser'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
@@ -132,6 +133,7 @@ export function ObjectTypeManager() {
           {types.length} type{types.length !== 1 ? 's' : ''}
         </p>
         <div className="flex items-center gap-2">
+          <StarterKitBrowser />
           {!isGuest && <GlobalTypeImporter />}
           <Button onClick={() => setIsCreating(true)}>
             <PlusIcon className="size-4" />
