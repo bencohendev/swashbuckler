@@ -139,6 +139,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [First-Use Tutorial](features/first-use-tutorial.md) | Onboarding walkthrough for new users |
 | [API Documentation](features/api-documentation.md) | Internal API documentation with architecture diagrams |
 | [Image Resize](features/image-resize.md) | Drag-handle resize for inline editor images |
+| [Account-Level Themes](features/account-level-themes.md) | Dedicated settings page for custom theme creation/management, selection-only Appearance page |
 
 
 ## Planned Features
@@ -146,7 +147,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
-| [Account-Level Themes](features/account-level-themes.md) | Move custom theme creation to Account Settings |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
 | [Type Starter Kits](features/type-starter-kits.md) | Pre-built type collections (RP, recipes, note-taking, etc.) |
