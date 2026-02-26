@@ -28,6 +28,7 @@ export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
   const themes = useCustomThemeStore(s => s.themes)
   const spaceThemes = useCustomThemeStore(s => s.spaceThemes)
   const setSpaceTheme = useCustomThemeStore(s => s.setSpaceTheme)
+  const togglePreset = useCustomThemeStore(s => s.togglePreset)
   const deleteTheme = useCustomThemeStore(s => s.deleteTheme)
   const { space } = useCurrentSpace()
   const [mounted, setMounted] = useState(false)
@@ -50,7 +51,7 @@ export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
 
   function handlePresetTheme(presetId: string) {
     if (!space) return
-    setSpaceTheme(space.id, { type: 'preset', presetId })
+    togglePreset(space.id, presetId)
   }
 
   return (
@@ -92,10 +93,13 @@ export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
       {/* Preset themes */}
       <div>
         <h3 className="mb-2 text-sm font-medium">Preset Themes</h3>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Preset themes add decorative styling on top of your light or dark theme.
+        </p>
         <div className="grid gap-3 sm:grid-cols-3">
           {THEME_PRESETS.map(preset => {
             const Icon = PRESET_ICONS[preset.icon] ?? SwordsIcon
-            const isActive = mounted && assignment?.type === 'preset' && assignment.presetId === preset.id
+            const isActive = mounted && assignment?.type === 'default' && assignment.presetId === preset.id
             return (
               <button
                 key={preset.id}
