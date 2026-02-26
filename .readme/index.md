@@ -144,6 +144,14 @@ Dual-storage architecture with a `DataClient` interface:
 | First use tutorial | Onboarding walkthrough for new users |
 | Block side menus | Notion-style block menus to insert blocks above/below — escape hatch for trapped blocks (private, code, table) |
 | API documentation | API documentation with diagrams |
+| Saved views and filters | Save current filter/sort configuration as named views on type pages; switch between saved views |
+| Resize images in editor | Drag handles or resize controls on images in the block editor |
+| Theme builder at account level | Move theme builder out of space settings into account-level settings; add a dedicated link in the account sub-header |
+| Edit template content | Full template editing (content, properties, icon, cover) — not just name. Backend already supports `UpdateTemplateInput` with all fields; needs UI |
+| Templates page rethink | If full template editing is added, keep the page as an editing hub. If not, consider removing it (templates are already manageable inline in type settings) |
+| Type packs | Pre-built sets of types for common use cases: TTRPGs (Character, Session, Location, Item), note-taking (Meeting Notes, Journal, Reading List), recipes (Recipe, Ingredient, Meal Plan), etc. |
+| Sharing card UI redesign | Revisit the sharing dialog/card UI for better usability |
+| Nested entries | Drag-to-nest entries in sidebar (3 levels max). DB `parent_id` column exists; needs sidebar drag UX and hierarchical rendering |
 
 ## Bugs
 
