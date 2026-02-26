@@ -1,6 +1,6 @@
 ---
 title: Filtering & Sorting
-description: Filter entries by any property and sort by any field across all type page views.
+description: Filter entries by any property with rich operators, OR logic via filter groups, relation filters, and system date filtering.
 ---
 
 ## Overview
@@ -9,37 +9,69 @@ Every [type page](/docs/type-pages) supports filtering and sorting. Filters narr
 
 ## Filtering
 
-Click the **Filter** button at the top of a type page to open the filter popover. A badge shows how many active filters are applied.
+Click the **Filter** button at the top of a type page to open the filter builder. A badge shows how many active filter conditions are applied.
 
-{/* screenshot: Filter popover with multiple property filters configured */}
+\{/* screenshot: Filter builder with Notion-style condition rows */\}
 
-### Filter Types
+### Filter Builder
 
-Filters are available for every property type on the current type:
+The filter builder uses a row-based interface. Each row is a single filter condition with three parts:
 
-| Property Type | Filter UI | Behavior |
-|---------------|-----------|----------|
-| **Select** | Checkboxes for each option | Shows entries matching any checked option (OR logic) |
-| **Multi-select** | Checkboxes for each option | Shows entries where any selected option is present (OR logic) |
-| **Checkbox** | Three options: Any / Yes / No | Filters by checked state |
-| **Tags** | Checkboxes for each tag | Shows entries with any checked tag (OR logic) |
-| **Date** | From / To date pickers | Shows entries within the date range (inclusive) |
-| **Number** | Min / Max inputs | Shows entries within the number range (inclusive) |
-| **Text** | Text input | Shows entries where the field contains the substring (case-insensitive) |
-| **URL** | Text input | Shows entries where the URL contains the substring (case-insensitive) |
+1. **Field** — what to filter on (Title, any custom property, Tags, Created, Updated, or Relations)
+2. **Operator** — how to compare (contains, equals, is before, etc.)
+3. **Value** — what to compare against (text, number, date, tag, entry, or type)
 
-### Filter Logic
+Click **Add filter group** to create your first filter. Click **Add filter** within a group to add more conditions. Use the **X** button to remove individual conditions.
 
-- **Between different properties**: filters use **AND** logic — an entry must match all active filters to appear
-- **Within a single select/multi-select/tags filter**: options use **OR** logic — matching any checked option is sufficient
+### Filter Types and Operators
+
+Each field type supports specific operators:
+
+| Field Type | Operators |
+|---|---|
+| **Text / URL / Title** | contains, does not contain, equals, does not equal, starts with, ends with, is empty, is not empty |
+| **Number** | = , \u2260 , > , < , \u2265 , \u2264 , is empty, is not empty |
+| **Date / Created / Updated** | is, is before, is after, is on or before, is on or after, is between, is empty, is not empty |
+| **Select** | is, is not, is empty, is not empty |
+| **Multi-select** | contains, does not contain, is empty, is not empty |
+| **Checkbox** | is checked, is not checked |
+| **Tags** | contains, does not contain, has no tags, has tags |
+| **Relations** | links to, links to type, has links, has no links |
+
+Changing the field resets the operator to the default for that type and clears the value.
+
+### Filter Groups (OR Logic)
+
+Filter conditions within the same group use **AND** logic — an entry must match every condition in the group. To create **OR** logic, add multiple filter groups using the **Add filter group** button.
+
+Groups are separated by an **or** divider. An entry appears if it matches **any** group (OR between groups) where it matches **all** conditions in that group (AND within groups).
+
+**Example:** To show entries that are either "active" status OR have the "urgent" tag:
+1. Create a group with condition: Status is "active"
+2. Add another filter group with condition: Tags contains "urgent"
+
+### System Dates
+
+**Created** and **Updated** are available as filterable fields with all date operators. These filter on the entry's `created_at` and `updated_at` timestamps.
+
+### Relation Filters
+
+Filter entries based on their links to other entries:
+
+| Operator | Behavior |
+|---|---|
+| **links to** | Entry has a relation (link or mention) to a specific entry |
+| **links to type** | Entry has a relation to any entry of the selected type |
+| **has links** | Entry has at least one relation |
+| **has no links** | Entry has no relations |
 
 ### Filter Pills
 
-Active filters appear as removable pills below the filter button. Click the **X** on any pill to remove that specific filter. Click **Clear filters** to remove all filters at once.
+Active filters appear as removable pills below the filter bar. Each pill shows the field name, operator, and value (e.g., "Title contains meeting" or "Tags has tags"). Click the **X** on any pill to remove that specific condition. Click **Clear all** inside the filter popover to remove all filters.
 
 When filters are active, the header shows a count like "5 of 12 Tasks" so you always know how many entries are hidden.
 
-{/* screenshot: Filter pills showing active filters with X buttons */}
+\{/* screenshot: Filter pills showing active filter conditions with operator labels */\}
 
 ### Empty Filtered State
 
@@ -69,7 +101,7 @@ The default sort is **Updated** (descending) — most recently edited entries ap
 
 In table view, clicking a column header toggles sort by that column. The current sort column shows a directional arrow. Column header sorts stay in sync with the Sort dropdown — they're two ways to control the same thing.
 
-{/* screenshot: Table view with sort arrow on a column header */}
+\{/* screenshot: Table view with sort arrow on a column header */\}
 
 ## Persistence
 
@@ -79,5 +111,7 @@ Both filter and sort selections are saved per type in your browser's localStorag
 
 - Filter changes are announced via an `aria-live` region (e.g., "Showing 5 of 12 entries")
 - Sort direction is communicated via `aria-sort` attributes on table columns
+- All filter controls (field, operator, value selects) have `aria-label` attributes
 - Filter pills are keyboard-navigable with clear labels
 - The Clear filters link is reachable via keyboard
+- Object search in relation filters supports keyboard navigation (arrow keys + Enter)
