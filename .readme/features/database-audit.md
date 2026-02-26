@@ -321,15 +321,15 @@ Total migration count: 25 (001-025).
 - **S12**: Color regex fixed to only allow valid CSS hex lengths (3, 4, 6, 8)
 - **S16**: `spaces.icon` Zod schema changed to `.nullable()` to match DB
 - **S8**: Removed `is_built_in` from `ObjectType` schema, all code, test fixtures
+- **N5**: Sidebar consolidated from 3 `useObjects` queries to 1, with `useMemo` derivations for type sections and flat views. Shares cache key with `useNextTitle`.
 
 ### Not Addressed
 
 **Separate features (larger refactors):**
-- **N5** — Sidebar fires 3 overlapping `useObjects` queries; should consolidate to one query and derive subsets client-side
 - **N7** — Content search fetches 200 full objects for client-side matching; should use server-side `tsvector` search
 
 **Performance at scale (acceptable now, revisit under load):**
-- **N4/R3** — `is_object_excluded()` RLS function called per-row; consider inlining as `NOT EXISTS` subquery at scale
+- **N4/R3** — `is_object_excluded()` RLS function called per-row. Evaluated inlining as `NOT EXISTS` but deferred: the function is `SECURITY DEFINER` to bypass nested RLS checks on `share_exclusions`/`space_shares`/`spaces`; inlining would subject those subqueries to their own RLS, potentially adding overhead. Partial indexes (migration 026) already improve its performance.
 - **E3** — No size limit on `content`/`properties` JSONB columns; latent performance concern with N7
 
 **Kept as-is (by design):**
