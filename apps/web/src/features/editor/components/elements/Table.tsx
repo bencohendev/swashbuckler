@@ -566,20 +566,24 @@ function TableElementContent({
 
   return (
     <div
-      className="relative -ml-[30px] -mt-[28px] pl-[30px] pt-[28px]"
+      className="relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Column handles — zero-height strip on top border */}
       {!readOnly && tablePath && (
         <div
           contentEditable={false}
-          className={`absolute left-[30px] right-0 top-0 h-[28px] transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+          className={`absolute left-0 right-0 top-0 z-10 h-0 transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         >
           {colPositions.map((col, i) => (
             <div
               key={i}
               className="absolute"
-              style={{ left: col.left + col.width / 2 - 12 }}
+              style={{
+                left: col.left + col.width / 2,
+                transform: 'translate(-50%, -50%)',
+              }}
             >
               <ColumnHandleMenu
                 colIndex={i}
@@ -593,16 +597,20 @@ function TableElementContent({
         </div>
       )}
 
+      {/* Row handles — zero-width strip on left border */}
       {!readOnly && tablePath && (
         <div
           contentEditable={false}
-          className={`absolute left-0 top-[28px] bottom-0 w-[30px] transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+          className={`absolute left-0 top-0 bottom-0 z-10 w-0 transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         >
           {rowPositions.map((row, i) => (
             <div
               key={i}
               className="absolute"
-              style={{ top: row.top + row.height / 2 - 12 }}
+              style={{
+                top: row.top + row.height / 2,
+                transform: 'translate(-50%, -50%)',
+              }}
             >
               <RowHandleMenu
                 rowIndex={i}
