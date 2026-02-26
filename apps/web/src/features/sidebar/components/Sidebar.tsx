@@ -173,13 +173,18 @@ export function Sidebar() {
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects, isLoading: exclusionFilterLoading, isSharedUser } = useExclusionFilter()
-  const { objects, isLoading: objectsLoading, create } = useObjects({
-    parentId: null,
-    isDeleted: false,
-    isArchived: false,
-  })
-  // All non-deleted, non-archived objects — shared with PinnedSection + RecentSection via props
-  const { objects: allObjects } = useObjects({ isDeleted: false, isArchived: false })
+  // Single query for all non-deleted objects — shares cache key with useNextTitle
+  const { objects: allNonDeleted, isLoading: objectsLoading, create } = useObjects({ isDeleted: false })
+  // Root-level, non-archived objects for type sections
+  const objects = useMemo(() =>
+    allNonDeleted.filter(obj => obj.parent_id === null && !obj.is_archived),
+    [allNonDeleted]
+  )
+  // Non-archived objects for flat views (pinned, recent)
+  const allObjects = useMemo(() =>
+    allNonDeleted.filter(obj => !obj.is_archived),
+    [allNonDeleted]
+  )
   const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
   const { pinnedIds } = usePins()
   const { tags } = useTags()
