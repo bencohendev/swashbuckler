@@ -10,9 +10,9 @@ import { CORE_COLOR_KEYS } from '../types'
 interface ThemeCardProps {
   theme: CustomTheme
   isActive: boolean
-  onActivate: (id: string) => void
-  onEdit: (theme: CustomTheme) => void
-  onDelete: (id: string) => void
+  onActivate?: (id: string) => void
+  onEdit?: (theme: CustomTheme) => void
+  onDelete?: (id: string) => void
 }
 
 export function ThemeCard({ theme, isActive, onActivate, onEdit, onDelete }: ThemeCardProps) {
@@ -48,39 +48,47 @@ export function ThemeCard({ theme, isActive, onActivate, onEdit, onDelete }: The
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1">
-        {!isActive && (
-          <Button variant="outline" size="sm" onClick={() => onActivate(theme.id)}>
-            Activate
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => onEdit(theme)}
-          aria-label={`Edit ${theme.name}`}
-        >
-          <PencilIcon />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => setConfirmOpen(true)}
-          aria-label={`Delete ${theme.name}`}
-        >
-          <TrashIcon />
-        </Button>
-      </div>
+      {(onActivate || onEdit || onDelete) && (
+        <div className="flex gap-1">
+          {onActivate && !isActive && (
+            <Button variant="outline" size="sm" onClick={() => onActivate(theme.id)}>
+              Activate
+            </Button>
+          )}
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => onEdit(theme)}
+              aria-label={`Edit ${theme.name}`}
+            >
+              <PencilIcon />
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setConfirmOpen(true)}
+              aria-label={`Delete ${theme.name}`}
+            >
+              <TrashIcon />
+            </Button>
+          )}
+        </div>
+      )}
 
-      <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title="Delete theme"
-        description={`Are you sure you want to delete "${theme.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
-        destructive
-        onConfirm={() => onDelete(theme.id)}
-      />
+      {onDelete && (
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Delete theme"
+          description={`Are you sure you want to delete "${theme.name}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={() => onDelete(theme.id)}
+        />
+      )}
     </div>
   )
 }

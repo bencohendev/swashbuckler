@@ -16,9 +16,10 @@ import { ThemePreview } from './ThemePreview'
 interface ThemeBuilderProps {
   editingTheme?: CustomTheme | null
   onClose: () => void
+  autoAssignSpace?: boolean
 }
 
-export function ThemeBuilder({ editingTheme, onClose }: ThemeBuilderProps) {
+export function ThemeBuilder({ editingTheme, onClose, autoAssignSpace = true }: ThemeBuilderProps) {
   const addTheme = useCustomThemeStore(s => s.addTheme)
   const updateTheme = useCustomThemeStore(s => s.updateTheme)
   const setSpaceTheme = useCustomThemeStore(s => s.setSpaceTheme)
@@ -48,7 +49,7 @@ export function ThemeBuilder({ editingTheme, onClose }: ThemeBuilderProps) {
       updateTheme(editingTheme.id, trimmedName, base, colors)
     } else {
       const theme = addTheme(trimmedName, base, colors)
-      if (space) {
+      if (autoAssignSpace && space) {
         setSpaceTheme(space.id, { type: 'custom', themeId: theme.id })
       }
     }

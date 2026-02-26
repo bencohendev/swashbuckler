@@ -31,7 +31,7 @@ const spaceItems: SettingsItem[] = [
   {
     href: '/settings/appearance',
     label: 'Appearance',
-    description: 'Customize themes and color schemes',
+    description: 'Choose a theme for this space',
     icon: PaletteIcon,
   },
   {
