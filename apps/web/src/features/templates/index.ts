@@ -1,5 +1,7 @@
 export { useTemplates } from './hooks/useTemplates'
+export { useTemplate } from './hooks/useTemplate'
 export { TemplateSelector } from './components/TemplateSelector'
 export { TemplateList } from './components/TemplateList'
+export { TemplateEditor } from './components/TemplateEditor'
 export { SaveAsTemplateDialog } from './components/SaveAsTemplateDialog'
 export { ApplyTemplateDialog } from './components/ApplyTemplateDialog'

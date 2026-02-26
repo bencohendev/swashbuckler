@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { TrashIcon, MoreHorizontalIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FileEditIcon, TrashIcon, MoreHorizontalIcon } from 'lucide-react'
 import { useTemplates } from '../hooks/useTemplates'
 import { useObjectTypes } from '@/features/object-types'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
@@ -20,10 +21,11 @@ import type { Template, ObjectType } from '@/shared/lib/data'
 interface TemplateCardProps {
   template: Template
   objectType?: ObjectType
+  onEdit: (id: string) => void
   onDelete: (id: string) => Promise<void>
 }
 
-function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
+function TemplateCard({ template, objectType, onEdit, onDelete }: TemplateCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
@@ -55,6 +57,10 @@ function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onEdit(template.id)}>
+            <FileEditIcon className="size-4" />
+            Edit Template
+          </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => setConfirmDeleteOpen(true)}>
             <TrashIcon className="size-4" />
             Delete Permanently
@@ -75,6 +81,7 @@ function TemplateCard({ template, objectType, onDelete }: TemplateCardProps) {
 }
 
 export function TemplateList() {
+  const router = useRouter()
   const { templates, isLoading, error, deleteTemplate } = useTemplates()
   const { types } = useObjectTypes()
 
@@ -135,6 +142,7 @@ export function TemplateList() {
                 key={template.id}
                 template={template}
                 objectType={typeMap.get(template.type_id)}
+                onEdit={(id) => router.push(`/templates/${id}`)}
                 onDelete={handleDelete}
               />
             ))}
