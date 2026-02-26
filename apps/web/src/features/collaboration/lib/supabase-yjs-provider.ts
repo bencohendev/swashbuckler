@@ -324,12 +324,23 @@ export class SupabaseYjsProvider implements UnifiedProvider {
     this.broadcast('yjs-update', merged)
   }
 
+  /** Supabase Broadcast has a ~1MB message limit; warn if we're close */
+  private static readonly PAYLOAD_WARN_BYTES = 900_000
+
   private broadcast(type: MessageType, data: Uint8Array): void {
     if (!this.channel || !this.isConnected) return
 
+    const encoded = toBase64(data)
+
+    if (encoded.length > SupabaseYjsProvider.PAYLOAD_WARN_BYTES) {
+      console.warn(
+        `[collab] Large broadcast payload (${(encoded.length / 1024).toFixed(0)}KB) — may exceed Supabase Broadcast limit`
+      )
+    }
+
     const payload: BroadcastPayload = {
       type,
-      data: toBase64(data),
+      data: encoded,
       sender: this.instanceId,
     }
 

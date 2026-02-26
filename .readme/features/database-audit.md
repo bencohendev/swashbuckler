@@ -299,6 +299,10 @@ Total migration count: 25 (001-025).
 - **I7**: Dropped redundant low-selectivity `object_relations_type_idx`
 - **I8**: Replaced full boolean `objects_is_deleted_idx` with partial `WHERE is_deleted = true`
 
+### Migration 028 (`028_value_constraints.sql`)
+- **S10**: CHECK constraint on `objects.title` — max 255 characters
+- **S11**: CHECK constraint on `objects.cover_image` — max 2048 characters
+
 ### Migration 027 (`027_constraints_cleanup.sql`)
 - **S5**: CHECK constraint on `object_relations.relation_type` — `('link', 'mention')`
 - **S9**: CHECK constraint on `saved_views.view_mode` — `('table', 'list', 'card', 'board')`
@@ -322,6 +326,9 @@ Total migration count: 25 (001-025).
 - **S16**: `spaces.icon` Zod schema changed to `.nullable()` to match DB
 - **S8**: Removed `is_built_in` from `ObjectType` schema, all code, test fixtures
 - **N5**: Sidebar consolidated from 3 `useObjects` queries to 1, with `useMemo` derivations for type sections and flat views. Shares cache key with `useNextTitle`.
+- **E4**: Dexie compound operations (type delete, space delete, saved view create/update) wrapped in `database.transaction()` for atomicity
+- **D3**: Replaced `owner_id: 'local'` with `LOCAL_OWNER_ID` UUID constant; Dexie version 13 migration updates existing data
+- **RT3**: Added broadcast payload size warning when approaching Supabase Broadcast ~1MB limit
 
 ### Not Addressed
 
@@ -343,8 +350,4 @@ Total migration count: 25 (001-025).
 - **E5** — Type deletion cascades objects immediately, bypassing soft-delete/trash flow
 
 **Deferred — low value:**
-- **RT2** — Unscoped realtime subscriptions (Supabase's intended pattern)
-- **RT3** — No Yjs broadcast message chunking (unlikely to hit limits)
-- **E4** — Dexie compound operations lack transactions (single-threaded mitigates)
-- **S10/S11** — DB-level length/URL validation (Zod handles; only direct SQL bypasses)
-- **D3** — `owner_id: 'local'` not a valid UUID (works in practice)
+- **RT2** — Unscoped realtime subscriptions (Supabase's intended pattern; scoping requires re-subscribing on space switch)
