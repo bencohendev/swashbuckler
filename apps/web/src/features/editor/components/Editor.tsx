@@ -151,7 +151,7 @@ function SoloEditor({
             <PlateContent
               readOnly={readOnly}
               placeholder={placeholder}
-              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert md:pl-8"
+              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
             />
           </Plate>
 
@@ -367,7 +367,7 @@ function CollaborativeEditor({
             <PlateContent
               readOnly={readOnly}
               placeholder={placeholder}
-              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert md:pl-8"
+              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
             />
             <RemoteCursorOverlay awareness={awareness} doc={doc} />
           </Plate>

@@ -75,7 +75,7 @@ export function BlockGutter({ element }: BlockGutterProps) {
   return (
     <div
       contentEditable={false}
-      className={`absolute -left-8 top-0 flex h-6 items-center transition-opacity duration-150 ${
+      className={`absolute left-0 top-0 flex h-6 items-center transition-opacity duration-150 ${
         isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}
     >

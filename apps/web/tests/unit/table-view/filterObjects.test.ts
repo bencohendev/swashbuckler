@@ -1,432 +1,567 @@
 import { describe, it, expect } from 'vitest'
 import {
   filterObjects,
-  isFiltered,
-  EMPTY_FILTERS,
-  type TypePageFilters,
+  hasActiveFilters,
+  EMPTY_EXPRESSION,
+  type FilterExpression,
+  type FilterContext,
 } from '@/features/table-view/lib/filterObjects'
 import { createMockObject } from '../../fixtures/objects'
 import { createMockTag } from '../../fixtures/tags'
 
-describe('isFiltered', () => {
-  it('returns false for EMPTY_FILTERS', () => {
-    expect(isFiltered(EMPTY_FILTERS)).toBe(false)
+function expr(overrides: Partial<FilterExpression> = {}): FilterExpression {
+  return { ...EMPTY_EXPRESSION, ...overrides }
+}
+
+function withCondition(
+  target: import('@/features/table-view/lib/filterTypes').FilterFieldTarget,
+  operator: string,
+  value: unknown = '',
+  value2?: unknown,
+): FilterExpression {
+  return {
+    search: '',
+    groups: [{
+      id: 'g1',
+      conditions: [{
+        id: 'c1',
+        target,
+        operator,
+        value,
+        value2,
+      }],
+    }],
+  }
+}
+
+const EMPTY_CTX: FilterContext = {
+  tagsByObject: {},
+  relationsByObject: {},
+  objectTypeByObjectId: {},
+}
+
+describe('hasActiveFilters', () => {
+  it('returns false for EMPTY_EXPRESSION', () => {
+    expect(hasActiveFilters(EMPTY_EXPRESSION)).toBe(false)
   })
 
   it('returns true when search is set', () => {
-    expect(isFiltered({ ...EMPTY_FILTERS, search: 'hello' })).toBe(true)
+    expect(hasActiveFilters(expr({ search: 'hello' }))).toBe(true)
   })
 
   it('returns false for whitespace-only search', () => {
-    expect(isFiltered({ ...EMPTY_FILTERS, search: '   ' })).toBe(false)
+    expect(hasActiveFilters(expr({ search: '   ' }))).toBe(false)
   })
 
-  it('returns true when a select filter is set', () => {
-    expect(
-      isFiltered({
-        ...EMPTY_FILTERS,
-        selectFilters: { status: new Set(['active']) },
-      })
-    ).toBe(true)
+  it('returns true when groups have conditions', () => {
+    expect(hasActiveFilters(withCondition({ kind: 'title' }, 'contains', 'x'))).toBe(true)
   })
 
-  it('returns false for empty select filter sets', () => {
-    expect(
-      isFiltered({
-        ...EMPTY_FILTERS,
-        selectFilters: { status: new Set() },
-      })
-    ).toBe(false)
-  })
-
-  it('returns true when a checkbox filter is set', () => {
-    expect(
-      isFiltered({
-        ...EMPTY_FILTERS,
-        checkboxFilters: { done: true },
-      })
-    ).toBe(true)
-  })
-
-  it('returns false when checkbox filter is undefined', () => {
-    expect(
-      isFiltered({
-        ...EMPTY_FILTERS,
-        checkboxFilters: { done: undefined },
-      })
-    ).toBe(false)
-  })
-
-  it('returns true when tag filter is set', () => {
-    expect(
-      isFiltered({
-        ...EMPTY_FILTERS,
-        tagFilter: new Set(['tag-1']),
-      })
-    ).toBe(true)
+  it('returns false for empty groups', () => {
+    expect(hasActiveFilters({ search: '', groups: [{ id: 'g1', conditions: [] }] })).toBe(false)
   })
 })
 
-describe('filterObjects', () => {
-  const obj1 = createMockObject({ title: 'Meeting Notes', properties: { status: 'active', priority: 'high', done: true, category: ['work', 'urgent'] } })
-  const obj2 = createMockObject({ title: 'Shopping List', properties: { status: 'draft', priority: 'low', done: false, category: ['personal'] } })
-  const obj3 = createMockObject({ title: 'Project Plan', properties: { status: 'active', priority: 'medium', done: false, category: ['work'] } })
+describe('filterObjects — search', () => {
+  const obj1 = createMockObject({ title: 'Meeting Notes' })
+  const obj2 = createMockObject({ title: 'Shopping List' })
+  const obj3 = createMockObject({ title: 'Project Plan' })
+  const objects = [obj1, obj2, obj3]
+
+  it('returns all objects when no filters active', () => {
+    const result = filterObjects(objects, EMPTY_EXPRESSION, EMPTY_CTX)
+    expect(result).toBe(objects)
+  })
+
+  it('filters by title search (case-insensitive)', () => {
+    const result = filterObjects(objects, expr({ search: 'meeting' }), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Meeting Notes')
+  })
+
+  it('search matches partial titles', () => {
+    const result = filterObjects(objects, expr({ search: 'plan' }), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Project Plan')
+  })
+})
+
+describe('filterObjects — text operators', () => {
+  const NOTES_FIELD = crypto.randomUUID()
+  const objA = createMockObject({ title: 'A', properties: { [NOTES_FIELD]: 'Main project for Q3' } })
+  const objB = createMockObject({ title: 'B', properties: { [NOTES_FIELD]: 'Resolved quickly' } })
+  const objEmpty = createMockObject({ title: 'C', properties: {} })
+  const objects = [objA, objB, objEmpty]
+
+  it('contains (case-insensitive)', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'contains', 'PROJECT'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('A')
+  })
+
+  it('does_not_contain', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'does_not_contain', 'project'), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['B', 'C'])
+  })
+
+  it('equals', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'equals', 'Resolved quickly'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('B')
+  })
+
+  it('not_equals', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'not_equals', 'Resolved quickly'), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['A', 'C'])
+  })
+
+  it('starts_with', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'starts_with', 'main'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('A')
+  })
+
+  it('ends_with', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'ends_with', 'Q3'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('A')
+  })
+
+  it('is_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'is_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('C')
+  })
+
+  it('is_not_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: NOTES_FIELD }, 'is_not_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(2)
+  })
+})
+
+describe('filterObjects — title as filterable field', () => {
+  const obj1 = createMockObject({ title: 'Apple Pie Recipe' })
+  const obj2 = createMockObject({ title: 'Banana Bread' })
+  const objects = [obj1, obj2]
+
+  it('title contains', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'title' }, 'contains', 'apple'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Apple Pie Recipe')
+  })
+
+  it('title starts_with', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'title' }, 'starts_with', 'banana'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Banana Bread')
+  })
+
+  it('title is_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'title' }, 'is_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(0)
+  })
+})
+
+describe('filterObjects — number operators', () => {
+  const SCORE = crypto.randomUUID()
+  const objA = createMockObject({ title: 'Low', properties: { [SCORE]: 10 } })
+  const objB = createMockObject({ title: 'Mid', properties: { [SCORE]: 50 } })
+  const objC = createMockObject({ title: 'High', properties: { [SCORE]: 95 } })
+  const objEmpty = createMockObject({ title: 'None', properties: {} })
+  const objects = [objA, objB, objC, objEmpty]
+
+  it('eq', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'eq', 50), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Mid')
+  })
+
+  it('neq', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'neq', 50), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['High', 'Low'])
+  })
+
+  it('gt', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'gt', 50), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('High')
+  })
+
+  it('lt', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'lt', 50), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Low')
+  })
+
+  it('gte', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'gte', 50), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['High', 'Mid'])
+  })
+
+  it('lte', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'lte', 50), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['Low', 'Mid'])
+  })
+
+  it('is_empty excludes missing values', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'is_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('None')
+  })
+
+  it('is_not_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: SCORE }, 'is_not_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(3)
+  })
+})
+
+describe('filterObjects — date operators', () => {
+  const DUE = crypto.randomUUID()
+  const objA = createMockObject({ title: 'Early', properties: { [DUE]: '2025-03-01' } })
+  const objB = createMockObject({ title: 'Middle', properties: { [DUE]: '2025-06-15' } })
+  const objC = createMockObject({ title: 'Late', properties: { [DUE]: '2025-09-30' } })
+  const objEmpty = createMockObject({ title: 'No date', properties: {} })
+  const objects = [objA, objB, objC, objEmpty]
+
+  it('is', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is', '2025-06-15'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Middle')
+  })
+
+  it('is_before', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is_before', '2025-06-15'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Early')
+  })
+
+  it('is_after', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is_after', '2025-06-15'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Late')
+  })
+
+  it('is_on_or_before', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is_on_or_before', '2025-06-15'), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['Early', 'Middle'])
+  })
+
+  it('is_on_or_after', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is_on_or_after', '2025-06-15'), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['Late', 'Middle'])
+  })
+
+  it('is_between', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is_between', '2025-04-01', '2025-07-01'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Middle')
+  })
+
+  it('is_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('No date')
+  })
+
+  it('is_not_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DUE }, 'is_not_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(3)
+  })
+})
+
+describe('filterObjects — system date fields', () => {
+  const objOld = createMockObject({ title: 'Old', created_at: '2024-01-15T00:00:00Z', updated_at: '2024-02-01T00:00:00Z' })
+  const objNew = createMockObject({ title: 'New', created_at: '2025-06-01T00:00:00Z', updated_at: '2025-06-15T00:00:00Z' })
+  const objects = [objOld, objNew]
+
+  it('created_at is_after', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'system', field: 'created_at' }, 'is_after', '2025-01-01'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('New')
+  })
+
+  it('updated_at is_before', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'system', field: 'updated_at' }, 'is_before', '2025-01-01'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Old')
+  })
+
+  it('created_at is_between', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'system', field: 'created_at' }, 'is_between', '2024-01-01', '2024-12-31'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Old')
+  })
+})
+
+describe('filterObjects — select operators', () => {
+  const STATUS = crypto.randomUUID()
+  const objA = createMockObject({ title: 'Active', properties: { [STATUS]: 'active' } })
+  const objB = createMockObject({ title: 'Draft', properties: { [STATUS]: 'draft' } })
+  const objC = createMockObject({ title: 'Empty', properties: {} })
+  const objects = [objA, objB, objC]
+
+  it('is', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: STATUS }, 'is', 'active'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Active')
+  })
+
+  it('is_not', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: STATUS }, 'is_not', 'active'), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['Draft', 'Empty'])
+  })
+
+  it('is_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: STATUS }, 'is_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Empty')
+  })
+
+  it('is_not_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: STATUS }, 'is_not_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(2)
+  })
+})
+
+describe('filterObjects — multi_select operators', () => {
+  const CAT = crypto.randomUUID()
+  const objA = createMockObject({ title: 'Both', properties: { [CAT]: ['work', 'urgent'] } })
+  const objB = createMockObject({ title: 'Personal', properties: { [CAT]: ['personal'] } })
+  const objC = createMockObject({ title: 'None', properties: { [CAT]: [] } })
+  const objects = [objA, objB, objC]
+
+  it('contains', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: CAT }, 'contains', 'urgent'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Both')
+  })
+
+  it('does_not_contain', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: CAT }, 'does_not_contain', 'urgent'), EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['None', 'Personal'])
+  })
+
+  it('is_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: CAT }, 'is_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('None')
+  })
+
+  it('is_not_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: CAT }, 'is_not_empty'), EMPTY_CTX)
+    expect(result).toHaveLength(2)
+  })
+})
+
+describe('filterObjects — checkbox operators', () => {
+  const DONE = crypto.randomUUID()
+  const objA = createMockObject({ title: 'Checked', properties: { [DONE]: true } })
+  const objB = createMockObject({ title: 'Unchecked', properties: { [DONE]: false } })
+  const objects = [objA, objB]
+
+  it('is_checked', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DONE }, 'is_checked'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Checked')
+  })
+
+  it('is_not_checked', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'property', fieldId: DONE }, 'is_not_checked'), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Unchecked')
+  })
+})
+
+describe('filterObjects — tag operators', () => {
+  const obj1 = createMockObject({ title: 'Tagged' })
+  const obj2 = createMockObject({ title: 'Other Tag' })
+  const obj3 = createMockObject({ title: 'No Tags' })
   const objects = [obj1, obj2, obj3]
 
   const tag1 = createMockTag({ name: 'important' })
   const tag2 = createMockTag({ name: 'review' })
 
-  const tagsByObject: Record<string, typeof tag1[]> = {
-    [obj1.id]: [tag1, tag2],
-    [obj2.id]: [tag2],
-    [obj3.id]: [],
+  const ctx: FilterContext = {
+    tagsByObject: {
+      [obj1.id]: [tag1, tag2],
+      [obj2.id]: [tag2],
+      [obj3.id]: [],
+    },
+    relationsByObject: {},
+    objectTypeByObjectId: {},
   }
 
-  it('returns all objects when no filters are active', () => {
-    const result = filterObjects(objects, EMPTY_FILTERS, {})
-    expect(result).toBe(objects) // same reference
-  })
-
-  it('filters by title search (case-insensitive)', () => {
-    const filters: TypePageFilters = { ...EMPTY_FILTERS, search: 'meeting' }
-    const result = filterObjects(objects, filters, {})
+  it('contains', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'tag' }, 'contains', tag1.id), ctx)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Meeting Notes')
+    expect(result[0].title).toBe('Tagged')
   })
 
-  it('search is case-insensitive', () => {
-    const filters: TypePageFilters = { ...EMPTY_FILTERS, search: 'SHOPPING' }
-    const result = filterObjects(objects, filters, {})
+  it('does_not_contain', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'tag' }, 'does_not_contain', tag1.id), ctx)
+    expect(result.map((o) => o.title).sort()).toEqual(['No Tags', 'Other Tag'])
+  })
+
+  it('is_empty (has no tags)', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'tag' }, 'is_empty'), ctx)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Shopping List')
+    expect(result[0].title).toBe('No Tags')
   })
 
-  it('search matches partial titles', () => {
-    const filters: TypePageFilters = { ...EMPTY_FILTERS, search: 'plan' }
-    const result = filterObjects(objects, filters, {})
-    expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Project Plan')
-  })
-
-  it('filters by select field', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: { status: new Set(['active']) },
-    }
-    const result = filterObjects(objects, filters, {})
+  it('is_not_empty (has tags)', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'tag' }, 'is_not_empty'), ctx)
     expect(result).toHaveLength(2)
-    expect(result.map((o) => o.title).sort()).toEqual(['Meeting Notes', 'Project Plan'])
+  })
+})
+
+describe('filterObjects — relation operators', () => {
+  const TYPE_A = crypto.randomUUID()
+  const TYPE_B = crypto.randomUUID()
+  const obj1 = createMockObject({ title: 'Has Links', type_id: TYPE_A })
+  const obj2 = createMockObject({ title: 'Target', type_id: TYPE_B })
+  const obj3 = createMockObject({ title: 'No Links', type_id: TYPE_A })
+  const objects = [obj1, obj2, obj3]
+
+  const relation = {
+    id: crypto.randomUUID(),
+    source_id: obj1.id,
+    target_id: obj2.id,
+    relation_type: 'link',
+    source_property: null,
+    context: null,
+    created_at: new Date().toISOString(),
+  }
+
+  const ctx: FilterContext = {
+    tagsByObject: {},
+    relationsByObject: {
+      [obj1.id]: [relation],
+      [obj2.id]: [relation],
+    },
+    objectTypeByObjectId: {
+      [obj1.id]: TYPE_A,
+      [obj2.id]: TYPE_B,
+      [obj3.id]: TYPE_A,
+    },
+  }
+
+  it('has_links', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'relation' }, 'has_links'), ctx)
+    expect(result.map((o) => o.title).sort()).toEqual(['Has Links', 'Target'])
   })
 
-  it('filters by select field with multiple allowed values', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: { priority: new Set(['high', 'low']) },
-    }
-    const result = filterObjects(objects, filters, {})
-    expect(result).toHaveLength(2)
-    expect(result.map((o) => o.title).sort()).toEqual(['Meeting Notes', 'Shopping List'])
-  })
-
-  it('filters by multi_select field (at least one match)', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: { category: new Set(['urgent']) },
-    }
-    const result = filterObjects(objects, filters, {})
+  it('has_no_links', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'relation' }, 'has_no_links'), ctx)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Meeting Notes')
+    expect(result[0].title).toBe('No Links')
   })
 
-  it('multi_select matches any value in the array', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: { category: new Set(['personal']) },
-    }
-    const result = filterObjects(objects, filters, {})
+  it('links_to specific object', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'relation' }, 'links_to', obj2.id), ctx)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Shopping List')
+    expect(result[0].title).toBe('Has Links')
   })
 
-  it('filters by checkbox true', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      checkboxFilters: { done: true },
-    }
-    const result = filterObjects(objects, filters, {})
+  it('links_to_type', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'relation' }, 'links_to_type', TYPE_B), ctx)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Meeting Notes')
+    expect(result[0].title).toBe('Has Links')
   })
+})
 
-  it('filters by checkbox false', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      checkboxFilters: { done: false },
-    }
-    const result = filterObjects(objects, filters, {})
-    expect(result).toHaveLength(2)
-    expect(result.map((o) => o.title).sort()).toEqual(['Project Plan', 'Shopping List'])
-  })
+describe('filterObjects — AND within groups', () => {
+  const STATUS = crypto.randomUUID()
+  const DONE = crypto.randomUUID()
+  const obj1 = createMockObject({ title: 'Active Done', properties: { [STATUS]: 'active', [DONE]: true } })
+  const obj2 = createMockObject({ title: 'Active Undone', properties: { [STATUS]: 'active', [DONE]: false } })
+  const obj3 = createMockObject({ title: 'Draft Done', properties: { [STATUS]: 'draft', [DONE]: true } })
+  const objects = [obj1, obj2, obj3]
 
-  it('checkbox undefined means any value', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      checkboxFilters: { done: undefined },
+  it('both conditions must match within a group', () => {
+    const expression: FilterExpression = {
+      search: '',
+      groups: [{
+        id: 'g1',
+        conditions: [
+          { id: 'c1', target: { kind: 'property', fieldId: STATUS }, operator: 'is', value: 'active' },
+          { id: 'c2', target: { kind: 'property', fieldId: DONE }, operator: 'is_checked', value: '' },
+        ],
+      }],
     }
-    const result = filterObjects(objects, filters, {})
-    expect(result).toBe(objects) // no filter active
-  })
-
-  it('filters by tags', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      tagFilter: new Set([tag1.id]),
-    }
-    const result = filterObjects(objects, filters, tagsByObject)
+    const result = filterObjects(objects, expression, EMPTY_CTX)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Meeting Notes')
+    expect(result[0].title).toBe('Active Done')
   })
+})
 
-  it('tag filter matches if any tag matches', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      tagFilter: new Set([tag2.id]),
+describe('filterObjects — OR between groups', () => {
+  const STATUS = crypto.randomUUID()
+  const obj1 = createMockObject({ title: 'Active', properties: { [STATUS]: 'active' } })
+  const obj2 = createMockObject({ title: 'Draft', properties: { [STATUS]: 'draft' } })
+  const obj3 = createMockObject({ title: 'Archived', properties: { [STATUS]: 'archived' } })
+  const objects = [obj1, obj2, obj3]
+
+  it('matches if any group matches', () => {
+    const expression: FilterExpression = {
+      search: '',
+      groups: [
+        {
+          id: 'g1',
+          conditions: [{ id: 'c1', target: { kind: 'property', fieldId: STATUS }, operator: 'is', value: 'active' }],
+        },
+        {
+          id: 'g2',
+          conditions: [{ id: 'c2', target: { kind: 'property', fieldId: STATUS }, operator: 'is', value: 'draft' }],
+        },
+      ],
     }
-    const result = filterObjects(objects, filters, tagsByObject)
-    expect(result).toHaveLength(2)
-    expect(result.map((o) => o.title).sort()).toEqual(['Meeting Notes', 'Shopping List'])
+    const result = filterObjects(objects, expression, EMPTY_CTX)
+    expect(result.map((o) => o.title).sort()).toEqual(['Active', 'Draft'])
   })
+})
 
-  it('excludes objects with no tags when tag filter is set', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      tagFilter: new Set([tag1.id]),
-    }
-    const result = filterObjects(objects, filters, tagsByObject)
-    expect(result.find((o) => o.id === obj3.id)).toBeUndefined()
-  })
+describe('filterObjects — search + expression combination', () => {
+  const obj1 = createMockObject({ title: 'Meeting Notes', properties: { done: true } })
+  const obj2 = createMockObject({ title: 'Meeting Plan', properties: { done: false } })
+  const obj3 = createMockObject({ title: 'Shopping List', properties: { done: true } })
+  const objects = [obj1, obj2, obj3]
 
-  it('combines filters with AND logic', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
+  it('search AND groups are combined', () => {
+    const expression: FilterExpression = {
       search: 'meeting',
-      selectFilters: { status: new Set(['active']) },
-      checkboxFilters: { done: true },
-      tagFilter: new Set([tag1.id]),
+      groups: [{
+        id: 'g1',
+        conditions: [{ id: 'c1', target: { kind: 'property', fieldId: 'done' }, operator: 'is_checked', value: '' }],
+      }],
     }
-    const result = filterObjects(objects, filters, tagsByObject)
+    const result = filterObjects(objects, expression, EMPTY_CTX)
     expect(result).toHaveLength(1)
     expect(result[0].title).toBe('Meeting Notes')
   })
+})
 
-  it('AND logic excludes when any filter fails', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      search: 'shopping',
-      selectFilters: { status: new Set(['active']) },
-    }
-    // Shopping List has status 'draft', not 'active'
-    const result = filterObjects(objects, filters, {})
+describe('filterObjects — empty/null handling', () => {
+  it('handles objects with missing properties gracefully', () => {
+    const obj = createMockObject({ title: 'Bare', properties: {} })
+    const result = filterObjects([obj], withCondition({ kind: 'property', fieldId: 'nonexistent' }, 'contains', 'x'), EMPTY_CTX)
     expect(result).toHaveLength(0)
   })
 
-  it('handles objects with missing properties', () => {
-    const objNoProps = createMockObject({ title: 'Bare Object', properties: {} })
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: { status: new Set(['active']) },
-    }
-    const result = filterObjects([objNoProps], filters, {})
-    expect(result).toHaveLength(0)
-  })
-
-  it('handles objects with null properties', () => {
-    const objNullProps = createMockObject({ title: 'Null Props', properties: { status: null } })
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: { status: new Set(['active']) },
-    }
-    const result = filterObjects([objNullProps], filters, {})
-    expect(result).toHaveLength(0)
-  })
-
-  it('handles empty select filter options (ignored)', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      selectFilters: { status: new Set() },
-    }
-    const result = filterObjects(objects, filters, {})
-    expect(result).toBe(objects) // no filter active
-  })
-
-  it('handles objects missing from tagsByObject', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      tagFilter: new Set([tag1.id]),
-    }
-    // empty tagsByObject — no object has tags
-    const result = filterObjects(objects, filters, {})
-    expect(result).toHaveLength(0)
-  })
-})
-
-describe('filterObjects — date filters', () => {
-  const DUE_FIELD = 'due-date-field'
-  const objA = createMockObject({ title: 'Early', properties: { [DUE_FIELD]: '2025-03-01' } })
-  const objB = createMockObject({ title: 'Middle', properties: { [DUE_FIELD]: '2025-06-15' } })
-  const objC = createMockObject({ title: 'Late', properties: { [DUE_FIELD]: '2025-09-30' } })
-  const objEmpty = createMockObject({ title: 'No date', properties: {} })
-  const dateObjects = [objA, objB, objC, objEmpty]
-
-  it('filters by "from" date only', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      dateFilters: { [DUE_FIELD]: { from: '2025-06-01' } },
-    }
-    const result = filterObjects(dateObjects, filters, {})
-    expect(result.map((o) => o.title).sort()).toEqual(['Late', 'Middle'])
-  })
-
-  it('filters by "to" date only', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      dateFilters: { [DUE_FIELD]: { to: '2025-06-15' } },
-    }
-    const result = filterObjects(dateObjects, filters, {})
-    expect(result.map((o) => o.title).sort()).toEqual(['Early', 'Middle'])
-  })
-
-  it('filters by date range (from + to)', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      dateFilters: { [DUE_FIELD]: { from: '2025-04-01', to: '2025-07-01' } },
-    }
-    const result = filterObjects(dateObjects, filters, {})
+  it('handles objects with null property values', () => {
+    const obj = createMockObject({ title: 'Null', properties: { field: null } })
+    const result = filterObjects([obj], withCondition({ kind: 'property', fieldId: 'field' }, 'is_empty'), EMPTY_CTX)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Middle')
   })
 
-  it('excludes objects with no date value', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      dateFilters: { [DUE_FIELD]: { from: '2025-01-01' } },
-    }
-    const result = filterObjects(dateObjects, filters, {})
-    expect(result.find((o) => o.title === 'No date')).toBeUndefined()
-  })
-})
-
-describe('filterObjects — number filters', () => {
-  const SCORE_FIELD = 'score-field'
-  const objA = createMockObject({ title: 'Low', properties: { [SCORE_FIELD]: 10 } })
-  const objB = createMockObject({ title: 'Mid', properties: { [SCORE_FIELD]: 50 } })
-  const objC = createMockObject({ title: 'High', properties: { [SCORE_FIELD]: 95 } })
-  const objEmpty = createMockObject({ title: 'No score', properties: {} })
-  const numObjects = [objA, objB, objC, objEmpty]
-
-  it('filters by "min" only', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      numberFilters: { [SCORE_FIELD]: { min: 50 } },
-    }
-    const result = filterObjects(numObjects, filters, {})
-    expect(result.map((o) => o.title).sort()).toEqual(['High', 'Mid'])
-  })
-
-  it('filters by "max" only', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      numberFilters: { [SCORE_FIELD]: { max: 50 } },
-    }
-    const result = filterObjects(numObjects, filters, {})
-    expect(result.map((o) => o.title).sort()).toEqual(['Low', 'Mid'])
-  })
-
-  it('filters by number range (min + max)', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      numberFilters: { [SCORE_FIELD]: { min: 20, max: 60 } },
-    }
-    const result = filterObjects(numObjects, filters, {})
+  it('empty string is considered empty', () => {
+    const obj = createMockObject({ title: 'Empty', properties: { field: '' } })
+    const result = filterObjects([obj], withCondition({ kind: 'property', fieldId: 'field' }, 'is_empty'), EMPTY_CTX)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Mid')
   })
 
-  it('excludes objects with no number value', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      numberFilters: { [SCORE_FIELD]: { min: 0 } },
-    }
-    const result = filterObjects(numObjects, filters, {})
-    expect(result.find((o) => o.title === 'No score')).toBeUndefined()
-  })
-})
-
-describe('filterObjects — text filters', () => {
-  const NOTES_FIELD = 'notes-field'
-  const URL_FIELD = 'url-field'
-  const objA = createMockObject({ title: 'A', properties: { [NOTES_FIELD]: 'Main project for Q3', [URL_FIELD]: 'https://example.com/dash' } })
-  const objB = createMockObject({ title: 'B', properties: { [NOTES_FIELD]: 'Resolved quickly', [URL_FIELD]: 'https://github.com/issues' } })
-  const objEmpty = createMockObject({ title: 'C', properties: {} })
-  const textObjects = [objA, objB, objEmpty]
-
-  it('filters by text field (case-insensitive)', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      textFilters: { [NOTES_FIELD]: 'PROJECT' },
-    }
-    const result = filterObjects(textObjects, filters, {})
+  it('empty array is considered empty', () => {
+    const obj = createMockObject({ title: 'EmptyArr', properties: { field: [] } })
+    const result = filterObjects([obj], withCondition({ kind: 'property', fieldId: 'field' }, 'is_empty'), EMPTY_CTX)
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('A')
-  })
-
-  it('filters by URL field (case-insensitive substring)', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      textFilters: { [URL_FIELD]: 'github' },
-    }
-    const result = filterObjects(textObjects, filters, {})
-    expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('B')
-  })
-
-  it('excludes objects with empty text value', () => {
-    const filters: TypePageFilters = {
-      ...EMPTY_FILTERS,
-      textFilters: { [NOTES_FIELD]: 'anything' },
-    }
-    const result = filterObjects(textObjects, filters, {})
-    expect(result.find((o) => o.title === 'C')).toBeUndefined()
-  })
-})
-
-describe('isFiltered — new filter types', () => {
-  it('returns true when dateFilters have from', () => {
-    expect(
-      isFiltered({ ...EMPTY_FILTERS, dateFilters: { f: { from: '2025-01-01' } } })
-    ).toBe(true)
-  })
-
-  it('returns true when numberFilters have min', () => {
-    expect(
-      isFiltered({ ...EMPTY_FILTERS, numberFilters: { f: { min: 5 } } })
-    ).toBe(true)
-  })
-
-  it('returns true when textFilters have value', () => {
-    expect(
-      isFiltered({ ...EMPTY_FILTERS, textFilters: { f: 'query' } })
-    ).toBe(true)
-  })
-
-  it('returns false for empty new filter fields', () => {
-    expect(
-      isFiltered({
-        ...EMPTY_FILTERS,
-        dateFilters: { f: {} },
-        numberFilters: { f: {} },
-        textFilters: { f: '' },
-      })
-    ).toBe(false)
   })
 })
