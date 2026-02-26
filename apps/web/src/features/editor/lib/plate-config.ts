@@ -62,7 +62,37 @@ export const editorPlugins = [
       },
     },
   }),
-  LinkPlugin,
+  LinkPlugin.overrideEditor(({ editor, tf: { insertText, insertData, insertBreak } }) => ({
+    transforms: {
+      insertText(text, options) {
+        insertText(text, options);
+        // withLink wraps URL text on space — restore DOM focus after restructuring
+        if (text === ' ' && editor.selection) {
+          setTimeout(() => {
+            editor.tf.focus({ at: editor.selection ?? undefined });
+          }, 0);
+        }
+      },
+      insertData(data) {
+        insertData(data);
+        // Pasting a URL also triggers link wrapping
+        if (editor.selection) {
+          setTimeout(() => {
+            editor.tf.focus({ at: editor.selection ?? undefined });
+          }, 0);
+        }
+      },
+      insertBreak() {
+        insertBreak();
+        // Enter after a URL also triggers link auto-detection
+        if (editor.selection) {
+          setTimeout(() => {
+            editor.tf.focus({ at: editor.selection ?? undefined });
+          }, 0);
+        }
+      },
+    },
+  })),
 
   // Indentation
   IndentPlugin,

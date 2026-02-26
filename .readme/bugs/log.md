@@ -6,13 +6,13 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
-| Cursor lost after inserting inline link | After inserting an inline link in the editor, the cursor/selection is lost. Likely missing `editor.tf.move()` + focus restoration after link node insertion (see mention insertion pattern for correct approach) |
 | Delete space redirects unnecessarily | Deleting a space always navigates to `/` — should only redirect if the deleted space was the current space. If deleting a different space, stay on current page |
 
 ## Closed
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-25 | Cursor lost after inserting inline link | Override LinkPlugin transforms (insertText, insertData, insertBreak) with deferred focus restoration after withLink's URL auto-wrapping |
 | 2026-02-25 | Sidebar entry reordering slow | Client-side Zustand store (`recentAccess.ts`) tracks access times per space in localStorage; Recent section orders by access time with `updated_at` fallback |
 | 2026-02-25 | Apply Template unavailable in shared spaces | Apply template content through Slate transforms (via `EditorHandle.applyContent`) so changes flow through Y.Doc to collaborators, instead of bypassing Yjs with a direct DB write |
 | 2026-02-25 | Docs reference nested entries | Removed unimplemented nesting section from `entries-and-types.mdx`; nested entries tracked as planned feature |
