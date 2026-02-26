@@ -32,7 +32,7 @@ function DraggableBlockWrapper({ children, element }: BlockWrapperProps) {
   return (
     <div
       ref={previewRef}
-      className={`group relative pl-8${isDragging ? ' opacity-50' : ''}`}
+      className={`group relative pl-11${isDragging ? ' opacity-50' : ''}`}
     >
       <BlockGutter element={element} handleRef={handleRef} />
       {children}

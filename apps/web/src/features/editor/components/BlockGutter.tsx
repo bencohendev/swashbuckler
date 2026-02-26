@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useEditorRef } from '@udecode/plate/react'
 import type { TElement } from '@udecode/plate'
-import { GripVertical, Plus, Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react'
+import { GripVertical, Plus, Copy, Trash2, ArrowUp, ArrowDown, Ellipsis } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -37,26 +37,16 @@ interface BlockGutterProps {
 export function BlockGutter({ element, handleRef }: BlockGutterProps) {
   const editor = useEditorRef()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const gripRef = useRef<HTMLButtonElement>(null)
+  const dragRef = useRef<HTMLButtonElement>(null)
 
-  // Connect the drag handle ref to the grip button
+  // Connect the drag handle ref to the drag grip button
   useEffect(() => {
-    if (!handleRef || !gripRef.current) return
-    handleRef(gripRef.current)
+    if (!handleRef || !dragRef.current) return
+    handleRef(dragRef.current)
     return () => {
       handleRef(null)
     }
   }, [handleRef])
-
-  // Close menu when drag starts from the grip button
-  useEffect(() => {
-    const el = gripRef.current
-    if (!el) return
-
-    const onDragStart = () => setIsMenuOpen(false)
-    el.addEventListener('dragstart', onDragStart)
-    return () => el.removeEventListener('dragstart', onDragStart)
-  }, [])
 
   const getPath = useCallback(() => {
     const index = editor.children.indexOf(element)
@@ -122,19 +112,27 @@ export function BlockGutter({ element, handleRef }: BlockGutterProps) {
   return (
     <div
       contentEditable={false}
-      className={`absolute left-0 top-1 flex h-6 items-center transition-opacity duration-150 ${
+      className={`absolute left-0 top-1 flex h-6 items-center gap-0.5 transition-opacity duration-150 ${
         isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}
     >
+      <button
+        ref={dragRef}
+        type="button"
+        className="flex size-5 cursor-grab items-center justify-center rounded hover:bg-accent"
+        aria-label="Drag to reorder"
+        tabIndex={-1}
+      >
+        <GripVertical className="size-3.5 text-muted-foreground" />
+      </button>
       <DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
         <DropdownMenuTrigger asChild>
           <button
-            ref={gripRef}
             type="button"
-            className="flex size-6 cursor-grab items-center justify-center rounded hover:bg-accent"
+            className="flex size-5 items-center justify-center rounded hover:bg-accent"
             aria-label="Block options"
           >
-            <GripVertical className="size-4 text-muted-foreground" />
+            <Ellipsis className="size-3.5 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="left">
