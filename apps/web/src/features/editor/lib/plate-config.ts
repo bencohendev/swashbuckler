@@ -26,6 +26,7 @@ import { SpoilerPlugin } from '../plugins/spoiler-plugin';
 import { PrivateBlockPlugin, PrivateMarkPlugin } from '../plugins/private-plugin';
 import { TemplateVariablePlugin } from '../plugins/template-variable-plugin';
 import { BlockSideMenuPlugin } from '../plugins/block-side-menu-plugin';
+import { focusEditorAtSelection } from './focusEditor';
 
 // Plugin configuration for the editor
 export const editorPlugins = [
@@ -72,24 +73,17 @@ export const editorPlugins = [
     transforms: {
       insertText(text, options) {
         insertText(text, options);
-        // withLink wraps URL text on space — restore DOM focus after restructuring.
-        // Use direct DOM focus because editor.tf.focus() calls toDOMNode which can
-        // fail when withLink restructures the tree and Slate's WeakMap is stale.
+        // withLink wraps URL text on space — restore focus + selection after
+        // DOM restructuring so cursor doesn't jump.
         if (text === ' ' && editor.selection) {
-          setTimeout(() => {
-            const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
-            el?.focus()
-          }, 0);
+          focusEditorAtSelection(editor);
         }
       },
       insertData(data) {
         insertData(data);
         // Pasting a URL also triggers link wrapping
         if (editor.selection) {
-          setTimeout(() => {
-            const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
-            el?.focus()
-          }, 0);
+          focusEditorAtSelection(editor);
         }
       },
     },
