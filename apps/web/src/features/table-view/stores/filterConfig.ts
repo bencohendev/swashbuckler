@@ -1,3 +1,5 @@
+'use client'
+
 import { create } from 'zustand'
 import { EMPTY_EXPRESSION, type FilterExpression } from '../lib/filterTypes'
 

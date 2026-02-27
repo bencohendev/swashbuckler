@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import * as Y from 'yjs'
 import { Awareness } from 'y-protocols/awareness'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CollaborationOptions } from '@/features/editor'
+import type { CollaborationOptions } from '@/features/editor/components/Editor'
 import { SupabaseYjsProvider } from '../lib/supabase-yjs-provider'
 import { getUserColor } from '../lib/user-colors'
 

@@ -1,9 +1,7 @@
-'use client'
-
 import Link from 'next/link'
 import { FileStackIcon, FolderIcon, PaletteIcon, SwatchBookIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
-import { useCurrentSpace } from '@/shared/lib/data'
 import type { LucideIcon } from 'lucide-react'
+import { SpaceSettingsHeading } from './SpaceSettingsHeading'
 
 interface SettingsItem {
   href: string
@@ -78,10 +76,6 @@ function SettingsCard({ href, label, description, icon: Icon }: SettingsItem) {
 }
 
 export default function SettingsPage() {
-  const { space } = useCurrentSpace()
-
-  const spaceHeading = space ? `${space.icon ?? ''} ${space.name}`.trim() : 'Space'
-
   return (
     <div className="space-y-8">
       <div>
@@ -101,7 +95,7 @@ export default function SettingsPage() {
       </section>
 
       <section aria-labelledby="settings-space-heading">
-        <h2 id="settings-space-heading" className="mb-4 text-lg font-medium">{spaceHeading}</h2>
+        <SpaceSettingsHeading />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {spaceItems.map(item => (
             <SettingsCard key={item.href} {...item} />

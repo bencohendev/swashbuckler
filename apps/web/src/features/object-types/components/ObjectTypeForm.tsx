@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { EmojiPicker } from '@/shared/components/EmojiPicker'
+import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
 import { FieldBuilder } from './FieldBuilder'
 import { TemplateSection } from './TemplateSection'
 import type { ObjectType, FieldDefinition, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
