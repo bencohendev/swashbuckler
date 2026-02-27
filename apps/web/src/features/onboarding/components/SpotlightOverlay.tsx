@@ -82,16 +82,21 @@ export function SpotlightOverlay({ targetEl, padding = 6 }: SpotlightOverlayProp
     Z
   `.trim()
 
+  // Fade out when between steps (targetEl null), fade in once new target resolves.
+  // Only transition opacity — not the path — so the cutout snaps to the new
+  // position instead of sliding across the screen.
+  const visible = targetEl !== null
+
   return (
     <svg
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-50"
-      style={{ width: vw, height: vh }}
+      className="pointer-events-none fixed inset-0 z-50 transition-opacity duration-200 motion-reduce:transition-none"
+      style={{ width: vw, height: vh, opacity: visible ? 1 : 0 }}
     >
       <path
         d={clipPath}
         fillRule="evenodd"
-        className="fill-black/60 transition-all duration-200 motion-reduce:transition-none"
+        className="fill-black/60"
       />
     </svg>
   )
