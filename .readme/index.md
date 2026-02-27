@@ -155,6 +155,7 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Feature | Description |
 |---------|-------------|
+| Content Filtering | Extend advanced filters to search entry body content, not just properties and title |
 
 ## Deferred
 
