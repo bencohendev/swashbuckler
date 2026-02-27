@@ -125,7 +125,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
         })
       }
     },
-    [query, create, getNextTitle, selectObject]
+    [query, create, getNextTitle, selectObject, editor]
   )
 
   // Close the mention menu
