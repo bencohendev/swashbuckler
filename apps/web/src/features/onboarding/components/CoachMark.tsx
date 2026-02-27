@@ -11,7 +11,7 @@ const GAP = 12 // px between target and popover
 const EDGE_PADDING = 8 // minimum px from viewport edge
 
 interface CoachMarkProps {
-  targetEl: Element | null
+  targetEl: Element
   title: string
   description: string
   placement: Placement
@@ -106,35 +106,12 @@ export function CoachMark({
   const popoverRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()
   const [position, setPosition] = useState<Position | null>(null)
-  // Track whether position has been measured for the current target
-  const [ready, setReady] = useState(false)
-
-  // Buffer displayed content — only update when becoming ready so the old
-  // content stays visible during the fade-out instead of flashing new text.
-  const [shownTitle, setShownTitle] = useState(title)
-  const [shownDescription, setShownDescription] = useState(description)
-  const [shownStep, setShownStep] = useState(currentStep)
-  if (ready && (shownTitle !== title || shownDescription !== description || shownStep !== currentStep)) {
-    setShownTitle(title)
-    setShownDescription(description)
-    setShownStep(currentStep)
-  }
-
-  // Derive state from props: hide popover when target changes so we don't
-  // show new content at the old element's position. Keep old position so the
-  // hidden popover doesn't flash at (0,0) before the new measurement arrives.
-  const [prevTarget, setPrevTarget] = useState<Element | null>(null)
-  if (targetEl !== prevTarget) {
-    setPrevTarget(targetEl)
-    setReady(false)
-  }
 
   const measure = useCallback(() => {
-    if (!targetEl || !popoverRef.current || isMobile) return
+    if (!popoverRef.current || isMobile) return
     const targetRect = targetEl.getBoundingClientRect()
     const popoverRect = popoverRef.current.getBoundingClientRect()
     setPosition(computePosition(targetRect, { width: popoverRect.width, height: popoverRect.height }, placement))
-    setReady(true)
   }, [targetEl, placement, isMobile])
 
   useEffect(() => {
@@ -143,7 +120,7 @@ export function CoachMark({
   }, [measure])
 
   useEffect(() => {
-    if (!targetEl || isMobile) return
+    if (isMobile) return
 
     const ro = new ResizeObserver(measure)
     ro.observe(targetEl)
@@ -157,12 +134,10 @@ export function CoachMark({
     }
   }, [targetEl, measure, isMobile])
 
-  // Focus management — wait for the popover to become ready
+  // Focus management
   useEffect(() => {
-    if (ready) {
-      popoverRef.current?.focus()
-    }
-  }, [ready, currentStep])
+    popoverRef.current?.focus()
+  }, [currentStep])
 
   // Escape to skip
   useEffect(() => {
@@ -176,17 +151,17 @@ export function CoachMark({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onSkip])
 
-  const isLast = shownStep === totalSteps - 1
-  const isFirst = shownStep === 0
+  const isLast = currentStep === totalSteps - 1
+  const isFirst = currentStep === 0
 
   // Step dots (only for coachmark steps — skip index 0 which is the welcome dialog)
   const coachmarkSteps = TUTORIAL_STEPS.filter((s) => s.type === 'coachmark')
-  const coachmarkIndex = shownStep - 1 // offset by welcome dialog step
+  const coachmarkIndex = currentStep - 1 // offset by welcome dialog step
 
   const content = (
     <>
-      <div className="mb-1 text-sm font-semibold">{shownTitle}</div>
-      <p className="mb-3 text-sm text-muted-foreground">{shownDescription}</p>
+      <div className="mb-1 text-sm font-semibold">{title}</div>
+      <p className="mb-3 text-sm text-muted-foreground">{description}</p>
       {/* Step dots */}
       <div className="mb-3 flex justify-center gap-1" aria-hidden="true">
         {coachmarkSteps.map((_, i) => (
@@ -223,7 +198,7 @@ export function CoachMark({
       <div
         ref={popoverRef}
         role="dialog"
-        aria-label={shownTitle}
+        aria-label={title}
         tabIndex={-1}
         className="fixed inset-x-0 bottom-0 z-[51] rounded-t-xl border-t bg-background p-4 shadow-xl outline-none animate-in slide-in-from-bottom-4 motion-reduce:animate-none"
       >
@@ -232,22 +207,19 @@ export function CoachMark({
     )
   }
 
-  // Desktop: positioned popover with smooth fade transitions between steps
+  // Desktop: positioned popover — mounts fresh each step via key in parent,
+  // so animate-in runs on every step transition.
   return (
     <div
       ref={popoverRef}
       role="dialog"
-      aria-label={shownTitle}
+      aria-label={title}
       tabIndex={-1}
-      className={cn(
-        'fixed z-[51] w-72 rounded-lg border bg-background p-4 shadow-xl outline-none',
-        'transition-opacity duration-150 motion-reduce:transition-none',
-        ready && position ? 'opacity-100' : 'opacity-0',
-      )}
+      className="fixed z-[51] w-72 rounded-lg border bg-background p-4 shadow-xl outline-none animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none"
       style={
         position
           ? { top: position.top, left: position.left }
-          : { top: 0, left: 0, pointerEvents: 'none' as const }
+          : { top: 0, left: 0, opacity: 0, pointerEvents: 'none' as const }
       }
     >
       {content}
