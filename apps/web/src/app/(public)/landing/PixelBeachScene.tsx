@@ -102,7 +102,9 @@ function stamp(
   }
 }
 
-function buildScene(): number[][] {
+const POLE_COL = 2
+
+function buildScene(includePole: boolean): number[][] {
   const grid: number[][] = Array.from({ length: ROWS }, () =>
     Array(COLS).fill(0),
   )
@@ -141,12 +143,13 @@ function buildScene(): number[][] {
     }
   }
 
-  // 3. Flagpole at cols 2-3 (offset to match main pole after pl-2 container shift)
-  const POLE_COL = 2
-  const poleSandTop = WATER_SURFACE - islandHeight(POLE_COL)
-  for (let r = 0; r <= poleSandTop; r++) {
-    grid[r][POLE_COL] = 4
-    grid[r][POLE_COL + 1] = 4
+  // 3. Flagpole (desktop only)
+  if (includePole) {
+    const poleSandTop = WATER_SURFACE - islandHeight(POLE_COL)
+    for (let r = 0; r <= poleSandTop; r++) {
+      grid[r][POLE_COL] = 4
+      grid[r][POLE_COL + 1] = 4
+    }
   }
 
   // 4. Stamp sprites
@@ -184,22 +187,34 @@ function buildScene(): number[][] {
   return grid
 }
 
-// Compute scene once at module level
-const SCENE = buildScene()
+// Compute both scenes once at module level
+const SCENE_NO_POLE = buildScene(false)
+const SCENE_WITH_POLE = buildScene(true)
 
-export function PixelBeachScene() {
-  // Transpose rows x cols into cols x rows for column-based rendering
+function transpose(scene: number[][]): number[][] {
   const columns: number[][] = []
   for (let c = 0; c < COLS; c++) {
     const col: number[] = []
     for (let r = 0; r < ROWS; r++) {
-      col.push(SCENE[r][c])
+      col.push(scene[r][c])
     }
     columns.push(col)
   }
+  return columns
+}
 
+const COLS_NO_POLE = transpose(SCENE_NO_POLE)
+const COLS_WITH_POLE = transpose(SCENE_WITH_POLE)
+
+function PixelGrid({
+  columns,
+  className,
+}: {
+  columns: number[][]
+  className?: string
+}) {
   return (
-    <div className="flex items-start">
+    <div className={`flex items-start ${className ?? ""}`}>
       {columns.map((col, colIdx) => (
         <div key={colIdx}>
           {col.map((colorIdx, rowIdx) => (
@@ -212,5 +227,14 @@ export function PixelBeachScene() {
         </div>
       ))}
     </div>
+  )
+}
+
+export function PixelBeachScene() {
+  return (
+    <>
+      <PixelGrid columns={COLS_NO_POLE} className="sm:hidden" />
+      <PixelGrid columns={COLS_WITH_POLE} className="hidden sm:flex" />
+    </>
   )
 }
