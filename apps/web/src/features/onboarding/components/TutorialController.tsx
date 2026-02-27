@@ -136,17 +136,20 @@ export function TutorialController() {
     <>
       <div aria-live="polite" className="sr-only">{announcement}</div>
       <SpotlightOverlay targetEl={targetEl} />
-      <CoachMark
-        targetEl={targetEl}
-        title={step?.title ?? ''}
-        description={step?.description ?? ''}
-        placement={step?.placement ?? 'bottom'}
-        currentStep={currentStep}
-        totalSteps={TUTORIAL_STEPS.length}
-        onNext={next}
-        onBack={back}
-        onSkip={skip}
-      />
+      {targetEl && (
+        <CoachMark
+          key={currentStep}
+          targetEl={targetEl}
+          title={step?.title ?? ''}
+          description={step?.description ?? ''}
+          placement={step?.placement ?? 'bottom'}
+          currentStep={currentStep}
+          totalSteps={TUTORIAL_STEPS.length}
+          onNext={next}
+          onBack={back}
+          onSkip={skip}
+        />
+      )}
     </>
   )
 }
