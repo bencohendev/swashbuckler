@@ -72,10 +72,13 @@ export const editorPlugins = [
     transforms: {
       insertText(text, options) {
         insertText(text, options);
-        // withLink wraps URL text on space — restore DOM focus after restructuring
+        // withLink wraps URL text on space — restore DOM focus after restructuring.
+        // Use direct DOM focus because editor.tf.focus() calls toDOMNode which can
+        // fail when withLink restructures the tree and Slate's WeakMap is stale.
         if (text === ' ' && editor.selection) {
           setTimeout(() => {
-            editor.tf.focus({ at: editor.selection ?? undefined });
+            const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
+            el?.focus()
           }, 0);
         }
       },
@@ -84,7 +87,8 @@ export const editorPlugins = [
         // Pasting a URL also triggers link wrapping
         if (editor.selection) {
           setTimeout(() => {
-            editor.tf.focus({ at: editor.selection ?? undefined });
+            const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
+            el?.focus()
           }, 0);
         }
       },
