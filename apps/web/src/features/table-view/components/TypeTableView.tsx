@@ -3,7 +3,7 @@
 import { useMemo, useCallback } from 'react'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { useObjectTypes } from '@/features/object-types'
-import { useObjects } from '@/features/objects/hooks'
+import { useObjects, useObjectContents } from '@/features/objects/hooks'
 import { useObjectTagsBatch, useTags } from '@/features/tags'
 import { useAllRelations } from '@/features/relations'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
@@ -19,7 +19,7 @@ import { useSortConfig } from '../stores/sortConfig'
 import { usePersistedFilters } from '../stores/filterConfig'
 import { useBoardGrouping } from '../stores/boardGrouping'
 import { useSavedViews } from '../hooks/useSavedViews'
-import { filterObjects, hasActiveFilters, EMPTY_EXPRESSION } from '../lib/filterObjects'
+import { filterObjects, hasActiveFilters, hasContentFilter, EMPTY_EXPRESSION } from '../lib/filterObjects'
 import type { FilterContext } from '../lib/filterObjects'
 import type { FilterExpression } from '../lib/filterTypes'
 import { sortObjects } from '../lib/sortObjects'
@@ -68,6 +68,16 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   const { tags } = useTags()
   const { relationsByObject } = useAllRelations()
 
+  const isContentFilterActive = useMemo(
+    () => hasContentFilter(expression) || expression.search.trim() !== '',
+    [expression],
+  )
+
+  const contentTextByObject = useObjectContents(
+    { typeId: type?.id ?? '__none__', isDeleted: false },
+    isContentFilterActive,
+  )
+
   const objectTypeByObjectId = useMemo(() => {
     const map: Record<string, string> = {}
     for (const obj of rawObjects) {
@@ -77,8 +87,8 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   }, [rawObjects])
 
   const filterCtx = useMemo<FilterContext>(
-    () => ({ tagsByObject, relationsByObject, objectTypeByObjectId }),
-    [tagsByObject, relationsByObject, objectTypeByObjectId],
+    () => ({ tagsByObject, relationsByObject, objectTypeByObjectId, contentTextByObject }),
+    [tagsByObject, relationsByObject, objectTypeByObjectId, contentTextByObject],
   )
 
   const fields = useMemo(

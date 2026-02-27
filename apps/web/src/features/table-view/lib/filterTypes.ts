@@ -4,6 +4,7 @@ export type FilterFieldTarget =
   | { kind: 'title' }
   | { kind: 'tag' }
   | { kind: 'relation' }
+  | { kind: 'content' }
 
 export interface FilterCondition {
   id: string

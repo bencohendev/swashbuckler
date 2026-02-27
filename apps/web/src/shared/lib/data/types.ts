@@ -264,6 +264,7 @@ export interface SearchOptions {
 
 export interface ObjectsClient {
   list(options?: ListObjectsOptions): Promise<DataListResult<DataObjectSummary>>
+  listContent(options?: ListObjectsOptions): Promise<DataListResult<{ id: string; content: unknown }>>
   get(id: string): Promise<DataResult<DataObject>>
   create(input: CreateObjectInput): Promise<DataResult<DataObject>>
   update(id: string, input: UpdateObjectInput): Promise<DataResult<DataObject>>

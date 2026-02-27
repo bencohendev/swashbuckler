@@ -818,6 +818,51 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       }
     },
 
+    async listContent(options: ListObjectsOptions = {}): Promise<DataListResult<{ id: string; content: unknown }>> {
+      try {
+        const database = getDB()
+        const collection = database.objects.toCollection()
+
+        const filters: ((obj: DataObject) => boolean)[] = []
+
+        if (spaceId) {
+          filters.push(obj => obj.space_id === spaceId)
+        }
+
+        if (options.parentId !== undefined) {
+          filters.push(obj => obj.parent_id === options.parentId)
+        }
+
+        if (options.typeId) {
+          filters.push(obj => obj.type_id === options.typeId)
+        }
+
+        if (options.isDeleted !== undefined) {
+          filters.push(obj => obj.is_deleted === options.isDeleted)
+        }
+
+        if (options.isArchived !== undefined) {
+          filters.push(obj => obj.is_archived === options.isArchived)
+        }
+
+        let results = await collection.toArray()
+
+        for (const filter of filters) {
+          results = results.filter(filter)
+        }
+
+        return {
+          data: results.map((obj) => ({ id: obj.id, content: obj.content })),
+          error: null,
+        }
+      } catch (error) {
+        return {
+          data: [],
+          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+        }
+      }
+    },
+
     async get(id: string): Promise<DataResult<DataObject>> {
       try {
         const database = getDB()

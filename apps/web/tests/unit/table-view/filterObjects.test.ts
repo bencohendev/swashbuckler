@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   filterObjects,
   hasActiveFilters,
+  hasContentFilter,
   EMPTY_EXPRESSION,
   type FilterExpression,
   type FilterContext,
@@ -38,6 +39,7 @@ const EMPTY_CTX: FilterContext = {
   tagsByObject: {},
   relationsByObject: {},
   objectTypeByObjectId: {},
+  contentTextByObject: {},
 }
 
 describe('hasActiveFilters', () => {
@@ -389,6 +391,7 @@ describe('filterObjects — tag operators', () => {
     },
     relationsByObject: {},
     objectTypeByObjectId: {},
+    contentTextByObject: {},
   }
 
   it('contains', () => {
@@ -443,6 +446,7 @@ describe('filterObjects — relation operators', () => {
       [obj2.id]: TYPE_B,
       [obj3.id]: TYPE_A,
     },
+    contentTextByObject: {},
   }
 
   it('has_links', () => {
@@ -563,5 +567,113 @@ describe('filterObjects — empty/null handling', () => {
     const obj = createMockObject({ title: 'EmptyArr', properties: { field: [] } })
     const result = filterObjects([obj], withCondition({ kind: 'property', fieldId: 'field' }, 'is_empty'), EMPTY_CTX)
     expect(result).toHaveLength(1)
+  })
+})
+
+describe('filterObjects — content operators', () => {
+  const obj1 = createMockObject({ title: 'Alpha' })
+  const obj2 = createMockObject({ title: 'Beta' })
+  const obj3 = createMockObject({ title: 'Gamma' })
+  const objects = [obj1, obj2, obj3]
+
+  const ctx: FilterContext = {
+    tagsByObject: {},
+    relationsByObject: {},
+    objectTypeByObjectId: {},
+    contentTextByObject: {
+      [obj1.id]: 'The quick brown fox jumped over the lazy dog',
+      [obj2.id]: 'Hello world this is a test document',
+      [obj3.id]: '',
+    },
+  }
+
+  it('contains', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'content' }, 'contains', 'quick brown'), ctx)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Alpha')
+  })
+
+  it('contains is case-insensitive', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'content' }, 'contains', 'HELLO WORLD'), ctx)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Beta')
+  })
+
+  it('does_not_contain', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'content' }, 'does_not_contain', 'fox'), ctx)
+    expect(result.map((o) => o.title).sort()).toEqual(['Beta', 'Gamma'])
+  })
+
+  it('is_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'content' }, 'is_empty'), ctx)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Gamma')
+  })
+
+  it('is_not_empty', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'content' }, 'is_not_empty'), ctx)
+    expect(result).toHaveLength(2)
+    expect(result.map((o) => o.title).sort()).toEqual(['Alpha', 'Beta'])
+  })
+
+  it('gracefully handles missing contentTextByObject entries', () => {
+    const result = filterObjects(objects, withCondition({ kind: 'content' }, 'contains', 'fox'), EMPTY_CTX)
+    expect(result).toHaveLength(0)
+  })
+})
+
+describe('filterObjects — search bar matches content', () => {
+  const obj1 = createMockObject({ title: 'Meeting Notes' })
+  const obj2 = createMockObject({ title: 'Shopping List' })
+  const objects = [obj1, obj2]
+
+  it('search matches content when title does not match', () => {
+    const ctx: FilterContext = {
+      tagsByObject: {},
+      relationsByObject: {},
+      objectTypeByObjectId: {},
+      contentTextByObject: {
+        [obj1.id]: 'discuss quarterly budget review',
+        [obj2.id]: 'milk eggs bread',
+      },
+    }
+    const result = filterObjects(objects, expr({ search: 'budget' }), ctx)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Meeting Notes')
+  })
+
+  it('search matches title even without content data', () => {
+    const result = filterObjects(objects, expr({ search: 'meeting' }), EMPTY_CTX)
+    expect(result).toHaveLength(1)
+    expect(result[0].title).toBe('Meeting Notes')
+  })
+
+  it('search matches either title or content (OR)', () => {
+    const ctx: FilterContext = {
+      tagsByObject: {},
+      relationsByObject: {},
+      objectTypeByObjectId: {},
+      contentTextByObject: {
+        [obj1.id]: 'some random text',
+        [obj2.id]: 'meeting agenda items',
+      },
+    }
+    // "meeting" matches obj1 by title and obj2 by content
+    const result = filterObjects(objects, expr({ search: 'meeting' }), ctx)
+    expect(result).toHaveLength(2)
+  })
+})
+
+describe('hasContentFilter', () => {
+  it('returns false for empty expression', () => {
+    expect(hasContentFilter(EMPTY_EXPRESSION)).toBe(false)
+  })
+
+  it('returns false for non-content filters', () => {
+    expect(hasContentFilter(withCondition({ kind: 'title' }, 'contains', 'x'))).toBe(false)
+  })
+
+  it('returns true when a content condition exists', () => {
+    expect(hasContentFilter(withCondition({ kind: 'content' }, 'contains', 'test'))).toBe(true)
   })
 })
