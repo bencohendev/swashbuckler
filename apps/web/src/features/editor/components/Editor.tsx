@@ -121,6 +121,9 @@ function SoloEditor({
 }: Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, isDirty, lastSaved } = useEditorStore();
   const editorValue = sanitizeContent(initialContent) || initialEditorValue;
+  // Per-instance content ref — isolates this editor's content from the global
+  // store so multiple coexisting editors (page + modal) don't interfere.
+  const contentRef = useRef<Value | null>(editorValue);
 
   const editor = usePlateEditor({
     plugins: editorPlugins,
@@ -128,25 +131,27 @@ function SoloEditor({
     override: { components: COMPONENT_OVERRIDES },
   });
 
-  const handleChange = useCallback(
-    (value: { value: Value }) => {
-      setContent(value.value);
-    },
-    [setContent]
-  );
-
-  useAutoSave({
+  const { markDirty: markAutoSaveDirty, markClean: markAutoSaveClean } = useAutoSave({
     onSave: onSave || (async () => {}),
     enabled: !!onSave && !readOnly,
+    contentRef,
   });
+
+  const handleChange = useCallback(
+    (value: { value: Value }) => {
+      contentRef.current = value.value;
+      markAutoSaveDirty();
+      setContent(value.value);
+    },
+    [setContent, markAutoSaveDirty]
+  );
 
   // Clear dirty flag after mount — Plate fires onChange during initialization which
   // marks the store dirty even though the user hasn't edited anything yet.
-  // This runs after useAutoSave's effects so the debounce timer (if started) will
-  // re-evaluate isDirty from the store and see false.
   useEffect(() => {
+    markAutoSaveClean();
     useEditorStore.getState().markClean();
-  }, []);
+  }, [markAutoSaveClean]);
 
   return (
     <EditorModeContext value={{ isTemplateMode: isTemplateMode ?? false, isOwner }}>

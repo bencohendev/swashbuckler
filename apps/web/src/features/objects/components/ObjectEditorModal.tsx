@@ -24,7 +24,7 @@ export function ObjectEditorModal() {
         className={
           isMobile
             ? "fixed inset-0 max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0"
-            : "max-h-[85vh] overflow-hidden p-0 sm:max-w-3xl"
+            : "max-h-[85vh] gap-0 overflow-y-auto p-0 sm:max-w-3xl"
         }
         showCloseButton={false}
       >
