@@ -156,6 +156,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | Content Filtering | Extend advanced filters to search entry body content, not just properties and title |
+| Manual Entry Ordering | Let users drag-and-drop to reorder entries instead of defaulting to most-recently-updated |
 
 ## Deferred
 
