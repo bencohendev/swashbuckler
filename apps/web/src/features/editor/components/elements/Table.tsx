@@ -260,7 +260,7 @@ function RowHandleMenu({
         <DropdownMenuItem
           onSelect={() => {
             insertTableRow(editor, {
-              at: [...tablePath, rowIndex],
+              fromRow: [...tablePath, rowIndex],
               before: true,
             });
           }}
@@ -269,7 +269,9 @@ function RowHandleMenu({
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
-            insertTableRow(editor, { at: [...tablePath, rowIndex] });
+            insertTableRow(editor, {
+              fromRow: [...tablePath, rowIndex],
+            });
           }}
         >
           Insert below
@@ -395,7 +397,7 @@ function ColumnHandleMenu({
         <DropdownMenuItem
           onSelect={() => {
             insertTableColumn(editor, {
-              at: [...tablePath, 0, colIndex],
+              fromCell: [...tablePath, 0, colIndex],
               before: true,
             });
           }}
@@ -405,7 +407,7 @@ function ColumnHandleMenu({
         <DropdownMenuItem
           onSelect={() => {
             insertTableColumn(editor, {
-              at: [...tablePath, 0, colIndex],
+              fromCell: [...tablePath, 0, colIndex],
             });
           }}
         >
@@ -656,7 +658,9 @@ export function TableElement({
           </TableElementContent>
         </TableProvider>
       ) : (
-        children
+        <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
+          <tbody>{children}</tbody>
+        </table>
       )}
     </PlateElement>
   );
