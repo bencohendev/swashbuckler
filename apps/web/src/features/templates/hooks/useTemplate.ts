@@ -53,10 +53,9 @@ export function useTemplate(id: string | null): UseTemplateReturn {
     const data = await updateRaw(input)
     if (data && id) {
       queryClient.setQueryData(queryKeys.templates.detail(id), data)
-      queryClient.invalidateQueries({ queryKey: queryKeys.templates.list(spaceId ?? undefined, data.type_id) })
     }
     return data
-  }, [updateRaw, id, queryClient, spaceId])
+  }, [updateRaw, id, queryClient])
 
   return {
     template: template ?? null,

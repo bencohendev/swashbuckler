@@ -31,10 +31,10 @@ export function useForceSimulation({
   width,
   height,
 }: UseForceSimulationOptions): UseForceSimulationReturn {
-  const [simulatedNodes, setSimulatedNodes] = useState<GraphNode[]>([])
-  const [simulatedEdges, setSimulatedEdges] = useState<GraphEdge[]>([])
+  const [simState, setSimState] = useState<{ nodes: GraphNode[]; edges: GraphEdge[] }>({ nodes: [], edges: [] })
   const [simulationVersion, setSimulationVersion] = useState(0)
   const simulationRef = useRef<Simulation<GraphNode, GraphEdge> | null>(null)
+  const rafRef = useRef(0)
 
   const getSimulation = useCallback(
     () => simulationRef.current,
@@ -43,8 +43,7 @@ export function useForceSimulation({
 
   useEffect(() => {
     if (nodes.length === 0 || width === 0 || height === 0) {
-      setSimulatedNodes([]) // eslint-disable-line react-hooks/set-state-in-effect -- clear when no data
-      setSimulatedEdges([])
+      setSimState({ nodes: [], edges: [] }) // eslint-disable-line react-hooks/set-state-in-effect -- clear when no data
       return
     }
 
@@ -74,17 +73,24 @@ export function useForceSimulation({
     setSimulationVersion(v => v + 1)
 
     simulation.on('tick', () => {
-      // Spread each node/edge into a new object so React memo sees new references
-      // (d3-force mutates objects in place, which memo would otherwise skip)
-      setSimulatedNodes(clonedNodes.map(n => ({ ...n })))
-      setSimulatedEdges(clonedEdges.map(e => ({ ...e })))
+      // Coalesce ticks into a single RAF to avoid multiple renders per frame
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => {
+        // Spread each node/edge into a new object so React memo sees new references
+        // (d3-force mutates objects in place, which memo would otherwise skip)
+        setSimState({
+          nodes: clonedNodes.map(n => ({ ...n })),
+          edges: clonedEdges.map(e => ({ ...e })),
+        })
+      })
     })
 
     return () => {
+      cancelAnimationFrame(rafRef.current)
       simulation.stop()
       simulationRef.current = null
     }
   }, [nodes, edges, width, height])
 
-  return { simulatedNodes, simulatedEdges, simulationVersion, getSimulation }
+  return { simulatedNodes: simState.nodes, simulatedEdges: simState.edges, simulationVersion, getSimulation }
 }

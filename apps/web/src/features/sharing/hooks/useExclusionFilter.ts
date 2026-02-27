@@ -19,6 +19,8 @@ export function useExclusionFilter() {
       return
     }
 
+    let cancelled = false
+
     setIsLoading(true)
     setError(null)
 
@@ -46,12 +48,15 @@ export function useExclusionFilter() {
         })(),
       ])
 
+      if (cancelled) return
+
       setExclusions([...perUserExclusions, ...spaceExclusions])
       setError(errors.length > 0 ? errors.join('; ') : null)
       setIsLoading(false)
     }
 
     loadExclusions()
+    return () => { cancelled = true }
   }, [dataClient, space, user?.id, isSharedUser])
 
   const excludedTypeIds = useMemo(() => {

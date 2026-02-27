@@ -26,6 +26,7 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
   const aspectRatioRef = useRef(1);
   const containerWidthRef = useRef(0);
   const handleSideRef = useRef<'left' | 'right'>('right');
+  const previewWidthRef = useRef(0);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent, side: 'left' | 'right') => {
@@ -48,6 +49,7 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
       aspectRatioRef.current = img.naturalWidth / img.naturalHeight || 1;
       handleSideRef.current = side;
 
+      previewWidthRef.current = img.clientWidth;
       setState({ isResizing: true, previewWidth: img.clientWidth });
 
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -66,6 +68,7 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
         Math.max(MIN_WIDTH, Math.min(maxWidth, startWidthRef.current + delta)),
       );
 
+      previewWidthRef.current = newWidth;
       setState((prev) => ({ ...prev, previewWidth: newWidth }));
     },
     [state.isResizing],
@@ -77,14 +80,14 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
 
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
 
-      const finalWidth = state.previewWidth;
+      const finalWidth = previewWidthRef.current;
       setState({ isResizing: false, previewWidth: null });
 
       if (finalWidth != null && finalWidth !== width) {
         onResize(finalWidth);
       }
     },
-    [state.isResizing, state.previewWidth, width, onResize],
+    [state.isResizing, width, onResize],
   );
 
   // Cancel resize on Escape

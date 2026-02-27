@@ -63,13 +63,16 @@ export function useCollaboration({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable: only recreate on doc/user/enabled
   }, [spaceId, documentId, userId, enabled])
 
-  // Auto-connect provider on creation, disconnect on cleanup.
-  // Uses disconnect() (not destroy()) so React Strict Mode re-mount works.
+  // Auto-connect provider on creation, disconnect + destroy on cleanup.
+  // Provider uses disconnect() (not destroy()) so Strict Mode re-mount can reconnect.
+  // doc.destroy() frees Yjs observers; in Strict Mode dev, the second connect() may
+  // miss doc-level listeners, but production unmounts are final so this is safe.
   useEffect(() => {
     if (!collab) return
     collab.provider.connect()
     return () => {
       collab.provider.disconnect()
+      collab.doc.destroy()
     }
   }, [collab])
 
