@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeftIcon, PlusIcon } from 'lucide-react'
 import { Button } from '@/shared/components/ui/Button'
+import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
 import { ThemeBuilder } from './ThemeBuilder'
 import { ThemeCard } from './ThemeCard'
@@ -17,7 +18,13 @@ type BuilderState =
 export function CustomThemeSettings() {
   const themes = useCustomThemeStore(s => s.themes)
   const deleteTheme = useCustomThemeStore(s => s.deleteTheme)
+  const spaceThemes = useCustomThemeStore(s => s.spaceThemes)
+  const setSpaceTheme = useCustomThemeStore(s => s.setSpaceTheme)
+  const { space } = useCurrentSpace()
   const [builder, setBuilder] = useState<BuilderState>({ mode: 'closed' })
+
+  const assignment = space ? spaceThemes[space.id] : undefined
+  const activeThemeId = assignment?.type === 'custom' ? assignment.themeId : undefined
 
   return (
     <div className="space-y-6">
@@ -64,7 +71,8 @@ export function CustomThemeSettings() {
             <ThemeCard
               key={t.id}
               theme={t}
-              isActive={false}
+              isActive={t.id === activeThemeId}
+              onActivate={space ? (id) => setSpaceTheme(space.id, { type: 'custom', themeId: id }) : undefined}
               onEdit={theme => setBuilder({ mode: 'edit', theme })}
               onDelete={deleteTheme}
             />
