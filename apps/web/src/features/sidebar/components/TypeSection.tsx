@@ -7,6 +7,7 @@ import { ContextMenu } from 'radix-ui'
 import { cn } from '@/shared/lib/utils'
 import type { DataObjectSummary, ObjectType, Template } from '@/shared/lib/data'
 import { ObjectList } from '@/features/objects/components'
+import { DraggableObjectItem } from './DraggableObjectItem'
 import { useTemplates } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import { useCollapsible } from '@/features/sidebar/hooks/useCollapsible'
@@ -34,6 +35,9 @@ interface TypeSectionProps {
   hideCreateButton?: boolean
   hideManageActions?: boolean
   collapseSignal?: CollapseSignal
+  canReorderObjects?: boolean
+  onMoveObject?: (from: number, to: number) => void
+  onDropObject?: () => void
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
   onDelete?: (typeId: string) => Promise<unknown>
@@ -94,6 +98,9 @@ export function TypeSection({
   hideCreateButton,
   hideManageActions,
   collapseSignal,
+  canReorderObjects,
+  onMoveObject,
+  onDropObject,
   onCreateBlank,
   onSelectTemplate,
   onDelete,
@@ -208,13 +215,31 @@ export function TypeSection({
       </ContextMenu.Root>
       {!collapsed && (
         <div id={`type-section-${type.id}`} className="pl-8">
-          <ObjectList
-            objects={visibleObjects}
-            objectType={type}
-            isLoading={isLoading}
-            emptyMessage={`No ${type.plural_name.toLowerCase()} yet`}
-            compact
-          />
+          {canReorderObjects && onMoveObject && onDropObject ? (
+            <div className="space-y-0.5">
+              {visibleObjects.map((obj, i) => (
+                <DraggableObjectItem
+                  key={obj.id}
+                  index={i}
+                  object={obj}
+                  dragType={`SIDEBAR_OBJECT_${type.id}`}
+                  onMove={onMoveObject}
+                  onDrop={onDropObject}
+                />
+              ))}
+              {visibleObjects.length === 0 && !isLoading && (
+                <p className="text-sm text-muted-foreground">{`No ${type.plural_name.toLowerCase()} yet`}</p>
+              )}
+            </div>
+          ) : (
+            <ObjectList
+              objects={visibleObjects}
+              objectType={type}
+              isLoading={isLoading}
+              emptyMessage={`No ${type.plural_name.toLowerCase()} yet`}
+              compact
+            />
+          )}
           {hasMore && (
             <Link
               href={`/types/${type.slug}`}

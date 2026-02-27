@@ -145,6 +145,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
+| [Manual Entry Ordering](features/manual-entry-ordering.md) | Drag-and-drop reordering of entries in sidebar and type pages (table/list views) |
 
 
 ## Planned Features

@@ -49,7 +49,7 @@ import type {
   DataListResult,
 } from './types'
 
-const OBJECT_SUMMARY_COLUMNS = 'id, title, type_id, owner_id, space_id, parent_id, icon, cover_image, properties, is_deleted, deleted_at, is_archived, archived_at, created_at, updated_at'
+const OBJECT_SUMMARY_COLUMNS = 'id, title, type_id, owner_id, space_id, parent_id, icon, cover_image, properties, sort_order, is_deleted, deleted_at, is_archived, archived_at, created_at, updated_at'
 
 async function resolveUserId(supabase: SupabaseClient, userId?: string): Promise<string | null> {
   if (userId) return userId
@@ -367,6 +367,7 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string, userId?
       let query = supabase
         .from('objects')
         .select(OBJECT_SUMMARY_COLUMNS)
+        .order('sort_order', { ascending: true })
         .order('updated_at', { ascending: false })
 
       if (spaceId) {

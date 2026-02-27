@@ -63,6 +63,9 @@ function DraggableTypeSection({
   isLoading,
   hideCreateButton,
   collapseSignal,
+  canReorderObjects,
+  onMoveObject,
+  onDropObject,
   onCreateBlank,
   onSelectTemplate,
   onDelete,
@@ -75,6 +78,9 @@ function DraggableTypeSection({
   isLoading: boolean
   hideCreateButton?: boolean
   collapseSignal?: CollapseSignal
+  canReorderObjects?: boolean
+  onMoveObject?: (from: number, to: number) => void
+  onDropObject?: () => void
   onCreateBlank: (typeId: string) => Promise<void>
   onSelectTemplate: (template: Template) => Promise<void>
   onDelete: (typeId: string) => Promise<unknown>
@@ -137,6 +143,9 @@ function DraggableTypeSection({
         isDragging={isDragging}
         hideCreateButton={hideCreateButton}
         collapseSignal={collapseSignal}
+        canReorderObjects={canReorderObjects}
+        onMoveObject={onMoveObject}
+        onDropObject={onDropObject}
         onCreateBlank={onCreateBlank}
         onSelectTemplate={onSelectTemplate}
         onDelete={onDelete}
@@ -174,7 +183,7 @@ export function Sidebar() {
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects, isLoading: exclusionFilterLoading, isSharedUser } = useExclusionFilter()
   // Single query for all non-deleted objects — shares cache key with useNextTitle
-  const { objects: allNonDeleted, isLoading: objectsLoading, create } = useObjects({ isDeleted: false })
+  const { objects: allNonDeleted, isLoading: objectsLoading, create, update: updateObject } = useObjects({ isDeleted: false })
   // Root-level, non-archived objects for type sections
   const objects = useMemo(() =>
     allNonDeleted.filter(obj => obj.parent_id === null && !obj.is_archived),
@@ -298,6 +307,61 @@ export function Sidebar() {
     }
     return grouped
   }, [objects, filterObjects])
+
+  // Optimistic local ordering of objects during sidebar DnD
+  const [orderedObjectsByType, setOrderedObjectsByType] = useState<Map<string, DataObjectSummary[]>>(objectsByType)
+  const orderedObjectsByTypeRef = useRef(orderedObjectsByType)
+
+  useEffect(() => {
+    orderedObjectsByTypeRef.current = orderedObjectsByType
+  }, [orderedObjectsByType])
+
+  // Sync from upstream when objectsByType changes (new objects added/removed)
+  useEffect(() => {
+    setOrderedObjectsByType((prev) => {
+      const next = new Map<string, DataObjectSummary[]>()
+      for (const [typeId, objs] of objectsByType) {
+        const prevObjs = prev.get(typeId)
+        if (!prevObjs) {
+          next.set(typeId, objs)
+          continue
+        }
+        const prevIds = new Set(prevObjs.map(o => o.id))
+        const nextIds = new Set(objs.map(o => o.id))
+        const idsChanged = prevIds.size !== nextIds.size || objs.some(o => !prevIds.has(o.id))
+        if (idsChanged) {
+          next.set(typeId, objs)
+        } else {
+          // Preserve local order, pick up data changes
+          next.set(typeId, prevObjs.map(po => objs.find(o => o.id === po.id) ?? po))
+        }
+      }
+      // Remove types that no longer exist
+      return next
+    })
+  }, [objectsByType])
+
+  const handleMoveObject = useCallback((typeId: string, fromIndex: number, toIndex: number) => {
+    setOrderedObjectsByType((prev) => {
+      const next = new Map(prev)
+      const items = [...(next.get(typeId) ?? [])]
+      const [moved] = items.splice(fromIndex, 1)
+      items.splice(toIndex, 0, moved)
+      next.set(typeId, items)
+      return next
+    })
+  }, [])
+
+  const handleDropObject = useCallback((typeId: string) => {
+    const items = orderedObjectsByTypeRef.current.get(typeId)
+    if (!items) return
+    items.forEach((obj, i) => {
+      const newOrder = i + 1
+      if (obj.sort_order !== newOrder) {
+        updateObject(obj.id, { sort_order: newOrder })
+      }
+    })
+  }, [updateObject])
 
   // Filter out objects whose type is archived for flat views (pinned, recent)
   const visibleAllObjects = useMemo(() =>
@@ -544,10 +608,13 @@ export function Sidebar() {
                         key={type.id}
                         index={index}
                         type={type}
-                        objects={objectsByType.get(type.id) ?? []}
+                        objects={orderedObjectsByType.get(type.id) ?? []}
                         isLoading={objectsLoading}
                         hideCreateButton={!canEditSpace}
                         collapseSignal={collapseSignal}
+                        canReorderObjects
+                        onMoveObject={(from, to) => handleMoveObject(type.id, from, to)}
+                        onDropObject={() => handleDropObject(type.id)}
                         onCreateBlank={handleCreateBlank}
                         onSelectTemplate={handleSelectTemplate}
                         onDelete={removeType}
