@@ -15,8 +15,8 @@ export function TodoListElement({ children, element, ...props }: PlateElementPro
         <input
           type="checkbox"
           checked={checked}
+          disabled={readOnly}
           onChange={(e) => {
-            if (readOnly) return
             editor.tf.setNodes(
               { checked: e.target.checked },
               { at: element }

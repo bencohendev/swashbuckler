@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom/vitest'
 import 'fake-indexeddb/auto'
+import * as vitestAxeMatchers from 'vitest-axe/matchers'
+import { expect } from 'vitest'
+
+expect.extend(vitestAxeMatchers)
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeAll, afterAll, vi } from 'vitest'
 import { server } from './mocks/server'

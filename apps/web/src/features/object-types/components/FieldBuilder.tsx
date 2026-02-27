@@ -63,7 +63,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">Custom Fields</label>
+        <span className="text-sm font-medium">Custom Fields</span>
         <Button type="button" size="sm" variant="outline" onClick={handleAddField}>
           <PlusIcon className="size-3" />
           Add Field
@@ -243,7 +243,7 @@ function OptionsEditor({ options, onChange }: OptionsEditorProps) {
 
   return (
     <div className="ml-5 space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">Options</label>
+      <span className="text-xs font-medium text-muted-foreground">Options</span>
       <div className="flex flex-wrap gap-1.5">
         {options.map((option, index) => (
           <span

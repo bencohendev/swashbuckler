@@ -115,10 +115,11 @@ export function ProfileSection({ user }: { user: User }) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">
+          <label htmlFor="profile-email" className="mb-1 block text-sm font-medium">
             Email
           </label>
           <input
+            id="profile-email"
             type="email"
             value={email}
             disabled

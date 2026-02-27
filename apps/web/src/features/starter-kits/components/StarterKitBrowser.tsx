@@ -74,7 +74,7 @@ function KitRow({ kit, onImport, isImporting }: {
       </div>
       {expanded && (
         <div className="border-t px-3 py-2">
-          <ul className="space-y-1" role="list">
+          <ul className="space-y-1">
             {kit.types.map((type) => (
               <li key={type.slug} className="flex items-center gap-2 text-sm">
                 <span role="img" aria-label={type.name}>{type.icon}</span>

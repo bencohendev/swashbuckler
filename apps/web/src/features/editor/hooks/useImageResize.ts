@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 
-const MIN_WIDTH = 50;
+export const MIN_WIDTH = 50;
+const KEYBOARD_STEP = 10;
+const KEYBOARD_STEP_LARGE = 50;
 
 interface ResizeState {
   isResizing: boolean;
@@ -26,6 +28,15 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
   const aspectRatioRef = useRef(1);
   const containerWidthRef = useRef(0);
   const handleSideRef = useRef<'left' | 'right'>('right');
+  const keyboardResizingRef = useRef(false);
+
+  const measureContainerWidth = useCallback(() => {
+    const img = imgRef.current;
+    if (!img) return 800;
+    const container = img.closest('[data-image-container]');
+    const measureEl = container?.parentElement ?? img.parentElement;
+    return measureEl?.clientWidth ?? 800;
+  }, []);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent, side: 'left' | 'right') => {
@@ -36,12 +47,7 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
       const img = imgRef.current;
       if (!img) return;
 
-      // Measure the container's parent (block-level) rather than the
-      // inline-block container itself — the container shrinks to fit the
-      // image, which would prevent resizing back up after shrinking.
-      const container = img.closest('[data-image-container]');
-      const measureEl = container?.parentElement ?? img.parentElement;
-      containerWidthRef.current = measureEl?.clientWidth ?? 800;
+      containerWidthRef.current = measureContainerWidth();
 
       startXRef.current = e.clientX;
       startWidthRef.current = img.clientWidth;
@@ -52,7 +58,7 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
 
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [disabled],
+    [disabled, measureContainerWidth],
   );
 
   const handlePointerMove = useCallback(
@@ -87,16 +93,74 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
     [state.isResizing, state.previewWidth, width, onResize],
   );
 
-  // Cancel resize on Escape
+  // Keyboard resize: Arrow keys adjust preview, Enter commits, Escape cancels
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, side: 'left' | 'right') => {
+      if (disabled) return;
+
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        const step = e.shiftKey ? KEYBOARD_STEP_LARGE : KEYBOARD_STEP;
+        // ArrowRight on right handle = grow, ArrowLeft = shrink (mirrored for left)
+        const direction = side === 'right'
+          ? (e.key === 'ArrowRight' ? 1 : -1)
+          : (e.key === 'ArrowLeft' ? 1 : -1);
+
+        const maxWidth = measureContainerWidth();
+        const currentWidth = state.previewWidth ?? width ?? imgRef.current?.clientWidth ?? 300;
+        const newWidth = Math.round(
+          Math.max(MIN_WIDTH, Math.min(maxWidth, currentWidth + step * direction)),
+        );
+
+        if (!keyboardResizingRef.current) {
+          keyboardResizingRef.current = true;
+          setState({ isResizing: true, previewWidth: newWidth });
+        } else {
+          setState((prev) => ({ ...prev, previewWidth: newWidth }));
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (keyboardResizingRef.current && state.previewWidth != null) {
+          const finalWidth = state.previewWidth;
+          keyboardResizingRef.current = false;
+          setState({ isResizing: false, previewWidth: null });
+          if (finalWidth !== width) {
+            onResize(finalWidth);
+          }
+        }
+      } else if (e.key === 'Escape') {
+        if (keyboardResizingRef.current) {
+          e.preventDefault();
+          keyboardResizingRef.current = false;
+          setState({ isResizing: false, previewWidth: null });
+        }
+      }
+    },
+    [disabled, state.previewWidth, width, onResize, measureContainerWidth],
+  );
+
+  // Commit keyboard resize on blur (same as Enter)
+  const handleBlur = useCallback(() => {
+    if (keyboardResizingRef.current && state.previewWidth != null) {
+      const finalWidth = state.previewWidth;
+      keyboardResizingRef.current = false;
+      setState({ isResizing: false, previewWidth: null });
+      if (finalWidth !== width) {
+        onResize(finalWidth);
+      }
+    }
+  }, [state.previewWidth, width, onResize]);
+
+  // Cancel pointer resize on Escape
   useEffect(() => {
-    if (!state.isResizing) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
+    if (!state.isResizing || keyboardResizingRef.current) return;
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setState({ isResizing: false, previewWidth: null });
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
   }, [state.isResizing]);
 
   const displayWidth = state.previewWidth ?? width;
@@ -108,5 +172,7 @@ export function useImageResize({ width, onResize, disabled }: UseImageResizeOpti
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handleKeyDown,
+    handleBlur,
   };
 }

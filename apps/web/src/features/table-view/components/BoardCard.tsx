@@ -20,9 +20,10 @@ interface BoardCardProps {
   fields: FieldDefinition[]
   sourceValue: string | null
   canEdit: boolean
+  onMove?: (objectId: string, direction: 'left' | 'right') => void
 }
 
-export function BoardCard({ object, fields, sourceValue, canEdit }: BoardCardProps) {
+export function BoardCard({ object, fields, sourceValue, canEdit, onMove }: BoardCardProps) {
   const router = useRouter()
   const ref = useRef<HTMLDivElement>(null)
 
@@ -45,7 +46,7 @@ export function BoardCard({ object, fields, sourceValue, canEdit }: BoardCardPro
   return (
     <div
       ref={ref}
-      role="listitem"
+      role="button"
       tabIndex={0}
       className={cn(
         'rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50',
@@ -57,8 +58,15 @@ export function BoardCard({ object, fields, sourceValue, canEdit }: BoardCardPro
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
           router.push(`/objects/${object.id}`)
+        } else if (canEdit && onMove && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+          e.preventDefault()
+          onMove(object.id, e.key === 'ArrowLeft' ? 'left' : 'right')
         }
       }}
+      {...(canEdit ? {
+        'aria-roledescription': 'movable card',
+        'aria-description': 'Use left and right arrow keys to move between columns',
+      } : {})}
     >
       <div className="flex items-center gap-2">
         {object.icon && <span className="shrink-0">{object.icon}</span>}

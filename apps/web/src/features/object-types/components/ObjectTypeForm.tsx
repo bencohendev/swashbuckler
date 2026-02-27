@@ -129,7 +129,7 @@ export function ObjectTypeForm({ objectType, onSave, onCancel, error }: ObjectTy
       )}
 
       <div>
-        <label className="mb-2 block text-sm font-medium">Icon</label>
+        <span className="mb-2 block text-sm font-medium">Icon</span>
         <EmojiPicker value={icon} onChange={setIcon}>
           <button
             type="button"
