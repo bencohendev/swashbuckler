@@ -100,12 +100,8 @@ export function useObjectRelations(objectId: string | null): UseObjectRelationsR
     emitChannels: ['objectRelations'],
   })
   const createLink = useCallback(async (targetId: string): Promise<ObjectRelation | null> => {
-    const result = await createLinkRaw(targetId)
-    if (result) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.relations.list(targetId) })
-    }
-    return result
-  }, [createLinkRaw, queryClient])
+    return createLinkRaw(targetId)
+  }, [createLinkRaw])
 
   const removeLinkFn = useCallback(
     (relationId: string) => dataClient.relations.delete(relationId),
@@ -116,14 +112,8 @@ export function useObjectRelations(objectId: string | null): UseObjectRelationsR
     emitChannels: ['objectRelations'],
   })
   const removeLink = useCallback(async (relationId: string): Promise<boolean> => {
-    const cached = queryClient.getQueryData<EnrichedRelation[]>(queryKeys.relations.list(objectId!))
-    const targetId = cached?.find(r => r.id === relationId)?.target_id
-    const ok = await removeLinkRaw(relationId)
-    if (ok && targetId) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.relations.list(targetId) })
-    }
-    return ok
-  }, [removeLinkRaw, queryClient, objectId])
+    return removeLinkRaw(relationId)
+  }, [removeLinkRaw])
 
   return {
     relations: data ?? EMPTY_RELATIONS,

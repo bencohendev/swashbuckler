@@ -91,8 +91,6 @@ interface UseObjectTagsReturn {
 
 export function useObjectTags(objectId: string): UseObjectTagsReturn {
   const dataClient = useDataClient()
-  const queryClient = useQueryClient()
-  const spaceId = useSpaceId()
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.tags.objectTags(objectId),
@@ -112,12 +110,8 @@ export function useObjectTags(objectId: string): UseObjectTagsReturn {
     emitChannels: ['tags'],
   })
   const addTag = useCallback(async (tagId: string) => {
-    const result = await addTagRaw(tagId)
-    if (result) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
-    }
-  }, [addTagRaw, queryClient, objectId, spaceId])
+    await addTagRaw(tagId)
+  }, [addTagRaw])
 
   const removeTagFn = useCallback(
     (tagId: string) => dataClient.tags.removeTagFromObject(objectId, tagId),
@@ -128,12 +122,8 @@ export function useObjectTags(objectId: string): UseObjectTagsReturn {
     emitChannels: ['tags'],
   })
   const removeTag = useCallback(async (tagId: string) => {
-    const ok = await removeTagRaw(tagId)
-    if (ok) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
-      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
-    }
-  }, [removeTagRaw, queryClient, objectId, spaceId])
+    await removeTagRaw(tagId)
+  }, [removeTagRaw])
 
   return { tags: data ?? EMPTY_TAGS, isLoading, addTag, removeTag }
 }

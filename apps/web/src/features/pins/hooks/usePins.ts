@@ -82,12 +82,13 @@ export function usePins(): UsePinsReturn {
   }, [unpinRaw, queryClient, queryKey])
 
   const toggle = useCallback(async (objectId: string) => {
-    if (pinnedIds.has(objectId)) {
+    const current = queryClient.getQueryData<string[]>(queryKey)
+    if (current?.includes(objectId)) {
       await unpin(objectId)
     } else {
       await pin(objectId)
     }
-  }, [pinnedIds, pin, unpin])
+  }, [queryClient, queryKey, pin, unpin])
 
   return { pinnedIds, isLoading, pin, unpin, toggle }
 }

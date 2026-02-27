@@ -30,6 +30,8 @@ interface EditorState {
   reset: () => void;
 }
 
+// Single global store — assumes one active editor at a time.
+// If multi-editor is needed, replace with a per-instance store or context.
 export const useEditorStore = create<EditorState>((set) => ({
   content: initialEditorValue,
   isDirty: false,

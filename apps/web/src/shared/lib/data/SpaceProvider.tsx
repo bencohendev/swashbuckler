@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { toast } from '@/shared/hooks/useToast'
 import type { Space, SpacesClient, SharingClient, SpaceSharePermission, DataClient } from './types'
 import { createSupabaseDataClient } from './supabase'
@@ -56,6 +56,8 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const loadSeqRef = useRef(0)
+
   const supabase = useMemo(() => createClient(), [])
 
   const spacesClient: SpacesClient = useMemo(() => {
@@ -73,6 +75,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
   }, [user, supabase])
 
   const loadSpaces = useCallback(async () => {
+    const seq = ++loadSeqRef.current
     const result = await spacesClient.list()
     if (result.error) {
       console.error('Failed to load spaces:', result.error.message)
@@ -130,6 +133,8 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       shared = []
     }
 
+    if (loadSeqRef.current !== seq) return
+
     setOwnedSpaces(owned)
     setSharedSpaces(shared)
     setShareInfoMap(newShareInfoMap)
@@ -154,7 +159,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
   useEffect(() => {
     if (isAuthLoading) return
-    loadSpaces() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch
+    loadSpaces() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch on mount
   }, [isAuthLoading, loadSpaces])
 
   // Listen for spaces and spaceShares events to refresh
@@ -212,144 +217,164 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     sharedPermission,
   }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission])
 
+  // Refs for values read inside CRUD callbacks — keeps callbacks stable
+  const ownedSpacesRef = useRef(ownedSpaces)
+  const sharedSpacesRef = useRef(sharedSpaces)
+  const currentSpaceIdRef = useRef(currentSpaceId)
+  const userRef = useRef(user)
+  useEffect(() => { ownedSpacesRef.current = ownedSpaces }, [ownedSpaces])
+  useEffect(() => { sharedSpacesRef.current = sharedSpaces }, [sharedSpaces])
+  useEffect(() => { currentSpaceIdRef.current = currentSpaceId }, [currentSpaceId])
+  useEffect(() => { userRef.current = user }, [user])
+
+  const create = useCallback(async (input: CreateSpaceInput) => {
+    const { copyTypesFromSpaceId, includeTemplates, starterKitId, ...createInput } = input
+    const result = await spacesClient.create(createInput)
+    if (result.error) {
+      toast({ title: 'Create space', description: result.error.message, variant: 'destructive' })
+      return { data: null, error: result.error.message }
+    }
+
+    const newSpace = result.data!
+
+    if (copyTypesFromSpaceId) {
+      try {
+        const makeClient = (spaceId: string): DataClient =>
+          userRef.current
+            ? createSupabaseDataClient(supabase, spaceId, userRef.current.id)
+            : createLocalDataClient(spaceId)
+
+        const sourceClient = makeClient(copyTypesFromSpaceId)
+        const targetClient = makeClient(newSpace.id)
+
+        const typesResult = await sourceClient.objectTypes.list()
+        if (!typesResult.error) {
+          const typeIdMap = new Map<string, string>()
+
+          for (const sourceType of typesResult.data) {
+            const newFields = sourceType.fields.map((f) => ({
+              ...f,
+              id: crypto.randomUUID(),
+            }))
+            const createResult = await targetClient.objectTypes.create({
+              name: sourceType.name,
+              plural_name: sourceType.plural_name,
+              slug: sourceType.slug,
+              icon: sourceType.icon,
+              color: sourceType.color,
+              fields: newFields,
+              sort_order: sourceType.sort_order,
+            })
+            if (createResult.data) {
+              typeIdMap.set(sourceType.id, createResult.data.id)
+            }
+          }
+
+          if (includeTemplates) {
+            const templatesResult = await sourceClient.templates.list()
+            if (!templatesResult.error) {
+              for (const tmpl of templatesResult.data) {
+                const newTypeId = typeIdMap.get(tmpl.type_id)
+                if (!newTypeId) continue
+                await targetClient.templates.create({
+                  name: tmpl.name,
+                  type_id: newTypeId,
+                  icon: tmpl.icon,
+                  cover_image: tmpl.cover_image,
+                  properties: tmpl.properties,
+                  content: tmpl.content,
+                })
+              }
+            }
+          }
+
+          emit('objectTypes')
+          if (includeTemplates) emit('templates')
+        }
+      } catch (err) {
+        console.error('Failed to copy types/templates:', err)
+      }
+    }
+
+    if (starterKitId && !copyTypesFromSpaceId) {
+      try {
+        const kit = STARTER_KITS.find((k) => k.id === starterKitId)
+        if (kit) {
+          const targetClient: DataClient = userRef.current
+            ? createSupabaseDataClient(supabase, newSpace.id, userRef.current.id)
+            : createLocalDataClient(newSpace.id)
+          await importKit(kit, targetClient, [])
+        }
+      } catch (err) {
+        console.error('Failed to import starter kit:', err)
+      }
+    }
+
+    emit('spaces')
+    return { data: newSpace }
+  }, [spacesClient, supabase])
+
+  const update = useCallback(async (id: string, input: { name?: string; icon?: string }) => {
+    const result = await spacesClient.update(id, input)
+    if (result.error) {
+      toast({ title: 'Update space', description: result.error.message, variant: 'destructive' })
+      return { data: null, error: result.error.message }
+    }
+    emit('spaces')
+    return { data: result.data }
+  }, [spacesClient])
+
+  const remove = useCallback(async (id: string) => {
+    const result = await spacesClient.delete(id)
+    if (result.error) {
+      toast({ title: 'Delete space', description: result.error.message, variant: 'destructive' })
+      return result.error.message
+    }
+    emit('spaces')
+    return null
+  }, [spacesClient])
+
+  const archiveSpace = useCallback(async (id: string) => {
+    // Guard: cannot archive the last non-archived owned space
+    const activeOwned = ownedSpacesRef.current.filter(s => !s.is_archived)
+    if (activeOwned.length <= 1 && activeOwned.some(s => s.id === id)) {
+      return { error: 'Cannot archive your last space' }
+    }
+    const result = await spacesClient.archive(id)
+    if (result.error) {
+      toast({ title: 'Archive space', description: result.error.message, variant: 'destructive' })
+      return { error: result.error.message }
+    }
+    // If archiving the current space, switch to next available
+    if (id === currentSpaceIdRef.current) {
+      const remaining = [...ownedSpacesRef.current, ...sharedSpacesRef.current].filter(s => s.id !== id && !s.is_archived)
+      if (remaining.length > 0) {
+        switchSpace(remaining[0].id)
+      }
+    }
+    emit('spaces')
+    return {}
+  }, [spacesClient, switchSpace])
+
+  const unarchiveSpace = useCallback(async (id: string) => {
+    const result = await spacesClient.unarchive(id)
+    if (result.error) {
+      toast({ title: 'Unarchive space', description: result.error.message, variant: 'destructive' })
+      return { error: result.error.message }
+    }
+    emit('spaces')
+    return {}
+  }, [spacesClient])
+
   const spacesContextValue: SpacesContextValue = useMemo(() => ({
     spaces,
     allSpaces: allSpacesIncludingArchived,
-    create: async (input: CreateSpaceInput) => {
-      const { copyTypesFromSpaceId, includeTemplates, starterKitId, ...createInput } = input
-      const result = await spacesClient.create(createInput)
-      if (result.error) {
-        toast({ title: 'Create space', description: result.error.message, variant: 'destructive' })
-        return { data: null, error: result.error.message }
-      }
-
-      const newSpace = result.data!
-
-      if (copyTypesFromSpaceId) {
-        try {
-          const createClient = (spaceId: string): DataClient =>
-            user
-              ? createSupabaseDataClient(supabase, spaceId, user.id)
-              : createLocalDataClient(spaceId)
-
-          const sourceClient = createClient(copyTypesFromSpaceId)
-          const targetClient = createClient(newSpace.id)
-
-          const typesResult = await sourceClient.objectTypes.list()
-          if (!typesResult.error) {
-            const typeIdMap = new Map<string, string>()
-
-            for (const sourceType of typesResult.data) {
-              const newFields = sourceType.fields.map((f) => ({
-                ...f,
-                id: crypto.randomUUID(),
-              }))
-              const createResult = await targetClient.objectTypes.create({
-                name: sourceType.name,
-                plural_name: sourceType.plural_name,
-                slug: sourceType.slug,
-                icon: sourceType.icon,
-                color: sourceType.color,
-                fields: newFields,
-                sort_order: sourceType.sort_order,
-              })
-              if (createResult.data) {
-                typeIdMap.set(sourceType.id, createResult.data.id)
-              }
-            }
-
-            if (includeTemplates) {
-              const templatesResult = await sourceClient.templates.list()
-              if (!templatesResult.error) {
-                for (const tmpl of templatesResult.data) {
-                  const newTypeId = typeIdMap.get(tmpl.type_id)
-                  if (!newTypeId) continue
-                  await targetClient.templates.create({
-                    name: tmpl.name,
-                    type_id: newTypeId,
-                    icon: tmpl.icon,
-                    cover_image: tmpl.cover_image,
-                    properties: tmpl.properties,
-                    content: tmpl.content,
-                  })
-                }
-              }
-            }
-
-            emit('objectTypes')
-            if (includeTemplates) emit('templates')
-          }
-        } catch (err) {
-          console.error('Failed to copy types/templates:', err)
-        }
-      }
-
-      if (starterKitId && !copyTypesFromSpaceId) {
-        try {
-          const kit = STARTER_KITS.find((k) => k.id === starterKitId)
-          if (kit) {
-            const targetClient: DataClient = user
-              ? createSupabaseDataClient(supabase, newSpace.id, user.id)
-              : createLocalDataClient(newSpace.id)
-            await importKit(kit, targetClient, [])
-          }
-        } catch (err) {
-          console.error('Failed to import starter kit:', err)
-        }
-      }
-
-      emit('spaces')
-      return { data: newSpace }
-    },
-    update: async (id: string, input: { name?: string; icon?: string }) => {
-      const result = await spacesClient.update(id, input)
-      if (result.error) {
-        toast({ title: 'Update space', description: result.error.message, variant: 'destructive' })
-        return { data: null, error: result.error.message }
-      }
-      emit('spaces')
-      return { data: result.data }
-    },
-    remove: async (id: string) => {
-      const result = await spacesClient.delete(id)
-      if (result.error) {
-        toast({ title: 'Delete space', description: result.error.message, variant: 'destructive' })
-        return result.error.message
-      }
-      emit('spaces')
-      return null
-    },
-    archiveSpace: async (id: string) => {
-      // Guard: cannot archive the last non-archived owned space
-      const activeOwned = ownedSpaces.filter(s => !s.is_archived)
-      if (activeOwned.length <= 1 && activeOwned.some(s => s.id === id)) {
-        return { error: 'Cannot archive your last space' }
-      }
-      const result = await spacesClient.archive(id)
-      if (result.error) {
-        toast({ title: 'Archive space', description: result.error.message, variant: 'destructive' })
-        return { error: result.error.message }
-      }
-      // If archiving the current space, switch to next available
-      if (id === currentSpaceId) {
-        const remaining = [...ownedSpaces, ...sharedSpaces].filter(s => s.id !== id && !s.is_archived)
-        if (remaining.length > 0) {
-          switchSpace(remaining[0].id)
-        }
-      }
-      emit('spaces')
-      return {}
-    },
-    unarchiveSpace: async (id: string) => {
-      const result = await spacesClient.unarchive(id)
-      if (result.error) {
-        toast({ title: 'Unarchive space', description: result.error.message, variant: 'destructive' })
-        return { error: result.error.message }
-      }
-      emit('spaces')
-      return {}
-    },
-  }), [spaces, allSpacesIncludingArchived, spacesClient, supabase, user, ownedSpaces, sharedSpaces, currentSpaceId, switchSpace])
+    create,
+    update,
+    remove,
+    archiveSpace,
+    unarchiveSpace,
+  }), [spaces, allSpacesIncludingArchived, create, update, remove, archiveSpace, unarchiveSpace])
 
   return (
     <SpaceContext.Provider value={spaceContextValue}>

@@ -1,12 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/shared/lib/supabase/client'
 import { createSupabaseDataClient } from '@/shared/lib/data'
 
 export function useAccountExport() {
   const [isExporting, setIsExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    return () => { isMounted.current = false }
+  }, [])
 
   async function exportData() {
     setIsExporting(true)
@@ -90,9 +95,12 @@ export function useAccountExport() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (err) {
+      if (!isMounted.current) return
       setError(err instanceof Error ? err.message : 'Export failed')
     } finally {
-      setIsExporting(false)
+      if (isMounted.current) {
+        setIsExporting(false)
+      }
     }
   }
 

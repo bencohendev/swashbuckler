@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { toast } from '@/shared/hooks/useToast'
 import { emit, type EventChannel } from '@/shared/lib/data/events'
 import type { DataResult } from '@/shared/lib/data/types'
@@ -26,6 +26,11 @@ export function useMutationAction<Args extends unknown[], T>(
 ): (...args: Args) => Promise<T | null> {
   const { actionLabel, emitChannels, onSuccess } = options
 
+  const emitChannelsRef = useRef(emitChannels)
+  const onSuccessRef = useRef(onSuccess)
+  useEffect(() => { emitChannelsRef.current = emitChannels }, [emitChannels])
+  useEffect(() => { onSuccessRef.current = onSuccess }, [onSuccess])
+
   return useCallback(
     async (...args: Args): Promise<T | null> => {
       const result = await fn(...args)
@@ -40,18 +45,18 @@ export function useMutationAction<Args extends unknown[], T>(
       }
 
       if (result.data != null) {
-        onSuccess?.(result.data)
+        onSuccessRef.current?.(result.data)
       }
 
-      if (emitChannels) {
-        for (const channel of emitChannels) {
+      if (emitChannelsRef.current) {
+        for (const channel of emitChannelsRef.current) {
           emit(channel)
         }
       }
 
       return result.data
     },
-    [fn, actionLabel, emitChannels, onSuccess],
+    [fn, actionLabel],
   )
 }
 
@@ -64,6 +69,11 @@ export function useVoidMutationAction<Args extends unknown[]>(
   options: Omit<MutationActionOptions<void>, 'onSuccess'> & { onSuccess?: () => void },
 ): (...args: Args) => Promise<boolean> {
   const { actionLabel, emitChannels, onSuccess } = options
+
+  const emitChannelsRef = useRef(emitChannels)
+  const onSuccessRef = useRef(onSuccess)
+  useEffect(() => { emitChannelsRef.current = emitChannels }, [emitChannels])
+  useEffect(() => { onSuccessRef.current = onSuccess }, [onSuccess])
 
   return useCallback(
     async (...args: Args): Promise<boolean> => {
@@ -78,16 +88,16 @@ export function useVoidMutationAction<Args extends unknown[]>(
         return false
       }
 
-      onSuccess?.()
+      onSuccessRef.current?.()
 
-      if (emitChannels) {
-        for (const channel of emitChannels) {
+      if (emitChannelsRef.current) {
+        for (const channel of emitChannelsRef.current) {
           emit(channel)
         }
       }
 
       return true
     },
-    [fn, actionLabel, emitChannels, onSuccess],
+    [fn, actionLabel],
   )
 }
