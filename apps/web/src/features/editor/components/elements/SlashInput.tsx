@@ -391,7 +391,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
         el?.focus()
       }, 0)
     },
-    [editor]
+    [editor, focusEditor]
   )
 
   // Create a new object and insert a mention node
