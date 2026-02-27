@@ -644,15 +644,20 @@ export function TableElement({
   const editor = useEditorRef();
   const tablePath = editor.api.findPath(element);
 
-  if (!tablePath) return null;
-
+  // Always render PlateElement so its internal hooks run on every render.
+  // Returning null before PlateElement would violate rules of hooks when
+  // findPath alternates between null and a valid path across renders.
   return (
     <PlateElement {...props} element={element} className="my-4">
-      <TableProvider>
-        <TableElementContent tablePath={tablePath} element={element}>
-          {children}
-        </TableElementContent>
-      </TableProvider>
+      {tablePath ? (
+        <TableProvider>
+          <TableElementContent tablePath={tablePath} element={element}>
+            {children}
+          </TableElementContent>
+        </TableProvider>
+      ) : (
+        children
+      )}
     </PlateElement>
   );
 }

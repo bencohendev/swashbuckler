@@ -11,6 +11,7 @@ const TABLE_TO_CHANNEL: Record<string, EventChannel> = {
   tags: 'tags',
   object_tags: 'tags',
   pins: 'pins',
+  saved_views: 'savedViews',
 }
 
 const DEBOUNCE_MS = 100
@@ -48,6 +49,7 @@ export function subscribeToRealtimeChanges(supabase: SupabaseClient): () => void
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' }, () => handleChange('tags'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'object_tags' }, () => handleChange('object_tags'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'pins' }, () => handleChange('pins'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'saved_views' }, () => handleChange('saved_views'))
     .subscribe()
   return () => {
     if (timer) clearTimeout(timer)

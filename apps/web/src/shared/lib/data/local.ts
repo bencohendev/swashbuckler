@@ -46,6 +46,7 @@ import { extractTextFromContent } from '@/features/search/lib/extractText'
 import { BUILT_IN_TYPE_IDS } from './types'
 
 const LOCAL_DEFAULT_SPACE_ID = '00000000-0000-0000-0000-000000000099'
+const LOCAL_OWNER_ID = '00000000-0000-0000-0000-00000000006c'
 
 // Default Page type ID for fresh local databases
 const LOCAL_DEFAULT_PAGE_TYPE_ID = '00000000-0000-0000-0000-000000000101'
@@ -59,7 +60,6 @@ const DEFAULT_TYPES: ObjectType[] = [
     icon: 'file-text',
     color: null,
     fields: [],
-    is_built_in: false,
     owner_id: null,
     space_id: LOCAL_DEFAULT_SPACE_ID,
     sort_order: 0,
@@ -71,7 +71,8 @@ const DEFAULT_TYPES: ObjectType[] = [
 ]
 
 // Legacy built-in types for Dexie v2 migration (upgrading from v1)
-const LEGACY_BUILT_IN_TYPES: ObjectType[] = [
+// Uses old schema shape with is_built_in field (dropped in migration 027)
+const LEGACY_BUILT_IN_TYPES: (ObjectType & { is_built_in: boolean })[] = [
   {
     id: BUILT_IN_TYPE_IDS.page,
     name: 'Page',
@@ -218,7 +219,7 @@ class SwashbucklerDB extends Dexie {
         id: LOCAL_DEFAULT_SPACE_ID,
         name: 'My Space',
         icon: '📁',
-        owner_id: 'local',
+        owner_id: LOCAL_OWNER_ID,
         created_at: now,
         updated_at: now,
       })
@@ -337,6 +338,29 @@ class SwashbucklerDB extends Dexie {
       pins: 'id, object_id',
       savedViews: 'id, type_id, space_id, owner_id, is_default',
     })
+
+    // Version 12: Add compound index on objectTags for uniqueness enforcement (D2)
+    this.version(12).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, is_archived, updated_at, space_id',
+      objectTypes: 'id, name, slug, owner_id, sort_order, is_archived, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id, [object_id+tag_id]',
+      pins: 'id, object_id',
+      savedViews: 'id, type_id, space_id, owner_id, is_default',
+    })
+
+    // Version 13: Migrate owner_id from 'local' string to UUID constant (D3)
+    this.version(13).upgrade(async (tx) => {
+      await tx.table('spaces').toCollection().modify((space) => {
+        if (space.owner_id === 'local') space.owner_id = LOCAL_OWNER_ID
+      })
+      await tx.table('savedViews').toCollection().modify((view) => {
+        if (view.owner_id === 'local') view.owner_id = LOCAL_OWNER_ID
+      })
+    })
   }
 }
 
@@ -423,7 +447,6 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           icon: input.icon,
           color: input.color ?? null,
           fields: input.fields ?? [],
-          is_built_in: false,
           owner_id: null,
           space_id: spaceId ?? null,
           sort_order: sortOrder,
@@ -488,27 +511,33 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           return { data: null, error: { message: 'Object type not found', code: 'NOT_FOUND' } }
         }
 
-        // Cascade: delete associated objects, their relations/tags/pins, and templates
-        const objectIds = await database.objects
-          .where('type_id').equals(id)
-          .primaryKeys()
+        await database.transaction('rw',
+          [database.objectTypes, database.objects, database.objectRelations, database.objectTags, database.pins, database.templates, database.savedViews],
+          async () => {
+            // Cascade: delete associated objects, their relations/tags/pins, and templates
+            const objectIds = await database.objects
+              .where('type_id').equals(id)
+              .primaryKeys()
 
-        if (objectIds.length > 0) {
-          for (const oid of objectIds) {
-            await database.objectRelations
-              .where('source_id').equals(oid).delete()
-            await database.objectRelations
-              .where('target_id').equals(oid).delete()
-            await database.objectTags
-              .where('object_id').equals(oid).delete()
-            await database.pins
-              .where('object_id').equals(oid).delete()
-          }
-          await database.objects.where('type_id').equals(id).delete()
-        }
+            if (objectIds.length > 0) {
+              for (const oid of objectIds) {
+                await database.objectRelations
+                  .where('source_id').equals(oid).delete()
+                await database.objectRelations
+                  .where('target_id').equals(oid).delete()
+                await database.objectTags
+                  .where('object_id').equals(oid).delete()
+                await database.pins
+                  .where('object_id').equals(oid).delete()
+              }
+              await database.objects.where('type_id').equals(id).delete()
+            }
 
-        await database.templates.where('type_id').equals(id).delete()
-        await database.objectTypes.delete(id)
+            await database.templates.where('type_id').equals(id).delete()
+            // C3: Cascade-delete saved views for this type
+            await database.savedViews.where('type_id').equals(id).delete()
+            await database.objectTypes.delete(id)
+          })
         return { data: null, error: null }
       } catch (error) {
         return {
@@ -609,7 +638,6 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
           icon: input.icon,
           color: input.color ?? null,
           fields: input.fields ?? [],
-          is_built_in: false,
           owner_id: null,
           space_id: null,
           sort_order: sortOrder,
@@ -704,7 +732,6 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
             ...field,
             id: generateUUID(),
           })),
-          is_built_in: false,
           owner_id: globalType.owner_id,
           space_id: targetSpaceId,
           sort_order: globalType.sort_order,
@@ -1454,7 +1481,7 @@ function createLocalSpacesClient(): SpacesClient {
         // Check for duplicate name per owner (case-insensitive)
         const lowerName = input.name.toLowerCase()
         const duplicate = await database.spaces
-          .filter(s => s.owner_id === 'local' && s.name.toLowerCase() === lowerName)
+          .filter(s => s.owner_id === LOCAL_OWNER_ID && s.name.toLowerCase() === lowerName)
           .first()
         if (duplicate) {
           return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
@@ -1464,7 +1491,7 @@ function createLocalSpacesClient(): SpacesClient {
           id: generateUUID(),
           name: input.name,
           icon: input.icon ?? '📁',
-          owner_id: 'local',
+          owner_id: LOCAL_OWNER_ID,
           is_archived: false,
           archived_at: null,
           created_at: now,
@@ -1520,40 +1547,63 @@ function createLocalSpacesClient(): SpacesClient {
     async delete(id: string): Promise<DataResult<void>> {
       try {
         const database = getDB()
-        // Delete all objects, types, and templates in this space
-        const objectsInSpace = await database.objects.filter(o => o.space_id === id).toArray()
-        if (objectsInSpace.length > 0) {
-          const objectIds = new Set(objectsInSpace.map(o => o.id))
-          // Cascade: delete pins referencing objects in this space
-          const relatedPins = await database.pins
-            .filter(p => objectIds.has(p.object_id))
-            .toArray()
-          if (relatedPins.length > 0) {
-            await database.pins.bulkDelete(relatedPins.map(p => p.id))
-          }
-          await database.objects.bulkDelete(objectsInSpace.map(o => o.id))
-        }
-        const typesInSpace = await database.objectTypes.filter(t => t.space_id === id).toArray()
-        if (typesInSpace.length > 0) {
-          await database.objectTypes.bulkDelete(typesInSpace.map(t => t.id))
-        }
-        const templatesInSpace = await database.templates.filter(t => t.space_id === id).toArray()
-        if (templatesInSpace.length > 0) {
-          await database.templates.bulkDelete(templatesInSpace.map(t => t.id))
-        }
-        // Delete tags and object_tags in this space
-        const tagsInSpace = await database.tags.filter(t => t.space_id === id).toArray()
-        if (tagsInSpace.length > 0) {
-          const tagIds = new Set(tagsInSpace.map(t => t.id))
-          const relatedObjectTags = await database.objectTags
-            .filter(ot => tagIds.has(ot.tag_id))
-            .toArray()
-          if (relatedObjectTags.length > 0) {
-            await database.objectTags.bulkDelete(relatedObjectTags.map(ot => ot.id))
-          }
-          await database.tags.bulkDelete(tagsInSpace.map(t => t.id))
-        }
-        await database.spaces.delete(id)
+        await database.transaction('rw',
+          [database.spaces, database.objects, database.objectTypes, database.templates, database.objectRelations, database.objectTags, database.pins, database.tags, database.savedViews],
+          async () => {
+            // Delete all objects, types, and templates in this space
+            const objectsInSpace = await database.objects.filter(o => o.space_id === id).toArray()
+            if (objectsInSpace.length > 0) {
+              const objectIds = new Set(objectsInSpace.map(o => o.id))
+              // Cascade: delete pins referencing objects in this space
+              const relatedPins = await database.pins
+                .filter(p => objectIds.has(p.object_id))
+                .toArray()
+              if (relatedPins.length > 0) {
+                await database.pins.bulkDelete(relatedPins.map(p => p.id))
+              }
+              // C1: Cascade-delete object relations referencing objects in this space
+              const relatedRelations = await database.objectRelations
+                .filter(r => objectIds.has(r.source_id) || objectIds.has(r.target_id))
+                .toArray()
+              if (relatedRelations.length > 0) {
+                await database.objectRelations.bulkDelete(relatedRelations.map(r => r.id))
+              }
+              // Cascade: delete object tags referencing objects in this space
+              const relatedObjTags = await database.objectTags
+                .filter(ot => objectIds.has(ot.object_id))
+                .toArray()
+              if (relatedObjTags.length > 0) {
+                await database.objectTags.bulkDelete(relatedObjTags.map(ot => ot.id))
+              }
+              await database.objects.bulkDelete(objectsInSpace.map(o => o.id))
+            }
+            const typesInSpace = await database.objectTypes.filter(t => t.space_id === id).toArray()
+            if (typesInSpace.length > 0) {
+              await database.objectTypes.bulkDelete(typesInSpace.map(t => t.id))
+            }
+            const templatesInSpace = await database.templates.filter(t => t.space_id === id).toArray()
+            if (templatesInSpace.length > 0) {
+              await database.templates.bulkDelete(templatesInSpace.map(t => t.id))
+            }
+            // Delete tags and object_tags in this space
+            const tagsInSpace = await database.tags.filter(t => t.space_id === id).toArray()
+            if (tagsInSpace.length > 0) {
+              const tagIds = new Set(tagsInSpace.map(t => t.id))
+              const relatedObjectTags = await database.objectTags
+                .filter(ot => tagIds.has(ot.tag_id))
+                .toArray()
+              if (relatedObjectTags.length > 0) {
+                await database.objectTags.bulkDelete(relatedObjectTags.map(ot => ot.id))
+              }
+              await database.tags.bulkDelete(tagsInSpace.map(t => t.id))
+            }
+            // C2: Cascade-delete saved views in this space
+            const viewsInSpace = await database.savedViews.filter(v => v.space_id === id).toArray()
+            if (viewsInSpace.length > 0) {
+              await database.savedViews.bulkDelete(viewsInSpace.map(v => v.id))
+            }
+            await database.spaces.delete(id)
+          })
         return { data: null, error: null }
       } catch (error) {
         return {
@@ -1828,6 +1878,43 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
       }
     },
+
+    async countObjectsByTags(tagIds: string[]): Promise<DataResult<Map<string, number>>> {
+      try {
+        if (tagIds.length === 0) {
+          return { data: new Map(), error: null }
+        }
+        const database = getDB()
+        const tagIdSet = new Set(tagIds)
+        const allObjectTags = await database.objectTags
+          .filter(ot => tagIdSet.has(ot.tag_id))
+          .toArray()
+
+        if (allObjectTags.length === 0) {
+          return { data: new Map(), error: null }
+        }
+
+        // Bulk-get all referenced objects once
+        const uniqueObjectIds = [...new Set(allObjectTags.map(ot => ot.object_id))]
+        const objects = await database.objects.bulkGet(uniqueObjectIds)
+        const nonDeletedIds = new Set(
+          objects
+            .filter((o): o is DataObject => o !== undefined && !o.is_deleted)
+            .map(o => o.id)
+        )
+
+        // Count per tag, only counting non-deleted objects
+        const counts = new Map<string, number>()
+        for (const ot of allObjectTags) {
+          if (nonDeletedIds.has(ot.object_id)) {
+            counts.set(ot.tag_id, (counts.get(ot.tag_id) ?? 0) + 1)
+          }
+        }
+        return { data: counts, error: null }
+      } catch (error) {
+        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+      }
+    },
   }
 }
 
@@ -1920,16 +2007,6 @@ function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
         const database = getDB()
         const now = new Date().toISOString()
 
-        // If setting as default, unset existing defaults for this type
-        if (input.is_default) {
-          const existingDefaults = await database.savedViews
-            .where({ type_id: input.type_id, is_default: 1 })
-            .toArray()
-          for (const view of existingDefaults) {
-            await database.savedViews.update(view.id, { is_default: false })
-          }
-        }
-
         const savedView: SavedView = {
           id: generateUUID(),
           space_id: spaceId ?? LOCAL_DEFAULT_SPACE_ID,
@@ -1940,11 +2017,23 @@ function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
           view_mode: input.view_mode,
           board_group_field_id: input.board_group_field_id ?? null,
           is_default: input.is_default ?? false,
-          owner_id: 'local',
+          owner_id: LOCAL_OWNER_ID,
           created_at: now,
           updated_at: now,
         }
-        await database.savedViews.add(savedView)
+
+        await database.transaction('rw', database.savedViews, async () => {
+          // If setting as default, unset existing defaults for this type
+          if (input.is_default) {
+            const existingDefaults = await database.savedViews
+              .where({ type_id: input.type_id, is_default: 1 })
+              .toArray()
+            for (const view of existingDefaults) {
+              await database.savedViews.update(view.id, { is_default: false })
+            }
+          }
+          await database.savedViews.add(savedView)
+        })
         return { data: savedView, error: null }
       } catch (error) {
         return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
@@ -1955,26 +2044,29 @@ function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
       try {
         const database = getDB()
 
-        // If setting as default, unset existing defaults for this type
-        if (input.is_default) {
-          const existing = await database.savedViews.get(id)
-          if (existing) {
-            const otherDefaults = await database.savedViews
-              .where('type_id')
-              .equals(existing.type_id)
-              .filter(v => v.is_default && v.id !== id)
-              .toArray()
-            for (const view of otherDefaults) {
-              await database.savedViews.update(view.id, { is_default: false })
+        const updated = await database.transaction('rw', database.savedViews, async () => {
+          // If setting as default, unset existing defaults for this type
+          if (input.is_default) {
+            const existing = await database.savedViews.get(id)
+            if (existing) {
+              const otherDefaults = await database.savedViews
+                .where('type_id')
+                .equals(existing.type_id)
+                .filter(v => v.is_default && v.id !== id)
+                .toArray()
+              for (const view of otherDefaults) {
+                await database.savedViews.update(view.id, { is_default: false })
+              }
             }
           }
-        }
 
-        await database.savedViews.update(id, {
-          ...input,
-          updated_at: new Date().toISOString(),
+          await database.savedViews.update(id, {
+            ...input,
+            updated_at: new Date().toISOString(),
+          })
+          return database.savedViews.get(id)
         })
-        const updated = await database.savedViews.get(id)
+
         if (!updated) {
           return { data: null, error: { message: 'Saved view not found' } }
         }
@@ -2086,7 +2178,7 @@ export async function ensureLocalDefaultSpace(): Promise<Space> {
     id: LOCAL_DEFAULT_SPACE_ID,
     name: 'My Space',
     icon: '📁',
-    owner_id: 'local',
+    owner_id: LOCAL_OWNER_ID,
     is_archived: false,
     archived_at: null,
     created_at: now,

@@ -1,0 +1,244 @@
+/* Fantasy Theme — decorative overrides scoped to preset */
+
+/* ─── Typography ─── */
+html[data-preset="fantasy"] body {
+  font-family: var(--font-fantasy-body), Georgia, serif;
+}
+
+html[data-preset="fantasy"] h1,
+html[data-preset="fantasy"] h2,
+html[data-preset="fantasy"] h3,
+html[data-preset="fantasy"] h4,
+html[data-preset="fantasy"] h5,
+html[data-preset="fantasy"] h6,
+html[data-preset="fantasy"] [data-slot="dialog-title"],
+html[data-preset="fantasy"] [data-slot="card-title"] {
+  font-family: var(--font-fantasy-heading), Georgia, serif;
+}
+
+/* ─── Editor / main parchment texture ─── */
+html[data-preset="fantasy"] main {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(180, 150, 100, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(160, 130, 80, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(140, 110, 70, 0.05) 0%, transparent 50%);
+}
+
+html[data-preset="fantasy"] [data-plate-editor] {
+  box-shadow:
+    inset 0 0 40px rgba(139, 109, 63, 0.08),
+    inset 0 0 80px rgba(139, 109, 63, 0.04);
+}
+
+/* ─── Sidebar wood grain ─── */
+html[data-preset="fantasy"] aside {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 11px,
+      rgba(139, 109, 63, 0.03) 11px,
+      rgba(139, 109, 63, 0.03) 12px
+    ),
+    repeating-linear-gradient(
+      95deg,
+      transparent,
+      transparent 23px,
+      rgba(101, 75, 40, 0.02) 23px,
+      rgba(101, 75, 40, 0.02) 24px
+    );
+  border-right-width: 2px;
+}
+
+/* ─── Dialogs — scroll-style ─── */
+html[data-preset="fantasy"] [data-slot="dialog-content"] {
+  border-radius: 2px;
+  border-width: 2px;
+  box-shadow:
+    0 8px 32px rgba(44, 24, 16, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+html[data-preset="fantasy"] [data-slot="dialog-content"]::before,
+html[data-preset="fantasy"] [data-slot="dialog-content"]::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border) 15%,
+    var(--border) 85%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+html[data-preset="fantasy"] [data-slot="dialog-content"]::before {
+  top: -3px;
+}
+
+html[data-preset="fantasy"] [data-slot="dialog-content"]::after {
+  bottom: -3px;
+}
+
+/* ─── Buttons — embossed ─── */
+html[data-preset="fantasy"] [data-slot="button"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 2px 4px rgba(44, 24, 16, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+html[data-preset="fantasy"] [data-slot="button"]:active {
+  box-shadow:
+    inset 0 2px 4px rgba(44, 24, 16, 0.2);
+}
+
+/* Ghost/link buttons — no emboss */
+html[data-preset="fantasy"] [data-slot="button"][data-variant="ghost"],
+html[data-preset="fantasy"] [data-slot="button"][data-variant="link"] {
+  box-shadow: none;
+  text-shadow: none;
+}
+
+/* ─── Cards ─── */
+html[data-preset="fantasy"] [data-slot="card"] {
+  border-radius: 3px;
+  border-width: 2px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 8px rgba(44, 24, 16, 0.1);
+}
+
+/* ─── Header — ornamental border ─── */
+html[data-preset="fantasy"] header {
+  border-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent 100%
+  ) 1;
+}
+
+/* ─── Dividers ─── */
+html[data-preset="fantasy"] hr,
+html[data-preset="fantasy"] [data-slot="separator"] {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent 100%
+  );
+  position: relative;
+}
+
+html[data-preset="fantasy"] hr::after,
+html[data-preset="fantasy"] [data-slot="separator"]::after {
+  content: "◆";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--background);
+  padding: 0 8px;
+  font-size: 8px;
+  color: var(--border);
+  line-height: 1;
+}
+
+/* ─── Inputs ─── */
+html[data-preset="fantasy"] [data-slot="input"] {
+  border-radius: 2px;
+  border-width: 2px;
+}
+
+/* ─── Scrollbar ─── */
+html[data-preset="fantasy"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html[data-preset="fantasy"] ::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+html[data-preset="fantasy"] ::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+  border: 2px solid var(--muted);
+}
+
+html[data-preset="fantasy"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ─── Dark variant adjustments ─── */
+html[data-preset="fantasy"].dark main {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(201, 169, 110, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(201, 169, 110, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(201, 169, 110, 0.02) 0%, transparent 50%);
+}
+
+html[data-preset="fantasy"].dark [data-plate-editor] {
+  box-shadow:
+    inset 0 0 40px rgba(201, 169, 110, 0.04),
+    inset 0 0 80px rgba(201, 169, 110, 0.02);
+}
+
+html[data-preset="fantasy"].dark aside {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 11px,
+      rgba(201, 169, 110, 0.02) 11px,
+      rgba(201, 169, 110, 0.02) 12px
+    ),
+    repeating-linear-gradient(
+      95deg,
+      transparent,
+      transparent 23px,
+      rgba(201, 169, 110, 0.015) 23px,
+      rgba(201, 169, 110, 0.015) 24px
+    );
+}
+
+html[data-preset="fantasy"].dark [data-slot="dialog-content"] {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(201, 169, 110, 0.08);
+}
+
+html[data-preset="fantasy"].dark [data-slot="button"] {
+  box-shadow:
+    inset 0 1px 0 rgba(201, 169, 110, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+html[data-preset="fantasy"].dark [data-slot="button"]:active {
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+html[data-preset="fantasy"].dark [data-slot="button"][data-variant="ghost"],
+html[data-preset="fantasy"].dark [data-slot="button"][data-variant="link"] {
+  box-shadow: none;
+  text-shadow: none;
+}
+
+html[data-preset="fantasy"].dark [data-slot="card"] {
+  box-shadow:
+    inset 0 1px 0 rgba(201, 169, 110, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}

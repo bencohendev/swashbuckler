@@ -60,8 +60,16 @@ export const CORE_COLOR_KEYS: (keyof ThemeCoreColors)[] = [
 ]
 
 export type SpaceThemeAssignment =
-  | { type: 'default'; value: 'light' | 'dark' | 'system' }
+  | { type: 'default'; value: 'light' | 'dark' | 'system'; presetId?: string }
   | { type: 'custom'; themeId: string }
+
+export interface ThemePresetDefinition {
+  id: string
+  label: string
+  icon: string
+  lightColors: ThemeResolvedColors
+  darkColors: ThemeResolvedColors
+}
 
 export const CORE_COLOR_LABELS: Record<keyof ThemeCoreColors, string> = {
   background: 'Background',

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./fantasy.css";
+@import "./sci-fi.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -127,6 +129,15 @@
 
 body.dragging * {
   cursor: grabbing !important;
+}
+
+@keyframes flag-wave {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-3px) scaleY(0.97); }
+}
+.flag-wave-col {
+  animation: flag-wave 3s ease-in-out infinite;
+  animation-delay: calc(var(--col) * 0.06s);
 }
 
 @layer base {

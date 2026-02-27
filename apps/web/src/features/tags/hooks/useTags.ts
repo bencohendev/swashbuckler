@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { useQuery, useQueries, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   useDataClient,
   useSpaceId,
@@ -144,26 +144,22 @@ const EMPTY_COUNTS: Map<string, number> = new Map()
 export function useTagCounts(tags: Tag[]): Map<string, number> {
   const dataClient = useDataClient()
 
-  const results = useQueries({
-    queries: tags.map((tag) => ({
-      queryKey: queryKeys.tags.countByTag(tag.id),
-      queryFn: async () => {
-        const result = await dataClient.tags.countObjectsByTag(tag.id)
-        if (result.error) throw new Error(result.error.message)
-        return { tagId: tag.id, count: result.data ?? 0 }
-      },
-    })),
+  // N1 fix: Batch all tag counts into a single query instead of N individual queries
+  const sortedTagIds = useMemo(
+    () => tags.map(t => t.id).sort(),
+    [tags]
+  )
+
+  const { data } = useQuery({
+    queryKey: queryKeys.tags.countsByTags(sortedTagIds),
+    queryFn: async () => {
+      if (sortedTagIds.length === 0) return EMPTY_COUNTS
+      const result = await dataClient.tags.countObjectsByTags(sortedTagIds)
+      if (result.error) throw new Error(result.error.message)
+      return result.data ?? EMPTY_COUNTS
+    },
+    enabled: sortedTagIds.length > 0,
   })
 
-  return useMemo(() => {
-    const hasAnyData = results.some((r) => r.data)
-    if (!hasAnyData) return EMPTY_COUNTS
-    const map = new Map<string, number>()
-    for (const result of results) {
-      if (result.data) {
-        map.set(result.data.tagId, result.data.count)
-      }
-    }
-    return map
-  }, [results])
+  return data ?? EMPTY_COUNTS
 }

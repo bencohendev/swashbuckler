@@ -140,13 +140,13 @@ function SpaceRow({ space, isCurrent, canDelete, canArchive, onUpdate, onArchive
   return (
     <>
       <div className="flex items-center gap-3 rounded-lg border px-4 py-3">
-        <EmojiPicker value={space.icon} onChange={handleIconChange}>
+        <EmojiPicker value={space.icon ?? '📁'} onChange={handleIconChange}>
           <button
             type="button"
             className="flex size-9 shrink-0 items-center justify-center rounded-md text-xl hover:bg-muted"
             aria-label={`Change icon for ${space.name}`}
           >
-            {space.icon}
+            {space.icon ?? '📁'}
           </button>
         </EmojiPicker>
 

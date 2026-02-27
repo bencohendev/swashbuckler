@@ -7,6 +7,7 @@ import { SupabaseYjsProvider } from '../lib/supabase-yjs-provider'
 import { getUserColor } from '../lib/user-colors'
 
 interface UseCollaborationOptions {
+  spaceId: string
   documentId: string
   supabase: SupabaseClient
   userId: string
@@ -24,6 +25,7 @@ interface UseCollaborationOptions {
  * handles seeding from the editor's initial value.
  */
 export function useCollaboration({
+  spaceId,
   documentId,
   supabase,
   userId,
@@ -46,6 +48,7 @@ export function useCollaboration({
 
     const provider = new SupabaseYjsProvider({
       supabase,
+      spaceId,
       documentId,
       doc,
       awareness,
@@ -58,7 +61,7 @@ export function useCollaboration({
       cursorData: { name: userName, color, avatarUrl },
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable: only recreate on doc/user/enabled
-  }, [documentId, userId, enabled])
+  }, [spaceId, documentId, userId, enabled])
 
   // Auto-connect provider on creation, disconnect on cleanup.
   // Uses disconnect() (not destroy()) so React Strict Mode re-mount works.

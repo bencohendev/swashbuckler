@@ -5,7 +5,6 @@ export const ACCEPTED_IMAGE_TYPES = [
   'image/png',
   'image/gif',
   'image/webp',
-  'image/svg+xml',
 ]
 
 export const MAX_IMAGE_SIZE = 3 * 1024 * 1024 // 3 MB
@@ -16,7 +15,6 @@ function getExtension(mimeType: string): string {
     'image/png': 'png',
     'image/gif': 'gif',
     'image/webp': 'webp',
-    'image/svg+xml': 'svg',
   }
   return map[mimeType] ?? 'bin'
 }
@@ -26,7 +24,7 @@ export async function uploadImage(
   folder: 'images' | 'covers' | 'avatars'
 ): Promise<{ url: string; path: string }> {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-    throw new Error('File type not supported. Use JPEG, PNG, GIF, WebP, or SVG.')
+    throw new Error('File type not supported. Use JPEG, PNG, GIF, or WebP.')
   }
   if (file.size > MAX_IMAGE_SIZE) {
     throw new Error('File is too large. Maximum size is 3 MB.')

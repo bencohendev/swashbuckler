@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
-import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, PaletteIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, UserPlusIcon } from "lucide-react"
+import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, PaletteIcon, SearchIcon, SettingsIcon, SunIcon, SwordsIcon, UserIcon, UserPlusIcon, ZapIcon } from "lucide-react"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import { useSpacePermission } from "@/features/sharing"
 import { useSidebar } from "@/shared/stores/sidebar"
@@ -43,8 +43,8 @@ export function Header({ email }: { email?: string }) {
 
   const assignment = space ? spaceThemes[space.id] : undefined
   const lastCustomThemeId = space ? lastCustomThemeIds[space.id] : undefined
-  // Only offer the custom theme in the cycle if it still exists
-  const hasLastCustomTheme = lastCustomThemeId != null && themes.some(t => t.id === lastCustomThemeId)
+  const hasLastCustom = lastCustomThemeId != null && themes.some(t => t.id === lastCustomThemeId)
+  const activePresetId = assignment?.type === 'default' ? assignment.presetId : undefined
 
   useEffect(() => {
     setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect -- hydration detection
@@ -113,26 +113,36 @@ export function Header({ email }: { email?: string }) {
               setSpaceTheme(space.id, { type: 'default', value: 'light' })
               return
             }
-            // Cycle: light → dark → system → [custom] → light
+            // Cycle: light → dark → system → [last custom] → light (preserves presetId)
             const current = assignment?.type === 'default' ? assignment.value : 'system'
             const next: SpaceThemeAssignment =
               current === 'light' ? { type: 'default', value: 'dark' } :
               current === 'dark' ? { type: 'default', value: 'system' } :
-              current === 'system' && hasLastCustomTheme ? { type: 'custom', themeId: lastCustomThemeId! } :
+              current === 'system' && hasLastCustom ? { type: 'custom', themeId: lastCustomThemeId! } :
               { type: 'default', value: 'light' }
             setSpaceTheme(space.id, next)
           }}
-          title={mounted ? `Theme: ${assignment?.type === 'default' ? assignment.value : assignment?.type === 'custom' ? 'custom' : 'system'}` : "Theme"}
-          aria-label={mounted ? `Theme: ${assignment?.type === 'default' ? assignment.value : assignment?.type === 'custom' ? 'custom' : 'system'}` : "Toggle theme"}
+          title={mounted ? (() => {
+            if (assignment?.type === 'custom') return 'Theme: custom'
+            const base = assignment?.type === 'default' ? assignment.value : 'system'
+            return activePresetId ? `Theme: ${activePresetId} (${base})` : `Theme: ${base}`
+          })() : "Theme"}
+          aria-label={mounted ? (() => {
+            if (assignment?.type === 'custom') return 'Theme: custom'
+            const base = assignment?.type === 'default' ? assignment.value : 'system'
+            return activePresetId ? `Theme: ${activePresetId} (${base})` : `Theme: ${base}`
+          })() : "Toggle theme"}
         >
           {mounted ? (
             assignment?.type === 'custom'
               ? <PaletteIcon className="size-4" />
-              : assignment?.type === 'default' && assignment.value === 'system'
-                ? <MonitorIcon className="size-4" />
-                : resolvedTheme === 'dark'
-                  ? <MoonIcon className="size-4" />
-                  : <SunIcon className="size-4" />
+              : activePresetId
+                ? <span className="flex items-center gap-0.5">{activePresetId === 'sci-fi' ? <ZapIcon className="size-3.5" /> : <SwordsIcon className="size-3.5" />}{assignment?.type === 'default' && assignment.value === 'system' ? <MonitorIcon className="size-3.5" /> : resolvedTheme === 'dark' ? <MoonIcon className="size-3.5" /> : <SunIcon className="size-3.5" />}</span>
+                : assignment?.type === 'default' && assignment.value === 'system'
+                  ? <MonitorIcon className="size-4" />
+                  : resolvedTheme === 'dark'
+                    ? <MoonIcon className="size-4" />
+                    : <SunIcon className="size-4" />
           ) : (
             <SunIcon className="size-4" />
           )}
