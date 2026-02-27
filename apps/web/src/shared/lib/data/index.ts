@@ -82,7 +82,7 @@ export {
 
 export { DataLayerError, toDataLayerError, isAuthError } from './errors'
 export { createSupabaseDataClient } from './supabase'
-export { createLocalDataClient, clearLocalData, exportLocalData, ensureLocalDefaultSpace, ensureLocalDefaultTypes, LOCAL_DEFAULT_SPACE_ID } from './local'
+export { createLocalDataClient, clearLocalData, exportLocalData, ensureLocalDefaultSpace, ensureLocalDefaultTypes, LOCAL_DEFAULT_SPACE_ID, LOCAL_OWNER_ID } from './local'
 export {
   DataProvider,
   useDataClient,
