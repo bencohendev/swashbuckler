@@ -11,6 +11,13 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-27 | "Cannot resolve a DOM node" crash in modal editor | patchSlateDom now returns a disconnected div for all failed cases instead of re-throwing, preventing crashes when multiple editors coexist |
+| 2026-02-27 | Entry content not saving from modal editor | Auto-save used a global singleton store — two editors (page + modal) would race, with one stealing the other's dirty flag. Fixed by tracking content and dirty state per-instance via refs |
+| 2026-02-27 | Inline creation title filled in instead of placeholder | SlashInput and Mention opened the modal without autoFocus, causing the auto-generated title to appear as real text instead of a placeholder |
+| 2026-02-27 | ObjectEditorModal not scrollable on desktop | Desktop DialogContent had overflow-hidden with no scroll container. Changed to overflow-y-auto so content scrolls when fields exceed 85vh |
+
+| Date | Bug | Fix |
+|------|-----|-----|
 | 2026-02-26 | Enter key throws "Cannot resolve a DOM node" | LinkPlugin `insertBreak` override ran deferred `focus()` on every Enter; new block's DOM not yet in Slate's WeakMap. Removed the `insertBreak` override — link auto-detection only triggers on space/paste, not Enter |
 | 2026-02-25 | Toggle collapse crashes editor ("Cannot resolve a DOM node") | Always render children in DOM with `hidden` class when collapsed instead of unmounting them, keeping Slate model and DOM in sync |
 | 2026-02-25 | RecentSection infinite loop from unstable Zustand snapshot | Select stable `entries` reference and derive IDs via `useMemo` instead of calling `getRecentIds()` which returns a new array every render |
