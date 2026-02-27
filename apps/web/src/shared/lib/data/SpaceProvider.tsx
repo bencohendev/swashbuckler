@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { toast } from '@/shared/hooks/useToast'
 import type { Space, SpacesClient, SharingClient, SpaceSharePermission, DataClient } from './types'
 import { createSupabaseDataClient } from './supabase'
 import { createLocalDataClient, ensureLocalDefaultSpace, ensureLocalDefaultTypes } from './local'
@@ -218,6 +219,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       const { copyTypesFromSpaceId, includeTemplates, starterKitId, ...createInput } = input
       const result = await spacesClient.create(createInput)
       if (result.error) {
+        toast({ title: 'Create space', description: result.error.message, variant: 'destructive' })
         return { data: null, error: result.error.message }
       }
 
@@ -302,6 +304,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     update: async (id: string, input: { name?: string; icon?: string }) => {
       const result = await spacesClient.update(id, input)
       if (result.error) {
+        toast({ title: 'Update space', description: result.error.message, variant: 'destructive' })
         return { data: null, error: result.error.message }
       }
       emit('spaces')
@@ -310,6 +313,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     remove: async (id: string) => {
       const result = await spacesClient.delete(id)
       if (result.error) {
+        toast({ title: 'Delete space', description: result.error.message, variant: 'destructive' })
         return result.error.message
       }
       emit('spaces')
@@ -323,6 +327,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       }
       const result = await spacesClient.archive(id)
       if (result.error) {
+        toast({ title: 'Archive space', description: result.error.message, variant: 'destructive' })
         return { error: result.error.message }
       }
       // If archiving the current space, switch to next available
@@ -338,6 +343,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     unarchiveSpace: async (id: string) => {
       const result = await spacesClient.unarchive(id)
       if (result.error) {
+        toast({ title: 'Unarchive space', description: result.error.message, variant: 'destructive' })
         return { error: result.error.message }
       }
       emit('spaces')

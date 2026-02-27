@@ -11,7 +11,7 @@ interface ExclusionManagerProps {
   shareId: string
   loadExclusions: (shareId: string) => Promise<ShareExclusion[]>
   addExclusion: (shareId: string, input: CreateShareExclusionInput) => Promise<ShareExclusion | null>
-  removeExclusion: (exclusionId: string) => Promise<void>
+  removeExclusion: (exclusionId: string) => Promise<unknown>
   spaceExclusions?: ShareExclusion[]
   onExclusionsChange?: () => void
 }

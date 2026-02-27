@@ -88,7 +88,6 @@ function SharingControls({ spaceId }: { spaceId: string }) {
   const { shares, isLoading, createShare, updateShare, deleteShare, loadExclusions, addExclusion, removeExclusion, loadSpaceExclusions, addSpaceExclusion } = useSpaceShares(spaceId)
   const [email, setEmail] = useState('')
   const [permission, setPermission] = useState<SpaceSharePermission>('view')
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [expandedShareId, setExpandedShareId] = useState<string | null>(null)
   const [spaceExclusionsOpen, setSpaceExclusionsOpen] = useState(false)
@@ -108,13 +107,10 @@ function SharingControls({ spaceId }: { spaceId: string }) {
     e.preventDefault()
     if (!email.trim()) return
 
-    setError(null)
     setIsSubmitting(true)
     const result = await createShare(email.trim(), permission)
 
-    if (result && 'message' in result) {
-      setError(result.message)
-    } else {
+    if (result) {
       setEmail('')
       setPermission('view')
     }
@@ -127,9 +123,11 @@ function SharingControls({ spaceId }: { spaceId: string }) {
 
   const handleRemove = async () => {
     if (!pendingRemoveId) return
-    await deleteShare(pendingRemoveId)
+    const ok = await deleteShare(pendingRemoveId)
     setPendingRemoveId(null)
-    toast({ description: 'Access removed', variant: 'success' })
+    if (ok) {
+      toast({ description: 'Access removed', variant: 'success' })
+    }
   }
 
   return (
@@ -141,7 +139,6 @@ function SharingControls({ spaceId }: { spaceId: string }) {
           onChange={e => setEmail(e.target.value)}
           placeholder="Email address"
           aria-label="Email address"
-          aria-describedby={error ? "share-error" : undefined}
           className="flex-1"
         />
         <div className="flex gap-2">
@@ -159,7 +156,6 @@ function SharingControls({ spaceId }: { spaceId: string }) {
             Share
           </Button>
         </div>
-        {error && <p id="share-error" className="w-full text-sm text-destructive">{error}</p>}
       </form>
 
       {shares.length > 0 && (

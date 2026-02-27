@@ -115,11 +115,11 @@ function LinkSearch({ objectId, existingTargetIds, onSelect, onClose }: LinkSear
     inputRef.current?.focus()
   }, [])
 
-  // Search objects
+  // Search objects (debounced)
   useEffect(() => {
     let cancelled = false
 
-    async function search() {
+    const timer = setTimeout(async () => {
       const result = await dataClient.objects.search(query)
       if (!cancelled) {
         // Filter out self and already-linked objects
@@ -129,10 +129,9 @@ function LinkSearch({ objectId, existingTargetIds, onSelect, onClose }: LinkSear
         setResults(filtered)
         setSelectedIndex(0)
       }
-    }
+    }, 250)
 
-    search()
-    return () => { cancelled = true }
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [dataClient, query, objectId, existingTargetIds])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {

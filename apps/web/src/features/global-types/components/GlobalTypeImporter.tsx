@@ -24,12 +24,10 @@ export function GlobalTypeImporter() {
   const handleImport = async (typeId: string) => {
     if (!spaceId) return
     setImportingId(typeId)
-    const { data, error } = await importToSpace(typeId, spaceId)
+    const result = await importToSpace(typeId, spaceId)
     setImportingId(null)
-    if (error) {
-      toast({ description: error, variant: 'destructive' })
-    } else if (data) {
-      toast({ description: `Imported "${data.name}" into this space`, variant: 'success' })
+    if (result) {
+      toast({ description: `Imported "${result.name}" into this space`, variant: 'success' })
       setOpen(false)
     }
   }

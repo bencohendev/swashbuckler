@@ -33,38 +33,23 @@ export function ObjectTypeManager() {
     }
   }, [editTypeId, types])
 
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [editError, setEditError] = useState<string | null>(null)
-
   const handleCreate = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
-    setCreateError(null)
     const result = await create(input as CreateObjectTypeInput)
-    if (result.error) {
-      setCreateError(result.error)
-      return
-    }
-    setIsCreating(false)
+    if (result) setIsCreating(false)
   }
 
   const handleUpdate = async (input: CreateObjectTypeInput | UpdateObjectTypeInput) => {
     if (!editingType) return
-    setEditError(null)
     const result = await update(editingType.id, input as UpdateObjectTypeInput)
-    if (result.error) {
-      setEditError(result.error)
-      return
-    }
-    setEditingType(null)
+    if (result) setEditingType(null)
   }
 
   const handleDelete = async () => {
     if (!pendingDeleteType) return
     const typeName = pendingDeleteType.name
-    const error = await remove(pendingDeleteType.id)
+    const ok = await remove(pendingDeleteType.id)
     setPendingDeleteType(null)
-    if (error) {
-      toast({ description: `Failed to delete type: ${error}`, variant: 'destructive' })
-    } else {
+    if (ok) {
       toast({ description: `Type "${typeName}" deleted`, variant: 'success' })
     }
   }
@@ -72,11 +57,9 @@ export function ObjectTypeManager() {
   const handleArchive = async () => {
     if (!pendingArchiveType) return
     const typeName = pendingArchiveType.name
-    const error = await archive(pendingArchiveType.id)
+    const result = await archive(pendingArchiveType.id)
     setPendingArchiveType(null)
-    if (error) {
-      toast({ description: `Failed to archive type: ${error}`, variant: 'destructive' })
-    } else {
+    if (result) {
       toast({ description: `Type "${typeName}" archived`, variant: 'success' })
     }
   }
@@ -105,8 +88,7 @@ export function ObjectTypeManager() {
         <h2 className="mb-4 text-lg font-medium">Create New Type</h2>
         <ObjectTypeForm
           onSave={handleCreate}
-          onCancel={() => { setIsCreating(false); setCreateError(null) }}
-          error={createError}
+          onCancel={() => setIsCreating(false)}
         />
       </div>
     )
@@ -119,8 +101,7 @@ export function ObjectTypeManager() {
         <ObjectTypeForm
           objectType={editingType}
           onSave={handleUpdate}
-          onCancel={() => { setEditingType(null); setEditError(null) }}
-          error={editError}
+          onCancel={() => setEditingType(null)}
         />
       </div>
     )

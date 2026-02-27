@@ -9,8 +9,8 @@ import {
   type CreateTagInput,
   type UpdateTagInput,
 } from '@/shared/lib/data'
-import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { useMutationAction, useVoidMutationAction } from '@/shared/hooks/useMutationAction'
 
 const EMPTY_TAGS: Tag[] = []
 const EMPTY_BATCH: Record<string, Tag[]> = {}
@@ -22,7 +22,7 @@ interface UseTagsReturn {
   refetch: () => Promise<void>
   create: (input: CreateTagInput) => Promise<Tag | null>
   update: (id: string, input: UpdateTagInput) => Promise<Tag | null>
-  remove: (id: string) => Promise<void>
+  remove: (id: string) => Promise<boolean>
 }
 
 export function useTags(): UseTagsReturn {
@@ -44,25 +44,32 @@ export function useTags(): UseTagsReturn {
     await queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
   }, [queryClient, spaceId])
 
-  const create = useCallback(async (input: CreateTagInput): Promise<Tag | null> => {
-    const result = await dataClient.tags.create(input)
-    if (result.error) return null
-    emit('tags')
-    return result.data
-  }, [dataClient])
+  const createFn = useCallback(
+    (input: CreateTagInput) => dataClient.tags.create(input),
+    [dataClient],
+  )
+  const create = useMutationAction(createFn, {
+    actionLabel: 'Create tag',
+    emitChannels: ['tags'],
+  })
 
-  const update = useCallback(async (id: string, input: UpdateTagInput): Promise<Tag | null> => {
-    const result = await dataClient.tags.update(id, input)
-    if (result.error) return null
-    emit('tags')
-    return result.data
-  }, [dataClient])
+  const updateFn = useCallback(
+    (id: string, input: UpdateTagInput) => dataClient.tags.update(id, input),
+    [dataClient],
+  )
+  const update = useMutationAction(updateFn, {
+    actionLabel: 'Update tag',
+    emitChannels: ['tags'],
+  })
 
-  const remove = useCallback(async (id: string): Promise<void> => {
-    const result = await dataClient.tags.delete(id)
-    if (result.error) return
-    emit('tags')
-  }, [dataClient])
+  const removeFn = useCallback(
+    (id: string) => dataClient.tags.delete(id),
+    [dataClient],
+  )
+  const remove = useVoidMutationAction(removeFn, {
+    actionLabel: 'Delete tag',
+    emitChannels: ['tags'],
+  })
 
   return {
     tags: data ?? EMPTY_TAGS,
@@ -96,19 +103,37 @@ export function useObjectTags(objectId: string): UseObjectTagsReturn {
     },
   })
 
+  const addTagFn = useCallback(
+    (tagId: string) => dataClient.tags.addTagToObject(objectId, tagId),
+    [dataClient, objectId],
+  )
+  const addTagRaw = useMutationAction(addTagFn, {
+    actionLabel: 'Add tag',
+    emitChannels: ['tags'],
+  })
   const addTag = useCallback(async (tagId: string) => {
-    await dataClient.tags.addTagToObject(objectId, tagId)
-    queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
-    queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
-    emit('tags')
-  }, [dataClient, objectId, queryClient, spaceId])
+    const result = await addTagRaw(tagId)
+    if (result) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
+    }
+  }, [addTagRaw, queryClient, objectId, spaceId])
 
+  const removeTagFn = useCallback(
+    (tagId: string) => dataClient.tags.removeTagFromObject(objectId, tagId),
+    [dataClient, objectId],
+  )
+  const removeTagRaw = useVoidMutationAction(removeTagFn, {
+    actionLabel: 'Remove tag',
+    emitChannels: ['tags'],
+  })
   const removeTag = useCallback(async (tagId: string) => {
-    await dataClient.tags.removeTagFromObject(objectId, tagId)
-    queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
-    queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
-    emit('tags')
-  }, [dataClient, objectId, queryClient, spaceId])
+    const ok = await removeTagRaw(tagId)
+    if (ok) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.objectTags(objectId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all(spaceId ?? undefined) })
+    }
+  }, [removeTagRaw, queryClient, objectId, spaceId])
 
   return { tags: data ?? EMPTY_TAGS, isLoading, addTag, removeTag }
 }

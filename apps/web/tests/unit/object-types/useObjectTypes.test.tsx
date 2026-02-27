@@ -51,8 +51,8 @@ describe('useObjectTypes', () => {
       })
     })
 
-    expect(created!.data).not.toBeNull()
-    expect(created!.data!.name).toBe('Task')
+    expect(created).not.toBeNull()
+    expect(created!.name).toBe('Task')
 
     await waitFor(() => {
       expect(result.current.types.some(t => t.slug === 'task')).toBe(true)
@@ -77,7 +77,7 @@ describe('useObjectTypes', () => {
     })
 
     await act(async () => {
-      await result.current.update(created!.data!.id, { name: 'Renamed' })
+      await result.current.update(created!.id, { name: 'Renamed' })
     })
 
     await waitFor(() => {
@@ -108,7 +108,7 @@ describe('useObjectTypes', () => {
     })
 
     await act(async () => {
-      await result.current.remove(created!.data!.id)
+      await result.current.remove(created!.id)
     })
 
     await waitFor(() => {
@@ -140,7 +140,7 @@ describe('useObjectType', () => {
       })
     })
 
-    const { result } = renderHook(() => useObjectType(created!.data!.id), { wrapper: Wrapper })
+    const { result } = renderHook(() => useObjectType(created!.id), { wrapper: Wrapper })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)

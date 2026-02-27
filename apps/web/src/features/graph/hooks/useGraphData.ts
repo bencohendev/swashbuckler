@@ -3,10 +3,10 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useDataClient, useSpaceId } from '@/shared/lib/data'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
 import { useObjects } from '@/features/objects/hooks'
 import { useObjectTypeMap } from '@/features/object-types/hooks/useObjectTypeMap'
 import { useExclusionFilter } from '@/features/sharing'
-import { queryKeys } from '@/shared/lib/data/queryKeys'
 import { buildGraphData } from '../lib/buildGraphData'
 import type { GraphData } from '../lib/types'
 
