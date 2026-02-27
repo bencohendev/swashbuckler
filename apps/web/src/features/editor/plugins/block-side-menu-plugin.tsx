@@ -59,7 +59,7 @@ export const BlockSideMenuPlugin = createPlatePlugin({
   render: {
     aboveNodes: ({ path }) => {
       // Only wrap top-level elements (direct children of editor)
-      if (path.length !== 1) return undefined
+      if (!path || path.length !== 1) return undefined
 
       return BlockWrapper
     },
