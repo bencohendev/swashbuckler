@@ -432,6 +432,51 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string, userId?
       return { data: data as DataObjectSummary[], error: null }
     },
 
+    async listContent(options: ListObjectsOptions = {}): Promise<DataListResult<{ id: string; content: unknown }>> {
+      let query = supabase
+        .from('objects')
+        .select('id, content')
+        .order('updated_at', { ascending: false })
+
+      if (spaceId) {
+        query = query.eq('space_id', spaceId)
+      }
+
+      if (options.parentId !== undefined) {
+        query = options.parentId === null
+          ? query.is('parent_id', null)
+          : query.eq('parent_id', options.parentId)
+      }
+
+      if (options.typeId) {
+        query = query.eq('type_id', options.typeId)
+      }
+
+      if (options.isDeleted !== undefined) {
+        query = query.eq('is_deleted', options.isDeleted)
+      }
+
+      if (options.isArchived !== undefined) {
+        query = query.eq('is_archived', options.isArchived)
+      }
+
+      if (options.limit) {
+        query = query.limit(options.limit)
+      }
+
+      if (options.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 50) - 1)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as { id: string; content: unknown }[], error: null }
+    },
+
     async get(id: string): Promise<DataResult<DataObject>> {
       const { data, error } = await supabase
         .from('objects')

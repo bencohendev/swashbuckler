@@ -21,6 +21,7 @@ describe('getOperators', () => {
     checkbox: 2,
     tag: 4,
     relation: 4,
+    content: 4,
   }
 
   for (const [type, count] of Object.entries(expectedCounts)) {
