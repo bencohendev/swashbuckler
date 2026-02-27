@@ -159,7 +159,6 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Feature | Description |
 |---------|-------------|
-| Manual Entry Ordering | Let users drag-and-drop to reorder entries instead of defaulting to most-recently-updated |
 | RP Starter Kit Expansion | Expand the Roleplaying starter kit — more types (Quest, NPC, Encounter, etc.), richer properties, templates |
 | Apply Theme to Current Space | Add "Apply to current space" button on the account-level custom themes page |
 
