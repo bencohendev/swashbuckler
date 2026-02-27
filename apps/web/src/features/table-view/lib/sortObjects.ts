@@ -40,7 +40,13 @@ export function sortObjects(
   return [...objects].sort((a, b) => {
     let cmp: number
 
-    if (sort.field === 'title') {
+    if (sort.field === 'sort_order') {
+      const aOrder = a.sort_order ?? 0
+      const bOrder = b.sort_order ?? 0
+      if (aOrder !== bOrder) cmp = aOrder - bOrder
+      else cmp = new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      return cmp // Manual sort ignores direction
+    } else if (sort.field === 'title') {
       cmp = a.title.localeCompare(b.title)
     } else if (sort.field === 'tags') {
       const aTags = (tagsByObject[a.id] ?? []).map((t) => t.name).sort().join(', ')

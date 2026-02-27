@@ -377,6 +377,25 @@ class SwashbucklerDB extends Dexie {
         if (view.owner_id === 'local') view.owner_id = LOCAL_OWNER_ID
       })
     })
+
+    // Version 14: Add sort_order to objects for manual entry ordering
+    this.version(14).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, is_archived, updated_at, space_id, sort_order',
+      objectTypes: 'id, name, slug, owner_id, sort_order, is_archived, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id, [object_id+tag_id]',
+      pins: 'id, object_id',
+      savedViews: 'id, type_id, space_id, owner_id, is_default',
+    }).upgrade(async (tx) => {
+      await tx.table('objects').toCollection().modify((obj: Record<string, unknown>) => {
+        if (obj.sort_order === undefined) {
+          obj.sort_order = 0
+        }
+      })
+    })
   }
 }
 
@@ -817,10 +836,13 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           results = results.filter(filter)
         }
 
-        // Sort by updated_at descending
-        results.sort((a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        )
+        // Sort by sort_order ascending, then updated_at descending
+        results.sort((a, b) => {
+          const sortOrderA = (a as DataObject & { sort_order?: number }).sort_order ?? 0
+          const sortOrderB = (b as DataObject & { sort_order?: number }).sort_order ?? 0
+          if (sortOrderA !== sortOrderB) return sortOrderA - sortOrderB
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        })
 
         // Apply pagination
         if (options.offset) {
@@ -920,6 +942,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           cover_image: input.cover_image ?? null,
           properties: input.properties ?? {},
           content: input.content ?? null,
+          sort_order: input.sort_order ?? 0,
           is_deleted: false,
           deleted_at: null,
           is_archived: false,

@@ -17,6 +17,7 @@ interface SortPopoverProps {
 }
 
 function getSortLabel(field: string, fields: FieldDefinition[]): string {
+  if (field === 'sort_order') return 'Manual'
   if (field === 'title') return 'Title'
   if (field === 'tags') return 'Tags'
   if (field === 'updated_at') return 'Updated'
@@ -26,7 +27,10 @@ function getSortLabel(field: string, fields: FieldDefinition[]): string {
 }
 
 export function SortPopover({ fields, sort, onSortChange }: SortPopoverProps) {
+  const isManualSort = sort.field === 'sort_order'
+
   const sortFieldOptions = [
+    { value: 'sort_order', label: 'Manual' },
     { value: 'title', label: 'Title' },
     ...fields.map((f) => ({ value: f.id, label: f.name })),
     { value: 'tags', label: 'Tags' },
@@ -70,39 +74,41 @@ export function SortPopover({ fields, sort, onSortChange }: SortPopoverProps) {
                 </label>
               ))}
             </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase text-muted-foreground">Direction</p>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  aria-pressed={sort.direction === 'asc'}
-                  onClick={() => onSortChange({ ...sort, direction: 'asc' })}
-                  className={cn(
-                    'flex items-center gap-1 rounded-md px-3 py-1 text-sm transition-colors',
-                    sort.direction === 'asc'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  <ArrowUpIcon className="size-3" />
-                  Asc
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={sort.direction === 'desc'}
-                  onClick={() => onSortChange({ ...sort, direction: 'desc' })}
-                  className={cn(
-                    'flex items-center gap-1 rounded-md px-3 py-1 text-sm transition-colors',
-                    sort.direction === 'desc'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  <ArrowDownIcon className="size-3" />
-                  Desc
-                </button>
+            {!isManualSort && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase text-muted-foreground">Direction</p>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    aria-pressed={sort.direction === 'asc'}
+                    onClick={() => onSortChange({ ...sort, direction: 'asc' })}
+                    className={cn(
+                      'flex items-center gap-1 rounded-md px-3 py-1 text-sm transition-colors',
+                      sort.direction === 'asc'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    <ArrowUpIcon className="size-3" />
+                    Asc
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={sort.direction === 'desc'}
+                    onClick={() => onSortChange({ ...sort, direction: 'desc' })}
+                    className={cn(
+                      'flex items-center gap-1 rounded-md px-3 py-1 text-sm transition-colors',
+                      sort.direction === 'desc'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    <ArrowDownIcon className="size-3" />
+                    Desc
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </Popover.Content>
       </Popover.Portal>

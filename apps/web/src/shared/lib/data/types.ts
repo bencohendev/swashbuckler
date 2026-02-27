@@ -126,6 +126,7 @@ export const objectSchema = z.object({
   cover_image: z.string().url().nullable(),
   properties: z.record(z.string(), z.any()),
   content: z.any().nullable(),
+  sort_order: z.number().int(),
   is_deleted: z.boolean(),
   deleted_at: z.string().datetime().nullable(),
   is_archived: z.boolean(),
@@ -147,6 +148,7 @@ export const createObjectSchema = z.object({
   cover_image: z.string().url().nullable().optional(),
   properties: z.record(z.string(), z.any()).optional(),
   content: z.any().nullable().optional(),
+  sort_order: z.number().int().optional(),
   is_deleted: z.boolean().optional(),
 })
 
@@ -161,6 +163,7 @@ export const updateObjectSchema = z.object({
   cover_image: z.string().url().nullable().optional(),
   properties: z.record(z.string(), z.any()).optional(),
   content: z.any().nullable().optional(),
+  sort_order: z.number().int().optional(),
   is_deleted: z.boolean().optional(),
 })
 

@@ -152,6 +152,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Regression Testing](features/regression-testing.md) | Automated e2e regression tests (Playwright) + manual checklist |
 | Default Space Theme to System | Spaces without a theme assignment reset to system theme on switch |
 | [Content Filtering](features/content-filtering.md) | Extend advanced filters to search entry body content, not just properties and title |
+| [Manual Entry Ordering](features/manual-entry-ordering.md) | Drag-and-drop reordering of entries in sidebar and type pages (table/list views) |
 
 
 ## Planned Features
