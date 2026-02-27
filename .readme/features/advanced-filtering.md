@@ -14,10 +14,10 @@ Filters use a `FilterExpression` structure in Disjunctive Normal Form (DNF):
 
 ```
 FilterExpression
-├── search: string (global title search, AND'd with groups)
+├── search: string (global title + content search, AND'd with groups)
 └── groups: FilterGroup[] (OR'd together)
     └── conditions: FilterCondition[] (AND'd together)
-        ├── target: FilterFieldTarget (property | system | title | tag | relation)
+        ├── target: FilterFieldTarget (property | system | title | tag | relation | content)
         ├── operator: string (per-type operators)
         └── value / value2: unknown
 ```
@@ -38,10 +38,11 @@ Single source of truth mapping field types to available operators:
 | checkbox | is_checked, is_not_checked | 2 |
 | tag | contains, does_not_contain, is_empty (has no tags), is_not_empty (has tags) | 4 |
 | relation | links_to, links_to_type, has_links, has_no_links | 4 |
+| content | contains, does_not_contain, is_empty, is_not_empty | 4 |
 
 ### Filter Logic
 
-- **Search**: Global title substring filter, AND'd with group conditions
+- **Search**: Global title + content substring filter (OR), AND'd with group conditions
 - **Within a group**: Conditions use AND logic
 - **Between groups**: Groups use OR logic (DNF)
 - **Empty groups**: Auto-removed when last condition is deleted

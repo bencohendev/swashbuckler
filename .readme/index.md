@@ -151,13 +151,13 @@ Dual-storage architecture with a `DataClient` interface:
 | [Accessibility Audit v2](features/accessibility-audit-v2.md) | Automated testing, keyboard nav, screen readers, contrast, motion, touch targets, zoom/reflow |
 | [Regression Testing](features/regression-testing.md) | Automated e2e regression tests (Playwright) + manual checklist |
 | Default Space Theme to System | Spaces without a theme assignment reset to system theme on switch |
+| [Content Filtering](features/content-filtering.md) | Extend advanced filters to search entry body content, not just properties and title |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| Content Filtering | Extend advanced filters to search entry body content, not just properties and title |
 | Manual Entry Ordering | Let users drag-and-drop to reorder entries instead of defaulting to most-recently-updated |
 | RP Starter Kit Expansion | Expand the Roleplaying starter kit — more types (Quest, NPC, Encounter, etc.), richer properties, templates |
 | Apply Theme to Current Space | Add "Apply to current space" button on the account-level custom themes page |
