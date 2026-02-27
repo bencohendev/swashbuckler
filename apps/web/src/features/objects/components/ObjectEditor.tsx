@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
 import { Editor, type EditorHandle } from '@/features/editor'
+import { EditorErrorBoundary } from '@/features/editor/components/EditorErrorBoundary'
 import { stripPrivateContent } from '@/features/editor/lib/stripPrivateContent'
 import { TagPicker } from '@/features/tags'
 import { PinButton } from '@/features/pins'
@@ -430,17 +431,19 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
           <TagPicker objectId={id} readOnly={!canEdit} />
 
           <div data-tour="editor-area">
-            <Editor
-              key={`${id}-${contentVersion}`}
-              ref={editorRef}
-              initialContent={editorContent}
-              onSave={handleContentSave}
-              placeholder="Start writing..."
-              readOnly={!canEdit}
-              isTemplateMode={isTemplateMode}
-              isOwner={isOwner}
-              collaborationOptions={collaborationOptions}
-            />
+            <EditorErrorBoundary onReset={() => setContentVersion(v => v + 1)}>
+              <Editor
+                key={`${id}-${contentVersion}`}
+                ref={editorRef}
+                initialContent={editorContent}
+                onSave={handleContentSave}
+                placeholder="Start writing..."
+                readOnly={!canEdit}
+                isTemplateMode={isTemplateMode}
+                isOwner={isOwner}
+                collaborationOptions={collaborationOptions}
+              />
+            </EditorErrorBoundary>
           </div>
 
           <LinkedObjects objectId={id} readOnly={!canEdit} />
