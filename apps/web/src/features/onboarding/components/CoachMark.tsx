@@ -109,6 +109,17 @@ export function CoachMark({
   // Track whether position has been measured for the current target
   const [ready, setReady] = useState(false)
 
+  // Buffer displayed content — only update when becoming ready so the old
+  // content stays visible during the fade-out instead of flashing new text.
+  const [shownTitle, setShownTitle] = useState(title)
+  const [shownDescription, setShownDescription] = useState(description)
+  const [shownStep, setShownStep] = useState(currentStep)
+  if (ready && (shownTitle !== title || shownDescription !== description || shownStep !== currentStep)) {
+    setShownTitle(title)
+    setShownDescription(description)
+    setShownStep(currentStep)
+  }
+
   // Derive state from props: hide popover when target changes so we don't
   // show new content at the old element's position. Keep old position so the
   // hidden popover doesn't flash at (0,0) before the new measurement arrives.
@@ -165,17 +176,17 @@ export function CoachMark({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onSkip])
 
-  const isLast = currentStep === totalSteps - 1
-  const isFirst = currentStep === 0
+  const isLast = shownStep === totalSteps - 1
+  const isFirst = shownStep === 0
 
   // Step dots (only for coachmark steps — skip index 0 which is the welcome dialog)
   const coachmarkSteps = TUTORIAL_STEPS.filter((s) => s.type === 'coachmark')
-  const coachmarkIndex = currentStep - 1 // offset by welcome dialog step
+  const coachmarkIndex = shownStep - 1 // offset by welcome dialog step
 
   const content = (
     <>
-      <div className="mb-1 text-sm font-semibold">{title}</div>
-      <p className="mb-3 text-sm text-muted-foreground">{description}</p>
+      <div className="mb-1 text-sm font-semibold">{shownTitle}</div>
+      <p className="mb-3 text-sm text-muted-foreground">{shownDescription}</p>
       {/* Step dots */}
       <div className="mb-3 flex justify-center gap-1" aria-hidden="true">
         {coachmarkSteps.map((_, i) => (
@@ -212,7 +223,7 @@ export function CoachMark({
       <div
         ref={popoverRef}
         role="dialog"
-        aria-label={title}
+        aria-label={shownTitle}
         tabIndex={-1}
         className="fixed inset-x-0 bottom-0 z-[51] rounded-t-xl border-t bg-background p-4 shadow-xl outline-none animate-in slide-in-from-bottom-4 motion-reduce:animate-none"
       >
@@ -226,7 +237,7 @@ export function CoachMark({
     <div
       ref={popoverRef}
       role="dialog"
-      aria-label={title}
+      aria-label={shownTitle}
       tabIndex={-1}
       className={cn(
         'fixed z-[51] w-72 rounded-lg border bg-background p-4 shadow-xl outline-none',
