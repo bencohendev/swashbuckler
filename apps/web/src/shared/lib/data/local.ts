@@ -429,7 +429,10 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           .filter(t => t.space_id === effectiveSpace && t.slug.toLowerCase() === lowerSlug)
           .first()
         if (duplicate) {
-          return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+          const msg = duplicate.is_archived
+            ? 'A type with this slug already exists in this space. An archived type is using this name — unarchive or delete it first.'
+            : 'A type with this slug already exists in this space'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
         }
 
         // Determine sort_order if not provided
@@ -482,7 +485,10 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
             .filter(t => t.id !== id && t.space_id === existing.space_id && t.slug.toLowerCase() === lowerSlug)
             .first()
           if (duplicate) {
-            return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+            const msg = duplicate.is_archived
+              ? 'A type with this slug already exists in this space. An archived type is using this name — unarchive or delete it first.'
+              : 'A type with this slug already exists in this space'
+            return { data: null, error: { message: msg, code: 'DUPLICATE' } }
           }
         }
 
@@ -1484,7 +1490,10 @@ function createLocalSpacesClient(): SpacesClient {
           .filter(s => s.owner_id === LOCAL_OWNER_ID && s.name.toLowerCase() === lowerName)
           .first()
         if (duplicate) {
-          return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+          const msg = duplicate.is_archived
+            ? 'A space with this name already exists. An archived space is using this name — unarchive or delete it first.'
+            : 'A space with this name already exists'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
         }
 
         const space: Space = {
@@ -1524,7 +1533,10 @@ function createLocalSpacesClient(): SpacesClient {
             .filter(s => s.id !== id && s.owner_id === existing.owner_id && s.name.toLowerCase() === lowerName)
             .first()
           if (duplicate) {
-            return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+            const msg = duplicate.is_archived
+              ? 'A space with this name already exists. An archived space is using this name — unarchive or delete it first.'
+              : 'A space with this name already exists'
+            return { data: null, error: { message: msg, code: 'DUPLICATE' } }
           }
         }
 
