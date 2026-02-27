@@ -119,7 +119,10 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
       const obj = await create({ title, type_id: typeId })
       if (obj) {
         selectObject(obj)
-        useObjectModal.getState().open(obj.id, { autoFocus: true })
+        useObjectModal.getState().open(obj.id, {
+          autoFocus: true,
+          onClose: () => focusEditorAtSelection(editor),
+        })
       }
     },
     [query, create, getNextTitle, selectObject]

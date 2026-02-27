@@ -399,7 +399,10 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
         })
         editor.tf.move()
         focusEditorAtSelection(editor)
-        useObjectModal.getState().open(obj.id, { autoFocus: true })
+        useObjectModal.getState().open(obj.id, {
+          autoFocus: true,
+          onClose: () => focusEditorAtSelection(editor),
+        })
       }
     },
     [editor, create, getNextTitle]
