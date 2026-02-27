@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import type { TElement } from '@udecode/plate';
+import { type TElement, NodeApi } from '@udecode/plate';
 import type { PlateElementProps } from '@udecode/plate/react';
 import { PlateElement, useEditorRef, useReadOnly } from '@udecode/plate/react';
 import {
@@ -33,6 +33,23 @@ import {
 } from '@/shared/components/ui/DropdownMenu';
 
 type TableEditor = Parameters<typeof insertTableRow>[0];
+
+/** After a column insert, colSizes gets a 0 for the new column. Replace it
+ *  with the average of existing widths so it's visible. */
+function fixZeroColSizes(editor: TableEditor, tablePath: number[]) {
+  const node = NodeApi.get(editor, tablePath) as Record<string, unknown> | undefined;
+  const sizes = node?.colSizes as number[] | undefined;
+  if (!sizes || !sizes.some((s) => s === 0)) return;
+  const nonZero = sizes.filter((s) => s > 0);
+  const avg =
+    nonZero.length > 0
+      ? Math.round(nonZero.reduce((a, b) => a + b, 0) / nonZero.length)
+      : 100;
+  editor.tf.setNodes(
+    { colSizes: sizes.map((s) => (s === 0 ? avg : s)) } as Record<string, unknown>,
+    { at: tablePath },
+  );
+}
 
 interface RowPosition {
   top: number;
@@ -396,19 +413,20 @@ function ColumnHandleMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
-            insertTableColumn(editor, {
-              fromCell: [...tablePath, 0, colIndex],
-              before: true,
-            });
+            const cellPath = [...tablePath, 0, colIndex];
+            editor.tf.select(editor.api.start(cellPath));
+            insertTableColumn(editor, { before: true });
+            fixZeroColSizes(editor, tablePath);
           }}
         >
           Insert left
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
-            insertTableColumn(editor, {
-              fromCell: [...tablePath, 0, colIndex],
-            });
+            const cellPath = [...tablePath, 0, colIndex];
+            editor.tf.select(editor.api.start(cellPath));
+            insertTableColumn(editor);
+            fixZeroColSizes(editor, tablePath);
           }}
         >
           Insert right
