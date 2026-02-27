@@ -1,5 +1,3 @@
-'use client'
-
 import { AppearanceSettings } from '@/features/theme-builder'
 
 export default function AppearancePage() {

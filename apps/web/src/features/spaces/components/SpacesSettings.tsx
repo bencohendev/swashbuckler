@@ -8,7 +8,7 @@ import { useAuth, useCurrentSpace, useSpaces } from '@/shared/lib/data'
 import type { Space } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
-import { EmojiPicker } from '@/shared/components/EmojiPicker'
+import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
 import { toast } from '@/shared/hooks/useToast'
 
 export function SpacesSettings() {

@@ -1,5 +1,3 @@
-'use client'
-
 import { AccountSettings } from '@/features/account'
 
 export default function AccountSettingsPage() {

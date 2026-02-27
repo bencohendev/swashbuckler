@@ -1,3 +1,5 @@
+'use client'
+
 import { create } from 'zustand';
 import type { EditorContent } from './types';
 import { initialEditorValue } from './lib/plate-config';

@@ -1,3 +1,5 @@
+'use client'
+
 import { create } from 'zustand'
 import type { CustomTheme, ThemeCoreColors, ThemeBase, SpaceThemeAssignment } from '../types'
 import { deriveAllColors } from '../lib/deriveColors'

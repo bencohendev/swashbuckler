@@ -1,10 +1,15 @@
 import { type ReactNode } from "react"
+import dynamic from "next/dynamic"
 import { createClient } from "@/shared/lib/supabase/server"
 import { Sidebar } from "@/features/sidebar/components"
 import { Header } from "@/shared/components/layout"
 import { GuestBanner } from "@/shared/components/GuestBanner"
-import { ObjectEditorModal } from "@/features/objects/components/ObjectEditorModal"
 import { NavigationProgress } from "@/shared/components/NavigationProgress"
+
+const ObjectEditorModal = dynamic(
+  () => import("@/features/objects/components/ObjectEditorModal").then(mod => ({ default: mod.ObjectEditorModal })),
+  { ssr: false }
+)
 
 export default async function MainLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()

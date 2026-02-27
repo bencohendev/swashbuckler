@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import type { DataClient, StorageMode } from './types'
@@ -55,7 +55,7 @@ export function DataProvider({ children, spaceId, user, isAuthLoading }: DataPro
     })
   }, [dataClient, isAuthLoading])
 
-  const migrateToSupabase = async () => {
+  const migrateToSupabase = useCallback(async () => {
     if (!user) {
       throw new Error('Must be logged in to migrate data')
     }
@@ -140,16 +140,16 @@ export function DataProvider({ children, spaceId, user, isAuthLoading }: DataPro
 
     // Clear local data after successful migration
     await clearLocalData()
-  }
+  }, [user, supabase, spaceId])
 
-  const value: DataContextValue = {
+  const value: DataContextValue = useMemo(() => ({
     dataClient,
     storageMode,
     user,
     isLoading: isAuthLoading,
     spaceId: spaceId ?? null,
     migrateToSupabase,
-  }
+  }), [dataClient, storageMode, user, isAuthLoading, spaceId, migrateToSupabase])
 
   return (
     <DataContext.Provider value={value}>
