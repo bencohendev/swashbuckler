@@ -109,13 +109,13 @@ export function CoachMark({
   // Track whether position has been measured for the current target
   const [ready, setReady] = useState(false)
 
-  // Derive state from props: reset position when target changes so we don't
-  // show new content at the old element's position
+  // Derive state from props: hide popover when target changes so we don't
+  // show new content at the old element's position. Keep old position so the
+  // hidden popover doesn't flash at (0,0) before the new measurement arrives.
   const [prevTarget, setPrevTarget] = useState<Element | null>(null)
   if (targetEl !== prevTarget) {
     setPrevTarget(targetEl)
     setReady(false)
-    setPosition(null)
   }
 
   const measure = useCallback(() => {
