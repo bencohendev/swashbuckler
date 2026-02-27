@@ -24,7 +24,11 @@ import { DOMEditor } from 'slate-dom'
 const originalToDOMNode = DOMEditor.toDOMNode
 
 /** Disconnected element returned when DOM resolution fails — prevents crashes. */
-const FALLBACK_ELEMENT = document.createElement('div')
+let _fallback: HTMLElement | null = null
+function getFallback(): HTMLElement {
+  if (!_fallback) _fallback = document.createElement('div')
+  return _fallback
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 DOMEditor.toDOMNode = (editor: any, node: any): HTMLElement => {
@@ -39,6 +43,6 @@ DOMEditor.toDOMNode = (editor: any, node: any): HTMLElement => {
     }
     // Return a disconnected element instead of crashing. Selection handlers
     // will see el.contains(anchorNode) === false and skip processing.
-    return FALLBACK_ELEMENT
+    return getFallback()
   }
 }
