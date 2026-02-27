@@ -66,9 +66,11 @@ const CHEST = [
   [0,8,8,8,8,8,8,8,8,8,8,8,0],
 ]
 
-/** Island sand height — land tapers off on the right into ocean */
+/** Island sand height — land tapers off on both sides into ocean */
 function islandHeight(c: number): number {
-  const envelope = c <= 55 ? 1 : Math.max(0, 1 - (c - 55) / 16)
+  const leftTaper = c <= 10 ? Math.max(0, c / 10) : 1
+  const rightTaper = c <= 55 ? 1 : Math.max(0, 1 - (c - 55) / 16)
+  const envelope = Math.min(leftTaper, rightTaper)
   const peak1 = 3.0 * Math.exp(-((c - 20) ** 2) / 180)
   const peak2 = 2.5 * Math.exp(-((c - 50) ** 2) / 200)
   const ripple = 0.5 * Math.sin(c * 0.4)
