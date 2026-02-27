@@ -154,7 +154,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | Optimistic Locking | Prevent silent overwrites when two users edit the same entry's metadata in a shared space (from [Database Audit](features/database-audit.md) E1) |
-| Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
 | Soft-Delete on Type Deletion | Type deletion should soft-delete its objects into trash instead of immediate cascade (from [Database Audit](features/database-audit.md) E5) |
 
 ### Audits
