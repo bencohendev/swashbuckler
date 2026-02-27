@@ -10,6 +10,7 @@ import { useDataClient, type DataObject } from '@/shared/lib/data'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
 import { useObjects, useObject, useNextTitle } from '@/features/objects'
 import { useObjectModal } from '@/shared/stores/objectModal'
+import { focusEditorAtSelection } from '../../lib/focusEditor'
 
 function getMentionProps(element: Record<string, unknown>) {
   return {
@@ -36,7 +37,7 @@ export function MentionElement({ element, children, ...props }: PlateElementProp
       <Link
         href={`/objects/${objectId}`}
         contentEditable={false}
-        className="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-sm font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+        className="mx-px inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-sm font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
       >
         {displayTitle}
       </Link>
@@ -64,16 +65,6 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
   // Total selectable items = search results + create-new items (one per type)
   const totalItems = results.length + types.length
-
-  // Restore focus to the editor after node mutations remove the filter input.
-  // Direct DOM focus is required because editor.tf.focus() calls toDOMNode
-  // which can fail when Slate's WeakMap is stale after tree restructuring.
-  const focusEditor = useCallback(() => {
-    setTimeout(() => {
-      const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
-      el?.focus()
-    }, 0)
-  }, [])
 
   // Auto-focus the filter input on mount
   useEffect(() => {
@@ -116,9 +107,9 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
       // Move cursor after the mention
       editor.tf.move()
-      focusEditor()
+      focusEditorAtSelection(editor)
     },
-    [editor, focusEditor]
+    [editor]
   )
 
   // Create a new object and insert mention
@@ -147,9 +138,9 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
         { text: '@' + query },
         { at: path }
       )
-      focusEditor()
+      focusEditorAtSelection(editor)
     }
-  }, [editor, query, focusEditor])
+  }, [editor, query])
 
   // Keyboard navigation handler for the filter input
   const handleInputKeyDown = useCallback(
