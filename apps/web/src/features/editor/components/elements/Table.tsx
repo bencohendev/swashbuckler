@@ -396,19 +396,26 @@ function ColumnHandleMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
-            insertTableColumn(editor, {
-              fromCell: [...tablePath, 0, colIndex],
-              before: true,
-            });
+            const cellPath = [...tablePath, 0, colIndex];
+            editor.tf.select(editor.api.start(cellPath));
+            insertTableColumn(editor, { before: true });
+            editor.tf.setNodes(
+              { colSizes: [] } as Record<string, unknown>,
+              { at: tablePath },
+            );
           }}
         >
           Insert left
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
-            insertTableColumn(editor, {
-              fromCell: [...tablePath, 0, colIndex],
-            });
+            const cellPath = [...tablePath, 0, colIndex];
+            editor.tf.select(editor.api.start(cellPath));
+            insertTableColumn(editor);
+            editor.tf.setNodes(
+              { colSizes: [] } as Record<string, unknown>,
+              { at: tablePath },
+            );
           }}
         >
           Insert right
