@@ -150,6 +150,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
 | [Accessibility Audit v2](features/accessibility-audit-v2.md) | Automated testing, keyboard nav, screen readers, contrast, motion, touch targets, zoom/reflow |
 | [Regression Testing](features/regression-testing.md) | Automated e2e regression tests (Playwright) + manual checklist |
+| Default Space Theme to System | Spaces without a theme assignment reset to system theme on switch |
 
 
 ## Planned Features
@@ -160,7 +161,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Manual Entry Ordering | Let users drag-and-drop to reorder entries instead of defaulting to most-recently-updated |
 | RP Starter Kit Expansion | Expand the Roleplaying starter kit — more types (Quest, NPC, Encounter, etc.), richer properties, templates |
 | Apply Theme to Current Space | Add "Apply to current space" button on the account-level custom themes page |
-| Default Space Theme to System | Spaces without a theme selected should default to system theme instead of requiring explicit selection |
 
 ## Deferred
 
