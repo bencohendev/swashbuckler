@@ -22,7 +22,8 @@ function TagsCell({ tags, router }: { tags: Tag[]; router: ReturnType<typeof use
   return (
     <span className="flex flex-wrap items-center gap-1">
       {visible.map(tag => (
-        <span key={tag.id} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+        <span key={tag.id} onClick={(e) => e.stopPropagation()}>
           <TagBadge
             name={tag.name}
             color={tag.color}

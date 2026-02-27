@@ -13,9 +13,10 @@ interface BoardColumnProps {
   fields: FieldDefinition[]
   canEdit: boolean
   onDrop: (objectId: string, newValue: string | null) => void
+  onMove?: (objectId: string, direction: 'left' | 'right') => void
 }
 
-export function BoardColumn({ value, label, objects, fields, canEdit, onDrop }: BoardColumnProps) {
+export function BoardColumn({ value, label, objects, fields, canEdit, onDrop, onMove }: BoardColumnProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   const [{ isOver }, drop] = useDrop<BoardCardDragItem, void, { isOver: boolean }>({
@@ -61,6 +62,7 @@ export function BoardColumn({ value, label, objects, fields, canEdit, onDrop }: 
               fields={fields}
               sourceValue={value}
               canEdit={canEdit}
+              onMove={onMove}
             />
           ))
         )}

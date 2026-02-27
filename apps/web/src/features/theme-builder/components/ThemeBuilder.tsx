@@ -12,6 +12,7 @@ import { CORE_COLOR_KEYS, CORE_COLOR_LABELS } from '../types'
 import type { ThemeCoreColors, ThemeBase, CustomTheme } from '../types'
 import { ColorPickerField } from './ColorPickerField'
 import { ThemePreview } from './ThemePreview'
+import { ContrastWarnings } from './ContrastWarnings'
 
 interface ThemeBuilderProps {
   editingTheme?: CustomTheme | null
@@ -126,6 +127,8 @@ export function ThemeBuilder({ editingTheme, onClose, autoAssignSpace = true }: 
         </div>
         <ThemePreview resolvedColors={resolvedColors} />
       </div>
+
+      <ContrastWarnings resolvedColors={resolvedColors} />
 
       {/* Actions */}
       <div className="flex justify-end gap-2">

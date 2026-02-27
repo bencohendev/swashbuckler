@@ -83,6 +83,22 @@ export function TypeBoardView({ type, objects }: TypeBoardViewProps) {
     [objects, validFieldId]
   )
 
+  const handleKeyboardMove = useCallback(
+    (objectId: string, direction: 'left' | 'right') => {
+      const currentColIndex = columns.findIndex((col) =>
+        col.objects.some((o) => o.id === objectId)
+      )
+      if (currentColIndex === -1) return
+
+      const targetIndex = direction === 'left' ? currentColIndex - 1 : currentColIndex + 1
+      if (targetIndex < 0 || targetIndex >= columns.length) return
+
+      const targetValue = columns[targetIndex].value
+      handleDrop(objectId, targetValue)
+    },
+    [columns, handleDrop]
+  )
+
   // No select fields on the type
   if (selectFields.length === 0) {
     return (
@@ -119,6 +135,7 @@ export function TypeBoardView({ type, objects }: TypeBoardViewProps) {
                 fields={cardFields}
                 canEdit={canEdit}
                 onDrop={handleDrop}
+                onMove={handleKeyboardMove}
               />
             ))}
           </div>

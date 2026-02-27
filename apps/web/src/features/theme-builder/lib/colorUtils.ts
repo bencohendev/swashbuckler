@@ -91,12 +91,27 @@ export function mix(hex1: string, hex2: string, weight: number): string {
   ])
 }
 
-function relativeLuminance([r, g, b]: RGB): number {
+export function relativeLuminance([r, g, b]: RGB): number {
   const [rs, gs, bs] = [r, g, b].map(c => {
     const s = c / 255
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
   })
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+}
+
+export function contrastRatio(hex1: string, hex2: string): number {
+  const l1 = relativeLuminance(hexToRgb(hex1))
+  const l2 = relativeLuminance(hexToRgb(hex2))
+  const lighter = Math.max(l1, l2)
+  const darker = Math.min(l1, l2)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+export function contrastLevel(ratio: number): 'fail' | 'aa-large' | 'aa' | 'aaa' {
+  if (ratio >= 7) return 'aaa'
+  if (ratio >= 4.5) return 'aa'
+  if (ratio >= 3) return 'aa-large'
+  return 'fail'
 }
 
 export function contrastForeground(backgroundHex: string): string {

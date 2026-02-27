@@ -15,7 +15,7 @@ export function deriveAllColors(
     'primary-foreground': contrastForeground(core.primary),
     'secondary-foreground': contrastForeground(core.secondary),
     'accent-foreground': contrastForeground(core.accent),
-    'destructive-foreground': '#ffffff',
+    'destructive-foreground': contrastForeground(core.destructive),
 
     // Muted foreground: darken for light, lighten for dark
     'muted-foreground': isLight

@@ -6,7 +6,7 @@ import { PlateElement, useEditorRef, useReadOnly } from '@udecode/plate/react';
 import { ImageIcon, LinkIcon, RefreshCwIcon, Trash2Icon, LoaderIcon } from 'lucide-react';
 import { useAuth } from '@/shared/lib/data';
 import { uploadImage, ACCEPTED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/shared/lib/supabase/upload';
-import { useImageResize } from '../../hooks/useImageResize';
+import { useImageResize, MIN_WIDTH } from '../../hooks/useImageResize';
 
 function getImageProps(element: Record<string, unknown>) {
   return {
@@ -18,21 +18,33 @@ function getImageProps(element: Record<string, unknown>) {
 
 function ResizeHandle({
   side,
+  displayWidth,
+  maxWidth,
   onPointerDown,
+  onKeyDown,
+  onBlur,
 }: {
   side: 'left' | 'right';
+  displayWidth: number | undefined;
+  maxWidth: number;
   onPointerDown: (e: React.PointerEvent) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  onBlur: () => void;
 }) {
   return (
     <div
-      role="separator"
-      aria-orientation="vertical"
+      role="slider"
       aria-label={`Resize image from ${side}`}
-      tabIndex={-1}
+      aria-valuemin={MIN_WIDTH}
+      aria-valuemax={maxWidth}
+      aria-valuenow={displayWidth}
+      tabIndex={0}
       onPointerDown={onPointerDown}
-      className={`absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} z-10 flex h-full w-4 cursor-col-resize items-center ${side === 'left' ? 'justify-start pl-1' : 'justify-end pr-1'}`}
+      onKeyDown={onKeyDown}
+      onBlur={onBlur}
+      className={`absolute top-0 ${side === 'left' ? 'left-0' : 'right-0'} z-10 flex h-full w-4 cursor-col-resize items-center outline-none ${side === 'left' ? 'justify-start pl-1' : 'justify-end pr-1'}`}
     >
-      <div className="h-12 max-h-[50%] w-1.5 rounded-full bg-primary/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100" />
+      <div className="h-12 max-h-[50%] w-1.5 rounded-full bg-primary/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" />
     </div>
   );
 }
@@ -58,12 +70,15 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
     [editor, element],
   );
 
-  const { imgRef, isResizing, displayWidth, handlePointerDown, handlePointerMove, handlePointerUp } =
-    useImageResize({
-      width,
-      onResize: handleResize,
-      disabled: readOnly,
-    });
+  const {
+    imgRef, isResizing, displayWidth,
+    handlePointerDown, handlePointerMove, handlePointerUp,
+    handleKeyDown: handleResizeKeyDown, handleBlur: handleResizeBlur,
+  } = useImageResize({
+    width,
+    onResize: handleResize,
+    disabled: readOnly,
+  });
 
   const setNodeUrl = useCallback((newUrl: string) => {
     const path = editor.api.findPath(element);
@@ -151,15 +166,23 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
               className={`rounded-lg ${isResizing ? 'select-none' : ''}`}
               draggable={false}
             />
-            {!readOnly && (showHover || isResizing) && (
+            {!readOnly && (
               <>
                 <ResizeHandle
                   side="left"
+                  displayWidth={displayWidth}
+                  maxWidth={800}
                   onPointerDown={(e) => handlePointerDown(e, 'left')}
+                  onKeyDown={(e) => handleResizeKeyDown(e, 'left')}
+                  onBlur={handleResizeBlur}
                 />
                 <ResizeHandle
                   side="right"
+                  displayWidth={displayWidth}
+                  maxWidth={800}
                   onPointerDown={(e) => handlePointerDown(e, 'right')}
+                  onKeyDown={(e) => handleResizeKeyDown(e, 'right')}
+                  onBlur={handleResizeBlur}
                 />
               </>
             )}
@@ -174,7 +197,7 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
                   type="button"
                   onClick={handleReplace}
                   className="rounded-md bg-background/80 p-1.5 text-sm text-foreground shadow-sm backdrop-blur-sm hover:bg-background"
-                  title="Replace image"
+                  aria-label="Replace image"
                 >
                   <RefreshCwIcon className="size-3.5" />
                 </button>
@@ -182,7 +205,7 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
                   type="button"
                   onClick={handleDelete}
                   className="rounded-md bg-background/80 p-1.5 text-sm text-destructive shadow-sm backdrop-blur-sm hover:bg-background"
-                  title="Delete image"
+                  aria-label="Delete image"
                 >
                   <Trash2Icon className="size-3.5" />
                 </button>
@@ -229,6 +252,7 @@ export function ImageElement({ element, children, ...props }: PlateElementProps)
                   onChange={(e) => setEmbedUrl(e.target.value)}
                   onKeyDown={handleEmbedKeyDown}
                   placeholder="Paste image URL..."
+                  aria-label="Image URL"
                   className="w-full rounded-md border bg-background py-1.5 pl-8 pr-3 text-sm outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>

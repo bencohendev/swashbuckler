@@ -24,7 +24,7 @@ function ArchivedEntriesSection() {
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div role="status" aria-busy="true" aria-label="Loading archived entries" className="space-y-2">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
@@ -85,7 +85,7 @@ function ArchivedTypesSection() {
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div role="status" aria-busy="true" aria-label="Loading archived types" className="space-y-2">
         {[1, 2].map((i) => (
           <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
@@ -204,7 +204,7 @@ function EmptyState() {
   if (objects.length > 0 || types.length > 0 || archivedSpaces.length > 0) return null
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
+    <div role="status" className="flex flex-col items-center justify-center py-12 text-center">
       <ArchiveIcon className="mb-4 size-12 text-muted-foreground/50" />
       <p className="text-muted-foreground">Archive is empty</p>
     </div>
