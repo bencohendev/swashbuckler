@@ -5,6 +5,7 @@ import {
   isOwner,
 } from '@/features/sharing/lib/permissions'
 import type { Space } from '@/shared/lib/data'
+import { LOCAL_OWNER_ID } from '@/shared/lib/data'
 
 const mockSpace = (ownerId: string): Space => ({
   id: crypto.randomUUID(),
@@ -28,7 +29,7 @@ describe('resolveSpacePermission', () => {
   })
 
   it('returns owner when userId is undefined and space owner is local (guest mode)', () => {
-    const space = mockSpace('local')
+    const space = mockSpace(LOCAL_OWNER_ID)
     expect(resolveSpacePermission(space, undefined, null)).toBe('owner')
   })
 
