@@ -7,7 +7,15 @@ interface SpotlightOverlayProps {
   padding?: number
 }
 
-function getRect(el: Element, padding: number): { x: number; y: number; w: number; h: number; r: number } {
+interface Rect {
+  x: number
+  y: number
+  w: number
+  h: number
+  r: number
+}
+
+function getRect(el: Element, padding: number): Rect {
   const rect = el.getBoundingClientRect()
   return {
     x: rect.left - padding,
@@ -19,13 +27,12 @@ function getRect(el: Element, padding: number): { x: number; y: number; w: numbe
 }
 
 export function SpotlightOverlay({ targetEl, padding = 6 }: SpotlightOverlayProps) {
-  const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number; r: number } | null>(null)
+  // Never clear rect — keeping the last valid position lets the CSS transition
+  // smoothly animate the cutout to the new target instead of vanishing between steps.
+  const [rect, setRect] = useState<Rect | null>(null)
 
   const measure = useCallback(() => {
-    if (!targetEl) {
-      setRect(null)
-      return
-    }
+    if (!targetEl) return // Don't clear — keep last rect during transition
     setRect(getRect(targetEl, padding))
   }, [targetEl, padding])
 
@@ -84,7 +91,7 @@ export function SpotlightOverlay({ targetEl, padding = 6 }: SpotlightOverlayProp
       <path
         d={clipPath}
         fillRule="evenodd"
-        className="fill-black/50 transition-all duration-200 motion-reduce:transition-none"
+        className="fill-black/60 transition-all duration-200 motion-reduce:transition-none"
       />
     </svg>
   )
