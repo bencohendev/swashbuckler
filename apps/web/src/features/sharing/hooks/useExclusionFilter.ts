@@ -7,38 +7,47 @@ export function useExclusionFilter() {
   const { space, sharedPermission } = useCurrentSpace()
   const [exclusions, setExclusions] = useState<ShareExclusion[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Only load exclusions for shared spaces (non-owner)
   const isSharedUser = !!sharedPermission && !!space && space.owner_id !== user?.id
 
   useEffect(() => {
     if (!isSharedUser || !space) {
-      setExclusions([]) // eslint-disable-line react-hooks/set-state-in-effect -- clear when not shared user
+      setExclusions([]) // eslint-disable-line react-hooks/set-state-in-effect -- clear state when condition changes
+      setError(null)
       return
     }
 
     setIsLoading(true)
+    setError(null)
 
     async function loadExclusions() {
+      const errors: string[] = []
+
       // N2 fix: Run per-user and space-wide exclusion fetches in parallel
       const [perUserExclusions, spaceExclusions] = await Promise.all([
         // Per-user exclusions: shares → find my share → load exclusions
         (async () => {
           const sharesResult = await dataClient.sharing.listShares(space!.id)
-          if (sharesResult.error || sharesResult.data.length === 0) return []
+          if (sharesResult.error) { errors.push(sharesResult.error.message); return [] }
+          if (sharesResult.data.length === 0) return []
           const myShare = sharesResult.data.find(s => s.shared_with_id === user?.id)
           if (!myShare) return []
           const result = await dataClient.sharing.listExclusions(myShare.id)
-          return result.error ? [] : result.data
+          if (result.error) { errors.push(result.error.message); return [] }
+          return result.data
         })(),
         // Space-wide exclusions (independent of per-user shares)
         (async () => {
           const result = await dataClient.sharing.listSpaceExclusions(space!.id)
-          return result.error ? [] : result.data
+          if (result.error) { errors.push(result.error.message); return [] }
+          return result.data
         })(),
       ])
 
       setExclusions([...perUserExclusions, ...spaceExclusions])
+      setError(errors.length > 0 ? errors.join('; ') : null)
       setIsLoading(false)
     }
 
@@ -115,5 +124,6 @@ export function useExclusionFilter() {
     filterProperties,
     isSharedUser,
     isLoading,
-  }), [isTypeExcluded, isObjectExcluded, filterTypes, filterObjects, isFieldExcluded, filterFields, filterProperties, isSharedUser, isLoading])
+    error,
+  }), [isTypeExcluded, isObjectExcluded, filterTypes, filterObjects, isFieldExcluded, filterFields, filterProperties, isSharedUser, isLoading, error])
 }

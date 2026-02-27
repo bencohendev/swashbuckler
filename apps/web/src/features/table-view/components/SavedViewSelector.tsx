@@ -46,7 +46,7 @@ interface SavedViewSelectorProps {
     board_group_field_id: string | null
     is_default: boolean
     type_id: string
-  }) => Promise<SavedView>
+  }) => Promise<SavedView | null>
   onUpdateView: (id: string, input: {
     name?: string
     filters?: FilterExpression
@@ -54,8 +54,8 @@ interface SavedViewSelectorProps {
     view_mode?: ViewMode
     board_group_field_id?: string | null
     is_default?: boolean
-  }) => Promise<SavedView>
-  onDeleteView: (id: string) => Promise<void>
+  }) => Promise<SavedView | null>
+  onDeleteView: (id: string) => Promise<boolean>
 }
 
 export function SavedViewSelector({

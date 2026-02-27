@@ -179,7 +179,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const handleTemplateDialogSave = useCallback(async (name: string): Promise<boolean> => {
     if (!object) return false
     const result = await saveObjectAsTemplate(object, name)
-    if (result.data) {
+    if (result) {
       toast({ description: `Template "${name}" saved`, variant: 'success' })
       return true
     }
@@ -270,7 +270,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
   if (error || !object) {
     return (
-      <div className="p-6">
+      <div className="p-6" role="alert" aria-live="assertive">
         <p className="text-destructive">{error || 'Entry not found'}</p>
         <Button variant="outline" onClick={onNavigateAway ?? (() => router.push('/dashboard'))} className="mt-4">
           Go back

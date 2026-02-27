@@ -1,6 +1,7 @@
 import { type ReactNode } from "react"
 import { createClient } from "@/shared/lib/supabase/server"
 import { Sidebar } from "@/features/sidebar/components"
+import { SectionErrorBoundary } from "@/shared/components/SectionErrorBoundary"
 import { Header } from "@/shared/components/layout"
 import { GuestBanner } from "@/shared/components/GuestBanner"
 import { ObjectEditorModal } from "@/features/objects/components/ObjectEditorModal"
@@ -16,7 +17,9 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:shadow-lg focus:border">
         Skip to main content
       </a>
-      <Sidebar />
+      <SectionErrorBoundary fallbackLabel="Sidebar">
+        <Sidebar />
+      </SectionErrorBoundary>
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <GuestBanner isGuestServer={!user} />
         <Header email={user?.email} />

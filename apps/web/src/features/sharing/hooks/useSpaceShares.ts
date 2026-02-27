@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useDataClient, type SpaceShare, type SpaceSharePermission, type CreateShareExclusionInput, type ShareExclusion } from '@/shared/lib/data'
+import { useDataClient, type SpaceShare, type SpaceSharePermission, type CreateShareExclusionInput } from '@/shared/lib/data'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { useMutationAction, useVoidMutationAction } from '@/shared/hooks/useMutationAction'
 
 const EMPTY_SHARES: SpaceShare[] = []
 
@@ -25,35 +26,39 @@ export function useSpaceShares(spaceId: string | null) {
     }
   }, [queryClient, spaceId])
 
-  const createShare = useCallback(async (email: string, permission: SpaceSharePermission) => {
-    if (!spaceId) return null
-    const result = await dataClient.sharing.createShare({
-      space_id: spaceId,
-      shared_with_email: email,
-      permission,
-    })
-    if (!result.error && result.data) {
-      invalidate()
-      return result.data
-    }
-    return result.error
-  }, [dataClient, spaceId, invalidate])
+  const createShareFn = useCallback(
+    (email: string, permission: SpaceSharePermission) => {
+      if (!spaceId) return Promise.resolve({ data: null, error: null } as { data: SpaceShare | null; error: null })
+      return dataClient.sharing.createShare({ space_id: spaceId, shared_with_email: email, permission })
+    },
+    [dataClient, spaceId],
+  )
+  const createShare = useMutationAction(createShareFn, {
+    actionLabel: 'Share space',
+    emitChannels: ['spaceShares'],
+    onSuccess: () => invalidate(),
+  })
 
-  const updateShare = useCallback(async (shareId: string, permission: SpaceSharePermission) => {
-    const result = await dataClient.sharing.updateShare(shareId, { permission })
-    if (!result.error) {
-      invalidate()
-    }
-    return result.error
-  }, [dataClient, invalidate])
+  const updateShareFn = useCallback(
+    (shareId: string, permission: SpaceSharePermission) =>
+      dataClient.sharing.updateShare(shareId, { permission }),
+    [dataClient],
+  )
+  const updateShare = useMutationAction(updateShareFn, {
+    actionLabel: 'Update share',
+    emitChannels: ['spaceShares'],
+    onSuccess: () => invalidate(),
+  })
 
-  const deleteShare = useCallback(async (shareId: string) => {
-    const result = await dataClient.sharing.deleteShare(shareId)
-    if (!result.error) {
-      invalidate()
-    }
-    return result.error
-  }, [dataClient, invalidate])
+  const deleteShareFn = useCallback(
+    (shareId: string) => dataClient.sharing.deleteShare(shareId),
+    [dataClient],
+  )
+  const deleteShare = useVoidMutationAction(deleteShareFn, {
+    actionLabel: 'Remove share',
+    emitChannels: ['spaceShares'],
+    onSuccess: () => invalidate(),
+  })
 
   // Exclusions management
   const loadExclusions = useCallback(async (shareId: string) => {
@@ -64,17 +69,22 @@ export function useSpaceShares(spaceId: string | null) {
     return []
   }, [dataClient])
 
-  const addExclusion = useCallback(async (shareId: string, input: CreateShareExclusionInput): Promise<ShareExclusion | null> => {
-    const result = await dataClient.sharing.addExclusion(shareId, input)
-    if (!result.error && result.data) {
-      return result.data
-    }
-    return null
-  }, [dataClient])
+  const addExclusionFn = useCallback(
+    (shareId: string, input: CreateShareExclusionInput) =>
+      dataClient.sharing.addExclusion(shareId, input),
+    [dataClient],
+  )
+  const addExclusion = useMutationAction(addExclusionFn, {
+    actionLabel: 'Add exclusion',
+  })
 
-  const removeExclusion = useCallback(async (exclusionId: string) => {
-    await dataClient.sharing.removeExclusion(exclusionId)
-  }, [dataClient])
+  const removeExclusionFn = useCallback(
+    (exclusionId: string) => dataClient.sharing.removeExclusion(exclusionId),
+    [dataClient],
+  )
+  const removeExclusion = useVoidMutationAction(removeExclusionFn, {
+    actionLabel: 'Remove exclusion',
+  })
 
   // Space-wide exclusions
   const loadSpaceExclusions = useCallback(async (id: string) => {
@@ -85,13 +95,14 @@ export function useSpaceShares(spaceId: string | null) {
     return []
   }, [dataClient])
 
-  const addSpaceExclusion = useCallback(async (id: string, input: CreateShareExclusionInput): Promise<ShareExclusion | null> => {
-    const result = await dataClient.sharing.addSpaceExclusion(id, input)
-    if (!result.error && result.data) {
-      return result.data
-    }
-    return null
-  }, [dataClient])
+  const addSpaceExclusionFn = useCallback(
+    (id: string, input: CreateShareExclusionInput) =>
+      dataClient.sharing.addSpaceExclusion(id, input),
+    [dataClient],
+  )
+  const addSpaceExclusion = useMutationAction(addSpaceExclusionFn, {
+    actionLabel: 'Add exclusion',
+  })
 
   return {
     shares: data ?? EMPTY_SHARES,

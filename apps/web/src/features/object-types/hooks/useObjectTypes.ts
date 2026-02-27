@@ -10,8 +10,8 @@ import {
   type UpdateObjectTypeInput,
   type ListObjectTypesOptions,
 } from '@/shared/lib/data'
-import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { useMutationAction, useVoidMutationAction } from '@/shared/hooks/useMutationAction'
 
 const EMPTY_TYPES: ObjectType[] = []
 
@@ -22,11 +22,11 @@ interface UseObjectTypesReturn {
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
-  create: (input: CreateObjectTypeInput) => Promise<{ data: ObjectType | null; error?: string }>
-  update: (id: string, input: UpdateObjectTypeInput) => Promise<{ data: ObjectType | null; error?: string }>
-  remove: (id: string) => Promise<string | null>
-  archive: (id: string) => Promise<string | null>
-  unarchive: (id: string) => Promise<string | null>
+  create: (input: CreateObjectTypeInput) => Promise<ObjectType | null>
+  update: (id: string, input: UpdateObjectTypeInput) => Promise<ObjectType | null>
+  remove: (id: string) => Promise<boolean>
+  archive: (id: string) => Promise<ObjectType | null>
+  unarchive: (id: string) => Promise<ObjectType | null>
 }
 
 export function useObjectTypes(options: UseObjectTypesOptions = {}): UseObjectTypesReturn {
@@ -52,44 +52,50 @@ export function useObjectTypes(options: UseObjectTypesOptions = {}): UseObjectTy
     await queryClient.invalidateQueries({ queryKey: queryKeys.objectTypes.all(spaceId ?? undefined) })
   }, [queryClient, spaceId])
 
-  const create = useCallback(async (input: CreateObjectTypeInput): Promise<{ data: ObjectType | null; error?: string }> => {
-    const result = await dataClient.objectTypes.create(input)
-    if (result.error) return { data: null, error: result.error.message }
-    emit('objectTypes')
-    return { data: result.data }
-  }, [dataClient])
+  const createFn = useCallback(
+    (input: CreateObjectTypeInput) => dataClient.objectTypes.create(input),
+    [dataClient],
+  )
+  const create = useMutationAction(createFn, {
+    actionLabel: 'Create type',
+    emitChannels: ['objectTypes'],
+  })
 
-  const update = useCallback(async (id: string, input: UpdateObjectTypeInput): Promise<{ data: ObjectType | null; error?: string }> => {
-    const result = await dataClient.objectTypes.update(id, input)
-    if (result.error) return { data: null, error: result.error.message }
-    emit('objectTypes')
-    return { data: result.data }
-  }, [dataClient])
+  const updateFn = useCallback(
+    (id: string, input: UpdateObjectTypeInput) => dataClient.objectTypes.update(id, input),
+    [dataClient],
+  )
+  const update = useMutationAction(updateFn, {
+    actionLabel: 'Update type',
+    emitChannels: ['objectTypes'],
+  })
 
-  const remove = useCallback(async (id: string): Promise<string | null> => {
-    const result = await dataClient.objectTypes.delete(id)
-    if (result.error) return result.error.message
-    emit('objectTypes')
-    emit('objects')
-    emit('templates')
-    return null
-  }, [dataClient])
+  const removeFn = useCallback(
+    (id: string) => dataClient.objectTypes.delete(id),
+    [dataClient],
+  )
+  const remove = useVoidMutationAction(removeFn, {
+    actionLabel: 'Delete type',
+    emitChannels: ['objectTypes', 'objects', 'templates'],
+  })
 
-  const archive = useCallback(async (id: string): Promise<string | null> => {
-    const result = await dataClient.objectTypes.archive(id)
-    if (result.error) return result.error.message
-    emit('objectTypes')
-    emit('objects')
-    return null
-  }, [dataClient])
+  const archiveFn = useCallback(
+    (id: string) => dataClient.objectTypes.archive(id),
+    [dataClient],
+  )
+  const archive = useMutationAction(archiveFn, {
+    actionLabel: 'Archive type',
+    emitChannels: ['objectTypes', 'objects'],
+  })
 
-  const unarchive = useCallback(async (id: string): Promise<string | null> => {
-    const result = await dataClient.objectTypes.unarchive(id)
-    if (result.error) return result.error.message
-    emit('objectTypes')
-    emit('objects')
-    return null
-  }, [dataClient])
+  const unarchiveFn = useCallback(
+    (id: string) => dataClient.objectTypes.unarchive(id),
+    [dataClient],
+  )
+  const unarchive = useMutationAction(unarchiveFn, {
+    actionLabel: 'Unarchive type',
+    emitChannels: ['objectTypes', 'objects'],
+  })
 
   return {
     types: data ?? EMPTY_TYPES,
@@ -107,6 +113,7 @@ export function useObjectTypes(options: UseObjectTypesOptions = {}): UseObjectTy
 export function useObjectType(id: string | null) {
   const dataClient = useDataClient()
   const queryClient = useQueryClient()
+  const spaceId = useSpaceId()
 
   const { data: objectType, isLoading, error: queryError } = useQuery({
     queryKey: queryKeys.objectTypes.detail(id!),
@@ -116,6 +123,16 @@ export function useObjectType(id: string | null) {
       return result.data
     },
     enabled: !!id,
+    placeholderData: () => {
+      const lists = queryClient.getQueriesData<ObjectType[]>({
+        queryKey: queryKeys.objectTypes.all(spaceId ?? undefined),
+      })
+      for (const [, items] of lists) {
+        const match = items?.find(t => t.id === id)
+        if (match) return match
+      }
+      return undefined
+    },
   })
 
   const refetch = useCallback(async () => {

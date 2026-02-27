@@ -6,8 +6,8 @@ import { useDataClient, useSpaceId } from '@/shared/lib/data'
 import type { Template, CreateTemplateInput, DataObject, CreateObjectInput } from '@/shared/lib/data'
 import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { toast } from '@/shared/hooks/useToast'
 
-const EMPTY_TEMPLATES: Template[] = []
 import {
   extractContentVariables,
   extractPropertyVariables,
@@ -15,6 +15,8 @@ import {
   resolvePropertyVariables,
   type VariableResolutionContext,
 } from '../lib/variables'
+
+const EMPTY_TEMPLATES: Template[] = []
 
 interface UseTemplatesOptions {
   typeId?: string
@@ -41,7 +43,7 @@ interface UseTemplatesReturn {
     parentId?: string | null,
   ) => Promise<DataObject | null>
   getTemplateVariables: (templateId: string) => Promise<TemplateVariableInfo | null>
-  saveObjectAsTemplate: (object: DataObject, name?: string) => Promise<{ data: Template | null; error?: string }>
+  saveObjectAsTemplate: (object: DataObject, name?: string) => Promise<Template | null>
   deleteTemplate: (id: string) => Promise<void>
   renameTemplate: (id: string, name: string) => Promise<void>
 }
@@ -69,7 +71,7 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
   const saveObjectAsTemplate = useCallback(async (
     object: DataObject,
     name?: string
-  ): Promise<{ data: Template | null; error?: string }> => {
+  ): Promise<Template | null> => {
     const input: CreateTemplateInput = {
       name: name || `${object.title} (Template)`,
       type_id: object.type_id,
@@ -80,9 +82,12 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     }
 
     const result = await dataClient.templates.create(input)
-    if (result.error) return { data: null, error: result.error.message }
+    if (result.error) {
+      toast({ title: 'Save as template', description: result.error.message, variant: 'destructive' })
+      return null
+    }
     emit('templates')
-    return { data: result.data }
+    return result.data
   }, [dataClient])
 
   const createFromTemplate = useCallback(async (
@@ -91,7 +96,10 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     parentId?: string | null
   ): Promise<DataObject | null> => {
     const templateResult = await dataClient.templates.get(templateId)
-    if (templateResult.error || !templateResult.data) return null
+    if (templateResult.error || !templateResult.data) {
+      toast({ title: 'Create from template', description: templateResult.error?.message ?? 'Template not found', variant: 'destructive' })
+      return null
+    }
 
     const template = templateResult.data
 
@@ -106,7 +114,10 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     }
 
     const result = await dataClient.objects.create(input)
-    if (result.error) return null
+    if (result.error) {
+      toast({ title: 'Create from template', description: result.error.message, variant: 'destructive' })
+      return null
+    }
     emit('objects')
     return result.data
   }, [dataClient])
@@ -138,7 +149,10 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     parentId?: string | null
   ): Promise<DataObject | null> => {
     const templateResult = await dataClient.templates.get(templateId)
-    if (templateResult.error || !templateResult.data) return null
+    if (templateResult.error || !templateResult.data) {
+      toast({ title: 'Create from template', description: templateResult.error?.message ?? 'Template not found', variant: 'destructive' })
+      return null
+    }
 
     const template = templateResult.data
 
@@ -161,20 +175,29 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     }
 
     const result = await dataClient.objects.create(input)
-    if (result.error) return null
+    if (result.error) {
+      toast({ title: 'Create from template', description: result.error.message, variant: 'destructive' })
+      return null
+    }
     emit('objects')
     return result.data
   }, [dataClient])
 
   const deleteTemplate = useCallback(async (id: string): Promise<void> => {
     const result = await dataClient.templates.delete(id)
-    if (result.error) return
+    if (result.error) {
+      toast({ title: 'Delete template', description: result.error.message, variant: 'destructive' })
+      return
+    }
     emit('templates')
   }, [dataClient])
 
   const renameTemplate = useCallback(async (id: string, name: string): Promise<void> => {
     const result = await dataClient.templates.update(id, { name })
-    if (result.error) return
+    if (result.error) {
+      toast({ title: 'Rename template', description: result.error.message, variant: 'destructive' })
+      return
+    }
     emit('templates')
   }, [dataClient])
 

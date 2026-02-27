@@ -7,9 +7,12 @@ import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import { DataProvider, SpaceProvider, useCurrentSpace } from '@/shared/lib/data'
 import { setQueryClient } from '@/shared/lib/data/events'
+import { DataLayerError } from '@/shared/lib/data/errors'
 import { Toaster } from '@/shared/components/ui/Toast'
 import { CustomThemeApplier } from '@/features/theme-builder'
 import { TutorialController } from '@/features/onboarding'
+import { useSessionGuard } from '@/shared/hooks/useSessionGuard'
+import { useFocusOnNavigation } from '@/shared/hooks/useFocusOnNavigation'
 
 interface ProvidersProps {
   children: ReactNode
@@ -18,6 +21,8 @@ interface ProvidersProps {
 // Inner component that reads space context and passes spaceId to DataProvider
 function DataProviderWithSpace({ children, user, isAuthLoading }: { children: ReactNode; user: User | null; isAuthLoading: boolean }) {
   const { space } = useCurrentSpace()
+  useSessionGuard()
+  useFocusOnNavigation()
 
   return (
     <DataProvider spaceId={space?.id} user={user} isAuthLoading={isAuthLoading}>
@@ -37,7 +42,10 @@ export function Providers({ children }: ProvidersProps) {
         staleTime: 30_000,
         gcTime: 5 * 60_000,
         refetchOnWindowFocus: false,
-        retry: 1,
+        retry: (failureCount, error) => {
+          if (error instanceof DataLayerError && !error.retryable) return false
+          return failureCount < 1
+        },
       },
     },
   }))

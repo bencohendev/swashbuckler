@@ -25,7 +25,6 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
   const { shares, isLoading, createShare, updateShare, deleteShare, loadExclusions, addExclusion, removeExclusion } = useSpaceShares(spaceId)
   const [email, setEmail] = useState('')
   const [permission, setPermission] = useState<SpaceSharePermission>('view')
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [expandedShareId, setExpandedShareId] = useState<string | null>(null)
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null)
@@ -34,13 +33,10 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
     e.preventDefault()
     if (!email.trim()) return
 
-    setError(null)
     setIsSubmitting(true)
     const result = await createShare(email.trim(), permission)
 
-    if (result && 'message' in result) {
-      setError(result.message)
-    } else {
+    if (result) {
       setEmail('')
       setPermission('view')
     }
@@ -53,9 +49,11 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
 
   const handleRemove = async () => {
     if (!pendingRemoveId) return
-    await deleteShare(pendingRemoveId)
+    const ok = await deleteShare(pendingRemoveId)
     setPendingRemoveId(null)
-    toast({ description: 'Access removed', variant: 'success' })
+    if (ok) {
+      toast({ description: 'Access removed', variant: 'success' })
+    }
   }
 
   return (
@@ -81,7 +79,6 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                 onChange={e => setEmail(e.target.value)}
                 placeholder="Email address"
                 aria-label="Email address"
-                aria-describedby={error ? "share-error" : undefined}
                 className="flex-1"
               />
               <div className="flex gap-2">
@@ -100,7 +97,6 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
                 </Button>
               </div>
             </form>
-            {error && <p id="share-error" role="alert" className="text-sm text-destructive">{error}</p>}
           </div>
 
           <Separator />
@@ -110,7 +106,7 @@ export function ShareSpaceDialog({ open, onOpenChange, spaceId, spaceName }: Sha
               {shares.length > 0 ? `People with access (${shares.length})` : 'No one else has access'}
             </h3>
             {isLoading ? (
-              <div className="space-y-2">
+              <div role="status" aria-busy="true" aria-label="Loading shares" className="space-y-2">
                 {[1, 2].map(i => (
                   <div key={i} className="h-10 animate-pulse rounded bg-muted" />
                 ))}

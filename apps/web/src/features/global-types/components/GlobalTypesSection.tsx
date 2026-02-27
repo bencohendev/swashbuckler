@@ -40,11 +40,9 @@ export function GlobalTypesSection() {
   const handleDelete = async () => {
     if (!pendingDeleteType) return
     const typeName = pendingDeleteType.name
-    const err = await remove(pendingDeleteType.id)
+    const ok = await remove(pendingDeleteType.id)
     setPendingDeleteType(null)
-    if (err) {
-      toast({ description: `Failed to delete type: ${err}`, variant: 'destructive' })
-    } else {
+    if (ok) {
       toast({ description: `Global type "${typeName}" deleted`, variant: 'success' })
     }
   }

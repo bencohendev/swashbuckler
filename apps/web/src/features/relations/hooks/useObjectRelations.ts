@@ -4,8 +4,8 @@ import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDataClient } from '@/shared/lib/data'
 import type { ObjectRelation, DataObject } from '@/shared/lib/data'
-import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { useMutationAction, useVoidMutationAction } from '@/shared/hooks/useMutationAction'
 
 export interface EnrichedRelation extends ObjectRelation {
   linkedObject: Pick<DataObject, 'id' | 'title' | 'icon' | 'type_id'> | null
@@ -19,7 +19,7 @@ interface UseObjectRelationsReturn {
   error: string | null
   refetch: () => Promise<void>
   createLink: (targetId: string) => Promise<ObjectRelation | null>
-  removeLink: (relationId: string) => Promise<void>
+  removeLink: (relationId: string) => Promise<boolean>
 }
 
 export function useObjectRelations(objectId: string | null): UseObjectRelationsReturn {
@@ -84,25 +84,46 @@ export function useObjectRelations(objectId: string | null): UseObjectRelationsR
     }
   }, [queryClient, objectId])
 
+  const createLinkFn = useCallback(
+    (targetId: string) => {
+      if (!objectId) return Promise.resolve({ data: null, error: null } as { data: ObjectRelation | null; error: null })
+      return dataClient.relations.create({
+        source_id: objectId,
+        target_id: targetId,
+        relation_type: 'link',
+      })
+    },
+    [dataClient, objectId],
+  )
+  const createLinkRaw = useMutationAction(createLinkFn, {
+    actionLabel: 'Link object',
+    emitChannels: ['objectRelations'],
+  })
   const createLink = useCallback(async (targetId: string): Promise<ObjectRelation | null> => {
-    if (!objectId) return null
+    const result = await createLinkRaw(targetId)
+    if (result) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.relations.list(targetId) })
+    }
+    return result
+  }, [createLinkRaw, queryClient])
 
-    const result = await dataClient.relations.create({
-      source_id: objectId,
-      target_id: targetId,
-      relation_type: 'link',
-    })
-
-    if (result.error) return null
-    emit('objectRelations')
-    return result.data
-  }, [dataClient, objectId])
-
-  const removeLink = useCallback(async (relationId: string): Promise<void> => {
-    const result = await dataClient.relations.delete(relationId)
-    if (result.error) return
-    emit('objectRelations')
-  }, [dataClient])
+  const removeLinkFn = useCallback(
+    (relationId: string) => dataClient.relations.delete(relationId),
+    [dataClient],
+  )
+  const removeLinkRaw = useVoidMutationAction(removeLinkFn, {
+    actionLabel: 'Remove link',
+    emitChannels: ['objectRelations'],
+  })
+  const removeLink = useCallback(async (relationId: string): Promise<boolean> => {
+    const cached = queryClient.getQueryData<EnrichedRelation[]>(queryKeys.relations.list(objectId!))
+    const targetId = cached?.find(r => r.id === relationId)?.target_id
+    const ok = await removeLinkRaw(relationId)
+    if (ok && targetId) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.relations.list(targetId) })
+    }
+    return ok
+  }, [removeLinkRaw, queryClient, objectId])
 
   return {
     relations: data ?? EMPTY_RELATIONS,

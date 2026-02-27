@@ -70,7 +70,7 @@ export function GraphView() {
         {announcement}
       </div>
       {isLoading && (
-        <div role="status" className="flex items-center justify-center h-full text-muted-foreground">
+        <div role="status" aria-busy="true" aria-label="Loading graph" className="flex items-center justify-center h-full text-muted-foreground">
           Loading graph...
         </div>
       )}
