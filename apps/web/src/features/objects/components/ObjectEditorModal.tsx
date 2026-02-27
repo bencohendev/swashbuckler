@@ -19,19 +19,7 @@ export function ObjectEditorModal() {
   if (!objectId) return null
 
   return (
-    <Dialog open onOpenChange={(open) => {
-      if (!open) {
-        close()
-        // The modal is opened programmatically (no trigger element), so Radix
-        // doesn't know where to return focus on close. Ensure the page editor
-        // gets focus back. Deferred so React can unmount the modal editor first,
-        // leaving only the page editor's [data-slate-editor] in the DOM.
-        setTimeout(() => {
-          const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
-          el?.focus()
-        }, 0)
-      }
-    }}>
+    <Dialog open onOpenChange={(open) => { if (!open) close() }}>
       <DialogContent
         className={
           isMobile
