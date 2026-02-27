@@ -96,7 +96,7 @@ export function SpaceSwitcher() {
               )),
             ] : []),
             <DropdownMenuSeparator key="__actions-sep" />,
-            ...(space && isOwned(space) ? [
+            ...(space && user && isOwned(space) ? [
               <DropdownMenuItem
                 key="__share"
                 onClick={() => setShareDialogOpen(true)}

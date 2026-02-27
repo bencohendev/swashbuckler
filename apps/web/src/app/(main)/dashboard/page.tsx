@@ -1,6 +1,5 @@
 import { createClient } from "@/shared/lib/supabase/server"
-import { RecentObjects } from "@/features/objects/components"
-import { PinnedObjects } from "@/features/pins"
+import { DashboardContent } from "./DashboardContent"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -17,17 +16,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="rounded-lg border p-6">
-          <h2 className="mb-4 font-medium">Pinned</h2>
-          <PinnedObjects />
-        </section>
-
-        <section className="rounded-lg border p-6">
-          <h2 className="mb-4 font-medium">Recent</h2>
-          <RecentObjects />
-        </section>
-      </div>
+      <DashboardContent />
     </div>
   )
 }

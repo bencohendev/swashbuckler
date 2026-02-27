@@ -86,7 +86,7 @@ describe('useTemplates', () => {
     })
 
     await act(async () => {
-      await result.current.deleteTemplate(templateResult!.data!.id)
+      await result.current.deleteTemplate(templateResult!.id)
     })
 
     await waitFor(() => {
@@ -104,7 +104,7 @@ describe('useTemplates', () => {
       const noteType = await typeResult.current.create({
         name: 'Note', plural_name: 'Notes', slug: 'note', icon: 'sticky-note',
       })
-      noteTypeId = noteType.data!.id
+      noteTypeId = noteType!.id
     })
 
     const { result: objResult } = renderHook(() => useObjects(), { wrapper: Wrapper })

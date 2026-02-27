@@ -4,13 +4,12 @@ import { useState } from 'react'
 import { ArchiveIcon, ArchiveRestoreIcon } from 'lucide-react'
 import { useObjects } from '../hooks/useObjects'
 import { useObjectTypes } from '@/features/object-types'
-import { useSpaces, useDataClient } from '@/shared/lib/data'
+import { useSpaces } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { toast } from '@/shared/hooks/useToast'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
 import type { DataObjectSummary, ObjectType, Space } from '@/shared/lib/data'
-import { emit } from '@/shared/lib/data/events'
 
 function ArchivedEntriesSection() {
   const { objects, isLoading, unarchive } = useObjects({ isArchived: true, isDeleted: false })
@@ -72,17 +71,14 @@ function ArchivedEntriesSection() {
 }
 
 function ArchivedTypesSection() {
-  const { types, isLoading } = useObjectTypes({ isArchived: true })
+  const { types, isLoading, unarchive } = useObjectTypes({ isArchived: true })
   const [processingId, setProcessingId] = useState<string | null>(null)
-  const dataClient = useDataClient()
 
   const handleUnarchive = async (type: ObjectType) => {
     setProcessingId(type.id)
-    const result = await dataClient.objectTypes.unarchive(type.id)
+    const result = await unarchive(type.id)
     setProcessingId(null)
-    if (!result.error) {
-      emit('objectTypes')
-      emit('objects')
+    if (result) {
       toast({ description: `"${type.name}" type unarchived`, variant: 'success' })
     }
   }

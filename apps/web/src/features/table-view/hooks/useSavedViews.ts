@@ -4,8 +4,8 @@ import { useCallback, useMemo } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { useDataClient, useSpaceId } from '@/shared/lib/data'
 import type { SavedView, CreateSavedViewInput, UpdateSavedViewInput } from '@/shared/lib/data'
-import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { useMutationAction, useVoidMutationAction } from '@/shared/hooks/useMutationAction'
 
 const EMPTY_VIEWS: SavedView[] = []
 
@@ -32,25 +32,32 @@ export function useSavedViews(typeId: string | undefined) {
     [views],
   )
 
-  const createView = useCallback(async (input: CreateSavedViewInput) => {
-    const result = await dataClient.savedViews.create(input)
-    if (result.error) throw new Error(result.error.message)
-    emit('savedViews')
-    return result.data!
-  }, [dataClient])
+  const createViewFn = useCallback(
+    (input: CreateSavedViewInput) => dataClient.savedViews.create(input),
+    [dataClient],
+  )
+  const createView = useMutationAction(createViewFn, {
+    actionLabel: 'Create view',
+    emitChannels: ['savedViews'],
+  })
 
-  const updateView = useCallback(async (id: string, input: UpdateSavedViewInput) => {
-    const result = await dataClient.savedViews.update(id, input)
-    if (result.error) throw new Error(result.error.message)
-    emit('savedViews')
-    return result.data!
-  }, [dataClient])
+  const updateViewFn = useCallback(
+    (id: string, input: UpdateSavedViewInput) => dataClient.savedViews.update(id, input),
+    [dataClient],
+  )
+  const updateView = useMutationAction(updateViewFn, {
+    actionLabel: 'Update view',
+    emitChannels: ['savedViews'],
+  })
 
-  const deleteView = useCallback(async (id: string) => {
-    const result = await dataClient.savedViews.delete(id)
-    if (result.error) throw new Error(result.error.message)
-    emit('savedViews')
-  }, [dataClient])
+  const deleteViewFn = useCallback(
+    (id: string) => dataClient.savedViews.delete(id),
+    [dataClient],
+  )
+  const deleteView = useVoidMutationAction(deleteViewFn, {
+    actionLabel: 'Delete view',
+    emitChannels: ['savedViews'],
+  })
 
   return {
     views,
