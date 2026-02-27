@@ -157,6 +157,9 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | Content Filtering | Extend advanced filters to search entry body content, not just properties and title |
 | Manual Entry Ordering | Let users drag-and-drop to reorder entries instead of defaulting to most-recently-updated |
+| RP Starter Kit Expansion | Expand the Roleplaying starter kit — more types (Quest, NPC, Encounter, etc.), richer properties, templates |
+| Apply Theme to Current Space | Add "Apply to current space" button on the account-level custom themes page |
+| Default Space Theme to System | Spaces without a theme selected should default to system theme instead of requiring explicit selection |
 
 ## Deferred
 
