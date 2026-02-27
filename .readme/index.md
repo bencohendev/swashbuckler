@@ -149,6 +149,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Sci-Fi Theme](features/sci-fi-theme.md) | Sci-fi styled UI skin — cyberpunk/neon aesthetic, futuristic panels and controls |
 | Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
 | [Accessibility Audit v2](features/accessibility-audit-v2.md) | Automated testing, keyboard nav, screen readers, contrast, motion, touch targets, zoom/reflow |
+| [Regression Testing](features/regression-testing.md) | Automated e2e regression tests (Playwright) + manual checklist |
 
 
 ## Planned Features
