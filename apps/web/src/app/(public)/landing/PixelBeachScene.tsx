@@ -139,11 +139,12 @@ function buildScene(): number[][] {
     }
   }
 
-  // 3. Flagpole (from top down to sand surface)
-  const poleSandTop = WATER_SURFACE - islandHeight(0)
+  // 3. Flagpole (shifted right so sand is visible on both sides)
+  const POLE_COL = 4
+  const poleSandTop = WATER_SURFACE - islandHeight(POLE_COL)
   for (let r = 0; r <= poleSandTop; r++) {
-    grid[r][0] = 4
-    grid[r][1] = 4
+    grid[r][POLE_COL] = 4
+    grid[r][POLE_COL + 1] = 4
   }
 
   // 4. Stamp sprites
