@@ -153,8 +153,16 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Feature | Description |
 |---------|-------------|
-| Optimistic Locking | Prevent silent overwrites when two users edit the same entry's metadata in a shared space (from [Database Audit](features/database-audit.md) E1) |
+| [Fantasy Theme](features/fantasy-theme.md) | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
+| [Sci-Fi Theme](features/sci-fi-theme.md) | Sci-fi styled UI skin — cyberpunk/neon aesthetic, futuristic panels and controls |
+| Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
 | Soft-Delete on Type Deletion | Type deletion should soft-delete its objects into trash instead of immediate cascade (from [Database Audit](features/database-audit.md) E5) |
+
+## Deferred
+
+| Feature | Description | Reason |
+|---------|-------------|--------|
+| Optimistic Locking | Prevent silent overwrites when two users edit the same entry's metadata in a shared space (from [Database Audit](features/database-audit.md) E1) | Low practical risk — editor content already protected by Yjs CRDT; only metadata (title, properties) during simultaneous editing is exposed. Moderate implementation cost (~15-20 files). Revisit if multi-user metadata conflicts become a real pain point. |
 
 ### Audits
 

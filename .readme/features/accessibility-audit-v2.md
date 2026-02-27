@@ -1,6 +1,6 @@
 # Accessibility Audit v2
 
-**Status:** Not started
+**Status:** Active
 
 ## Overview
 
