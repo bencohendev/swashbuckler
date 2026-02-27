@@ -6,6 +6,7 @@ import { useDataClient, useSpaceId } from '@/shared/lib/data'
 import { useObjects } from '@/features/objects/hooks'
 import { useObjectTypeMap } from '@/features/object-types/hooks/useObjectTypeMap'
 import { useExclusionFilter } from '@/features/sharing'
+import { queryKeys } from '@/shared/lib/data/queryKeys'
 import { buildGraphData } from '../lib/buildGraphData'
 import type { GraphData } from '../lib/types'
 
@@ -17,7 +18,7 @@ export function useGraphData() {
   const { filterObjects } = useExclusionFilter()
 
   const { data: relations, isLoading: relationsLoading } = useQuery({
-    queryKey: ['relations', 'all', spaceId],
+    queryKey: queryKeys.relations.all(spaceId ?? undefined),
     queryFn: async () => {
       const result = await dataClient.relations.listAll()
       if (result.error) throw new Error(result.error.message)

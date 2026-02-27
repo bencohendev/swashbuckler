@@ -182,18 +182,198 @@ Audit of the client-side data layer: DataClient interface design, TanStack Query
 - No features work in one mode but break in the other
 - Edge cases (empty results, not found) handled identically
 
-## Methodology
+## Findings
 
-1. Interface review: read DataClient type and compare both implementations
-2. Hook inventory: catalog all `useQuery`/`useMutation` calls, check key usage
-3. Waterfall detection: trace component mount → data fetch chains
-4. Cache analysis: test navigation patterns, check network tab for redundant fetches
-5. Parity testing: run identical operations in Supabase and Dexie modes
+### 1. DataClient Interface Design
 
-## Deliverables
+**Result: PASS with notes**
 
-- Hook inventory spreadsheet (hook → key → staleTime → invalidation)
-- Waterfall diagram for critical paths (sidebar, editor, dashboard)
-- Parity gap list between Supabase and Dexie
-- Fix PRs for key issues (waterfalls, missing invalidation, error handling)
-- Updated spec with final results
+- All 10 sub-clients (objects, objectTypes, globalObjectTypes, templates, relations, spaces, sharing, tags, pins, savedViews) implemented in both Supabase and Dexie
+- All method signatures match the interface contract
+- Error handling uses standardized `DataResult<T>` / `DataListResult<T>` everywhere — errors returned, never thrown
+- Supabase checks `.error` after every query (100% coverage)
+- Dexie wraps every method in try-catch (100% coverage)
+
+**Issues:**
+- **C1: `as` casts in supabase.ts** — 54 occurrences of `data as Type`. Unavoidable due to Supabase client returning generic types. Not a correctness risk but limits type inference.
+- **C2: `any` in Zod schemas** — 15 instances in types.ts for `properties`, `content`, `filters`, `sort`, `context`. Intentional: these are user-defined JSON. Could be narrowed to `z.unknown()` for marginal safety.
+- **C3: Sharing is a no-op in Local** — All 12 sharing methods return `{ error: 'Sharing is not available in guest mode' }`. Intentional design for guest mode.
+
+### 2. TanStack Query Configuration
+
+**Result: PASS**
+
+Global defaults in `providers.tsx`:
+- `staleTime: 30_000` (30s) — appropriate for most queries
+- `gcTime: 5 * 60_000` (5min) — standard retention
+- `refetchOnWindowFocus: false` — prevents surprise refetches; invalidation via `emit()` handles freshness
+- `retry: 1` — single retry, won't loop on permanent errors
+
+No per-query staleTime/gcTime overrides found. All hooks use global defaults, which is acceptable given the uniform data access patterns.
+
+### 3. Query Key Consistency
+
+**Result: FAIL — 2 inline keys + 1 event/key mismatch**
+
+19 total `useQuery` call sites inventoried. 17/19 (89%) use the `queryKeys` factory.
+
+**Issues:**
+- **F1: Inline key in `useAllRelations.ts:15`** — `['relations', 'all', spaceId]` instead of factory. Factory lacks a `relations.all()` key.
+- **F2: Inline key in `useGraphData.ts:20`** — Same `['relations', 'all', spaceId]` inline key. Both F1 and F2 use the same hardcoded key, which is consistent with each other but bypasses the factory.
+- **F3: Event channel/query key mismatch for shares** — `emit('spaceShares')` maps to prefix `['spaceShares']` in `events.ts`, but queries use `queryKeys.shares.list()` → `['shares', spaceId]`. Result: **emit('spaceShares') does not invalidate share queries**. Workaround: `useSpaceShares` uses manual `queryClient.invalidateQueries()` — but this breaks cross-tab sync via BroadcastChannel.
+
+**Good patterns:**
+- 95% of hooks include spaceId in query keys (proper multi-tenant isolation)
+- Empty array constants (`EMPTY_TAGS`, `EMPTY_OBJECTS`, etc.) prevent reference churn — all hooks follow this
+- `keepPreviousData` used in list hooks for smooth UI transitions
+
+### 4. Mutation & Invalidation Patterns
+
+**Result: PASS with notes**
+
+All hooks use `emit(channel)` after successful mutations, which invalidates via prefix match and broadcasts to other tabs.
+
+**Good patterns:**
+- Cross-entity invalidation on type deletion: `emit('objectTypes')` + `emit('objects')` + `emit('templates')`
+- Optimistic cache updates in `useObject.update()` and `useTemplate.update()` via `queryClient.setQueryData()`
+- Prefetching on hover in `SidebarLink` via `queryClient.prefetchQuery()`
+
+**Issues:**
+- **F3 (above):** `useSpaceShares` mutations don't emit — uses manual invalidation, breaking cross-tab sync.
+- **F4: No global mutation defaults** — retry/timeout behavior varies per mutation. Not a bug, but a consistency gap.
+
+### 5. Error Handling Uniformity
+
+**Result: FAIL — silent mutation failures + missing error boundaries**
+
+**Query error handling: GOOD (100%)**
+All 12 query hooks throw from `queryFn` on error and expose `error` state to components.
+
+**Mutation error handling: POOR (78%)**
+
+| Hook | Mutations | Checked? |
+|------|-----------|----------|
+| useObjects | 6 | All ✓ |
+| useObjectTypes | 5 | All ✓ |
+| useGlobalObjectTypes | 4 | All ✓ |
+| useTemplates | 4 | All ✓ |
+| useTags | 3 | All ✓ |
+| useObjectRelations | 2 | All ✓ |
+| useSavedViews | 3 | All ✓ (throws) |
+| **usePins** | **2** | **NONE** |
+| **useSpaceShares** | **8** | **7/8** |
+
+**Issues:**
+- **F5: `usePins.ts:36,41`** — `pin()` and `unpin()` do not check errors. If the operation fails, `emit('pins')` still fires, leaving UI in an inconsistent state.
+- **F6: `useSpaceShares.ts:76`** — `removeExclusion()` does not check errors. Failure is invisible to user.
+- **F7: Only 1 error boundary** — `EditorErrorBoundary` wraps the Plate editor. No error boundaries around data-loading pages, sidebar, or other sections.
+- **F8: No auth error handling** — No detection of expired sessions, 401 responses, or redirect-to-login flow.
+- **F9: Inconsistent mutation return patterns** — Some return `null`, some return `{ data, error }`, some throw. Components must handle differently per hook.
+
+### 6. Request Waterfall Detection
+
+**Result: PASS — most paths parallel, 1 avoidable waterfall**
+
+**Sidebar:** All queries (objects, types, pins, tags) fire in parallel ✓
+
+**Object editor:** `useObject(id)` → `useObjectType(object?.type_id)` is serial but correct — can't know type_id until object loads. Templates and permissions load in parallel ✓
+
+**Graph view:** Objects, types, and relations all fire in parallel ✓
+
+**Type page:** Objects query initially fires with dummy typeId (`'__none__'`), then re-fires when types load. Suboptimal but not blocking.
+
+**Issues:**
+- **F10: Exclusion filter waterfall in `useExclusionFilter.ts:27-32`** — For shared users, fetches shares list serially, then finds user's share, then fetches per-user exclusions. The per-user arm could be parallelized with a single-RPC endpoint accepting `(spaceId, userId)`.
+- **F11: Template variable fetch in `useTemplates.ts:115`** — `getTemplateVariables()` makes a network fetch for a template that's already in the cached list. Could check cache first.
+
+### 7. Cache Utilization
+
+**Result: PASS**
+
+- `keepPreviousData` used in list hooks (useObjects, useObjectTypes, usePins, useTags, useSavedViews)
+- Prefetching on hover in SidebarLink ✓
+- Deduplication via TanStack Query (same query key = single network request) ✓
+- Stale-while-revalidate via `staleTime: 30s` + `emit()` invalidation ✓
+- No `refetchOnMount: 'always'` found — cache properly reused
+
+**Missing opportunities:**
+- Detail queries not populated from list cache (no `initialData` from list → detail)
+- No route-level prefetching (e.g., prefetch type page data on sidebar hover)
+
+### 8. Supabase/Dexie Parity
+
+**Result: PASS with 1 behavioral difference**
+
+- All method signatures, return types, and sort orders match
+- Duplicate detection works in both (Supabase via DB constraint, Dexie via manual check)
+- Cascade deletes handled in both (Supabase via FK, Dexie via explicit code)
+
+**Issues:**
+- **F12: Case-sensitive slug comparison mismatch** — Supabase unique constraint is case-sensitive (PostgreSQL `COALESCE(space_id, ...), slug`). Dexie checks case-insensitively via `slug.toLowerCase()`. Result: `page` vs `Page` would be allowed in Supabase but rejected in Dexie.
+- **F13: Search result parity** — Supabase uses two-pass search (title via trigram index, then content on subset). Dexie does single-pass client-side search. Content-only matches may be missed in Supabase if title results fill the quota.
+
+---
+
+## Hook Inventory
+
+| # | Hook | File | Query Key | Factory? | Space? | Mutations | emit? |
+|---|------|------|-----------|----------|--------|-----------|-------|
+| 1 | useObjects | objects/hooks/useObjects.ts:29 | objects.list | ✓ | ✓ | create, update, remove, restore, archive, unarchive | ✓ |
+| 2 | useObject | objects/hooks/useObjects.ts:120 | objects.detail | ✓ | — | update, remove, archive | ✓ |
+| 3 | useObjectTypes | object-types/hooks/useObjectTypes.ts:32 | objectTypes.list | ✓ | ✓ | create, update, remove, archive, unarchive | ✓ |
+| 4 | useObjectType | object-types/hooks/useObjectTypes.ts:107 | objectTypes.detail | ✓ | — | refetch | — |
+| 5 | useGlobalObjectTypes | global-types/hooks/useGlobalObjectTypes.ts:16 | globalObjectTypes.list | ✓ | — | create, update, remove, importToSpace | ✓ |
+| 6 | useTemplates | templates/hooks/useTemplates.ts:49 | templates.list | ✓ | ✓ | saveAs, createFrom, delete, rename | ✓ |
+| 7 | useTemplate | templates/hooks/useTemplate.ts:16 | templates.detail | ✓ | — | update (optimistic) | ✓ |
+| 8 | useTags | tags/hooks/useTags.ts:28 | tags.list | ✓ | ✓ | create, update, remove | ✓ |
+| 9 | useObjectTags | tags/hooks/useTags.ts:85 | tags.objectTags | ✓ | ✓ | addTag, removeTag | ✓ |
+| 10 | useObjectTagsBatch | tags/hooks/useTags.ts:116 | tags.objectTagsBatch | ✓ | ✓ | — | — |
+| 11 | useTagCounts | tags/hooks/useTags.ts:144 | tags.countsByTags | ✓ | ✓ | — | — |
+| 12 | TagPageView | tags/components/TagPageView.tsx:35 | tags.objectsByTag | ✓ | ✓ | — | — |
+| 13 | useObjectRelations | relations/hooks/useObjectRelations.ts:25 | relations.list | ✓ | ✓ | createLink, removeLink | ✓ |
+| 14 | useAllRelations | relations/hooks/useAllRelations.ts:10 | **INLINE** | — | ✓ | — | — |
+| 15 | usePins | pins/hooks/usePins.ts:19 | pins.list | ✓ | ✓ | pin, unpin, toggle | ✓ |
+| 16 | useSpaceShares | sharing/hooks/useSpaceShares.ts:8 | shares.list | ✓ | ✓ | create, update, delete, exclusions | manual |
+| 17 | useSavedViews | table-view/hooks/useSavedViews.ts:12 | savedViews.list | ✓ | ✓ | create, update, delete | ✓ |
+| 18 | useGraphData | graph/hooks/useGraphData.ts:19 | **INLINE** | — | ✓ | — | — |
+| 19 | SidebarLink | sidebar/components/SidebarLink.tsx:53 | objects.detail | ✓ (prefetch) | — | — | — |
+
+---
+
+## Issues Summary
+
+### Critical (fix now)
+
+| ID | Area | Issue | Location |
+|----|------|-------|----------|
+| F3 | Keys/Events | `emit('spaceShares')` doesn't invalidate share queries — prefix mismatch (`['spaceShares']` vs `['shares']`). Breaks cross-tab sync for shares. | events.ts:21, queryKeys.ts:40 |
+| F5 | Errors | `usePins.pin()` and `unpin()` don't check errors — UI shows success even on failure | usePins.ts:36,41 |
+| F6 | Errors | `useSpaceShares.removeExclusion()` doesn't check errors | useSpaceShares.ts:76 |
+
+### High (fix soon)
+
+| ID | Area | Issue | Location |
+|----|------|-------|----------|
+| F1 | Keys | Inline query key `['relations', 'all', spaceId]` — factory lacks `relations.all()` | useAllRelations.ts:15 |
+| F2 | Keys | Same inline key duplicated | useGraphData.ts:20 |
+| F7 | Errors | Only 1 error boundary in entire app (EditorErrorBoundary) | — |
+| F8 | Errors | No auth error handling (expired sessions, 401 redirect) | — |
+| F12 | Parity | Slug case sensitivity mismatch — Supabase case-sensitive, Dexie case-insensitive | local.ts:429, supabase.ts:125 |
+
+### Medium (improve when touching)
+
+| ID | Area | Issue | Location |
+|----|------|-------|----------|
+| F9 | Errors | Inconsistent mutation return patterns (null vs {data,error} vs throw) | Various |
+| F10 | Waterfalls | Exclusion filter serial fetch (listShares → listExclusions) | useExclusionFilter.ts:27-32 |
+| F11 | Cache | getTemplateVariables fetches instead of checking cache | useTemplates.ts:115 |
+| F13 | Parity | Search result differences between Supabase two-pass and Dexie single-pass | supabase.ts:584, local.ts:1060 |
+| C1 | Types | 54 `as` casts in supabase.ts (unavoidable with current Supabase types) | supabase.ts |
+| C2 | Types | 15 `z.any()` in schemas (intentional for JSON fields) | types.ts |
+| F4 | Config | No global mutation defaults (retry, timeout) | providers.tsx |
+
+### Low / Informational
+
+- Method definition order inconsistency in RelationsClient (list vs listAll)
+- Missing route-level prefetching
+- No `initialData` from list → detail cache

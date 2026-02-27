@@ -18,7 +18,7 @@ const channelToQueryPrefix: Record<EventChannel, string[]> = {
   templates: ['templates'],
   objectRelations: ['relations'],
   spaces: ['spaces'],
-  spaceShares: ['spaceShares'],
+  spaceShares: ['shares'],
   tags: ['tags'],
   pins: ['pins'],
   savedViews: ['savedViews'],

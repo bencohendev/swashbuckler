@@ -1,13 +1,13 @@
 import { useCallback } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useDataClient, type SpaceShare, type SpaceSharePermission, type CreateShareExclusionInput, type ShareExclusion } from '@/shared/lib/data'
+import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 
 const EMPTY_SHARES: SpaceShare[] = []
 
 export function useSpaceShares(spaceId: string | null) {
   const dataClient = useDataClient()
-  const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.shares.list(spaceId!),
@@ -19,12 +19,6 @@ export function useSpaceShares(spaceId: string | null) {
     enabled: !!spaceId,
   })
 
-  const invalidate = useCallback(() => {
-    if (spaceId) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.shares.list(spaceId) })
-    }
-  }, [queryClient, spaceId])
-
   const createShare = useCallback(async (email: string, permission: SpaceSharePermission) => {
     if (!spaceId) return null
     const result = await dataClient.sharing.createShare({
@@ -33,27 +27,27 @@ export function useSpaceShares(spaceId: string | null) {
       permission,
     })
     if (!result.error && result.data) {
-      invalidate()
+      emit('spaceShares')
       return result.data
     }
     return result.error
-  }, [dataClient, spaceId, invalidate])
+  }, [dataClient, spaceId])
 
   const updateShare = useCallback(async (shareId: string, permission: SpaceSharePermission) => {
     const result = await dataClient.sharing.updateShare(shareId, { permission })
     if (!result.error) {
-      invalidate()
+      emit('spaceShares')
     }
     return result.error
-  }, [dataClient, invalidate])
+  }, [dataClient])
 
   const deleteShare = useCallback(async (shareId: string) => {
     const result = await dataClient.sharing.deleteShare(shareId)
     if (!result.error) {
-      invalidate()
+      emit('spaceShares')
     }
     return result.error
-  }, [dataClient, invalidate])
+  }, [dataClient])
 
   // Exclusions management
   const loadExclusions = useCallback(async (shareId: string) => {
@@ -73,7 +67,8 @@ export function useSpaceShares(spaceId: string | null) {
   }, [dataClient])
 
   const removeExclusion = useCallback(async (exclusionId: string) => {
-    await dataClient.sharing.removeExclusion(exclusionId)
+    const result = await dataClient.sharing.removeExclusion(exclusionId)
+    if (result.error) return
   }, [dataClient])
 
   // Space-wide exclusions
