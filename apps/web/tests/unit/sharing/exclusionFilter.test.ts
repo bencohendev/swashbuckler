@@ -91,6 +91,7 @@ const makeObject = (id: string, typeId: string, title: string): DataObject => ({
   cover_image: null,
   properties: {},
   content: null,
+  sort_order: 0,
   is_deleted: false,
   deleted_at: null,
   is_archived: false,

@@ -49,7 +49,7 @@ import type {
   DataListResult,
 } from './types'
 
-const OBJECT_SUMMARY_COLUMNS = 'id, title, type_id, owner_id, space_id, parent_id, icon, cover_image, properties, is_deleted, deleted_at, is_archived, archived_at, created_at, updated_at'
+const OBJECT_SUMMARY_COLUMNS = 'id, title, type_id, owner_id, space_id, parent_id, icon, cover_image, properties, sort_order, is_deleted, deleted_at, is_archived, archived_at, created_at, updated_at'
 
 async function resolveUserId(supabase: SupabaseClient, userId?: string): Promise<string | null> {
   if (userId) return userId
@@ -123,7 +123,17 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string, use
 
       if (error) {
         if (error.code === '23505') {
-          return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+          const { data: archived } = await supabase
+            .from('object_types')
+            .select('id')
+            .ilike('slug', input.slug)
+            .eq('space_id', spaceId ?? '')
+            .eq('is_archived', true)
+            .limit(1)
+          const msg = archived && archived.length > 0
+            ? 'A type with this slug already exists in this space. An archived type is using this name — unarchive or delete it first.'
+            : 'A type with this slug already exists in this space'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
         }
         return { data: null, error: { message: error.message, code: error.code } }
       }
@@ -140,6 +150,20 @@ function createObjectTypesClient(supabase: SupabaseClient, spaceId?: string, use
         .single()
 
       if (error) {
+        if (error.code === '23505' && input.slug) {
+          const { data: archived } = await supabase
+            .from('object_types')
+            .select('id')
+            .ilike('slug', input.slug)
+            .eq('space_id', spaceId ?? '')
+            .eq('is_archived', true)
+            .neq('id', id)
+            .limit(1)
+          const msg = archived && archived.length > 0
+            ? 'A type with this slug already exists in this space. An archived type is using this name — unarchive or delete it first.'
+            : 'A type with this slug already exists in this space'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
+        }
         if (error.code === '23505') {
           return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
         }
@@ -367,6 +391,7 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string, userId?
       let query = supabase
         .from('objects')
         .select(OBJECT_SUMMARY_COLUMNS)
+        .order('sort_order', { ascending: true })
         .order('updated_at', { ascending: false })
 
       if (spaceId) {
@@ -406,6 +431,51 @@ function createObjectsClient(supabase: SupabaseClient, spaceId?: string, userId?
       }
 
       return { data: data as DataObjectSummary[], error: null }
+    },
+
+    async listContent(options: ListObjectsOptions = {}): Promise<DataListResult<{ id: string; content: unknown }>> {
+      let query = supabase
+        .from('objects')
+        .select('id, content')
+        .order('updated_at', { ascending: false })
+
+      if (spaceId) {
+        query = query.eq('space_id', spaceId)
+      }
+
+      if (options.parentId !== undefined) {
+        query = options.parentId === null
+          ? query.is('parent_id', null)
+          : query.eq('parent_id', options.parentId)
+      }
+
+      if (options.typeId) {
+        query = query.eq('type_id', options.typeId)
+      }
+
+      if (options.isDeleted !== undefined) {
+        query = query.eq('is_deleted', options.isDeleted)
+      }
+
+      if (options.isArchived !== undefined) {
+        query = query.eq('is_archived', options.isArchived)
+      }
+
+      if (options.limit) {
+        query = query.limit(options.limit)
+      }
+
+      if (options.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 50) - 1)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        return { data: [], error: { message: error.message, code: error.code } }
+      }
+
+      return { data: data as { id: string; content: unknown }[], error: null }
     },
 
     async get(id: string): Promise<DataResult<DataObject>> {
@@ -1014,7 +1084,17 @@ function createSpacesClient(supabase: SupabaseClient, userId?: string): SpacesCl
 
       if (error) {
         if (error.code === '23505') {
-          return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+          const { data: archived } = await supabase
+            .from('spaces')
+            .select('id')
+            .ilike('name', input.name)
+            .eq('owner_id', resolvedUserId)
+            .eq('is_archived', true)
+            .limit(1)
+          const msg = archived && archived.length > 0
+            ? 'A space with this name already exists. An archived space is using this name — unarchive or delete it first.'
+            : 'A space with this name already exists'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
         }
         return { data: null, error: { message: error.message, code: error.code } }
       }
@@ -1031,6 +1111,19 @@ function createSpacesClient(supabase: SupabaseClient, userId?: string): SpacesCl
         .single()
 
       if (error) {
+        if (error.code === '23505' && input.name) {
+          const { data: archived } = await supabase
+            .from('spaces')
+            .select('id')
+            .ilike('name', input.name)
+            .eq('is_archived', true)
+            .neq('id', id)
+            .limit(1)
+          const msg = archived && archived.length > 0
+            ? 'A space with this name already exists. An archived space is using this name — unarchive or delete it first.'
+            : 'A space with this name already exists'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
+        }
         if (error.code === '23505') {
           return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
         }

@@ -7,6 +7,7 @@ export interface FilterContext {
   tagsByObject: Record<string, Tag[]>
   relationsByObject: Record<string, ObjectRelation[]>
   objectTypeByObjectId: Record<string, string>
+  contentTextByObject: Record<string, string>
 }
 
 export function filterObjects(
@@ -18,10 +19,14 @@ export function filterObjects(
 
   const query = expression.search.trim().toLowerCase()
 
+  const hasContentData = Object.keys(ctx.contentTextByObject).length > 0
+
   return objects.filter((obj) => {
-    // Title search applies globally (AND with groups)
-    if (query && !obj.title.toLowerCase().includes(query)) {
-      return false
+    // Search applies globally (AND with groups) — matches title or content
+    if (query) {
+      const titleMatch = obj.title.toLowerCase().includes(query)
+      const contentMatch = hasContentData && (ctx.contentTextByObject[obj.id] ?? '').toLowerCase().includes(query)
+      if (!titleMatch && !contentMatch) return false
     }
 
     // If no groups, search-only filter
@@ -61,6 +66,9 @@ function evaluateCondition(
         ctx.relationsByObject,
         ctx.objectTypeByObjectId,
       )
+
+    case 'content':
+      return evaluateText(ctx.contentTextByObject[obj.id] ?? '', operator, cond.value)
 
     case 'property': {
       const raw = obj.properties?.[target.fieldId]
@@ -265,4 +273,10 @@ function isDateLikeOperator(op: string): boolean {
     'is_before', 'is_after',
     'is_on_or_before', 'is_on_or_after', 'is_between',
   ].includes(op)
+}
+
+export function hasContentFilter(expression: FilterExpression): boolean {
+  return expression.groups.some((g) =>
+    g.conditions.some((c) => c.target.kind === 'content'),
+  )
 }

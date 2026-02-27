@@ -18,6 +18,8 @@ function getFieldLabel(target: FilterFieldTarget, fields: FieldDefinition[]): st
   switch (target.kind) {
     case 'title':
       return 'Title'
+    case 'content':
+      return 'Content'
     case 'tag':
       return 'Tags'
     case 'relation':

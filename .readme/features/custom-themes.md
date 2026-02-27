@@ -117,7 +117,7 @@ Theme **creation** is account-wide (all custom themes are available in every spa
 - **Theme list**: Shows "Theme for [Space Name]" context. Active indicators check the current space's assignment
 - **New theme**: On save, automatically assigned to the current space
 - **Deleted theme**: `deleteTheme()` scans `spaceThemes` and removes entries referencing the deleted ID
-- **No assignment**: Falls back to system default (no CSS overrides)
+- **No assignment**: `CustomThemeApplier` calls `setTheme('system')` and clears CSS overrides — prevents the previous space's base theme from bleeding through
 - **Guest mode**: Works identically — local space ID is a valid key
 - **Shared spaces**: Assignment is in the viewer's localStorage — each user sees their own preference
 

@@ -26,6 +26,7 @@ import { useObjectModal } from '@/shared/stores/objectModal'
 import { EditorModeContext } from '../Editor'
 import { BUILT_IN_VARIABLES } from '@/features/templates/lib/variables'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
+import { focusEditorAtSelection, focusEditorNow } from '../../lib/focusEditor'
 
 interface SlashMenuItem {
   key: string
@@ -159,18 +160,6 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   const [isKeyboardMode, setIsKeyboardMode] = useState(false)
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
 
-  // Focus the editor's contentEditable after node mutations.
-  // We can't use editor.tf.focus() because it calls toDOMNode(editor)
-  // which relies on EDITOR_TO_ELEMENT WeakMap that becomes stale after
-  // our node mutations. Direct DOM focus is the only reliable approach.
-  // Must be deferred so React can commit the new DOM first.
-  const focusEditor = useCallback(() => {
-    setTimeout(() => {
-      const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
-      el?.focus()
-    }, 0)
-  }, [])
-
   // Auto-focus the filter input on mount (skip on mobile to avoid keyboard flicker)
   useEffect(() => {
     if (!isMobile) {
@@ -263,7 +252,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
             children: [{ text: '' }],
           })
           editor.tf.move()
-          focusEditor()
+          focusEditorAtSelection(editor)
           return
         }
         // Built-in variable
@@ -278,7 +267,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
           children: [{ text: '' }],
         })
         editor.tf.move()
-        focusEditor()
+        focusEditorAtSelection(editor)
         return
       }
 
@@ -297,7 +286,7 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
       // The text node persists so the existing selection stays valid.
       if (type === 'p' || type === 'h1' || type === 'h2' || type === 'h3') {
         editor.tf.setNodes({ type }, { at: blockPath })
-        focusEditor()
+        focusEditorAtSelection(editor)
         return
       }
 
@@ -380,18 +369,16 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
 
       editor.tf.insertNodes(node, { at: blockPath })
 
-      // Defer selection + focus together so plugin normalization
-      // (TrailingBlockPlugin, CodeBlockPlugin) finishes first
+      // Defer selection + focus so plugin normalization finishes first
       setTimeout(() => {
         const start = editor.api.start(blockPath)
         if (start) {
           editor.tf.select(start)
         }
-        const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
-        el?.focus()
+        focusEditorNow(editor)
       }, 0)
     },
-    [editor, focusEditor]
+    [editor]
   )
 
   // Create a new object and insert a mention node
@@ -411,11 +398,14 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
           children: [{ text: '' }],
         })
         editor.tf.move()
-        focusEditor()
-        useObjectModal.getState().open(obj.id)
+        focusEditorAtSelection(editor)
+        useObjectModal.getState().open(obj.id, {
+          autoFocus: true,
+          onClose: () => focusEditorAtSelection(editor),
+        })
       }
     },
-    [editor, create, getNextTitle, focusEditor]
+    [editor, create, getNextTitle]
   )
 
   // Reset selection when query changes

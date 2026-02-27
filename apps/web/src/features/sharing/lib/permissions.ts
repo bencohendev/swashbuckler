@@ -1,4 +1,5 @@
 import type { Space, SpaceSharePermission, SpacePermission } from '@/shared/lib/data'
+import { LOCAL_OWNER_ID } from '@/shared/lib/data'
 
 export function resolveSpacePermission(
   space: Space | null,
@@ -6,7 +7,7 @@ export function resolveSpacePermission(
   sharedPermission: SpaceSharePermission | null,
 ): SpacePermission {
   if (!space) return 'view'
-  if (!userId) return space.owner_id === 'local' ? 'owner' : 'view'
+  if (!userId) return space.owner_id === LOCAL_OWNER_ID ? 'owner' : 'view'
   if (space.owner_id === userId) return 'owner'
   if (sharedPermission === 'edit') return 'edit'
   return 'view'

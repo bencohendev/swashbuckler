@@ -11,7 +11,7 @@ const GAP = 12 // px between target and popover
 const EDGE_PADDING = 8 // minimum px from viewport edge
 
 interface CoachMarkProps {
-  targetEl: Element | null
+  targetEl: Element
   title: string
   description: string
   placement: Placement
@@ -108,7 +108,7 @@ export function CoachMark({
   const [position, setPosition] = useState<Position | null>(null)
 
   const measure = useCallback(() => {
-    if (!targetEl || !popoverRef.current || isMobile) return
+    if (!popoverRef.current || isMobile) return
     const targetRect = targetEl.getBoundingClientRect()
     const popoverRect = popoverRef.current.getBoundingClientRect()
     setPosition(computePosition(targetRect, { width: popoverRect.width, height: popoverRect.height }, placement))
@@ -120,7 +120,7 @@ export function CoachMark({
   }, [measure])
 
   useEffect(() => {
-    if (!targetEl || isMobile) return
+    if (isMobile) return
 
     const ro = new ResizeObserver(measure)
     ro.observe(targetEl)
@@ -207,7 +207,8 @@ export function CoachMark({
     )
   }
 
-  // Desktop: positioned popover
+  // Desktop: positioned popover — mounts fresh each step via key in parent,
+  // so animate-in runs on every step transition.
   return (
     <div
       ref={popoverRef}

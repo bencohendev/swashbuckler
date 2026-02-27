@@ -10,6 +10,7 @@ import { useDataClient, type DataObject } from '@/shared/lib/data'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
 import { useObjects, useObject, useNextTitle } from '@/features/objects'
 import { useObjectModal } from '@/shared/stores/objectModal'
+import { focusEditorAtSelection } from '../../lib/focusEditor'
 
 function getMentionProps(element: Record<string, unknown>) {
   return {
@@ -36,7 +37,7 @@ export function MentionElement({ element, children, ...props }: PlateElementProp
       <Link
         href={`/objects/${objectId}`}
         contentEditable={false}
-        className="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-sm font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+        className="mx-px inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-sm font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
       >
         {displayTitle}
       </Link>
@@ -106,6 +107,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
       // Move cursor after the mention
       editor.tf.move()
+      focusEditorAtSelection(editor)
     },
     [editor]
   )
@@ -117,10 +119,13 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
       const obj = await create({ title, type_id: typeId })
       if (obj) {
         selectObject(obj)
-        useObjectModal.getState().open(obj.id)
+        useObjectModal.getState().open(obj.id, {
+          autoFocus: true,
+          onClose: () => focusEditorAtSelection(editor),
+        })
       }
     },
-    [query, create, getNextTitle, selectObject]
+    [query, create, getNextTitle, selectObject, editor]
   )
 
   // Close the mention menu
@@ -136,6 +141,7 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
         { text: '@' + query },
         { at: path }
       )
+      focusEditorAtSelection(editor)
     }
   }, [editor, query])
 

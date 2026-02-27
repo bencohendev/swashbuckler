@@ -8,8 +8,8 @@ import {
   type CreateObjectTypeInput,
   type UpdateObjectTypeInput,
 } from '@/shared/lib/data'
-import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
+import { useMutationAction, useVoidMutationAction } from '@/shared/hooks/useMutationAction'
 
 const EMPTY_TYPES: ObjectType[] = []
 
@@ -30,34 +30,41 @@ export function useGlobalObjectTypes() {
     await queryClient.invalidateQueries({ queryKey: queryKeys.globalObjectTypes.all() })
   }, [queryClient])
 
-  const create = useCallback(async (input: CreateObjectTypeInput): Promise<ObjectType | null> => {
-    const result = await dataClient.globalObjectTypes.create(input)
-    if (result.error) return null
-    emit('globalObjectTypes')
-    return result.data
-  }, [dataClient])
+  const createFn = useCallback(
+    (input: CreateObjectTypeInput) => dataClient.globalObjectTypes.create(input),
+    [dataClient],
+  )
+  const create = useMutationAction(createFn, {
+    actionLabel: 'Create global type',
+    emitChannels: ['globalObjectTypes'],
+  })
 
-  const update = useCallback(async (id: string, input: UpdateObjectTypeInput): Promise<ObjectType | null> => {
-    const result = await dataClient.globalObjectTypes.update(id, input)
-    if (result.error) return null
-    emit('globalObjectTypes')
-    return result.data
-  }, [dataClient])
+  const updateFn = useCallback(
+    (id: string, input: UpdateObjectTypeInput) => dataClient.globalObjectTypes.update(id, input),
+    [dataClient],
+  )
+  const update = useMutationAction(updateFn, {
+    actionLabel: 'Update global type',
+    emitChannels: ['globalObjectTypes'],
+  })
 
-  const remove = useCallback(async (id: string): Promise<string | null> => {
-    const result = await dataClient.globalObjectTypes.delete(id)
-    if (result.error) return result.error.message
-    emit('globalObjectTypes')
-    return null
-  }, [dataClient])
+  const removeFn = useCallback(
+    (id: string) => dataClient.globalObjectTypes.delete(id),
+    [dataClient],
+  )
+  const remove = useVoidMutationAction(removeFn, {
+    actionLabel: 'Delete global type',
+    emitChannels: ['globalObjectTypes'],
+  })
 
-  const importToSpace = useCallback(async (id: string, targetSpaceId: string): Promise<{ data: ObjectType | null; error: string | null }> => {
-    const result = await dataClient.globalObjectTypes.importToSpace(id, targetSpaceId)
-    if (result.error) return { data: null, error: result.error.message }
-    emit('globalObjectTypes')
-    emit('objectTypes')
-    return { data: result.data, error: null }
-  }, [dataClient])
+  const importToSpaceFn = useCallback(
+    (id: string, targetSpaceId: string) => dataClient.globalObjectTypes.importToSpace(id, targetSpaceId),
+    [dataClient],
+  )
+  const importToSpace = useMutationAction(importToSpaceFn, {
+    actionLabel: 'Import type',
+    emitChannels: ['globalObjectTypes', 'objectTypes'],
+  })
 
   return {
     types: data ?? EMPTY_TYPES,

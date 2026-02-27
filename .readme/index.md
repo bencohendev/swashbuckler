@@ -145,17 +145,28 @@ Dual-storage architecture with a `DataClient` interface:
 | [Edit Template Content](features/edit-template-content.md) | Edit full template content and variables, not just name |
 | [Saved Views & Filters](features/saved-views.md) | Named saved views per type page (filters + sort + view mode) |
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
+| [Fantasy Theme](features/fantasy-theme.md) | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
+| [Sci-Fi Theme](features/sci-fi-theme.md) | Sci-fi styled UI skin — cyberpunk/neon aesthetic, futuristic panels and controls |
+| Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
+| [Accessibility Audit v2](features/accessibility-audit-v2.md) | Automated testing, keyboard nav, screen readers, contrast, motion, touch targets, zoom/reflow |
+| [Regression Testing](features/regression-testing.md) | Automated e2e regression tests (Playwright) + manual checklist |
+| Default Space Theme to System | Spaces without a theme assignment reset to system theme on switch |
+| [Content Filtering](features/content-filtering.md) | Extend advanced filters to search entry body content, not just properties and title |
+| [Manual Entry Ordering](features/manual-entry-ordering.md) | Drag-and-drop reordering of entries in sidebar and type pages (table/list views) |
+| [Apply Theme from Themes Page](features/apply-theme-from-themes-page.md) | Activate button on account-level custom themes page to apply a theme to the current space |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| [Fantasy Theme](features/fantasy-theme.md) | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
-| [Sci-Fi Theme](features/sci-fi-theme.md) | Sci-fi styled UI skin — cyberpunk/neon aesthetic, futuristic panels and controls |
-| Optimistic Locking | Prevent silent overwrites when two users edit the same entry's metadata in a shared space (from [Database Audit](features/database-audit.md) E1) |
-| Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
-| Soft-Delete on Type Deletion | Type deletion should soft-delete its objects into trash instead of immediate cascade (from [Database Audit](features/database-audit.md) E5) |
+| RP Starter Kit Expansion | Expand the Roleplaying starter kit — more types (Quest, NPC, Encounter, etc.), richer properties, templates |
+
+## Deferred
+
+| Feature | Description | Reason |
+|---------|-------------|--------|
+| Optimistic Locking | Prevent silent overwrites when two users edit the same entry's metadata in a shared space (from [Database Audit](features/database-audit.md) E1) | Low practical risk — editor content already protected by Yjs CRDT; only metadata (title, properties) during simultaneous editing is exposed. Moderate implementation cost (~15-20 files). Revisit if multi-user metadata conflicts become a real pain point. |
 
 ### Audits
 
@@ -166,7 +177,6 @@ Dual-storage architecture with a `DataClient` interface:
 | [SSR vs Client Audit](features/ssr-vs-client-audit.md) | Rendering strategy, `'use client'` boundaries, SSR data fetching, hydration risks, bundle size |
 | [Client API Audit](features/client-api-audit.md) | DataClient design, TanStack Query config, query keys, mutation/invalidation, error handling, waterfalls |
 | [React Hooks Audit](features/react-hooks-audit.md) | useEffect correctness, memoization, stale closures, Zustand patterns, infinite loop risks, cleanup |
-| [Accessibility Audit v2](features/accessibility-audit-v2.md) | Automated testing, keyboard nav, screen readers, contrast, motion, touch targets, zoom/reflow |
 
 ## Bugs
 

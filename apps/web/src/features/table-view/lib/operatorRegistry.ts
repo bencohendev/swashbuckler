@@ -10,6 +10,7 @@ export type FilterFieldType =
   | 'checkbox'
   | 'tag'
   | 'relation'
+  | 'content'
 
 export interface OperatorDef {
   value: string
@@ -84,6 +85,13 @@ const RELATION_OPERATORS: OperatorDef[] = [
   { value: 'has_no_links', label: 'has no links', needsValue: false, needsValue2: false },
 ]
 
+const CONTENT_OPERATORS: OperatorDef[] = [
+  { value: 'contains', label: 'contains', needsValue: true, needsValue2: false },
+  { value: 'does_not_contain', label: 'does not contain', needsValue: true, needsValue2: false },
+  { value: 'is_empty', label: 'is empty', needsValue: false, needsValue2: false },
+  { value: 'is_not_empty', label: 'is not empty', needsValue: false, needsValue2: false },
+]
+
 const REGISTRY: Record<FilterFieldType, OperatorDef[]> = {
   text: TEXT_OPERATORS,
   url: TEXT_OPERATORS,
@@ -96,6 +104,7 @@ const REGISTRY: Record<FilterFieldType, OperatorDef[]> = {
   checkbox: CHECKBOX_OPERATORS,
   tag: TAG_OPERATORS,
   relation: RELATION_OPERATORS,
+  content: CONTENT_OPERATORS,
 }
 
 export function getOperators(fieldType: FilterFieldType): OperatorDef[] {

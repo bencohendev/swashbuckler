@@ -42,6 +42,7 @@ export function CustomThemeApplier() {
 
   useEffect(() => {
     if (!space) {
+      setTheme('system')
       clearOverrides()
       return
     }
@@ -49,6 +50,7 @@ export function CustomThemeApplier() {
     const assignment = spaceThemes[space.id]
 
     if (!assignment) {
+      setTheme('system')
       clearOverrides()
       return
     }

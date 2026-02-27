@@ -45,8 +45,24 @@ import type {
 import { extractTextFromContent } from '@/features/search/lib/extractText'
 import { BUILT_IN_TYPE_IDS } from './types'
 
+import type { DataError } from './types'
+
 const LOCAL_DEFAULT_SPACE_ID = '00000000-0000-0000-0000-000000000099'
 const LOCAL_OWNER_ID = '00000000-0000-0000-0000-00000000006c'
+
+/** Classify Dexie errors into user-friendly DataError responses */
+function handleDexieError(error: unknown): DataError {
+  if (error instanceof Error) {
+    if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+      return { message: 'Storage is full. Try deleting unused items to free space.', code: 'QUOTA_EXCEEDED' }
+    }
+    if (error.name === 'VersionError' || error.message.includes('version')) {
+      return { message: 'Database needs to be updated. Please refresh the page.', code: 'VERSION_ERROR' }
+    }
+    return { message: error.message }
+  }
+  return { message: 'Unknown error' }
+}
 
 // Default Page type ID for fresh local databases
 const LOCAL_DEFAULT_PAGE_TYPE_ID = '00000000-0000-0000-0000-000000000101'
@@ -361,6 +377,25 @@ class SwashbucklerDB extends Dexie {
         if (view.owner_id === 'local') view.owner_id = LOCAL_OWNER_ID
       })
     })
+
+    // Version 14: Add sort_order to objects for manual entry ordering
+    this.version(14).stores({
+      objects: 'id, title, type_id, parent_id, is_deleted, is_archived, updated_at, space_id, sort_order',
+      objectTypes: 'id, name, slug, owner_id, sort_order, is_archived, space_id',
+      templates: 'id, name, type_id, owner_id, updated_at, space_id',
+      objectRelations: 'id, source_id, target_id, relation_type, created_at',
+      spaces: 'id, name, owner_id, created_at',
+      tags: 'id, name, space_id',
+      objectTags: 'id, object_id, tag_id, [object_id+tag_id]',
+      pins: 'id, object_id',
+      savedViews: 'id, type_id, space_id, owner_id, is_default',
+    }).upgrade(async (tx) => {
+      await tx.table('objects').toCollection().modify((obj: Record<string, unknown>) => {
+        if (obj.sort_order === undefined) {
+          obj.sort_order = 0
+        }
+      })
+    })
   }
 }
 
@@ -394,7 +429,7 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -412,7 +447,7 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -429,7 +464,10 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
           .filter(t => t.space_id === effectiveSpace && t.slug.toLowerCase() === lowerSlug)
           .first()
         if (duplicate) {
-          return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+          const msg = duplicate.is_archived
+            ? 'A type with this slug already exists in this space. An archived type is using this name — unarchive or delete it first.'
+            : 'A type with this slug already exists in this space'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
         }
 
         // Determine sort_order if not provided
@@ -461,7 +499,7 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -482,7 +520,10 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
             .filter(t => t.id !== id && t.space_id === existing.space_id && t.slug.toLowerCase() === lowerSlug)
             .first()
           if (duplicate) {
-            return { data: null, error: { message: 'A type with this slug already exists in this space', code: 'DUPLICATE' } }
+            const msg = duplicate.is_archived
+              ? 'A type with this slug already exists in this space. An archived type is using this name — unarchive or delete it first.'
+              : 'A type with this slug already exists in this space'
+            return { data: null, error: { message: msg, code: 'DUPLICATE' } }
           }
         }
 
@@ -497,7 +538,7 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -542,7 +583,7 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -559,7 +600,7 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
         await database.objectTypes.put(updated)
         return { data: updated, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -575,7 +616,7 @@ function createObjectTypesClient(spaceId?: string): ObjectTypesClient {
         await database.objectTypes.put(updated)
         return { data: updated, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
   }
@@ -594,7 +635,7 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -612,7 +653,7 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -652,7 +693,7 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -677,7 +718,7 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -696,7 +737,7 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -746,7 +787,7 @@ function createLocalGlobalObjectTypesClient(): GlobalObjectTypesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -795,10 +836,13 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           results = results.filter(filter)
         }
 
-        // Sort by updated_at descending
-        results.sort((a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        )
+        // Sort by sort_order ascending, then updated_at descending
+        results.sort((a, b) => {
+          const sortOrderA = (a as DataObject & { sort_order?: number }).sort_order ?? 0
+          const sortOrderB = (b as DataObject & { sort_order?: number }).sort_order ?? 0
+          if (sortOrderA !== sortOrderB) return sortOrderA - sortOrderB
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        })
 
         // Apply pagination
         if (options.offset) {
@@ -810,6 +854,51 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
         }
 
         return { data: results.map(stripContent), error: null }
+      } catch (error) {
+        return {
+          data: [],
+          error: handleDexieError(error)
+        }
+      }
+    },
+
+    async listContent(options: ListObjectsOptions = {}): Promise<DataListResult<{ id: string; content: unknown }>> {
+      try {
+        const database = getDB()
+        const collection = database.objects.toCollection()
+
+        const filters: ((obj: DataObject) => boolean)[] = []
+
+        if (spaceId) {
+          filters.push(obj => obj.space_id === spaceId)
+        }
+
+        if (options.parentId !== undefined) {
+          filters.push(obj => obj.parent_id === options.parentId)
+        }
+
+        if (options.typeId) {
+          filters.push(obj => obj.type_id === options.typeId)
+        }
+
+        if (options.isDeleted !== undefined) {
+          filters.push(obj => obj.is_deleted === options.isDeleted)
+        }
+
+        if (options.isArchived !== undefined) {
+          filters.push(obj => obj.is_archived === options.isArchived)
+        }
+
+        let results = await collection.toArray()
+
+        for (const filter of filters) {
+          results = results.filter(filter)
+        }
+
+        return {
+          data: results.map((obj) => ({ id: obj.id, content: obj.content })),
+          error: null,
+        }
       } catch (error) {
         return {
           data: [],
@@ -831,7 +920,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+          error: handleDexieError(error)
         }
       }
     },
@@ -853,6 +942,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
           cover_image: input.cover_image ?? null,
           properties: input.properties ?? {},
           content: input.content ?? null,
+          sort_order: input.sort_order ?? 0,
           is_deleted: false,
           deleted_at: null,
           is_archived: false,
@@ -867,7 +957,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+          error: handleDexieError(error)
         }
       }
     },
@@ -893,7 +983,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+          error: handleDexieError(error)
         }
       }
     },
@@ -941,7 +1031,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+          error: handleDexieError(error)
         }
       }
     },
@@ -968,7 +1058,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+          error: handleDexieError(error)
         }
       }
     },
@@ -988,7 +1078,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
         await database.objects.put(archived)
         return { data: archived, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1004,7 +1094,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
         await database.objects.put(unarchived)
         return { data: unarchived, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1052,7 +1142,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1087,7 +1177,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+          error: handleDexieError(error)
         }
       }
     },
@@ -1104,7 +1194,7 @@ function createObjectsClient(spaceId?: string): ObjectsClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' }
+          error: handleDexieError(error)
         }
       }
     },
@@ -1134,7 +1224,7 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1152,7 +1242,7 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1191,7 +1281,7 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1227,7 +1317,7 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1240,7 +1330,7 @@ function createTemplatesClient(spaceId?: string): TemplatesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1281,7 +1371,7 @@ function createRelationsClient(spaceId?: string): RelationsClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1306,7 +1396,7 @@ function createRelationsClient(spaceId?: string): RelationsClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1348,7 +1438,7 @@ function createRelationsClient(spaceId?: string): RelationsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1361,7 +1451,7 @@ function createRelationsClient(spaceId?: string): RelationsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1382,7 +1472,7 @@ function createRelationsClient(spaceId?: string): RelationsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1427,7 +1517,7 @@ function createRelationsClient(spaceId?: string): RelationsClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1450,7 +1540,7 @@ function createLocalSpacesClient(): SpacesClient {
       } catch (error) {
         return {
           data: [],
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1468,7 +1558,7 @@ function createLocalSpacesClient(): SpacesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1484,7 +1574,10 @@ function createLocalSpacesClient(): SpacesClient {
           .filter(s => s.owner_id === LOCAL_OWNER_ID && s.name.toLowerCase() === lowerName)
           .first()
         if (duplicate) {
-          return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+          const msg = duplicate.is_archived
+            ? 'A space with this name already exists. An archived space is using this name — unarchive or delete it first.'
+            : 'A space with this name already exists'
+          return { data: null, error: { message: msg, code: 'DUPLICATE' } }
         }
 
         const space: Space = {
@@ -1503,7 +1596,7 @@ function createLocalSpacesClient(): SpacesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1524,7 +1617,10 @@ function createLocalSpacesClient(): SpacesClient {
             .filter(s => s.id !== id && s.owner_id === existing.owner_id && s.name.toLowerCase() === lowerName)
             .first()
           if (duplicate) {
-            return { data: null, error: { message: 'A space with this name already exists', code: 'DUPLICATE' } }
+            const msg = duplicate.is_archived
+              ? 'A space with this name already exists. An archived space is using this name — unarchive or delete it first.'
+              : 'A space with this name already exists'
+            return { data: null, error: { message: msg, code: 'DUPLICATE' } }
           }
         }
 
@@ -1539,7 +1635,7 @@ function createLocalSpacesClient(): SpacesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1608,7 +1704,7 @@ function createLocalSpacesClient(): SpacesClient {
       } catch (error) {
         return {
           data: null,
-          error: { message: error instanceof Error ? error.message : 'Unknown error' },
+          error: handleDexieError(error),
         }
       }
     },
@@ -1625,7 +1721,7 @@ function createLocalSpacesClient(): SpacesClient {
         await database.spaces.put(updated)
         return { data: updated, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1641,7 +1737,7 @@ function createLocalSpacesClient(): SpacesClient {
         await database.spaces.put(updated)
         return { data: updated, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
   }
@@ -1659,7 +1755,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         results.sort((a, b) => a.name.localeCompare(b.name))
         return { data: results, error: null }
       } catch (error) {
-        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: [], error: handleDexieError(error) }
       }
     },
 
@@ -1672,7 +1768,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         }
         return { data: tag, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1700,7 +1796,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         await database.tags.add(tag)
         return { data: tag, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1729,7 +1825,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         await database.tags.put(updated)
         return { data: updated, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1746,7 +1842,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         await database.tags.delete(id)
         return { data: null, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1761,7 +1857,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         const tags = await database.tags.bulkGet(tagIds)
         return { data: tags.filter((t): t is Tag => t !== undefined), error: null }
       } catch (error) {
-        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: [], error: handleDexieError(error) }
       }
     },
 
@@ -1802,7 +1898,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
 
         return { data: result, error: null }
       } catch (error) {
-        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: [], error: handleDexieError(error) }
       }
     },
 
@@ -1824,7 +1920,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         await database.objectTags.add(objectTag)
         return { data: objectTag, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1839,7 +1935,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         }
         return { data: null, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1858,7 +1954,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
           .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
         return { data: results.map(stripContent), error: null }
       } catch (error) {
-        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: [], error: handleDexieError(error) }
       }
     },
 
@@ -1875,7 +1971,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         const count = objects.filter((o): o is DataObject => o !== undefined && !o.is_deleted).length
         return { data: count, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1912,7 +2008,7 @@ function createLocalTagsClient(spaceId?: string): TagsClient {
         }
         return { data: counts, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
   }
@@ -1929,7 +2025,7 @@ function createLocalPinsClient(): PinsClient {
         )
         return { data: results, error: null }
       } catch (error) {
-        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: [], error: handleDexieError(error) }
       }
     },
 
@@ -1951,7 +2047,7 @@ function createLocalPinsClient(): PinsClient {
         await database.pins.add(pin)
         return { data: pin, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1966,7 +2062,7 @@ function createLocalPinsClient(): PinsClient {
         }
         return { data: null, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -1998,7 +2094,7 @@ function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
         )
         return { data: results, error: null }
       } catch (error) {
-        return { data: [], error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: [], error: handleDexieError(error) }
       }
     },
 
@@ -2036,7 +2132,7 @@ function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
         })
         return { data: savedView, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -2072,7 +2168,7 @@ function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
         }
         return { data: updated, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
 
@@ -2082,7 +2178,7 @@ function createLocalSavedViewsClient(spaceId?: string): SavedViewsClient {
         await database.savedViews.delete(id)
         return { data: null, error: null }
       } catch (error) {
-        return { data: null, error: { message: error instanceof Error ? error.message : 'Unknown error' } }
+        return { data: null, error: handleDexieError(error) }
       }
     },
   }
@@ -2188,4 +2284,4 @@ export async function ensureLocalDefaultSpace(): Promise<Space> {
   return space
 }
 
-export { LOCAL_DEFAULT_SPACE_ID }
+export { LOCAL_DEFAULT_SPACE_ID, LOCAL_OWNER_ID }

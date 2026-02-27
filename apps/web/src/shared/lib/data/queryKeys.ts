@@ -4,6 +4,7 @@ export const queryKeys = {
   objects: {
     all: (spaceId?: string) => ['objects', spaceId] as const,
     list: (spaceId?: string, options?: ListObjectsOptions) => ['objects', spaceId, 'list', options] as const,
+    content: (spaceId?: string, options?: ListObjectsOptions) => ['objects', spaceId, 'content', options] as const,
     detail: (id: string) => ['objects', 'detail', id] as const,
   },
   objectTypes: {

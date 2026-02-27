@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState } from 'react'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { useObjectTypes } from '@/features/object-types'
-import { useObjects } from '@/features/objects/hooks'
+import { useObjects, useObjectContents } from '@/features/objects/hooks'
 import { useObjectTagsBatch, useTags } from '@/features/tags'
 import { useAllRelations } from '@/features/relations'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
@@ -19,7 +21,7 @@ import { useSortConfig } from '../stores/sortConfig'
 import { usePersistedFilters } from '../stores/filterConfig'
 import { useBoardGrouping } from '../stores/boardGrouping'
 import { useSavedViews } from '../hooks/useSavedViews'
-import { filterObjects, hasActiveFilters, EMPTY_EXPRESSION } from '../lib/filterObjects'
+import { filterObjects, hasActiveFilters, hasContentFilter, EMPTY_EXPRESSION } from '../lib/filterObjects'
 import type { FilterContext } from '../lib/filterObjects'
 import type { FilterExpression } from '../lib/filterTypes'
 import { sortObjects } from '../lib/sortObjects'
@@ -54,7 +56,7 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     [setExpression, setSort, setMode, setGroupField],
   )
 
-  const { objects, isLoading: objectsLoading } = useObjects(
+  const { objects, isLoading: objectsLoading, update: updateObject } = useObjects(
     type ? { typeId: type.id, isDeleted: false } : { typeId: '__none__', isDeleted: false },
   )
 
@@ -68,6 +70,16 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   const { tags } = useTags()
   const { relationsByObject } = useAllRelations()
 
+  const isContentFilterActive = useMemo(
+    () => hasContentFilter(expression) || expression.search.trim() !== '',
+    [expression],
+  )
+
+  const contentTextByObject = useObjectContents(
+    { typeId: type?.id ?? '__none__', isDeleted: false },
+    isContentFilterActive,
+  )
+
   const objectTypeByObjectId = useMemo(() => {
     const map: Record<string, string> = {}
     for (const obj of rawObjects) {
@@ -77,8 +89,8 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   }, [rawObjects])
 
   const filterCtx = useMemo<FilterContext>(
-    () => ({ tagsByObject, relationsByObject, objectTypeByObjectId }),
-    [tagsByObject, relationsByObject, objectTypeByObjectId],
+    () => ({ tagsByObject, relationsByObject, objectTypeByObjectId, contentTextByObject }),
+    [tagsByObject, relationsByObject, objectTypeByObjectId, contentTextByObject],
   )
 
   const fields = useMemo(
@@ -95,6 +107,41 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     () => sortObjects(filteredObjects, sort, fields, tagsByObject),
     [filteredObjects, sort, fields, tagsByObject],
   )
+
+  const isManualSort = sort.field === 'sort_order'
+
+  // Track reordered IDs during active drag (null = use sortedObjects order)
+  const [reorderIds, setReorderIds] = useState<string[] | null>(null)
+
+  const displayObjects = useMemo(() => {
+    if (!isManualSort || !reorderIds) return sortedObjects
+    const map = new Map(sortedObjects.map(o => [o.id, o]))
+    return reorderIds
+      .map(id => map.get(id))
+      .filter((o): o is typeof sortedObjects[number] => o !== undefined)
+  }, [sortedObjects, reorderIds, isManualSort])
+
+  const handleMoveObject = useCallback((from: number, to: number) => {
+    setReorderIds(prev => {
+      const ids = prev ?? sortedObjects.map(o => o.id)
+      const next = [...ids]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      return next
+    })
+  }, [sortedObjects])
+
+  const handleDropObjects = useCallback(() => {
+    const ids = reorderIds ?? sortedObjects.map(o => o.id)
+    const objMap = new Map(sortedObjects.map(o => [o.id, o]))
+    ids.forEach((id, i) => {
+      const obj = objMap.get(id)
+      if (obj && obj.sort_order !== i + 1) {
+        updateObject(id, { sort_order: i + 1 })
+      }
+    })
+    setReorderIds(null)
+  }, [reorderIds, sortedObjects, updateObject])
 
   const handleSortChange = useCallback(
     (next: SortConfig) => setSort(next),
@@ -178,23 +225,51 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
         </div>
       ) : (
         <>
-          {mode === 'table' && (
-            <TypeDataTable
-              type={type}
-              objects={sortedObjects}
-              tagsByObject={tagsByObject}
-              sort={sort}
-              onSortChange={handleSortChange}
-            />
-          )}
-          {mode === 'list' && (
-            <TypeListView type={type} objects={sortedObjects} />
-          )}
-          {mode === 'card' && (
-            <TypeCardView type={type} objects={sortedObjects} />
-          )}
-          {mode === 'board' && (
-            <TypeBoardView type={type} objects={sortedObjects} />
+          {isManualSort && (mode === 'table' || mode === 'list') ? (
+            <DndProvider backend={HTML5Backend}>
+              {mode === 'table' && (
+                <TypeDataTable
+                  type={type}
+                  objects={displayObjects}
+                  tagsByObject={tagsByObject}
+                  sort={sort}
+                  onSortChange={handleSortChange}
+                  isManualSort
+                  onMoveObject={handleMoveObject}
+                  onDropObjects={handleDropObjects}
+                />
+              )}
+              {mode === 'list' && (
+                <TypeListView
+                  type={type}
+                  objects={displayObjects}
+                  isManualSort
+                  onMoveObject={handleMoveObject}
+                  onDropObjects={handleDropObjects}
+                />
+              )}
+            </DndProvider>
+          ) : (
+            <>
+              {mode === 'table' && (
+                <TypeDataTable
+                  type={type}
+                  objects={displayObjects}
+                  tagsByObject={tagsByObject}
+                  sort={sort}
+                  onSortChange={handleSortChange}
+                />
+              )}
+              {mode === 'list' && (
+                <TypeListView type={type} objects={displayObjects} />
+              )}
+              {mode === 'card' && (
+                <TypeCardView type={type} objects={displayObjects} />
+              )}
+              {mode === 'board' && (
+                <TypeBoardView type={type} objects={displayObjects} />
+              )}
+            </>
           )}
         </>
       )}

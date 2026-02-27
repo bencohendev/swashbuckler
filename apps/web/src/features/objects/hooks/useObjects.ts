@@ -3,9 +3,9 @@
 import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useDataClient, useSpaceId, type DataObject, type DataObjectSummary, type ListObjectsOptions, type CreateObjectInput, type UpdateObjectInput } from '@/shared/lib/data'
-import { emit } from '@/shared/lib/data/events'
 import { queryKeys } from '@/shared/lib/data/queryKeys'
 import { useRecentAccess } from '@/shared/stores/recentAccess'
+import { useMutationAction, useVoidMutationAction } from '@/shared/hooks/useMutationAction'
 
 const EMPTY_OBJECTS: DataObjectSummary[] = []
 
@@ -57,51 +57,68 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
     await queryClient.invalidateQueries({ queryKey: queryKeys.objects.all(spaceId ?? undefined) })
   }, [queryClient, spaceId])
 
-  const create = useCallback(async (input: CreateObjectInput): Promise<DataObject | null> => {
-    const result = await dataClient.objects.create(input)
-    if (result.error) {
-      console.error('Failed to create object:', result.error.message)
-      return null
-    }
-    emit('objects')
-    return result.data
-  }, [dataClient])
+  const createFn = useCallback(
+    (input: CreateObjectInput) => dataClient.objects.create(input),
+    [dataClient],
+  )
+  const create = useMutationAction(createFn, {
+    actionLabel: 'Create object',
+    emitChannels: ['objects'],
+  })
 
-  const update = useCallback(async (id: string, input: UpdateObjectInput): Promise<DataObject | null> => {
-    const result = await dataClient.objects.update(id, input)
-    if (result.error) return null
-    emit('objects')
-    return result.data
-  }, [dataClient])
+  const updateFn = useCallback(
+    (id: string, input: UpdateObjectInput) => dataClient.objects.update(id, input),
+    [dataClient],
+  )
+  const update = useMutationAction(updateFn, {
+    actionLabel: 'Update object',
+    emitChannels: ['objects'],
+  })
 
+  const removeFn = useCallback(
+    (id: string, permanent = false) => dataClient.objects.delete(id, permanent),
+    [dataClient],
+  )
+  const removeRaw = useVoidMutationAction(removeFn, {
+    actionLabel: 'Delete object',
+    emitChannels: ['objects'],
+  })
   const remove = useCallback(async (id: string, permanent = false): Promise<void> => {
-    const result = await dataClient.objects.delete(id, permanent)
-    if (result.error) return
-    removeRecentEntry(id)
-    emit('objects')
-  }, [dataClient, removeRecentEntry])
+    const ok = await removeRaw(id, permanent)
+    if (ok) removeRecentEntry(id)
+  }, [removeRaw, removeRecentEntry])
 
-  const restore = useCallback(async (id: string): Promise<DataObject | null> => {
-    const result = await dataClient.objects.restore(id)
-    if (result.error) return null
-    emit('objects')
-    return result.data
-  }, [dataClient])
+  const restoreFn = useCallback(
+    (id: string) => dataClient.objects.restore(id),
+    [dataClient],
+  )
+  const restore = useMutationAction(restoreFn, {
+    actionLabel: 'Restore object',
+    emitChannels: ['objects'],
+  })
 
+  const archiveFn = useCallback(
+    (id: string) => dataClient.objects.archive(id),
+    [dataClient],
+  )
+  const archiveRaw = useMutationAction(archiveFn, {
+    actionLabel: 'Archive object',
+    emitChannels: ['objects'],
+  })
   const archive = useCallback(async (id: string): Promise<DataObject | null> => {
-    const result = await dataClient.objects.archive(id)
-    if (result.error) return null
-    removeRecentEntry(id)
-    emit('objects')
-    return result.data
-  }, [dataClient, removeRecentEntry])
+    const data = await archiveRaw(id)
+    if (data) removeRecentEntry(id)
+    return data
+  }, [archiveRaw, removeRecentEntry])
 
-  const unarchive = useCallback(async (id: string): Promise<DataObject | null> => {
-    const result = await dataClient.objects.unarchive(id)
-    if (result.error) return null
-    emit('objects')
-    return result.data
-  }, [dataClient])
+  const unarchiveFn = useCallback(
+    (id: string) => dataClient.objects.unarchive(id),
+    [dataClient],
+  )
+  const unarchive = useMutationAction(unarchiveFn, {
+    actionLabel: 'Unarchive object',
+    emitChannels: ['objects'],
+  })
 
   return {
     objects: data ?? EMPTY_OBJECTS,
@@ -137,30 +154,48 @@ export function useObject(id: string | null) {
     }
   }, [queryClient, id])
 
+  const updateFn = useCallback(
+    (input: UpdateObjectInput) => {
+      if (!id) return Promise.resolve({ data: null, error: null } as { data: DataObject | null; error: null })
+      return dataClient.objects.update(id, input)
+    },
+    [dataClient, id],
+  )
+  const updateRaw = useMutationAction(updateFn, {
+    actionLabel: 'Update object',
+    emitChannels: ['objects'],
+  })
   const update = useCallback(async (input: UpdateObjectInput): Promise<DataObject | null> => {
-    if (!id) return null
-    const result = await dataClient.objects.update(id, input)
-    if (result.error) return null
-    // Optimistically update the detail cache
-    queryClient.setQueryData(queryKeys.objects.detail(id), result.data)
-    emit('objects')
-    return result.data
-  }, [dataClient, id, queryClient])
+    const data = await updateRaw(input)
+    if (data && id) {
+      queryClient.setQueryData(queryKeys.objects.detail(id), data)
+    }
+    return data
+  }, [updateRaw, id, queryClient])
 
-  const remove = useCallback(async (permanent = false): Promise<void> => {
-    if (!id) return
-    const result = await dataClient.objects.delete(id, permanent)
-    if (result.error) return
-    emit('objects')
-  }, [dataClient, id])
+  const removeFn = useCallback(
+    (permanent = false) => {
+      if (!id) return Promise.resolve({ data: undefined as void, error: null })
+      return dataClient.objects.delete(id, permanent)
+    },
+    [dataClient, id],
+  )
+  const remove = useVoidMutationAction(removeFn, {
+    actionLabel: 'Delete object',
+    emitChannels: ['objects'],
+  })
 
-  const archive = useCallback(async (): Promise<DataObject | null> => {
-    if (!id) return null
-    const result = await dataClient.objects.archive(id)
-    if (result.error) return null
-    emit('objects')
-    return result.data
-  }, [dataClient, id])
+  const archiveFn = useCallback(
+    () => {
+      if (!id) return Promise.resolve({ data: null, error: null } as { data: DataObject | null; error: null })
+      return dataClient.objects.archive(id)
+    },
+    [dataClient, id],
+  )
+  const archive = useMutationAction(archiveFn, {
+    actionLabel: 'Archive object',
+    emitChannels: ['objects'],
+  })
 
   return {
     object: object ?? null,

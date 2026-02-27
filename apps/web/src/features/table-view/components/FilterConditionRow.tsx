@@ -36,6 +36,7 @@ export function buildFieldOptions(fields: FieldDefinition[]): FieldOption[] {
     })
   }
   result.push(
+    { label: 'Content', value: '__content__', kind: 'content', fieldType: 'content' },
     { label: 'Tags', value: '__tag__', kind: 'tag', fieldType: 'tag' },
     { label: 'Created', value: '__created_at__', kind: 'system', systemField: 'created_at', fieldType: 'system_date' },
     { label: 'Updated', value: '__updated_at__', kind: 'system', systemField: 'updated_at', fieldType: 'system_date' },
@@ -48,6 +49,8 @@ function targetToSelectValue(target: FilterFieldTarget): string {
   switch (target.kind) {
     case 'title':
       return '__title__'
+    case 'content':
+      return '__content__'
     case 'tag':
       return '__tag__'
     case 'relation':
@@ -94,6 +97,9 @@ export function FilterConditionRow({
     switch (option.kind) {
       case 'title':
         target = { kind: 'title' }
+        break
+      case 'content':
+        target = { kind: 'content' }
         break
       case 'tag':
         target = { kind: 'tag' }

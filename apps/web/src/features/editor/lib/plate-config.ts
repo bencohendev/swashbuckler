@@ -26,6 +26,7 @@ import { SpoilerPlugin } from '../plugins/spoiler-plugin';
 import { PrivateBlockPlugin, PrivateMarkPlugin } from '../plugins/private-plugin';
 import { TemplateVariablePlugin } from '../plugins/template-variable-plugin';
 import { BlockSideMenuPlugin } from '../plugins/block-side-menu-plugin';
+import { focusEditorAtSelection } from './focusEditor';
 
 // Plugin configuration for the editor
 export const editorPlugins = [
@@ -72,20 +73,17 @@ export const editorPlugins = [
     transforms: {
       insertText(text, options) {
         insertText(text, options);
-        // withLink wraps URL text on space — restore DOM focus after restructuring
+        // withLink wraps URL text on space — restore focus + selection after
+        // DOM restructuring so cursor doesn't jump.
         if (text === ' ' && editor.selection) {
-          setTimeout(() => {
-            editor.tf.focus({ at: editor.selection ?? undefined });
-          }, 0);
+          focusEditorAtSelection(editor);
         }
       },
       insertData(data) {
         insertData(data);
         // Pasting a URL also triggers link wrapping
         if (editor.selection) {
-          setTimeout(() => {
-            editor.tf.focus({ at: editor.selection ?? undefined });
-          }, 0);
+          focusEditorAtSelection(editor);
         }
       },
     },

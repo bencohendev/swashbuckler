@@ -97,11 +97,9 @@ export const STARTER_KITS: StarterKit[] = [
         icon: '🥘',
         color: null,
         fields: [
-          { name: 'Ingredients', type: 'text', sort_order: 0 },
           { name: 'Cook Time', type: 'text', sort_order: 1 },
           { name: 'Servings', type: 'number', sort_order: 2 },
           { name: 'Cuisine', type: 'select', options: ['Italian', 'Mexican', 'Asian', 'American', 'Indian', 'Mediterranean', 'Other'], sort_order: 3 },
-          { name: 'Difficulty', type: 'select', options: ['Easy', 'Medium', 'Hard'], sort_order: 4 },
         ],
       },
       {
@@ -127,16 +125,23 @@ export const STARTER_KITS: StarterKit[] = [
     category: 'Creative',
     types: [
       {
-        name: 'Character',
-        plural_name: 'Characters',
-        slug: 'character',
+        name: 'PC',
+        plural_name: 'PCs',
+        slug: 'pc',
         icon: '🧙',
         color: null,
         fields: [
-          { name: 'Race', type: 'text', sort_order: 0 },
-          { name: 'Class', type: 'text', sort_order: 1 },
-          { name: 'Level', type: 'number', sort_order: 2 },
-          { name: 'Status', type: 'select', options: ['Active', 'Retired', 'Deceased'], sort_order: 3 },
+          { name: 'gender', type: 'text', sort_order: 0 },
+        ],
+      },
+      {
+        name: 'NPC',
+        plural_name: 'NPCs',
+        slug: 'npc',
+        icon: '🧙',
+        color: null,
+        fields: [
+          { name: 'gender', type: 'text', sort_order: 0 },
         ],
       },
       {
@@ -148,7 +153,6 @@ export const STARTER_KITS: StarterKit[] = [
         fields: [
           { name: 'Region', type: 'text', sort_order: 0 },
           { name: 'Type', type: 'select', options: ['City', 'Town', 'Village', 'Dungeon', 'Wilderness', 'Other'], sort_order: 1 },
-          { name: 'Discovered', type: 'checkbox', sort_order: 2 },
         ],
       },
       {
@@ -180,11 +184,7 @@ export const STARTER_KITS: StarterKit[] = [
         slug: 'item',
         icon: '🗡️',
         color: null,
-        fields: [
-          { name: 'Type', type: 'select', options: ['Weapon', 'Armor', 'Potion', 'Scroll', 'Artifact', 'Mundane'], sort_order: 0 },
-          { name: 'Rarity', type: 'select', options: ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Legendary'], sort_order: 1 },
-          { name: 'Attuned', type: 'checkbox', sort_order: 2 },
-        ],
+        fields: [],
       },
     ],
     templates: [],

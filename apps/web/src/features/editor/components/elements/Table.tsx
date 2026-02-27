@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { type TElement, NodeApi } from '@udecode/plate';
 import type { PlateElementProps } from '@udecode/plate/react';
 import { PlateElement, useEditorRef, useReadOnly } from '@udecode/plate/react';
@@ -40,11 +40,7 @@ function fixZeroColSizes(editor: TableEditor, tablePath: number[]) {
   const node = NodeApi.get(editor, tablePath) as Record<string, unknown> | undefined;
   const sizes = node?.colSizes as number[] | undefined;
   if (!sizes || !sizes.some((s) => s === 0)) return;
-  const nonZero = sizes.filter((s) => s > 0);
-  const avg =
-    nonZero.length > 0
-      ? Math.round(nonZero.reduce((a, b) => a + b, 0) / nonZero.length)
-      : 100;
+  const avg = 150; // fixed width for new columns
   editor.tf.setNodes(
     { colSizes: sizes.map((s) => (s === 0 ? avg : s)) } as Record<string, unknown>,
     { at: tablePath },
@@ -516,8 +512,8 @@ function TableElementContent({
   const editor = useEditorRef();
   const readOnly = useReadOnly();
   const tableRef = useRef<HTMLTableElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [openMenuCount, setOpenMenuCount] = useState(0);
+  const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
+  const [menuAnchorCell, setMenuAnchorCell] = useState<{ row: number; col: number } | null>(null);
   const [rowPositions, setRowPositions] = useState<RowPosition[]>([]);
   const [colPositions, setColPositions] = useState<ColPosition[]>([]);
 
@@ -576,82 +572,115 @@ function TableElementContent({
     return () => observer.disconnect();
   }, []);
 
-  const handleMenuOpenChange = useCallback((open: boolean) => {
-    setOpenMenuCount((prev) => (open ? prev + 1 : prev - 1));
-  }, []);
-
-  const showHandles = !readOnly && (isHovered || openMenuCount > 0);
+  const activeCell = menuAnchorCell ?? hoveredCell;
 
   const tableElement = element as unknown as TableElementNode;
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const row = rowPositions.findIndex(
+        (r) => y >= r.top && y < r.top + r.height,
+      );
+      const col = colPositions.findIndex(
+        (c) => x >= c.left && x < c.left + c.width,
+      );
+      if (row >= 0 && col >= 0) {
+        setHoveredCell((prev) =>
+          prev?.row === row && prev?.col === col ? prev : { row, col },
+        );
+      }
+    },
+    [rowPositions, colPositions],
+  );
 
   return (
     <div
       className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHoveredCell(null)}
     >
-      {/* Column handles — zero-height strip on top border */}
-      {!readOnly && tablePath && (
-        <div
-          contentEditable={false}
-          className={`absolute left-0 right-0 top-0 z-10 h-0 transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-        >
-          {colPositions.map((col, i) => (
-            <div
-              key={i}
-              className="absolute"
-              style={{
-                left: col.left + col.width / 2,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <ColumnHandleMenu
-                colIndex={i}
-                tablePath={tablePath}
-                editor={editor}
-                element={tableElement}
-                onOpenChange={handleMenuOpenChange}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+        {/* Column handles — zero-height strip on top border */}
+        {!readOnly && tablePath && (
+          <div
+            contentEditable={false}
+            className="absolute left-0 right-0 top-0 z-10 h-0"
+          >
+            {colPositions.map((col, i) => {
+              const visible = activeCell?.col === i;
+              return (
+                <div
+                  key={i}
+                  className={`absolute transition-opacity duration-150 ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                  style={{
+                    left: col.left + col.width / 2,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <ColumnHandleMenu
+                    colIndex={i}
+                    tablePath={tablePath}
+                    editor={editor}
+                    element={tableElement}
+                    onOpenChange={(open) => {
+                      if (open) setMenuAnchorCell({ row: -1, col: i });
+                      else setMenuAnchorCell(null);
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-      {/* Row handles — zero-width strip on left border */}
-      {!readOnly && tablePath && (
-        <div
-          contentEditable={false}
-          className={`absolute left-0 top-0 bottom-0 z-10 w-0 transition-opacity duration-150 ${showHandles ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-        >
-          {rowPositions.map((row, i) => (
-            <div
-              key={i}
-              className="absolute"
-              style={{
-                top: row.top + row.height / 2,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <RowHandleMenu
-                rowIndex={i}
-                tablePath={tablePath}
-                editor={editor}
-                element={tableElement}
-                onOpenChange={handleMenuOpenChange}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+        {/* Row handles — zero-width strip on left border */}
+        {!readOnly && tablePath && (
+          <div
+            contentEditable={false}
+            className="absolute left-0 top-0 bottom-0 z-10 w-0"
+          >
+            {rowPositions.map((row, i) => {
+              const visible = activeCell?.row === i;
+              return (
+                <div
+                  key={i}
+                  className={`absolute transition-opacity duration-150 ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                  style={{
+                    top: row.top + row.height / 2,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <RowHandleMenu
+                    rowIndex={i}
+                    tablePath={tablePath}
+                    editor={editor}
+                    element={tableElement}
+                    onOpenChange={(open) => {
+                      if (open) setMenuAnchorCell({ row: i, col: -1 });
+                      else setMenuAnchorCell(null);
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-      <table
-        ref={tableRef}
-        className="w-full border-collapse border border-gray-200 dark:border-gray-700"
-        style={{ tableLayout: 'fixed' }}
-      >
-        <TableColGroup />
-        <tbody>{children}</tbody>
-      </table>
+        <table
+          ref={tableRef}
+          className="border-collapse border border-gray-200 dark:border-gray-700"
+          style={{
+            tableLayout: 'fixed',
+            width: hasColSizes
+              ? colSizes!.reduce((a, b) => a + b, 0)
+              : '100%',
+          }}
+        >
+          <TableColGroup />
+          <tbody>{children}</tbody>
+        </table>
     </div>
   );
 }
@@ -696,6 +725,7 @@ export function TableRowElement(props: PlateElementProps) {
 
 export function TableCellElement(props: PlateElementProps) {
   const readOnly = useReadOnly();
+  const { colIndex } = useTableCellElement();
   const cellElement = props.element as unknown as {
     background?: string;
     color?: string;
@@ -704,11 +734,13 @@ export function TableCellElement(props: PlateElementProps) {
   if (cellElement.background) style.backgroundColor = cellElement.background;
   if (cellElement.color) style.color = cellElement.color;
 
+  const isFirstCol = colIndex === 0 && !readOnly;
+
   return (
     <PlateElement
       {...props}
       as="td"
-      className="relative border border-gray-200 p-2 dark:border-gray-700"
+      className={`relative border border-gray-200 p-2 dark:border-gray-700 ${isFirstCol ? 'pl-5' : ''}`}
       style={style}
     >
       {props.children}
@@ -719,6 +751,7 @@ export function TableCellElement(props: PlateElementProps) {
 
 export function TableHeaderCellElement(props: PlateElementProps) {
   const readOnly = useReadOnly();
+  const { colIndex } = useTableCellElement();
   const cellElement = props.element as unknown as {
     background?: string;
     color?: string;
@@ -727,11 +760,13 @@ export function TableHeaderCellElement(props: PlateElementProps) {
   if (cellElement.background) style.backgroundColor = cellElement.background;
   if (cellElement.color) style.color = cellElement.color;
 
+  const isFirstCol = colIndex === 0 && !readOnly;
+
   return (
     <PlateElement
       {...props}
       as="th"
-      className="relative border border-gray-200 bg-gray-50 p-2 font-semibold dark:border-gray-700 dark:bg-gray-800"
+      className={`relative border border-gray-200 bg-gray-50 p-2 font-semibold dark:border-gray-700 dark:bg-gray-800 ${isFirstCol ? 'pl-5' : ''}`}
       style={style}
     >
       {props.children}

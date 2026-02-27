@@ -28,6 +28,13 @@ export function TutorialController() {
   const [targetEl, setTargetEl] = useState<Element | null>(null)
   const hasAutoStarted = useRef(false)
 
+  // Clear target immediately when step changes so CoachMark hides before repositioning
+  const [prevStep, setPrevStep] = useState(currentStep)
+  if (currentStep !== prevStep) {
+    setPrevStep(currentStep)
+    setTargetEl(null)
+  }
+
   // Auto-start for new authenticated users (once)
   useEffect(() => {
     if (hasAutoStarted.current) return
@@ -74,19 +81,20 @@ export function TutorialController() {
     }
   }, [active, currentStep, isMobile, collapsed, toggle, setMobileOpen])
 
-  // Resolve target on step change, with a small delay for sidebar transitions
+  // Resolve target on step change
   useEffect(() => {
     if (!active) return
 
     const step = TUTORIAL_STEPS[currentStep]
+    if (!step || step.type === 'dialog') return
 
-    // Wait a bit for sidebar animations to complete
+    // Determine if this step targets a sidebar element (needs longer delay for sidebar animation)
+    const match = step.target?.match(/data-tour="([^"]+)"/)
+    const tourId = match?.[1]
+    const needsSidebarDelay = tourId ? SIDEBAR_TARGETS.has(tourId) : false
+    const delay = needsSidebarDelay ? 300 : 50
+
     const timer = setTimeout(() => {
-      if (!step || step.type === 'dialog') {
-        setTargetEl(null)
-        return
-      }
-
       // Scroll target into view if needed (e.g. tags section below the fold)
       if (step.target) {
         const scrollTarget = document.querySelector(step.target)
@@ -98,7 +106,7 @@ export function TutorialController() {
       if (!el) {
         next()
       }
-    }, step?.type === 'dialog' ? 0 : 300)
+    }, delay)
 
     return () => clearTimeout(timer)
   }, [active, currentStep, resolveTarget, next])
@@ -128,17 +136,20 @@ export function TutorialController() {
     <>
       <div aria-live="polite" className="sr-only">{announcement}</div>
       <SpotlightOverlay targetEl={targetEl} />
-      <CoachMark
-        targetEl={targetEl}
-        title={step?.title ?? ''}
-        description={step?.description ?? ''}
-        placement={step?.placement ?? 'bottom'}
-        currentStep={currentStep}
-        totalSteps={TUTORIAL_STEPS.length}
-        onNext={next}
-        onBack={back}
-        onSkip={skip}
-      />
+      {targetEl && (
+        <CoachMark
+          key={currentStep}
+          targetEl={targetEl}
+          title={step?.title ?? ''}
+          description={step?.description ?? ''}
+          placement={step?.placement ?? 'bottom'}
+          currentStep={currentStep}
+          totalSteps={TUTORIAL_STEPS.length}
+          onNext={next}
+          onBack={back}
+          onSkip={skip}
+        />
+      )}
     </>
   )
 }
