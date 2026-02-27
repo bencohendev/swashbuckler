@@ -1,3 +1,5 @@
+'use client'
+
 import { create } from 'zustand'
 
 const STORAGE_PREFIX = 'swashbuckler:recentAccess:'

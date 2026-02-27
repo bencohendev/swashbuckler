@@ -1,3 +1,5 @@
+'use client'
+
 import { create } from 'zustand'
 import type { SortConfig } from '../lib/sortObjects'
 import { DEFAULT_SORT } from '../lib/sortObjects'

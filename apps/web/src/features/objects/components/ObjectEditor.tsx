@@ -22,7 +22,7 @@ import {
   resolvePropertyVariables,
   type VariableResolutionContext,
 } from '@/features/templates/lib/variables'
-import { EmojiPicker } from '@/shared/components/EmojiPicker'
+import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { toast } from '@/shared/hooks/useToast'
@@ -33,7 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
-import { Editor, type EditorHandle } from '@/features/editor'
+import { Editor, type EditorHandle } from '@/features/editor/components/Editor'
 import { EditorErrorBoundary } from '@/features/editor/components/EditorErrorBoundary'
 import { stripPrivateContent } from '@/features/editor/lib/stripPrivateContent'
 import { TagPicker } from '@/features/tags'

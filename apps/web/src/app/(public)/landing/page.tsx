@@ -10,22 +10,26 @@ const features = [
     title: "Block Editor",
     description:
       "Rich text with slash commands, mentions, tables, and code blocks.",
+    href: "https://docs.swashbuckler.quest/docs/editor",
   },
   {
     icon: BoxesIcon,
     title: "Custom Types",
     description:
       "Define your own entry types with custom fields and templates.",
+    href: "https://docs.swashbuckler.quest/docs/entries-and-types",
   },
   {
     icon: NetworkIcon,
     title: "Knowledge Graph",
     description: "Visualize connections between your entries.",
+    href: "https://docs.swashbuckler.quest/docs/graph-view",
   },
   {
     icon: UsersIcon,
     title: "Real-time Collaboration",
     description: "Share spaces and edit together in real time.",
+    href: "https://docs.swashbuckler.quest/docs/realtime-collaboration",
   },
 ]
 
@@ -51,62 +55,79 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="relative z-10 mx-auto max-w-3xl px-6 py-24">
-          <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:gap-12">
-            <div className="shrink-0">
-              <PixelPirateFlag />
-            </div>
-            <div className="text-center sm:text-left">
-              <p className="text-lg text-muted-foreground">
-                Avast ye matey, welcome to
-              </p>
-              <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
-                Swashbuckler
-              </h1>
-              <p className="mt-3 text-base text-muted-foreground/80">
-                Your personal knowledge base
-              </p>
-              <div className="mt-8 flex items-center justify-center gap-4 sm:justify-start">
-                <Link
-                  href="/signup"
-                  className="inline-flex h-10 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
-                >
-                  Get Started
-                </Link>
-                <GuestButton />
-              </div>
-            </div>
+        <section className="relative z-10 mx-auto max-w-3xl px-6 pt-24 pb-4">
+          <PixelPirateFlag />
+        </section>
+
+        <section className="relative z-10 mx-auto max-w-3xl px-6 pt-8 pb-6">
+          <div className="text-center">
+            <p className="text-lg text-muted-foreground">
+              Avast ye matey, welcome to
+            </p>
+            <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
+              Swashbuckler
+            </h1>
+            <p className="mt-3 text-base text-muted-foreground/80">
+              Your personal knowledge base
+            </p>
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-5xl px-6 pb-24">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-8">
+          <div className="flex items-center justify-center gap-6">
+            <Link
+              href="/signup"
+              className="inline-flex h-14 items-center rounded-md bg-primary px-10 text-lg font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+            >
+              Get Started
+            </Link>
+            <GuestButton />
+          </div>
+        </section>
+
+        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             {features.map((feature) => (
-              <div
+              <a
                 key={feature.title}
-                className="rounded-lg border bg-card p-6 text-card-foreground"
+                href={feature.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border bg-card p-6 text-card-foreground transition-colors hover:border-primary/40 hover:bg-accent"
               >
                 <feature.icon className="size-8 text-muted-foreground" />
                 <h2 className="mt-4 font-semibold">{feature.title}</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {feature.description}
                 </p>
-              </div>
+              </a>
             ))}
           </div>
         </section>
 
+        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-24 text-center">
+          <p className="text-muted-foreground">...and much more</p>
+          <a
+            href="https://docs.swashbuckler.quest"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex h-10 items-center rounded-md border bg-background px-6 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            Read the Docs
+          </a>
+        </section>
+
       </main>
 
-      <footer className="relative z-10 bg-[#D2B48C] pb-4">
-        <div className="mx-auto max-w-3xl overflow-hidden px-6" aria-hidden="true">
+      <footer className="relative z-10 bg-[#0C2D48] pb-4">
+        <div className="mx-auto max-w-3xl overflow-hidden pl-2 pr-6" aria-hidden="true">
           <PixelBeachScene />
         </div>
-        <p className="mt-4 px-6 text-center text-sm text-[#5D3A1A]">
+        <p className="mt-4 px-6 text-center text-sm text-[#7EC4DE]">
           &copy; Swashbuckler &middot;{" "}
-          <Link href="/docs" className="underline hover:text-[#3A2210] transition-colors">
+          <a href="https://docs.swashbuckler.quest" className="underline hover:text-white transition-colors">
             Docs
-          </Link>
+          </a>
         </p>
       </footer>
     </div>

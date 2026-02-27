@@ -1,3 +1,5 @@
+'use client'
+
 import { create } from 'zustand'
 
 export type ToastVariant = 'default' | 'success' | 'info' | 'warning' | 'destructive'

@@ -34,6 +34,7 @@ export const queryKeys = {
     detail: (id: string) => ['templates', 'detail', id] as const,
   },
   relations: {
+    all: (spaceId?: string) => ['relations', 'all', spaceId] as const,
     list: (objectId: string) => ['relations', objectId] as const,
   },
   shares: {

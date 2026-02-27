@@ -33,12 +33,14 @@ export function usePins(): UsePinsReturn {
   const pinnedIds = useMemo(() => new Set(data ?? EMPTY_IDS), [data])
 
   const pin = useCallback(async (objectId: string) => {
-    await dataClient.pins.pin(objectId)
+    const result = await dataClient.pins.pin(objectId)
+    if (result.error) return
     emit('pins')
   }, [dataClient])
 
   const unpin = useCallback(async (objectId: string) => {
-    await dataClient.pins.unpin(objectId)
+    const result = await dataClient.pins.unpin(objectId)
+    if (result.error) return
     emit('pins')
   }, [dataClient])
 

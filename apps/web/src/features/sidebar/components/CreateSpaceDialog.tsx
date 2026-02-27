@@ -12,7 +12,7 @@ import {
 import { Button } from "@/shared/components/ui/Button"
 import { Input } from "@/shared/components/ui/Input"
 import { Label } from "@/shared/components/ui/Label"
-import { EmojiPicker } from "@/shared/components/EmojiPicker"
+import { EmojiPicker } from "@/shared/components/LazyEmojiPicker"
 import { StarterKitSelector } from "@/features/starter-kits/components/StarterKitSelector"
 import type { Space } from "@/shared/lib/data/types"
 

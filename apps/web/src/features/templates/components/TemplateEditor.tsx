@@ -6,7 +6,7 @@ import { ArrowLeftIcon, SmilePlusIcon, ImageIcon } from 'lucide-react'
 import { useTemplate } from '../hooks/useTemplate'
 import { useObjectType } from '@/features/object-types'
 import { useEditorStore } from '@/features/editor/store'
-import { EmojiPicker } from '@/shared/components/EmojiPicker'
+import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
 import { Button } from '@/shared/components/ui/Button'
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/DropdownMenu'
 import { toast } from '@/shared/hooks/useToast'
-import { Editor } from '@/features/editor'
+import { Editor } from '@/features/editor/components/Editor'
 import { PropertyFields } from '@/features/objects/components/PropertyFields'
 import { CoverImage } from '@/features/objects/components/CoverImage'
 import type { UpdateTemplateInput } from '@/shared/lib/data'
