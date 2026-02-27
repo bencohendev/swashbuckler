@@ -16,13 +16,14 @@ Drag-to-resize handles on table column borders so users can manually control col
 | Minimum width | 48px per column |
 | Persistence | Stored in `table.colSizes[]` on the Slate node (auto-saved) |
 | Read-only | Resize handles hidden |
-| Existing tables | Normalizer seeds equal-width `colSizes` on first render |
+| New column width | Fixed 150px — table grows wider to accommodate |
+| Existing tables | DOM-measured `colSizes` seeded on first render |
 
 ## Design
 
 ### User interaction
 
-Hover over the right border of any table cell to see a blue resize indicator line. Click and drag to adjust the column width. The adjacent column resizes inversely to preserve total table width.
+Hover over the right border of any table cell to see a blue resize indicator line. Click and drag to adjust the column width. The table width is the sum of all `colSizes` — inserting a new column (150px) makes the table wider rather than squishing existing columns.
 
 ### Technical approach
 
@@ -47,7 +48,8 @@ Integrate Plate's resize primitives rather than building from scratch:
 
 ### Key details
 
-- `initialTableWidth: 640` triggers Plate's normalizer to seed `colSizes` on tables that lack them
-- Dragging resizes current column and neighbor inversely (total width preserved)
+- `colSizes` seeded from DOM measurements on first render (avoids "jump on first drag" mismatch)
+- Table width = `sum(colSizes)` when available, `100%` otherwise — new columns grow the table instead of squishing existing ones
+- New columns inserted via hover menu get a fixed 150px width (`fixZeroColSizes`)
 - `colSizes` persists as a normal Slate node property — Yjs handles sync automatically
 - Existing hover menus unaffected — ResizeObserver re-measures on layout changes

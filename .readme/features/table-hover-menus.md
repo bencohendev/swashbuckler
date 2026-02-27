@@ -10,8 +10,8 @@ Replace the current single floating toolbar above tables with per-row and per-co
 
 | Area | Decision |
 |------|----------|
-| Row handle position | Left gutter, visible on row hover |
-| Column handle position | Above each column, visible on table hover |
+| Row handle position | Left gutter, visible when cell in that row is hovered |
+| Column handle position | Above each column, visible when cell in that column is hovered |
 | Menu component | Reuse existing `DropdownMenu` (Radix) |
 | Positioning | Absolute positioning relative to table container |
 | Delete table | Available as final item in any row or column menu |
@@ -20,7 +20,7 @@ Replace the current single floating toolbar above tables with per-row and per-co
 
 ### Row Controls
 
-A grip handle appears on the left edge of each row on hover. Clicking opens a `DropdownMenu`:
+A grip handle appears on the left edge of a row when any cell in that row is hovered. Clicking opens a `DropdownMenu`:
 - Insert row above
 - Insert row below
 - Delete row
@@ -29,7 +29,7 @@ A grip handle appears on the left edge of each row on hover. Clicking opens a `D
 
 ### Column Controls
 
-A handle appears above each column on table hover. Clicking opens a `DropdownMenu`:
+A handle appears above a column when any cell in that column is hovered. Clicking opens a `DropdownMenu`:
 - Insert column left
 - Insert column right
 - Delete column
@@ -60,6 +60,8 @@ All handles render inside `TableElement` using DOM measurements (avoids HTML tab
 
 - `ResizeObserver` on the `<table>` measures row heights/positions and column widths/positions from first-row cells
 - Each handle is a `RowHandleMenu` or `ColumnHandleMenu` component using Radix `DropdownMenu` (portals, keyboard/a11y built-in)
-- An `openMenuCount` counter keeps handles visible when a dropdown is open (portal moves mouse outside the table container)
+- Per-cell hover tracking via `onMouseMove` on the wrapper div — computes which cell is hovered from `rowPositions`/`colPositions`, so only the hovered cell's row and column handles appear (not all handles at once)
+- A `menuAnchorCell` state keeps the relevant handle visible when a dropdown menu is open (portal moves mouse outside the table container); takes priority over `hoveredCell`
+- First-column cells have extra left padding (`pl-5`) in edit mode to prevent the row handle from overlapping cell content
 - For `deleteRow`/`deleteColumn`, selection is moved into the target cell first via `editor.tf.select(editor.api.start(cellPath))`, then the delete function operates on selection
 - Handles are `contentEditable={false}` and hidden in read-only mode
