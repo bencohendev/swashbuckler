@@ -65,6 +65,16 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
   // Total selectable items = search results + create-new items (one per type)
   const totalItems = results.length + types.length
 
+  // Restore focus to the editor after node mutations remove the filter input.
+  // Direct DOM focus is required because editor.tf.focus() calls toDOMNode
+  // which can fail when Slate's WeakMap is stale after tree restructuring.
+  const focusEditor = useCallback(() => {
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>('[data-slate-editor="true"]')
+      el?.focus()
+    }, 0)
+  }, [])
+
   // Auto-focus the filter input on mount
   useEffect(() => {
     filterInputRef.current?.focus()
@@ -106,8 +116,9 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
       // Move cursor after the mention
       editor.tf.move()
+      focusEditor()
     },
-    [editor]
+    [editor, focusEditor]
   )
 
   // Create a new object and insert mention
@@ -136,8 +147,9 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
         { text: '@' + query },
         { at: path }
       )
+      focusEditor()
     }
-  }, [editor, query])
+  }, [editor, query, focusEditor])
 
   // Keyboard navigation handler for the filter input
   const handleInputKeyDown = useCallback(
