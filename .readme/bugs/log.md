@@ -11,6 +11,10 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-02-27 | Focus lost and cursor at wrong position after inline link/mention insertion | Shared `focusEditorAtSelection` helper sets DOM selection from Slate via `DOMEditor.toDOMRange` before focusing, preventing cursor jump. `onClose` callback on objectModal store restores editor focus at correct position when modal closes |
+| 2026-02-27 | Cursor invisible next to mention chips | Mention element's background padding overlapped cursor position. Added `mx-px` margin for visual separation and `caret-black`/`caret-white` on link elements |
+| 2026-02-27 | Focus lost after selecting/dismissing mention menu | MentionInputElement's filter input held focus; removing the mention_input node left focus on document.body. Added deferred focus restoration matching the pattern in SlashInput |
+| 2026-02-27 | SSR crash: "document is not defined" in patchSlateDom | `FALLBACK_ELEMENT` was created at module scope via `document.createElement`. Changed to lazy getter so element is only created on first use in the browser |
 | 2026-02-27 | "Cannot resolve a DOM node" crash in modal editor | patchSlateDom now returns a disconnected div for all failed cases instead of re-throwing, preventing crashes when multiple editors coexist |
 | 2026-02-27 | Entry content not saving from modal editor | Auto-save used a global singleton store — two editors (page + modal) would race, with one stealing the other's dirty flag. Fixed by tracking content and dirty state per-instance via refs |
 | 2026-02-27 | Inline creation title filled in instead of placeholder | SlashInput and Mention opened the modal without autoFocus, causing the auto-generated title to appear as real text instead of a placeholder |
