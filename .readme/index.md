@@ -153,6 +153,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Default Space Theme to System | Spaces without a theme assignment reset to system theme on switch |
 | [Content Filtering](features/content-filtering.md) | Extend advanced filters to search entry body content, not just properties and title |
 | [Manual Entry Ordering](features/manual-entry-ordering.md) | Drag-and-drop reordering of entries in sidebar and type pages (table/list views) |
+| [Apply Theme from Themes Page](features/apply-theme-from-themes-page.md) | Activate button on account-level custom themes page to apply a theme to the current space |
 
 
 ## Planned Features
@@ -160,7 +161,6 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | RP Starter Kit Expansion | Expand the Roleplaying starter kit — more types (Quest, NPC, Encounter, etc.), richer properties, templates |
-| Apply Theme to Current Space | Add "Apply to current space" button on the account-level custom themes page |
 
 ## Deferred
 
