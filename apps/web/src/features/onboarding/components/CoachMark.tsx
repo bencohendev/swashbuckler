@@ -106,12 +106,24 @@ export function CoachMark({
   const popoverRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()
   const [position, setPosition] = useState<Position | null>(null)
+  // Track whether position has been measured for the current target
+  const [ready, setReady] = useState(false)
+
+  // Derive state from props: reset position when target changes so we don't
+  // show new content at the old element's position
+  const [prevTarget, setPrevTarget] = useState<Element | null>(null)
+  if (targetEl !== prevTarget) {
+    setPrevTarget(targetEl)
+    setReady(false)
+    setPosition(null)
+  }
 
   const measure = useCallback(() => {
     if (!targetEl || !popoverRef.current || isMobile) return
     const targetRect = targetEl.getBoundingClientRect()
     const popoverRect = popoverRef.current.getBoundingClientRect()
     setPosition(computePosition(targetRect, { width: popoverRect.width, height: popoverRect.height }, placement))
+    setReady(true)
   }, [targetEl, placement, isMobile])
 
   useEffect(() => {
@@ -134,10 +146,12 @@ export function CoachMark({
     }
   }, [targetEl, measure, isMobile])
 
-  // Focus management
+  // Focus management — wait for the popover to become ready
   useEffect(() => {
-    popoverRef.current?.focus()
-  }, [currentStep])
+    if (ready) {
+      popoverRef.current?.focus()
+    }
+  }, [ready, currentStep])
 
   // Escape to skip
   useEffect(() => {
@@ -207,18 +221,22 @@ export function CoachMark({
     )
   }
 
-  // Desktop: positioned popover
+  // Desktop: positioned popover with smooth fade transitions between steps
   return (
     <div
       ref={popoverRef}
       role="dialog"
       aria-label={title}
       tabIndex={-1}
-      className="fixed z-[51] w-72 rounded-lg border bg-background p-4 shadow-xl outline-none animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none"
+      className={cn(
+        'fixed z-[51] w-72 rounded-lg border bg-background p-4 shadow-xl outline-none',
+        'transition-opacity duration-150 motion-reduce:transition-none',
+        ready && position ? 'opacity-100' : 'opacity-0',
+      )}
       style={
         position
           ? { top: position.top, left: position.left }
-          : { top: 0, left: 0, opacity: 0, pointerEvents: 'none' as const }
+          : { top: 0, left: 0, pointerEvents: 'none' as const }
       }
     >
       {content}
