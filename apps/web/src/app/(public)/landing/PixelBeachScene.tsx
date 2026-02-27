@@ -139,12 +139,11 @@ function buildScene(): number[][] {
     }
   }
 
-  // 3. Flagpole (shifted right so sand is visible on both sides)
-  const POLE_COL = 4
-  const poleSandTop = WATER_SURFACE - islandHeight(POLE_COL)
+  // 3. Flagpole (cols 0-1, aligns with main page pole)
+  const poleSandTop = WATER_SURFACE - islandHeight(0)
   for (let r = 0; r <= poleSandTop; r++) {
-    grid[r][POLE_COL] = 4
-    grid[r][POLE_COL + 1] = 4
+    grid[r][0] = 4
+    grid[r][1] = 4
   }
 
   // 4. Stamp sprites
@@ -197,7 +196,7 @@ export function PixelBeachScene() {
   }
 
   return (
-    <div className="flex items-start">
+    <div className="-ml-[24px] flex items-start">
       {columns.map((col, colIdx) => (
         <div key={colIdx}>
           {col.map((colorIdx, rowIdx) => (

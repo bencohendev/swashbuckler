@@ -37,7 +37,7 @@ export default function LandingPage() {
         className="pointer-events-none absolute inset-x-0 top-[7rem] bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
         aria-hidden="true"
       >
-        <div className="ml-[32px] h-full w-[16px] bg-[#8B5E3C]" />
+        <div className="h-full w-[16px] bg-[#8B5E3C]" />
       </div>
 
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b bg-background">
