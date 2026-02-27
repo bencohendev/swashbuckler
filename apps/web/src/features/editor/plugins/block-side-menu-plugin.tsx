@@ -11,7 +11,29 @@ interface BlockWrapperProps {
   element: TElement
 }
 
-function BlockWrapper({ children, element }: BlockWrapperProps) {
+/**
+ * Hook-free wrapper returned by aboveNodes.
+ *
+ * Plate's `aboveNodes` mechanism calls the returned component as a plain
+ * function (not JSX), which means any hooks inside it execute in the calling
+ * `ElementContent`'s React context. Because `aboveNodes` conditionally returns
+ * this wrapper (only for top-level elements), the hook count inside
+ * `ElementContent` would differ between top-level and nested elements — a
+ * React hooks-rules violation that causes "Rendered fewer hooks than expected."
+ *
+ * To avoid this, this wrapper contains NO hooks. It just renders
+ * `<BlockWrapperInner>` as JSX, giving it its own component instance and
+ * isolated hook context.
+ */
+function BlockWrapperShell({ children, element }: BlockWrapperProps) {
+  return (
+    <BlockWrapperInner element={element}>
+      {children}
+    </BlockWrapperInner>
+  )
+}
+
+function BlockWrapperInner({ children, element }: BlockWrapperProps) {
   const readOnly = useReadOnly()
   const isMobile = useIsMobile()
 
@@ -61,7 +83,7 @@ export const BlockSideMenuPlugin = createPlatePlugin({
       // Only wrap top-level elements (direct children of editor)
       if (!path || path.length !== 1) return undefined
 
-      return BlockWrapper
+      return BlockWrapperShell
     },
   },
 })
