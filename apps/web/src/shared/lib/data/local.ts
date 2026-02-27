@@ -2188,4 +2188,4 @@ export async function ensureLocalDefaultSpace(): Promise<Space> {
   return space
 }
 
-export { LOCAL_DEFAULT_SPACE_ID }
+export { LOCAL_DEFAULT_SPACE_ID, LOCAL_OWNER_ID }
