@@ -157,6 +157,134 @@ export async function openQuickCapture(page: Page): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// More options / toast helpers
+// ---------------------------------------------------------------------------
+
+/** Opens the "More options" dropdown on the current entry's editor. */
+export async function openMoreMenu(page: Page): Promise<void> {
+  const btn = page.locator('button[aria-label="More options"]')
+  await btn.click()
+  // Wait for dropdown to appear
+  await expect(page.getByRole('menuitem').first()).toBeVisible({ timeout: 5000 })
+}
+
+/** Wait for a toast notification containing the given text. */
+export async function waitForToast(page: Page, text: string): Promise<void> {
+  await expect(page.getByText(text).first()).toBeVisible({ timeout: 5000 })
+}
+
+// ---------------------------------------------------------------------------
+// Tag helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Adds a tag to the current entry. Creates the tag if it doesn't exist.
+ * Must be on an object editor page.
+ */
+export async function addTagToEntry(page: Page, tagName: string): Promise<void> {
+  // Click the "+ Tag" button (dashed border button with "Tag" text)
+  const tagButton = page.locator('button').filter({ hasText: /^Tag$/ }).first()
+  await tagButton.click()
+
+  // Type the tag name in the search input
+  const searchInput = page.locator('input[placeholder="Search or create..."]')
+  await searchInput.waitFor({ state: 'visible', timeout: 5000 })
+  await searchInput.fill(tagName)
+
+  // Click "Create" if the tag doesn't exist, or click the matching tag
+  const createBtn = page.getByText(`Create \u201c${tagName}\u201d`)
+  const existingTag = page.locator('button').filter({ hasText: tagName }).first()
+
+  if (await createBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await createBtn.click()
+  } else {
+    await existingTag.click()
+  }
+
+  // Wait for the TagBadge to appear
+  await expect(page.locator('span').filter({ hasText: tagName }).first()).toBeVisible({
+    timeout: 5000,
+  })
+}
+
+/**
+ * Removes a tag from the current entry by clicking its X button.
+ */
+export async function removeTagFromEntry(page: Page, tagName: string): Promise<void> {
+  // Close any open popover first (e.g., the tag picker)
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+
+  // TagBadge renders: <span>name <button><XIcon /></button></span>
+  // The badge with an X button only exists in the editor area (not sidebar)
+  const mainContent = page.locator('#main-content, main').first()
+  const badge = mainContent.locator('span').filter({ hasText: tagName }).filter({
+    has: page.locator('button'),
+  }).first()
+  await badge.waitFor({ state: 'visible', timeout: 5000 })
+  const removeBtn = badge.locator('button')
+  await removeBtn.click()
+
+  // Wait for the badge to disappear
+  await expect(badge).not.toBeVisible({ timeout: 5000 })
+}
+
+// ---------------------------------------------------------------------------
+// Pin helpers
+// ---------------------------------------------------------------------------
+
+/** Pins the current entry by clicking the Pin button in the editor header. */
+export async function pinCurrentEntry(page: Page): Promise<void> {
+  const main = page.locator('#main-content, main').first()
+  const btn = main.locator('button[title="Pin"]')
+  await btn.click()
+  await expect(main.locator('button[title="Unpin"]')).toBeVisible({ timeout: 5000 })
+}
+
+/** Unpins the current entry by clicking the Unpin button in the editor header. */
+export async function unpinCurrentEntry(page: Page): Promise<void> {
+  const main = page.locator('#main-content, main').first()
+  const btn = main.locator('button[title="Unpin"]')
+  await btn.click()
+  await expect(main.locator('button[title="Pin"]')).toBeVisible({ timeout: 5000 })
+}
+
+// ---------------------------------------------------------------------------
+// Archive helpers
+// ---------------------------------------------------------------------------
+
+/** Archives the current entry via the More options menu. */
+export async function archiveCurrentEntry(page: Page): Promise<void> {
+  await openMoreMenu(page)
+  const archiveItem = page.getByRole('menuitem', { name: 'Archive' })
+  await archiveItem.click()
+  await waitForToast(page, 'Archived')
+}
+
+// ---------------------------------------------------------------------------
+// Template helpers
+// ---------------------------------------------------------------------------
+
+/** Saves the current entry as a template via the More options menu. */
+export async function saveAsTemplate(page: Page, name: string): Promise<void> {
+  await openMoreMenu(page)
+  const saveItem = page.getByRole('menuitem', { name: 'Save as Template' })
+  await saveItem.click()
+
+  // Fill the template name in the dialog
+  const nameInput = page.locator('input#template-name')
+  await nameInput.waitFor({ state: 'visible', timeout: 5000 })
+  await nameInput.fill(name)
+
+  // Click Save
+  const saveBtn = page.locator('button[type="submit"]').filter({ hasText: 'Save' })
+  await saveBtn.click()
+
+  // Wait for dialog to close
+  await expect(nameInput).not.toBeVisible({ timeout: 5000 })
+}
+
+// ---------------------------------------------------------------------------
 // Tour helpers
 // ---------------------------------------------------------------------------
 

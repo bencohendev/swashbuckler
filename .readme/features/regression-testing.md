@@ -10,12 +10,17 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 
 ### Phase 1 (Automated — Guest Mode)
 
-- **Shared helpers** (`tests/e2e/helpers.ts`) — custom Playwright fixture for guest mode, reusable create/navigation helpers
-- **4 e2e test files** covering 26 tests across:
+- **Shared helpers** (`tests/e2e/helpers.ts`) — custom Playwright fixture for guest mode, reusable create/navigation/tag/pin/archive/template helpers
+- **9 e2e test files** covering 56 tests across:
   - Editor (7 tests) — highest risk, 6+ crashes in bug log
   - Types & entries (5 tests) — default type, creation, unique names
   - Navigation & lifecycle (7 tests) — all views, trash, settings, sidebar
   - Search & quick capture (7 tests) — Cmd+K, Cmd+E, keyboard nav
+  - Tags & pins (7 tests) — tag CRUD, sidebar tags, pin/unpin, dashboard pinned section
+  - Dashboard & archive (6 tests) — sections, recent entries, archive/unarchive, empty states
+  - Templates (5 tests) — save/apply template, settings list, delete, empty state
+  - Type settings & properties (6 tests) — add fields, property display, persistence, view modes
+  - Theme & editor formatting (6 tests) — theme toggle/cycle, dark mode, bold autoformat, blockquote, todo checkbox
 - **Playwright config updates** — CI reporter, failure screenshots, web server timeout
 - **CI integration** — e2e job in GitHub Actions (PRs only, Chromium, artifact upload)
 
@@ -35,6 +40,11 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 | `types-and-entries.test.ts` | 5 | High |
 | `navigation-and-lifecycle.test.ts` | 7 | High |
 | `search-and-quick-capture.test.ts` | 7 | Medium |
+| `tags-and-pins.test.ts` | 7 | Medium |
+| `dashboard-and-archive.test.ts` | 6 | Medium |
+| `templates.test.ts` | 5 | Medium |
+| `type-settings-and-properties.test.ts` | 6 | Medium |
+| `theme-and-editor-formatting.test.ts` | 6 | Low |
 
 ## CI Integration
 
