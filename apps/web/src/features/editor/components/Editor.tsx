@@ -1,5 +1,9 @@
 'use client';
 
+// Patch slate-dom before any Slate/Plate imports use it — prevents
+// "Cannot resolve a DOM node" crashes from slate-react timing gaps.
+import '../lib/patchSlateDom';
+
 import { createContext, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from '@udecode/plate/react';
 import { DndProvider } from 'react-dnd';
@@ -12,6 +16,7 @@ import type { Awareness } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 
 import { editorPlugins, initialEditorValue } from '../lib/plate-config';
+import { sanitizeContent } from '../lib/sanitizeContent';
 import {
   ParagraphElement,
   H1Element,
@@ -115,7 +120,7 @@ function SoloEditor({
   isOwner = true,
 }: Omit<EditorProps, 'collaborationOptions'>) {
   const { setContent, isSaving, isDirty, lastSaved } = useEditorStore();
-  const editorValue = initialContent || initialEditorValue;
+  const editorValue = sanitizeContent(initialContent) || initialEditorValue;
 
   const editor = usePlateEditor({
     plugins: editorPlugins,
@@ -269,7 +274,7 @@ function CollaborativeEditor({
   useEffect(() => {
     const sharedType = doc.get('content', Y.XmlText)
     if (sharedType.length === 0) {
-      const content = initialContent || initialEditorValue
+      const content = sanitizeContent(initialContent) || initialEditorValue
       const realClientID = doc.clientID
       doc.clientID = 0
       doc.transact(() => {
