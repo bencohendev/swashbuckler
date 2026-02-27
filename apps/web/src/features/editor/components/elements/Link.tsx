@@ -22,7 +22,7 @@ export function LinkElement({ element, children, ...props }: PlateElementProps) 
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        className="text-blue-600 underline decoration-blue-600/30 hover:text-blue-800 dark:text-blue-400 dark:decoration-blue-400/30 dark:hover:text-blue-300 caret-black dark:caret-white"
       >
         {children}
       </a>
