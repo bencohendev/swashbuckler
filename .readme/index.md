@@ -147,14 +147,13 @@ Dual-storage architecture with a `DataClient` interface:
 | [Sharing UI Redesign](features/sharing-ui-redesign.md) | Redesign sharing card/dialog, especially for desktop |
 | [Fantasy Theme](features/fantasy-theme.md) | Fantasy-styled UI skin — parchment paper editor, scroll-style modals, medieval typography and ornamental accents |
 | [Sci-Fi Theme](features/sci-fi-theme.md) | Sci-fi styled UI skin — cyberpunk/neon aesthetic, futuristic panels and controls |
+| Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
 
 
 ## Planned Features
 
 | Feature | Description |
 |---------|-------------|
-| Archive Releases Names | Archiving a type/tag should release its slug/name for reuse (from [Database Audit](features/database-audit.md) E2) |
-| Soft-Delete on Type Deletion | Type deletion should soft-delete its objects into trash instead of immediate cascade (from [Database Audit](features/database-audit.md) E5) |
 
 ## Deferred
 
