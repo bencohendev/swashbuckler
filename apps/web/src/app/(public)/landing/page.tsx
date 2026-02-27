@@ -98,13 +98,13 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="relative z-10 bg-[#D2B48C] pb-4">
+      <footer className="relative z-10 bg-[#0C2D48] pb-4">
         <div className="mx-auto max-w-3xl overflow-hidden px-6" aria-hidden="true">
           <PixelBeachScene />
         </div>
-        <p className="mt-4 px-6 text-center text-sm text-[#5D3A1A]">
+        <p className="mt-4 px-6 text-center text-sm text-[#7EC4DE]">
           &copy; Swashbuckler &middot;{" "}
-          <Link href="/docs" className="underline hover:text-[#3A2210] transition-colors">
+          <Link href="/docs" className="underline hover:text-white transition-colors">
             Docs
           </Link>
         </p>
