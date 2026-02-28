@@ -73,9 +73,9 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-2xl px-6 py-8">
+        <section className="relative z-10 mx-auto max-w-2xl border-y border-border px-6 py-8">
           <div className="flex flex-col items-center gap-6">
-            <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
+            <div className="flex w-full flex-col items-center gap-2 sm:w-auto">
               <p className="text-sm text-muted-foreground">Create an account and</p>
               <Link
                 href="/signup"
@@ -84,7 +84,7 @@ export default function LandingPage() {
                 Get Started
               </Link>
             </div>
-            <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
+            <div className="flex w-full flex-col items-center gap-2 sm:w-auto">
               <p className="text-sm text-muted-foreground">or</p>
               <GuestButton />
             </div>
