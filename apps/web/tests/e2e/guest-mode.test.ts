@@ -1,55 +1,52 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+
+async function enterGuestMode(page: Page) {
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/landing/)
+  await page.getByRole('button', { name: /try as guest/i }).click()
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 })
+}
+
+async function createObject(page: Page) {
+  // Open the "Page options" dropdown in the sidebar
+  const optionsButton = page.getByRole('button', { name: /page options/i })
+  await optionsButton.click()
+  // Click "Create" in the dropdown
+  await page.getByRole('menuitem', { name: /^create$/i }).click()
+  // Wait for navigation to the new object
+  await page.waitForURL(/\/objects\//, { timeout: 10000 })
+}
 
 test.describe('Guest mode', () => {
   test('homepage loads in guest mode with welcome message', async ({ page }) => {
-    await page.goto('/')
+    await enterGuestMode(page)
 
-    // Guest mode shows a welcome message
     await expect(page.getByText('Welcome')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/guest/i)).toBeVisible()
+    await expect(page.getByText('Guest').first()).toBeVisible()
   })
 
-  test('create object from sidebar and see it in list', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+  test('create object from sidebar and see editor', async ({ page }) => {
+    await enterGuestMode(page)
 
-    // Look for a "New" or create button in the sidebar
-    const newButton = page.getByRole('button', { name: /new/i }).first()
-    await newButton.click()
+    await createObject(page)
 
-    // Should create an object and navigate to it, or show it in the sidebar
-    // Wait for the editor or object view to appear
-    await expect(page.locator('[data-testid="object-editor"], [contenteditable]')).toBeVisible({ timeout: 10000 })
-  })
-
-  test('navigate to object and see editor', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
-    // Create an object first
-    const newButton = page.getByRole('button', { name: /new/i }).first()
-    await newButton.click()
-
-    // Wait for navigation to object page
-    await page.waitForURL(/\/objects\//, { timeout: 10000 })
-
-    // The editor area should be present
-    await expect(page.locator('[contenteditable], [data-testid="object-editor"]')).toBeVisible({ timeout: 10000 })
+    // The editor area should be present (use role=textbox for Slate editor)
+    await expect(page.getByRole('textbox').first()).toBeVisible({ timeout: 10000 })
   })
 
   test('sidebar shows created objects', async ({ page }) => {
-    await page.goto('/')
+    await enterGuestMode(page)
+
+    await createObject(page)
+
+    // After creation, the URL should contain the object id
+    await expect(page).toHaveURL(/\/objects\//)
+
+    // Navigate back to dashboard to see the sidebar with the listed object
+    await page.goto('/dashboard')
     await page.waitForLoadState('networkidle')
 
-    // Create an object
-    const newButton = page.getByRole('button', { name: /new/i }).first()
-    await newButton.click()
-
-    // Wait for it to appear
-    await page.waitForURL(/\/objects\//, { timeout: 10000 })
-
-    // The sidebar should have the object listed
-    const sidebar = page.locator('aside, [data-testid="sidebar"], nav')
-    await expect(sidebar.getByText(/untitled|new page/i).first()).toBeVisible({ timeout: 5000 })
+    // The sidebar should have the created object (default title: "New Page")
+    await expect(page.locator('span').filter({ hasText: /^New Page/ }).first()).toBeVisible({ timeout: 10000 })
   })
 })
