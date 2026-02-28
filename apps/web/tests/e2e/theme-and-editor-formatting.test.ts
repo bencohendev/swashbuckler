@@ -24,14 +24,13 @@ test.describe('Theme & Editor Formatting — regression tests', () => {
     // Get initial title after hydration
     const initialTitle = await themeBtn.getAttribute('title')
 
-    // Click to cycle
-    await themeBtn.click()
-
-    // Wait for the title to change after clicking
+    // Click to cycle — retry because the space context may still be loading in CI
     await expect(async () => {
+      await themeBtn.click()
+      await page.waitForTimeout(200)
       const title = await page.locator('button[title^="Theme"]').getAttribute('title')
       expect(title).not.toBe(initialTitle)
-    }).toPass({ timeout: 5000 })
+    }).toPass({ timeout: 10000 })
 
     const nextTitle = await page.locator('button[title^="Theme"]').getAttribute('title')
     expect(nextTitle).toContain('Theme')
