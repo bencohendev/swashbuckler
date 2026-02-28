@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
 import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
+import { TypeIcon } from './TypeIcon'
 import { FieldBuilder } from './FieldBuilder'
 import { TemplateSection } from './TemplateSection'
 import type { ObjectType, FieldDefinition, CreateObjectTypeInput, UpdateObjectTypeInput } from '@/shared/lib/data'
@@ -136,7 +137,7 @@ export function ObjectTypeForm({ objectType, onSave, onCancel, error }: ObjectTy
             aria-label="Choose icon"
             className="flex size-10 items-center justify-center rounded-lg border text-lg transition-colors hover:bg-muted"
           >
-            {icon}
+            <TypeIcon icon={icon} className="size-5" />
           </button>
         </EmojiPicker>
       </div>
