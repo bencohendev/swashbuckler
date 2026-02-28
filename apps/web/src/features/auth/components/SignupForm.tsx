@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { Mail } from "lucide-react"
 import { createClient } from "@/shared/lib/supabase/client"
 import { Button } from "@/shared/components/ui/Button"
 import { Input } from "@/shared/components/ui/Input"
@@ -21,12 +21,12 @@ import { PasswordStrengthMeter } from "./PasswordStrengthMeter"
 import { Separator } from "@/shared/components/ui/Separator"
 
 export function SignupForm() {
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [confirmationSent, setConfirmationSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -59,8 +59,31 @@ export function SignupForm() {
       return
     }
 
-    router.push("/dashboard")
-    router.refresh()
+    setConfirmationSent(true)
+  }
+
+  if (confirmationSent) {
+    return (
+      <Card>
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Mail className="h-6 w-6 text-primary" aria-hidden="true" />
+          </div>
+          <CardTitle className="text-2xl">Check your email</CardTitle>
+          <CardDescription>
+            We sent a confirmation link to{" "}
+            <span className="font-medium text-foreground">{email}</span>.
+            Click the link to activate your account, then come back here to
+            sign in.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter className="justify-center">
+          <Link href="/login">
+            <Button variant="outline">Go to sign in</Button>
+          </Link>
+        </CardFooter>
+      </Card>
+    )
   }
 
   return (
@@ -113,7 +136,7 @@ export function SignupForm() {
             />
           </div>
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-destructive" role="alert">{error}</p>
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Creating account..." : "Create account"}
