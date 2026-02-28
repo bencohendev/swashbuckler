@@ -14,7 +14,7 @@ Strengthens password handling across the app: a visual strength meter on signup 
 | Composition rules | None enforced | NIST SP 800-63B recommends against composition rules — length matters more |
 | Minimum length | 8 characters | Reasonable minimum per NIST guidelines |
 | Rate limiting | Client-side cooldown (5 failures → 30s, 10+ → 60s) | UX protection; Supabase has server-side rate limiting built in |
-| Strength meter scope | Signup + change password | Both password-entry surfaces get the same feedback |
+| Strength meter scope | Signup, change password, reset password | All password-entry surfaces get the same feedback |
 
 ## Strength Scoring
 
@@ -51,5 +51,6 @@ Five possible points, clamped to 1–4 for any non-empty password:
 | `src/features/auth/components/PasswordStrengthMeter.tsx` | Visual 4-bar meter component |
 | `src/features/auth/components/SignupForm.tsx` | Meter integration, 8-char min |
 | `src/features/auth/components/LoginForm.tsx` | Rate limiting with countdown |
+| `src/features/auth/components/ResetPasswordForm.tsx` | Meter integration, 8-char min, confirm match |
 | `src/features/account/components/PasswordSection.tsx` | Meter integration, 8-char min |
 | `tests/unit/auth/passwordStrength.test.ts` | 12 unit tests for scoring |

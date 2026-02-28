@@ -17,10 +17,25 @@ Email/password and OAuth authentication via Supabase Auth, with a guest mode fal
 
 ## Implementation
 
-- `src/features/auth/components/` — LoginForm, SignupForm, OAuthButtons
-- `src/app/(auth)/` — login and signup pages
-- `src/app/auth/callback/route.ts` — OAuth callback handler
+- `src/features/auth/components/` — LoginForm, SignupForm, ForgotPasswordForm, ResetPasswordForm, OAuthButtons
+- `src/app/(auth)/` — login, signup, forgot-password, and reset-password pages
+- `src/app/auth/callback/page.tsx` — PKCE code exchange + auth event routing
 - Guest mode enabled by removing auth redirect; uses Dexie for storage
+
+## Password Reset Flow
+
+1. User clicks "Forgot password?" link on the login form
+2. `/forgot-password` page renders `ForgotPasswordForm` — email input that calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: origin + '/auth/callback' })`
+3. Success state shows "Check your email for a reset link"
+4. User clicks the email link → lands on `/auth/callback?code=...`
+5. Callback's `onAuthStateChange` detects `PASSWORD_RECOVERY` event → redirects to `/reset-password`
+6. `/reset-password` page renders `ResetPasswordForm` — new password + confirm password with `PasswordStrengthMeter`
+7. Validates: min 8 chars, passwords match (same rules as SignupForm)
+8. Calls `supabase.auth.updateUser({ password })` → redirects to `/dashboard`
+
+### Middleware
+
+No middleware changes needed. `/forgot-password` and `/reset-password` don't match the existing `isAuthPage` check, so unauthenticated users can access `/forgot-password` and users with recovery sessions can access `/reset-password`.
 
 ## Database
 
@@ -35,6 +50,10 @@ Email/password and OAuth authentication via Supabase Auth, with a guest mode fal
 - [x] Protected routes redirect to /login
 - [x] Logout clears session
 - [x] Guest mode works without authentication
+- [x] Forgot password link on login page
+- [x] Password reset email sent successfully
+- [x] Recovery callback redirects to reset page
+- [x] New password set and redirected to dashboard
 
 ## OAuth Provider Configuration
 
