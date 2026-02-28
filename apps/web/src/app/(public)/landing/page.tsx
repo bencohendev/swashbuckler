@@ -74,23 +74,38 @@ export default function LandingPage() {
         </section>
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 py-8">
-          <hr className="mb-8 border-border" />
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
-            <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
-              <p className="text-sm text-muted-foreground">Create an account and</p>
-              <Link
-                href="/signup"
-                className="inline-flex h-14 w-full items-center justify-center rounded-md bg-primary px-10 text-lg font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors sm:w-auto"
-              >
-                Get Started
-              </Link>
+          {/* Mobile: stacked layout with dividers */}
+          <div className="sm:hidden">
+            <hr className="mb-8 border-border" />
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex w-full flex-col items-center gap-1">
+                <p className="text-sm text-muted-foreground">Create an account and</p>
+                <Link
+                  href="/signup"
+                  className="inline-flex h-14 w-full items-center justify-center rounded-md bg-primary px-10 text-lg font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+                >
+                  Get Started
+                </Link>
+              </div>
+              <div className="flex w-full flex-col items-center gap-1">
+                <p className="text-sm text-muted-foreground">or</p>
+                <GuestButton />
+              </div>
             </div>
-            <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
-              <p className="text-sm text-muted-foreground">or</p>
-              <GuestButton />
-            </div>
+            <hr className="mt-8 border-border" />
           </div>
-          <hr className="mt-8 border-border" />
+          {/* Desktop: inline sentence with buttons */}
+          <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-3">
+            <span className="text-muted-foreground">Create an account and</span>
+            <Link
+              href="/signup"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-base font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+            >
+              Get Started
+            </Link>
+            <span className="text-muted-foreground">or</span>
+            <GuestButton className="inline-flex h-11 items-center justify-center rounded-md border bg-background px-8 text-base font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors" />
+          </div>
         </section>
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12">
