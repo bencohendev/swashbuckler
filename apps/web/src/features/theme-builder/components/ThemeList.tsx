@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { CheckIcon, SunIcon, MoonIcon, MonitorIcon, ArrowRightIcon, SwordsIcon, ZapIcon } from 'lucide-react'
+import { CheckIcon, SunIcon, MoonIcon, MonitorIcon, ArrowRightIcon, PlusIcon, SwordsIcon, ZapIcon } from 'lucide-react'
 import { useCurrentSpace } from '@/shared/lib/data'
 import { useCustomThemeStore } from '../stores/customTheme'
 import { THEME_PRESETS } from '../lib/presets'
@@ -151,6 +151,17 @@ export function ThemeList({ onEdit, selectionOnly }: ThemeListProps) {
             </Link>
           )}
         </div>
+      )}
+
+      {/* Create custom theme link */}
+      {selectionOnly && (
+        <Link
+          href="/settings/themes"
+          className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80"
+        >
+          <PlusIcon className="size-4" />
+          Create custom theme
+        </Link>
       )}
     </div>
   )
