@@ -69,7 +69,7 @@ export function Providers({ children }: ProvidersProps) {
   }, [supabase])
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <QueryClientProvider client={queryClient}>
         <SpaceProvider user={user} isAuthLoading={isAuthLoading}>
           <CustomThemeApplier />
