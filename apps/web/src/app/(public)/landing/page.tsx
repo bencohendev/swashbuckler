@@ -73,19 +73,30 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-8">
-          <div className="flex items-center justify-center gap-6">
-            <Link
-              href="/signup"
-              className="inline-flex h-14 items-center rounded-md bg-primary px-10 text-lg font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
-            >
-              Get Started
-            </Link>
-            <GuestButton />
+        <section className="relative z-10 mx-auto max-w-2xl px-6 py-8">
+          <hr className="mb-8 border-border" />
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+            <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
+              <p className="text-sm text-muted-foreground">Create an account and</p>
+              <Link
+                href="/signup"
+                className="inline-flex h-14 w-full items-center justify-center rounded-md bg-primary px-10 text-lg font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors sm:w-auto"
+              >
+                Get Started
+              </Link>
+            </div>
+            <div className="flex w-full flex-col items-center gap-1 sm:w-auto">
+              <p className="text-sm text-muted-foreground">or</p>
+              <GuestButton />
+            </div>
           </div>
+          <hr className="mt-8 border-border" />
         </section>
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12">
+          <p className="mb-6 text-center text-muted-foreground">
+            Swashbuckler is a fully featured note-taking app. Take advantage of:
+          </p>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             {features.map((feature) => (
               <a
@@ -107,14 +118,22 @@ export default function LandingPage() {
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 pb-24 text-center">
           <p className="text-muted-foreground">...and much more</p>
-          <a
-            href="https://docs.swashbuckler.quest"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex h-10 items-center rounded-md border bg-background px-6 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            Read the Docs
-          </a>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <Link
+              href="/signup"
+              className="inline-flex h-10 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+            >
+              Get Started
+            </Link>
+            <a
+              href="https://docs.swashbuckler.quest"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center rounded-md border bg-background px-6 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              Read the Docs
+            </a>
+          </div>
         </section>
 
       </main>
