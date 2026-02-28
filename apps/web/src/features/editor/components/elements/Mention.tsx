@@ -136,11 +136,18 @@ export function MentionInputElement({ children, element, ...props }: PlateElemen
 
     if (mentionInputEntry) {
       const [, path] = mentionInputEntry
+      const textToInsert = '@' + query
       editor.tf.removeNodes({ at: path })
       editor.tf.insertNodes(
-        { text: '@' + query },
+        { text: textToInsert },
         { at: path }
       )
+      // Advance cursor past the inserted text (insertNodes at an explicit
+      // path doesn't move the selection, so it's still before the text)
+      if (editor.selection) {
+        const { path: selPath, offset } = editor.selection.anchor
+        editor.tf.select({ path: selPath, offset: offset + textToInsert.length })
+      }
       focusEditorAtSelection(editor)
     }
   }, [editor, query])
