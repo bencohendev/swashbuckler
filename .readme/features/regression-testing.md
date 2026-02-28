@@ -1,6 +1,6 @@
 # Regression Testing
 
-**Status:** Done
+**Status:** Active
 
 ## Overview
 
@@ -84,7 +84,7 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 - [ ] Image upload block appears and accepts files
 - [ ] Table block renders with hover menus
 - [ ] Table column resize works
-- [ ] Mention `[[` triggers search dropdown
+- [ ] Mention `@` triggers search dropdown
 - [ ] Block side menu appears on hover (desktop)
 - [ ] Entry title persists on reload
 

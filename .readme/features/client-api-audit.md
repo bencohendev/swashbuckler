@@ -568,7 +568,7 @@ No `react-window`, `react-virtuoso`, or `@tanstack/react-virtual` in the project
 #### P2. Mention/link search fires on every keystroke (Minor)
 **Files:** `editor/components/LinkedObjects.tsx:119-136`
 
-Global search (`useGlobalSearch`) has a 300ms debounce. But the `[[` mention trigger and the LinkedObjects link search fire `dataClient.objects.search(query)` on every keystroke via a bare `useEffect` with `query` in deps. Typing 12 characters = 12 parallel network requests.
+Global search (`useGlobalSearch`) has a 300ms debounce. But the `@` mention trigger and the LinkedObjects link search fire `dataClient.objects.search(query)` on every keystroke via a bare `useEffect` with `query` in deps. Typing 12 characters = 12 parallel network requests.
 
 **Fix:** Add 200-300ms debounce to the link search effect, matching global search.
 
