@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 
-export function GuestButton({ className }: { className?: string }) {
+export function GuestButton() {
   const router = useRouter()
 
   const handleClick = () => {
@@ -13,7 +13,7 @@ export function GuestButton({ className }: { className?: string }) {
   return (
     <button
       onClick={handleClick}
-      className={className ?? "inline-flex h-14 w-full items-center justify-center rounded-md border bg-background px-10 text-lg font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors sm:w-auto"}
+      className="inline-flex h-14 w-full items-center justify-center rounded-md border bg-background px-10 text-lg font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors sm:w-auto"
     >
       Try as Guest
     </button>
