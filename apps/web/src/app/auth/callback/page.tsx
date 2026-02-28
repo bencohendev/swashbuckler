@@ -38,6 +38,11 @@ function AuthCallbackContent() {
     // The browser Supabase client (detectSessionInUrl: true) automatically
     // detects ?code= and exchanges it via PKCE. We just listen for the result.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        router.replace('/reset-password')
+        redirected = true
+        return
+      }
       if (event === 'SIGNED_IN') {
         redirect()
       }

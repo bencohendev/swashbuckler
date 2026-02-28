@@ -61,9 +61,6 @@ test.describe('Search & Quick Capture — regression tests', () => {
   test('Cmd+E opens quick capture dialog', async ({ guestPage: page }) => {
     // Click the floating action button (+ button) instead of keyboard shortcut
     // since Cmd+E needs focus on body and may not work in all contexts
-    const fab = page.locator('button.fixed, button[class*="fixed"]').filter({ hasText: /^$/ }).last()
-      .or(page.locator('button').filter({ has: page.locator('svg') }).last())
-
     // Try keyboard shortcut first
     await page.locator('body').click()
     await page.keyboard.press('Meta+e')
