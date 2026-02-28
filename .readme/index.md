@@ -160,7 +160,6 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Feature | Description |
 |---------|-------------|
-| RP Starter Kit Expansion | Expand the Roleplaying starter kit — more types (Quest, NPC, Encounter, etc.), richer properties, templates |
 
 ## Deferred
 
