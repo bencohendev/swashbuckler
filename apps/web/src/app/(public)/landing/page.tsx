@@ -146,7 +146,11 @@ export default function LandingPage() {
           &copy; Swashbuckler &middot;{" "}
           <a href="https://docs.swashbuckler.quest" className="underline hover:text-white transition-colors">
             Docs
-          </a>
+          </a>{" "}
+          &middot;{" "}
+          <Link href="/privacy" className="underline hover:text-white transition-colors">
+            Privacy
+          </Link>
         </p>
       </footer>
     </div>
