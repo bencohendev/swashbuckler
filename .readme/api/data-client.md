@@ -196,7 +196,7 @@ Manages reusable entry templates.
 
 ## RelationsClient
 
-Manages links between entries. Two relation types: `mention` (auto-synced from editor `[[` references) and `link` (manual).
+Manages links between entries. Two relation types: `mention` (auto-synced from editor `@` references) and `link` (manual).
 
 | Method | Signature | Description |
 |--------|-----------|-------------|

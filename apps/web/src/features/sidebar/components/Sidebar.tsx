@@ -741,7 +741,7 @@ export function Sidebar() {
                 <h4 className="mb-1.5 font-medium text-muted-foreground">Editor</h4>
                 <div className="space-y-1">
                   <ShortcutRow keys={["/"]} label="Slash commands" />
-                  <ShortcutRow keys={["[["]} label="Link to object" />
+                  <ShortcutRow keys={["@"]} label="Link to object" />
                   <ShortcutRow keys={["⌘", "Enter"]} label="Exit block" />
                 </div>
               </div>

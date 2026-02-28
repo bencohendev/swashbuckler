@@ -27,7 +27,7 @@ Three sections:
 | General | `⌘ E` | Quick capture |
 | General | `⌘ \` | Toggle sidebar |
 | Editor | `/` | Slash commands |
-| Editor | `[[` | Link to object |
+| Editor | `@` | Link to object |
 | Editor | `⌘ Enter` | Exit block |
 | Markdown | `#` | Heading |
 | Markdown | `>` | Quote |
