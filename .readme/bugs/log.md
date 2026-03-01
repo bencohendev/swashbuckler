@@ -11,6 +11,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-03-01 | Password reset link redirects to landing page instead of reset form | Race condition in client-side callback: `getSession()` resolved before `PASSWORD_RECOVERY` event, and middleware treated `/auth/callback` as an auth page. Replaced with server-side Route Handler that exchanges PKCE code and redirects via `next` query param |
 | 2026-02-27 | Focus lost and cursor at wrong position after inline link/mention insertion | Shared `focusEditorAtSelection` helper sets DOM selection from Slate via `DOMEditor.toDOMRange` before focusing, preventing cursor jump. `onClose` callback on objectModal store restores editor focus at correct position when modal closes |
 | 2026-02-27 | Cursor invisible next to mention chips | Mention element's background padding overlapped cursor position. Added `mx-px` margin for visual separation and `caret-black`/`caret-white` on link elements |
 | 2026-02-27 | Focus lost after selecting/dismissing mention menu | MentionInputElement's filter input held focus; removing the mention_input node left focus on document.body. Added deferred focus restoration matching the pattern in SlashInput |
