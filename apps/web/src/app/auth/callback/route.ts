@@ -35,5 +35,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // If this was a password reset attempt, send them back to forgot-password
+  // with an error so they can request a new link
+  if (rawNext === "/reset-password") {
+    return NextResponse.redirect(`${origin}/forgot-password?error=link_expired`)
+  }
+
   return NextResponse.redirect(`${origin}/login`)
 }

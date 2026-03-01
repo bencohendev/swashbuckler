@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { createClient } from "@/shared/lib/supabase/client"
 import { Button } from "@/shared/components/ui/Button"
 import { Input } from "@/shared/components/ui/Input"
@@ -15,9 +16,17 @@ import {
   CardTitle,
 } from "@/shared/components/ui/Card"
 
+const ERROR_MESSAGES: Record<string, string> = {
+  link_expired: "That reset link has expired. Enter your email to get a new one.",
+}
+
 export function ForgotPasswordForm() {
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get("error")
   const [email, setEmail] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    urlError ? ERROR_MESSAGES[urlError] ?? "Something went wrong. Please try again." : null
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
