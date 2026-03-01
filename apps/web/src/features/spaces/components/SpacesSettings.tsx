@@ -3,19 +3,21 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArchiveIcon, ArrowLeftIcon, FolderIcon, Trash2Icon } from 'lucide-react'
+import { ArchiveIcon, ArrowLeftIcon, FolderIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useAuth, useCurrentSpace, useSpaces } from '@/shared/lib/data'
 import type { Space } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
+import { CreateSpaceDialog } from '@/features/sidebar/components/CreateSpaceDialog'
 import { toast } from '@/shared/hooks/useToast'
 
 export function SpacesSettings() {
   const { user, isGuest } = useAuth()
   const { space: currentSpace, spaces: allSpaces, switchSpace } = useCurrentSpace()
-  const { update, remove, archiveSpace } = useSpaces()
+  const { create, update, remove, archiveSpace } = useSpaces()
   const router = useRouter()
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   const ownedSpaces = isGuest ? allSpaces : allSpaces.filter(s => s.owner_id === user?.id)
 
@@ -72,6 +74,16 @@ export function SpacesSettings() {
           />
         ))}
       </div>
+      <Button variant="outline" onClick={() => setCreateDialogOpen(true)}>
+        <PlusIcon className="size-4" />
+        New Space
+      </Button>
+      <CreateSpaceDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={create}
+        spaces={ownedSpaces}
+      />
     </div>
   )
 }

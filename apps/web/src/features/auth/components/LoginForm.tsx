@@ -124,6 +124,14 @@ export function LoginForm() {
               required
             />
           </div>
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           {isLockedOut && (
             <p className="text-sm text-amber-600 dark:text-amber-400" role="status">
               Too many failed attempts. Please wait {cooldownRemaining} seconds before trying again.
