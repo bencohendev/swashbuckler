@@ -58,9 +58,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Auth pages that should redirect authenticated users away
-  const isAuthPage = pathname.startsWith("/login") ||
+  // Exclude /auth/callback — it must always run to exchange PKCE codes
+  const isAuthPage = (pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
-    pathname.startsWith("/auth")
+    pathname.startsWith("/auth")) &&
+    pathname !== "/auth/callback"
 
   // Redirect authenticated users away from auth pages
   if (user && isAuthPage) {
