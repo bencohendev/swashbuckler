@@ -58,7 +58,7 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 
 ## Manual Regression Checklist
 
-### Authentication (9 items)
+### Authentication (18 items)
 
 - [ ] Login with email/password works
 - [ ] Login with Google OAuth works
@@ -66,9 +66,18 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 - [ ] Signup creates account and redirects
 - [ ] Password strength meter displays correctly
 - [ ] Invalid credentials show error message
-- [ ] Logout clears session and redirects to login
+- [ ] Logout clears session, guest cookie, query cache, and redirects to login
 - [ ] Session persists across page reload
 - [ ] Guest mode activates on first visit without auth
+- [ ] Visiting /dashboard without session or guest cookie redirects to /login
+- [ ] Visiting /reset-password directly (no session) shows "Invalid or expired link"
+- [ ] Expired password reset link shows error on /forgot-password
+- [ ] Denying OAuth consent shows message on /login
+- [ ] Network failure during login shows "Unable to connect" error
+- [ ] Network failure during signup shows error (not frozen spinner)
+- [ ] Authenticated user visiting /forgot-password redirects to /dashboard
+- [ ] Session expiry during use redirects to /login with "session expired" message
+- [ ] Signup confirmation state shows "Resend confirmation email" button
 
 ### Editor (15 items) — HIGHEST RISK
 

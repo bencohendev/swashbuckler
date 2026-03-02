@@ -6,21 +6,36 @@ import { Button } from "@/shared/components/ui/Button"
 
 export function OAuthButtons() {
   const [isLoading, setIsLoading] = useState<"google" | "github" | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleOAuthLogin(provider: "google" | "github") {
     setIsLoading(provider)
-    const supabase = createClient()
+    setError(null)
 
-    await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      const supabase = createClient()
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (oauthError) {
+        setError(oauthError.message)
+        setIsLoading(null)
+      }
+    } catch {
+      setError("Unable to connect. Please try again.")
+      setIsLoading(null)
+    }
   }
 
   return (
     <div className="grid gap-2">
+      {error && (
+        <p className="text-sm text-destructive" role="alert">{error}</p>
+      )}
       <Button
         variant="outline"
         onClick={() => handleOAuthLogin("google")}

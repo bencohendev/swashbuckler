@@ -61,6 +61,7 @@ export async function updateSession(request: NextRequest) {
   // Exclude /auth/callback — it must always run to exchange PKCE codes
   const isAuthPage = (pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
+    pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/auth")) &&
     pathname !== "/auth/callback"
 
@@ -68,6 +69,18 @@ export async function updateSession(request: NextRequest) {
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
+    return NextResponse.redirect(url)
+  }
+
+  // Protected routes: require session or guest cookie
+  const protectedPrefixes = [
+    "/dashboard", "/settings", "/objects", "/trash",
+    "/archive", "/graph", "/types", "/tags", "/templates",
+  ]
+  const isProtected = protectedPrefixes.some(p => pathname.startsWith(p))
+  if (isProtected && !user && !hasGuestCookie) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 

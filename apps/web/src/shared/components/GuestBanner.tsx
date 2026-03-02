@@ -28,7 +28,7 @@ export function GuestBanner({ isGuestServer = true }: GuestBannerProps) {
       <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm text-amber-800">
-            <strong>Guest mode:</strong> Your data is stored locally and will be lost when you close the browser.{' '}
+            <strong>Guest mode:</strong> Your data is stored only on this device and is not backed up.{' '}
             <Link href="/signup" className="font-medium underline hover:no-underline">
               Sign up
             </Link>{' '}
