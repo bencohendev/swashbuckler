@@ -160,6 +160,7 @@ Dual-storage architecture with a `DataClient` interface:
 
 | Feature | Description |
 |---------|-------------|
+| Signup Bot Protection | Add CAPTCHA (Cloudflare Turnstile) to signup form to prevent bot/garbage account creation. Supabase has native support; requires Turnstile widget on frontend + passing `captchaToken` in `signUp()` options. |
 
 ## Deferred
 
