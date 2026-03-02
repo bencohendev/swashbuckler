@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/shared/lib/supabase/client"
 import { Button } from "@/shared/components/ui/Button"
@@ -19,6 +19,12 @@ import {
 import { OAuthButtons } from "./OAuthButtons"
 import { Separator } from "@/shared/components/ui/Separator"
 
+const URL_ERROR_MESSAGES: Record<string, string> = {
+  link_expired: "That link has expired. Please try again.",
+  oauth_denied: "Sign-in was cancelled. Please try again.",
+  oauth_error: "Something went wrong during sign-in. Please try again.",
+}
+
 function getCooldownSeconds(attempts: number): number {
   if (attempts >= 10) return 60
   if (attempts >= 5) return 30
@@ -27,6 +33,7 @@ function getCooldownSeconds(attempts: number): number {
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -34,6 +41,25 @@ export function LoginForm() {
   const [failedAttempts, setFailedAttempts] = useState(0)
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null)
   const [cooldownRemaining, setCooldownRemaining] = useState(0)
+  const [bannerMessage, setBannerMessage] = useState<string | null>(() => {
+    // Check URL search params for error/expired messages
+    const expired = searchParams.get("expired")
+    const urlError = searchParams.get("error")
+    if (expired === "true") return "Your session has expired. Please sign in again."
+    if (urlError && URL_ERROR_MESSAGES[urlError]) return URL_ERROR_MESSAGES[urlError]
+
+    // Check for OAuth error fragments in the URL hash
+    if (typeof window !== "undefined" && window.location.hash) {
+      const params = new URLSearchParams(window.location.hash.slice(1))
+      const hashError = params.get("error_description") ?? params.get("error")
+      if (hashError) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search)
+        return decodeURIComponent(hashError)
+      }
+    }
+
+    return null
+  })
 
   useEffect(() => {
     if (cooldownRemaining <= 0) return
@@ -58,29 +84,37 @@ export function LoginForm() {
     if (lockoutUntil && Date.now() < lockoutUntil) return
 
     setError(null)
+    setBannerMessage(null)
     setIsLoading(true)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      const newAttempts = failedAttempts + 1
-      setFailedAttempts(newAttempts)
-      const cooldown = getCooldownSeconds(newAttempts)
-      if (cooldown > 0) {
-        setLockoutUntil(Date.now() + cooldown * 1000)
-        setCooldownRemaining(cooldown)
+      if (error) {
+        const newAttempts = failedAttempts + 1
+        setFailedAttempts(newAttempts)
+        const cooldown = getCooldownSeconds(newAttempts)
+        if (cooldown > 0) {
+          setLockoutUntil(Date.now() + cooldown * 1000)
+          setCooldownRemaining(cooldown)
+        }
+        setError(error.message)
+        setIsLoading(false)
+        return
       }
-      setError(error.message)
-      setIsLoading(false)
-      return
-    }
 
-    router.push("/dashboard")
-    router.refresh()
+      // Clear guest cookie on successful login
+      document.cookie = "swashbuckler-guest=; path=/; max-age=0"
+      router.push("/dashboard")
+      router.refresh()
+    } catch {
+      setError("Unable to connect. Please check your internet connection and try again.")
+      setIsLoading(false)
+    }
   }
 
   const isLockedOut = cooldownRemaining > 0
@@ -92,6 +126,11 @@ export function LoginForm() {
         <CardDescription>Sign in to your account to continue</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {bannerMessage && (
+          <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200" role="alert">
+            {bannerMessage}
+          </p>
+        )}
         <OAuthButtons />
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -138,7 +177,7 @@ export function LoginForm() {
             </p>
           )}
           {error && !isLockedOut && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-destructive" role="alert">{error}</p>
           )}
           <Button type="submit" className="w-full" disabled={isLoading || isLockedOut}>
             {isLoading
