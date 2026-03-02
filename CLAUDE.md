@@ -63,10 +63,10 @@ This is the required workflow for all feature work. **Do not skip steps.**
 - Run all checks (unit tests, e2e tests, types, lint) before finishing
 
 ### 5. Finish
-- Update the spec with any implementation details or changes from the original plan
+- **Update the spec** in `.readme/features/` with any implementation details or changes from the original plan
+- **Update user-facing docs** in `apps/docs/content/docs/` — required for any change that affects user-visible behavior; create a new page if needed (see User-Facing Documentation below)
 - Set `**Status:**` to `Done`
 - Move the feature from the Planned table to the Implemented table in `index.md` (if it was planned)
-- If the change affects user-facing behavior, update the corresponding page in `apps/docs/content/docs/` (or create one if needed — see User-Facing Documentation below)
 - Commit doc updates and merge to `dev`
 
 ## Documentation
