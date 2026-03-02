@@ -1,4 +1,6 @@
 -- Update search_objects to use type_id instead of type
+-- Must drop first: PG cannot change return type via CREATE OR REPLACE
+DROP FUNCTION IF EXISTS search_objects(TEXT, UUID, INT);
 CREATE OR REPLACE FUNCTION search_objects(
   search_query TEXT,
   user_id UUID,
