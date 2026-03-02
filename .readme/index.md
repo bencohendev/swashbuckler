@@ -1,5 +1,9 @@
 # Swashbuckler — Documentation Index
 
+## Onboarding
+
+New to the codebase? Start with the [Onboarding Guide](onboarding/index.md) — a structured 10-document learning program covering architecture, data layer, database, auth, routing, editor, sharing, collaboration, state management, and testing.
+
 ## Overview
 
 A knowledge management app with block-based editing, custom types/relations, and a visual graph view.
