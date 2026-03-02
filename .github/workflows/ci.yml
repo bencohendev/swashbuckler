@@ -66,8 +66,39 @@ jobs:
             playwright-${{ runner.os }}-
       - name: Install Playwright browsers
         run: cd apps/web && npx playwright install --with-deps chromium
-      - name: Run e2e tests
+
+      # Phase 1 — Guest-mode tests (no Supabase needed)
+      - name: Run guest-mode e2e tests
         run: cd apps/web && npx playwright test --project=chromium
+
+      # Phase 2 — Supabase-backed tests
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: cd apps/web && supabase start
+
+      - name: Extract Supabase credentials
+        id: supabase
+        run: |
+          cd apps/web
+          echo "url=$(supabase status --output json | jq -r '.API_URL')" >> "$GITHUB_OUTPUT"
+          echo "anon_key=$(supabase status --output json | jq -r '.ANON_KEY')" >> "$GITHUB_OUTPUT"
+          echo "service_role_key=$(supabase status --output json | jq -r '.SERVICE_ROLE_KEY')" >> "$GITHUB_OUTPUT"
+
+      - name: Run Supabase e2e tests
+        run: cd apps/web && npx playwright test --project=supabase
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ steps.supabase.outputs.anon_key }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ steps.supabase.outputs.service_role_key }}
+
+      - name: Stop local Supabase
+        if: always()
+        run: cd apps/web && supabase stop
+
       - name: Upload test artifacts
         if: failure()
         uses: actions/upload-artifact@v4
