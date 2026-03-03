@@ -30,7 +30,9 @@ export function Header({ email }: { email?: string }) {
   const { setMobileOpen } = useSidebar()
   const queryClient = useQueryClient()
   const { canEdit } = useSpacePermission()
-  const isGuest = isLoading ? !email : !user
+  // Default to not-guest during loading to prevent a flash of "Guest" when
+  // an authenticated user lands on the dashboard with a stale RSC payload.
+  const isGuest = isLoading ? false : !user
   const resolvedEmail = user?.email ?? email
   const avatarUrl: string | undefined = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture
   const [searchOpen, setSearchOpen] = useState(false)

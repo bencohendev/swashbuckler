@@ -21,7 +21,7 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
         <Sidebar />
       </SectionErrorBoundary>
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <GuestBanner isGuestServer={!user} />
+        <GuestBanner />
         <Header email={user?.email} />
         <main id="main-content" className="relative flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
