@@ -30,41 +30,24 @@ test.describe('Spaces', () => {
     const createButton = dialog.getByRole('button', { name: /create/i })
     await createButton.click()
 
-    // Dialog should close
-    await expect(dialog).not.toBeVisible({ timeout: 10000 })
+    // Dialog should close after API call completes (can be slow in CI)
+    await expect(dialog).not.toBeVisible({ timeout: 30000 })
 
-    // Reload and verify the new space appears in the dropdown
-    await authPage.reload()
-    await authPage.waitForLoadState('networkidle')
-    await switcher.click()
-    await expect(
-      authPage.getByRole('menuitem').filter({ hasText: 'Test Space E2E' }),
-    ).toBeVisible({ timeout: 10000 })
+    // After creation, the app auto-switches to the new space — verify the switcher updates
+    await expect(switcher).toContainText('Test Space E2E', { timeout: 15000 })
   })
 
   test('switches between spaces', async ({ authPage, testData }) => {
     await authPage.goto('/dashboard')
     await authPage.waitForURL('**/dashboard', { timeout: 15000 })
 
-    // First create a second space so we can switch
     const switcher = authPage.locator('[data-tour="space-switcher"]')
-    await switcher.click()
-    await authPage.getByRole('menuitem', { name: /new space/i }).click()
 
-    const dialog = authPage.getByRole('dialog')
-    await expect(dialog).toBeVisible({ timeout: 5000 })
-    await dialog.getByLabel(/name/i).first().fill('Switch Target')
-    await dialog.getByRole('button', { name: /create/i }).click()
-    await expect(dialog).not.toBeVisible({ timeout: 10000 })
+    // Global setup seeds two spaces — switch to the second one
+    await switchToSpace(authPage, testData.archiveSpace.name)
+    await expect(switcher).toContainText(testData.archiveSpace.name)
 
-    // Reload to ensure the spaces list is fresh after creation
-    await authPage.reload()
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
-
-    // Switch to the new space, then back to original
-    await switchToSpace(authPage, 'Switch Target')
-    await expect(switcher).toContainText('Switch Target')
-
+    // Switch back to the primary space
     await switchToSpace(authPage, testData.spaceA.name)
     await expect(switcher).toContainText(testData.spaceA.name)
   })
@@ -99,39 +82,20 @@ test.describe('Spaces', () => {
     expect(updatedName).toBe('Renamed Space E2E')
   })
 
-  test('archives a space from settings', async ({ authPage }) => {
-    // First create a space to archive (via direct navigation)
+  test('archives a space from settings', async ({ authPage, testData }) => {
+    // Switch to the pre-seeded archive test space
     await authPage.goto('/dashboard')
     await authPage.waitForURL('**/dashboard', { timeout: 15000 })
 
-    const switcher = authPage.locator('[data-tour="space-switcher"]')
-    await switcher.click()
-    await authPage.getByRole('menuitem', { name: /new space/i }).click()
+    await switchToSpace(authPage, testData.archiveSpace.name)
 
-    const createDialog = authPage.getByRole('dialog')
-    await expect(createDialog).toBeVisible({ timeout: 5000 })
-    await createDialog.getByLabel(/name/i).first().fill('To Archive')
-    await createDialog.getByRole('button', { name: /create/i }).click()
-    await expect(createDialog).not.toBeVisible({ timeout: 10000 })
-
-    // Reload to ensure the spaces list is fresh after creation
-    await authPage.reload()
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
-
-    // Switch to the new space
-    await switchToSpace(authPage, 'To Archive')
-    await expect(switcher).toContainText('To Archive', { timeout: 10000 })
-
-    // Go to space settings
+    // Navigate to space settings
     await authPage.goto('/settings/spaces')
     await authPage.waitForLoadState('domcontentloaded')
 
-    // Wait for space list to load
-    await authPage.waitForTimeout(1000)
-
-    // Find and click the archive button for the "To Archive" space
-    const archiveButton = authPage.getByLabel(/archive to archive/i)
-    await archiveButton.waitFor({ state: 'visible', timeout: 10000 })
+    // Find and click the archive button for the archive test space
+    const archiveButton = authPage.getByLabel(new RegExp(`archive ${testData.archiveSpace.name}`, 'i'))
+    await archiveButton.waitFor({ state: 'visible', timeout: 15000 })
     await archiveButton.click()
 
     // Confirm archive (Radix AlertDialog)

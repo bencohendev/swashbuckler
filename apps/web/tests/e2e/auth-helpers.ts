@@ -95,18 +95,21 @@ export const twoUserTest = base.extend<TwoUserFixtures>({
 export async function switchToSpace(page: Page, spaceName: string) {
   const switcher = page.locator('[data-tour="space-switcher"]')
   await switcher.waitFor({ state: 'visible', timeout: 15000 })
-  await page.waitForLoadState('networkidle')
 
-  // Open the dropdown — retry if it didn't open (Radix menus can miss clicks during re-renders)
-  await switcher.click()
+  // Ensure any previous Radix dropdown animation has completed
   const menu = page.locator('[role="menu"]')
-  if (!(await menu.isVisible({ timeout: 2000 }).catch(() => false))) {
+  await menu.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+
+  // Open the dropdown — retry up to 5 times (Radix menus can miss clicks during re-renders)
+  for (let attempt = 0; attempt < 5; attempt++) {
     await switcher.click()
+    if (await menu.isVisible({ timeout: 2000 }).catch(() => false)) break
+    await page.waitForTimeout(500)
   }
 
   // Wait for the target space to appear and click it
   const item = page.getByRole('menuitem').filter({ hasText: spaceName })
-  await item.waitFor({ state: 'visible', timeout: 10000 })
+  await item.waitFor({ state: 'visible', timeout: 15000 })
   await item.click()
 
   // Wait for the switcher to show the selected space

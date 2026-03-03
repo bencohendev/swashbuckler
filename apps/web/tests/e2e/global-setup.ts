@@ -19,6 +19,7 @@ export interface TestData {
   userA: { id: string; email: string }
   userB: { id: string; email: string }
   spaceA: { id: string; name: string }
+  archiveSpace: { id: string; name: string }
   typeA: { id: string; slug: string }
   shareId: string
   sharedPageId: string
@@ -100,6 +101,18 @@ export default async function globalSetup(_config: FullConfig) {
     .single()
   if (spaceError) throw new Error(`Failed to query User A's space: ${spaceError.message}`)
 
+  // Create a second space for archive tests
+  const { data: archiveSpaceData, error: archiveSpaceError } = await admin
+    .from('spaces')
+    .insert({
+      name: 'Archive Test Space',
+      icon: '📁',
+      owner_id: userAId,
+    })
+    .select('id, name')
+    .single()
+  if (archiveSpaceError) throw new Error(`Failed to create archive space: ${archiveSpaceError.message}`)
+
   const { data: typeRows, error: typeError } = await admin
     .from('object_types')
     .select('id, slug')
@@ -161,6 +174,7 @@ export default async function globalSetup(_config: FullConfig) {
     userA: { id: userAId, email: USER_A_EMAIL },
     userB: { id: userBId, email: USER_B_EMAIL },
     spaceA: { id: spaceRows.id, name: spaceRows.name },
+    archiveSpace: { id: archiveSpaceData.id, name: archiveSpaceData.name },
     typeA: { id: typeRows.id, slug: typeRows.slug },
     shareId: shareData.id,
     sharedPageId: sharedPage.id,
