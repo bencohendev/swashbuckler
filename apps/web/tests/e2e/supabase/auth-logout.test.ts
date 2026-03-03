@@ -14,17 +14,30 @@ const TEST_DATA_PATH = path.join(AUTH_DIR, 'test-data.json')
  */
 async function loginFresh(browser: import('@playwright/test').Browser) {
   const context = await browser.newContext()
+
+  // Pre-set tutorial as completed BEFORE any page loads so the Zustand store
+  // reads the correct value at creation time (it reads localStorage once on init)
+  await context.addInitScript(() => {
+    localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
+  })
+
   const page = await context.newPage()
-
-  // Pre-set tutorial as completed so the onboarding dialog doesn't block interactions
   await page.goto('/login')
-  await page.evaluate(() => localStorage.setItem('swashbuckler:tutorialCompleted', 'true'))
-
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 15000 })
   await page.getByLabel('Email').fill(USER_A_EMAIL)
   await page.locator('#password').fill(USER_A_PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
   await page.waitForURL('**/dashboard', { timeout: 30000 })
+
+  // After client-side login, the auth cookie may not be ready for the first
+  // server render (router.push fires before the cookie setter completes).
+  // If the page lands in guest mode, reload to pick up the session cookie.
+  const welcomeBack = page.getByText('Welcome back')
+  if (!(await welcomeBack.isVisible({ timeout: 5000 }).catch(() => false))) {
+    await page.reload()
+  }
+  await expect(welcomeBack).toBeVisible({ timeout: 15000 })
+
   return { page, context }
 }
 

@@ -63,6 +63,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: /supabase\/auth-logout\.test\.ts$/,
       dependencies: ['supabase'],
+      fullyParallel: false,
       timeout: 60_000,
     },
   ],

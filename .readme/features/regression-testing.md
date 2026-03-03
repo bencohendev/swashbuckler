@@ -277,9 +277,13 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 
 ### Key Design Decisions
 
-- **Logout tests run last** — Supabase's `signOut()` defaults to `scope: 'global'` which revokes ALL server-side refresh tokens. Logout tests use isolated `supabase-logout` project with fresh login sessions to prevent invalidating shared storageState.
+- **Logout tests run last and sequentially** — Supabase's `signOut()` defaults to `scope: 'global'` which revokes ALL server-side refresh tokens. Logout tests use isolated `supabase-logout` project with fresh login sessions and `fullyParallel: false` to prevent concurrent logins for the same user (which causes session conflicts).
 - **Production build for tests** — `next build && next start` instead of `next dev` handles parallel test load much better and matches production behavior.
 - **User A's space renamed** — Global setup renames User A's auto-created space to "User A Space" to avoid duplicate "My Space" names (both users get auto-created spaces).
+- **Archive test space pre-seeded** — Global setup creates a second space ("Archive Test Space") for deterministic archive/switch tests. UI-based space creation is flaky due to `loadSpaces()` timing and space name uniqueness constraints (including archived spaces).
+- **Login cookie timing** — After `signInWithPassword`, the auth cookie may not be ready for the first SSR render (router.push fires before the cookie setter completes). `loginFresh` retries with a page reload if guest mode is detected.
+- **Zustand store timing** — `useTutorial` reads localStorage at module creation time. Tests use `context.addInitScript()` (not `page.evaluate()`) to set localStorage before any page JS runs.
+- **Radix dropdown retry** — `switchToSpace` helper waits for menu close animation and retries clicks up to 5 times to handle Radix dropdown missed clicks during React re-renders.
 - **Radix AlertDialog** — Archive/leave confirmations use `role="alertdialog"`, not `role="dialog"`. Tests use `getByRole('alertdialog')` accordingly.
 - **Collaboration sync timeouts** — Realtime tests use 30s assertion timeouts and wait for "Synced" status indicator before typing, accommodating Supabase Broadcast latency.
 
