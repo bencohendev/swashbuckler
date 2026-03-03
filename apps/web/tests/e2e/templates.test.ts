@@ -75,8 +75,10 @@ test.describe('Templates — regression tests', () => {
     await confirmBtn.click()
 
     // Template should be gone — either removed from list or empty state shown
-    await page.waitForTimeout(500)
-    await expect(page.getByText('Deletable Template').first()).not.toBeVisible({ timeout: 5000 })
+    // Use heading locator to avoid matching the toast message "Template ... deleted"
+    await expect(
+      page.getByRole('heading', { name: 'Deletable Template' }),
+    ).not.toBeVisible({ timeout: 5000 })
   })
 
   test('apply template to entry', async ({ guestPage: page }) => {

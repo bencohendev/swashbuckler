@@ -14,10 +14,11 @@ export const test = base.extend<{ guestPage: Page }>({
         path: '/',
       },
     ])
-    // Dismiss the onboarding tutorial via localStorage before navigating
+    // Dismiss the onboarding tutorial and analytics consent banner via localStorage before navigating
     await page.goto('/dashboard', { waitUntil: 'commit' })
     await page.evaluate(() => {
       localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
+      localStorage.setItem('swashbuckler:analyticsConsent', 'accepted')
     })
     // Navigate again so tutorial state is read on mount
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
