@@ -148,6 +148,10 @@ export default function LandingPage() {
           &middot;{" "}
           <Link href="/privacy" className="underline hover:text-white transition-colors">
             Privacy
+          </Link>{" "}
+          &middot;{" "}
+          <Link href="/terms" className="underline hover:text-white transition-colors">
+            Terms
           </Link>
         </p>
       </footer>
