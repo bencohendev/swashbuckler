@@ -7,15 +7,14 @@ import { cn } from '@/shared/lib/utils'
 import { useAuth } from '@/shared/lib/data'
 import { Button } from './ui/Button'
 
-interface GuestBannerProps {
-  isGuestServer?: boolean
-}
-
-export function GuestBanner({ isGuestServer = true }: GuestBannerProps) {
+export function GuestBanner() {
   const { isGuest, isLoading } = useAuth()
   const [isDismissed, setIsDismissed] = useState(false)
 
-  const isGuestResolved = isLoading ? isGuestServer : isGuest
+  // Default to not-guest during loading to avoid a flash when an authenticated
+  // user navigates to the dashboard and the server RSC payload is stale.
+  // Real guests see the banner appear after one imperceptible frame.
+  const isGuestResolved = isLoading ? false : isGuest
   const show = isGuestResolved && !isDismissed
 
   return (
