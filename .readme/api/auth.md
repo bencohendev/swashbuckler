@@ -7,7 +7,7 @@
 | Method | Provider |
 |--------|----------|
 | Email + Password | Supabase Auth |
-| Google OAuth | Supabase Auth (Social Login) |
+| Google OAuth | Direct flow → `signInWithIdToken` |
 | GitHub OAuth | Supabase Auth (Social Login) |
 
 ## Auth Flow
@@ -16,14 +16,24 @@
 sequenceDiagram
     participant B as Browser
     participant N as Next.js Server
+    participant G as Google
     participant S as Supabase Auth
 
     alt Email Login
         B->>S: signInWithPassword(email, password)
         S-->>B: session + JWT
-    else OAuth Login
-        B->>S: signInWithOAuth({ provider })
-        S->>B: redirect to provider
+    else Google OAuth (direct flow)
+        B->>G: redirect to accounts.google.com
+        G-->>B: redirect to /auth/google/callback?code=...
+        B->>N: GET /auth/google/callback
+        N->>G: exchange code for id_token
+        G-->>N: id_token
+        N->>S: signInWithIdToken({ provider: 'google', token })
+        S-->>N: session
+        N-->>B: redirect to /dashboard
+    else GitHub OAuth (Supabase-proxied)
+        B->>S: signInWithOAuth({ provider: 'github' })
+        S->>B: redirect to GitHub
         B->>S: OAuth callback
         S-->>B: redirect to /auth/callback
         B->>N: GET /auth/callback
