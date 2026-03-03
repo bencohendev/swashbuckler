@@ -61,9 +61,16 @@ export function Providers({ children }: ProvidersProps) {
       setIsAuthLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Skip SIGNED_OUT — the UI is about to redirect to /login.
+      // Clearing user here would briefly flash "guest" before navigation completes.
+      if (event === 'SIGNED_OUT') return
+
       setUser(session?.user ?? null)
-      setIsAuthLoading(false)
+      // Resolve loading immediately when we have a user (fast path from local session).
+      // For no-user cases, let getUser() above be the definitive resolver — it's
+      // near-instant for guests (no session to validate server-side).
+      if (session?.user) setIsAuthLoading(false)
     })
 
     return () => subscription.unsubscribe()
