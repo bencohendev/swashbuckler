@@ -34,7 +34,8 @@ test.describe('Spaces', () => {
     await expect(dialog).not.toBeVisible({ timeout: 30000 })
 
     // After creation, the app auto-switches to the new space — verify the switcher updates
-    await expect(switcher).toContainText('Test Space E2E', { timeout: 15000 })
+    // loadSpaces() can be slow in CI (single worker, cold Supabase)
+    await expect(switcher).toContainText('Test Space E2E', { timeout: 30000 })
   })
 
   test('switches between spaces', async ({ authPage, testData }) => {
