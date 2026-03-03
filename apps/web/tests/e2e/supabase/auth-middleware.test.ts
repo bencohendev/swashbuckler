@@ -26,14 +26,19 @@ base.describe('Auth Middleware — Unauthenticated', () => {
     await page.waitForURL('**/landing', { timeout: 15000 })
   })
 
-  base('/dashboard loads without redirect for unauthenticated user', async ({ page }) => {
-    // Clear any cookies
+  base('/dashboard with guest cookie loads in guest mode', async ({ page }) => {
+    // Clear any existing cookies, then set the guest cookie to opt in
     await page.context().clearCookies()
+    await page.context().addCookies([{
+      name: 'swashbuckler-guest',
+      value: 'true',
+      domain: 'localhost',
+      path: '/',
+    }])
     await page.goto('/dashboard')
-
-    // The app enters guest mode (no redirect to /login — guest mode allows access)
-    // Verify the dashboard loaded by checking the URL stayed on /dashboard
     await page.waitForLoadState('domcontentloaded')
-    expect(page.url()).toContain('/dashboard')
+
+    // Guest mode should load the dashboard with a Welcome heading
+    await expect(page.getByRole('heading', { name: /welcome/i })).toBeVisible({ timeout: 15000 })
   })
 })
