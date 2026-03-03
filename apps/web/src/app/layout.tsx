@@ -2,10 +2,6 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono, Cinzel, Lora, Orbitron, Share_Tech_Mono } from "next/font/google"
 import { Providers } from "./providers"
 import { getThemeScript } from "@/features/theme-builder"
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
-
-
 import "./globals.css"
 
 const geistSans = Geist({
@@ -57,8 +53,6 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: getThemeScript() }} />
         <Providers>
           {children}
-          <Analytics/>
-          <SpeedInsights/>
         </Providers>
       </body>
     </html>
