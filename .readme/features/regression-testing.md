@@ -29,15 +29,15 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 - **Infrastructure:** Supabase CLI `config.toml`, global setup/teardown, auth fixtures
 - **Global setup** (`tests/e2e/global-setup.ts`) — creates test users via Admin API, seeds space share + objects, saves `storageState` per user
 - **Auth fixtures** (`tests/e2e/auth-helpers.ts`) — single-user and two-user Playwright fixtures, graceful skip when Supabase not running
-- **9 e2e test files** covering ~46 tests in `tests/e2e/supabase/`:
-  - Auth login (8 tests) — valid/invalid login, rate limiting, error params, guest cookie clearing
+- **9 e2e test files** covering 43 tests in `tests/e2e/supabase/` (+ 2 setup tests):
+  - Auth login (6 tests) — valid/invalid login, rate limiting, fresh browser session, form fields
   - Auth signup (4 tests) — form fields, password validation, mismatch, confirmation UI
-  - Auth password reset (3 tests) — forgot-password form, expired link, reset form with session
-  - Auth middleware (6 tests) — route protection for auth and protected pages
-  - Auth logout (3 tests) — sign out, session cleared, guest cookie cleared
-  - Spaces (6 tests) — create, switch, rename, archive/restore, can't delete last
-  - Sharing (8 tests) — invite, permission update, revoke, shared user sees space, leave
-  - Sharing exclusions (4 tests) — exclusion panel, settings page, share dialog links
+  - Auth password reset (3 tests) — forgot-password form, form fields, reset form with session
+  - Auth middleware (5 tests) — route protection for auth pages + guest mode entry
+  - Auth logout (3 tests) — sign out, session cleared, login page shown (isolated sessions)
+  - Spaces (6 tests) — display, create, switch, rename, archive, can't delete last
+  - Sharing (8 tests) — open dialog, invite, permission update, revoke, shared user sees space/objects, leave
+  - Sharing exclusions (4 tests) — exclusion panel, settings page, share dialog links, share count
   - Collaboration (4 tests) — A→B sync, B→A sync, presence avatars, simultaneous editing
 - **CSP update** — `localhost:54321` added to `connect-src` in dev mode
 - **CI integration** — Supabase CLI setup, `supabase start`, credential extraction, `--project=supabase` run, cleanup
@@ -62,10 +62,10 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 
 | File | Tests | Area |
 |------|-------|------|
-| `supabase/auth-login.test.ts` | 8 | Auth |
+| `supabase/auth-login.test.ts` | 6 | Auth |
 | `supabase/auth-signup.test.ts` | 4 | Auth |
 | `supabase/auth-password-reset.test.ts` | 3 | Auth |
-| `supabase/auth-middleware.test.ts` | 6 | Auth |
+| `supabase/auth-middleware.test.ts` | 5 | Auth |
 | `supabase/auth-logout.test.ts` | 3 | Auth |
 | `supabase/spaces.test.ts` | 6 | Spaces |
 | `supabase/sharing.test.ts` | 8 | Sharing |
@@ -265,14 +265,23 @@ Comprehensive regression test coverage via automated Playwright e2e tests (guest
 
 - `supabase/config.toml` — local Supabase CLI config (email confirmations disabled, studio disabled, realtime enabled)
 - `supabase/seed.sql` — placeholder (data created programmatically)
-- `tests/e2e/global-setup.ts` — creates users via Admin API, seeds space share + objects, logs in via browser, saves `storageState`
+- `tests/e2e/global-setup.ts` — creates users via Admin API, seeds space share + objects, saves test data JSON
+- `tests/e2e/supabase-login.setup.ts` — Playwright setup project that logs in via browser and saves `storageState` per user
 - `tests/e2e/global-teardown.ts` — cleans up `tests/.auth/` directory
-- `tests/e2e/auth-helpers.ts` — `test` fixture (single user), `twoUserTest` fixture (two contexts), helper functions
+- `tests/e2e/auth-helpers.ts` — `test` fixture (single user), `twoUserTest` fixture (two contexts), `switchToSpace`, `openShareDialog`, `waitForCollabReady` helpers
 - `next.config.ts` — CSP includes `localhost:54321` in non-production
 - `.env.local.example` — `SUPABASE_SERVICE_ROLE_KEY` placeholder added
 - `.gitignore` — `tests/.auth/` excluded from git
-- Playwright config — `supabase` project with `testMatch: /supabase\/.+\.test\.ts$/`, existing projects have `testIgnore: /supabase\//`
+- `playwright.config.ts` — loads `.env.local` via `process.loadEnvFile()`; three Supabase projects: `supabase-setup` → `supabase` → `supabase-logout` (chained via dependencies); production build webServer (`next build && next start`)
 - Graceful degradation — all Supabase tests skip silently when local Supabase isn't running
+
+### Key Design Decisions
+
+- **Logout tests run last** — Supabase's `signOut()` defaults to `scope: 'global'` which revokes ALL server-side refresh tokens. Logout tests use isolated `supabase-logout` project with fresh login sessions to prevent invalidating shared storageState.
+- **Production build for tests** — `next build && next start` instead of `next dev` handles parallel test load much better and matches production behavior.
+- **User A's space renamed** — Global setup renames User A's auto-created space to "User A Space" to avoid duplicate "My Space" names (both users get auto-created spaces).
+- **Radix AlertDialog** — Archive/leave confirmations use `role="alertdialog"`, not `role="dialog"`. Tests use `getByRole('alertdialog')` accordingly.
+- **Collaboration sync timeouts** — Realtime tests use 30s assertion timeouts and wait for "Synced" status indicator before typing, accommodating Supabase Broadcast latency.
 
 ### Test Users
 

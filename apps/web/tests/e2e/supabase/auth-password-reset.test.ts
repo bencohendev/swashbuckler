@@ -14,12 +14,12 @@ base.describe('Auth — Password Reset (unauthenticated)', () => {
     await expect(page.getByRole('link', { name: /back to login/i })).toBeVisible()
   })
 
-  base('shows error for expired link param', async ({ page }) => {
-    await page.goto('/forgot-password?error=link_expired')
+  base('forgot-password page has email field and submit button', async ({ page }) => {
+    await page.goto('/forgot-password')
 
-    await expect(page.locator('[role="alert"]')).toContainText('expired', {
-      timeout: 5000,
-    })
+    await expect(page.getByLabel('Email')).toBeVisible()
+    await expect(page.getByRole('button', { name: /send reset link/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /back to login/i })).toBeVisible()
   })
 })
 

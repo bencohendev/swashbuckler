@@ -19,7 +19,7 @@ base.describe('Auth — Signup', () => {
     await page.locator('#confirmPassword').fill('short')
     await page.getByRole('button', { name: /create account/i }).click()
 
-    await expect(page.locator('[role="alert"]')).toContainText('at least 8 characters', {
+    await expect(page.getByRole('alert').filter({ hasText: 'at least 8 characters' })).toBeVisible({
       timeout: 5000,
     })
   })
@@ -32,7 +32,7 @@ base.describe('Auth — Signup', () => {
     await page.locator('#confirmPassword').fill('DifferentPassword1!')
     await page.getByRole('button', { name: /create account/i }).click()
 
-    await expect(page.locator('[role="alert"]')).toContainText('do not match', {
+    await expect(page.getByRole('alert').filter({ hasText: 'do not match' })).toBeVisible({
       timeout: 5000,
     })
   })
@@ -47,19 +47,7 @@ base.describe('Auth — Signup', () => {
     await page.locator('#confirmPassword').fill('StrongPassword1!')
     await page.getByRole('button', { name: /create account/i }).click()
 
-    // With email confirmations disabled in local Supabase, the form should
-    // either redirect to dashboard or show the confirmation UI
-    // (depending on Supabase config). Check for either outcome.
-    const confirmed = page
-      .getByText('Check your email')
-      .isVisible({ timeout: 10000 })
-      .catch(() => false)
-    const redirected = page
-      .waitForURL('**/dashboard', { timeout: 10000 })
-      .then(() => true)
-      .catch(() => false)
-
-    const result = await Promise.race([confirmed, redirected])
-    expect(result).toBeTruthy()
+    // The SignupForm always shows "Check your email" after successful signup
+    await expect(page.getByText('Check your email')).toBeVisible({ timeout: 15000 })
   })
 })

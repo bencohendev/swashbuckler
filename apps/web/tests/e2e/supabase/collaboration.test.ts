@@ -31,12 +31,12 @@ twoUserTest.describe('Collaboration', () => {
     const testText = `Collab A ${Date.now()}`
     await userAPage.keyboard.type(testText)
 
-    // Wait for sync
-    await userBPage.waitForTimeout(5000)
+    // Verify User A's editor has the text before checking sync
+    await expect(userAEditor).toContainText(testText, { timeout: 5000 })
 
-    // User B should see the text
+    // User B should see the text via Supabase Broadcast sync
     const userBEditor = userBPage.locator('[contenteditable="true"]').first()
-    await expect(userBEditor).toContainText(testText, { timeout: 15000 })
+    await expect(userBEditor).toContainText(testText, { timeout: 30000 })
   })
 
   twoUserTest('User B types text that User A sees', async ({
@@ -65,12 +65,12 @@ twoUserTest.describe('Collaboration', () => {
     const testText = `Collab B ${Date.now()}`
     await userBPage.keyboard.type(testText)
 
-    // Wait for sync
-    await userAPage.waitForTimeout(5000)
+    // Verify User B's editor has the text before checking sync
+    await expect(userBEditor).toContainText(testText, { timeout: 5000 })
 
-    // User A should see the text
+    // User A should see the text via Supabase Broadcast sync
     const userAEditor = userAPage.locator('[contenteditable="true"]').first()
-    await expect(userAEditor).toContainText(testText, { timeout: 15000 })
+    await expect(userAEditor).toContainText(testText, { timeout: 30000 })
   })
 
   twoUserTest('shows presence avatars when both users are editing', async ({
@@ -154,13 +154,10 @@ twoUserTest.describe('Collaboration', () => {
       userBPage.keyboard.type(textB),
     ])
 
-    // Wait for sync
-    await userAPage.waitForTimeout(5000)
-
-    // Both texts should be present in both editors
-    await expect(userAEditor).toContainText(textA, { timeout: 15000 })
-    await expect(userBEditor).toContainText(textA, { timeout: 15000 })
-    await expect(userAEditor).toContainText(textB, { timeout: 15000 })
-    await expect(userBEditor).toContainText(textB, { timeout: 15000 })
+    // Both texts should be present in both editors via Supabase Broadcast sync
+    await expect(userAEditor).toContainText(textA, { timeout: 30000 })
+    await expect(userBEditor).toContainText(textA, { timeout: 30000 })
+    await expect(userAEditor).toContainText(textB, { timeout: 30000 })
+    await expect(userBEditor).toContainText(textB, { timeout: 30000 })
   })
 })

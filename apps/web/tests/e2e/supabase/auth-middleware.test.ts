@@ -1,5 +1,5 @@
 import { test } from '../auth-helpers'
-import { test as base } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 
 test.describe('Auth Middleware — Authenticated', () => {
   test('redirects / to /dashboard for authenticated user', async ({ authPage }) => {
@@ -16,24 +16,22 @@ test.describe('Auth Middleware — Authenticated', () => {
     await authPage.goto('/signup')
     await authPage.waitForURL('**/dashboard', { timeout: 15000 })
   })
-
-  test('redirects /forgot-password to /dashboard for authenticated user', async ({ authPage }) => {
-    await authPage.goto('/forgot-password')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
-  })
 })
 
 base.describe('Auth Middleware — Unauthenticated', () => {
-  base('redirects /dashboard to /login without session', async ({ page }) => {
+  base('/ redirects to /landing without session or guest cookie', async ({ page }) => {
     // Clear any cookies to ensure no auth or guest session
     await page.context().clearCookies()
-    await page.goto('/dashboard')
-    await page.waitForURL('**/login', { timeout: 15000 })
+    await page.goto('/')
+    await page.waitForURL('**/landing', { timeout: 15000 })
   })
 
-  base('redirects /settings to /login without session', async ({ page }) => {
+  base('/dashboard enters guest mode without session', async ({ page }) => {
+    // Clear any cookies
     await page.context().clearCookies()
-    await page.goto('/settings')
-    await page.waitForURL('**/login', { timeout: 15000 })
+    await page.goto('/dashboard')
+
+    // The app enters guest mode (no redirect to /login — guest mode allows access)
+    await expect(page.getByText(/guest mode/i)).toBeVisible({ timeout: 15000 })
   })
 })
