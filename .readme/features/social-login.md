@@ -4,14 +4,15 @@
 
 ## Overview
 
-Add Google and GitHub as OAuth sign-in options alongside the existing email/password flow. Supabase Auth has built-in support for both providers — implementation is configuration + UI.
+Add Google and GitHub as OAuth sign-in options alongside the existing email/password flow. Google uses a **direct OAuth flow** (app redirects to Google directly) so the consent screen shows the app name instead of the Supabase subdomain. GitHub uses Supabase's built-in OAuth proxy.
 
 ## Decisions
 
 | Decision | Choice | Why |
 |----------|--------|-----|
 | OAuth providers | Google + GitHub | Covers most users; both free, both supported natively by Supabase |
-| Token handling | Supabase-managed | We never see or store OAuth tokens — Supabase handles the full flow |
+| Google token handling | Direct flow with `signInWithIdToken` | App exchanges code with Google directly, passes `id_token` to Supabase — consent screen shows app name instead of Supabase subdomain |
+| GitHub token handling | Supabase-managed | Supabase handles the full GitHub OAuth flow via `signInWithOAuth` |
 | Data received | Email, name, avatar | Basic profile scopes only — no sensitive/restricted scopes needed |
 | Google scope level | Non-sensitive (`openid`, `email`, `profile`) | Avoids security audit requirement and restrictive verification process |
 
@@ -57,25 +58,25 @@ All OAuth costs are effectively **$0** at current scale.
 
 ### Liability exposure
 
-Minimal, because Supabase handles the OAuth token exchange and session management. The app only receives basic profile data (email, name, avatar URL) and never touches raw OAuth tokens.
+Minimal. For Google, the app exchanges the authorization code server-side and only passes the `id_token` to Supabase via `signInWithIdToken` — access/refresh tokens from Google are not stored. For GitHub, Supabase handles the full flow. In both cases, the app only uses basic profile data (email, name, avatar URL).
 
 ## Implementation
 
-### Setup (Supabase dashboard)
+### Setup
 
-1. Create Google OAuth credentials in Google Cloud Console
+1. Create Google OAuth credentials in Google Cloud Console — add redirect URIs for `/auth/google/callback` (dev + prod)
 2. Create GitHub OAuth App in GitHub developer settings
-3. Add client IDs and secrets to Supabase Auth provider config
-4. Configure redirect URLs
+3. Add client IDs and secrets to Supabase Auth provider config (Google Client ID must match `NEXT_PUBLIC_GOOGLE_CLIENT_ID`)
+4. Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local`
+5. Configure redirect URLs
 
-### Key files (estimated)
+### Key files
 
 | File | Role |
 |------|------|
-| `src/features/auth/components/LoginForm.tsx` | Add Google/GitHub sign-in buttons |
-| `src/features/auth/components/SignupForm.tsx` | Add Google/GitHub sign-up buttons |
-| `src/app/auth/callback/route.ts` | Already exists — handles OAuth redirect |
-| `src/shared/lib/data/supabase.ts` | `signInWithOAuth()` calls |
+| `src/features/auth/components/OAuthButtons.tsx` | Google (direct redirect) + GitHub (`signInWithOAuth`) buttons |
+| `src/app/auth/google/callback/route.ts` | Server-side Google code exchange + `signInWithIdToken` |
+| `src/app/auth/callback/route.ts` | GitHub OAuth + email confirmation + password reset callback |
 
 ### UI
 

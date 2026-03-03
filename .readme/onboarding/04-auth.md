@@ -120,14 +120,37 @@ const storageMode: StorageMode = user ? 'supabase' : 'local'
 
 7. The login form calls `router.push("/dashboard")` and `router.refresh()` to navigate.
 
-### OAuth Login (Google/GitHub)
+### OAuth Login
+
+Google and GitHub use different OAuth strategies:
+
+#### Google (Direct Flow)
 
 **File:** `apps/web/src/features/auth/components/OAuthButtons.tsx`
 
-1. User clicks "Continue with Google" or "Continue with GitHub".
-2. `supabase.auth.signInWithOAuth({ provider, options: { redirectTo } })` is called, with `redirectTo` set to `${window.location.origin}/auth/callback`.
-3. The browser is redirected to the OAuth provider's consent screen.
-4. After the user authenticates, the provider redirects back to `/auth/callback?code=...`.
+1. User clicks "Continue with Google".
+2. The app builds a Google OAuth URL directly (with `client_id`, `redirect_uri`, `state` for CSRF, `scope=openid email profile`) and redirects the browser to `accounts.google.com`.
+3. The Google consent screen shows the app name (not the Supabase subdomain).
+4. After the user authenticates, Google redirects back to `/auth/google/callback?code=...&state=...`.
+
+**File:** `apps/web/src/app/auth/google/callback/route.ts`
+
+5. The callback route handler runs server-side:
+   - Verifies the CSRF `state` parameter matches the cookie set before redirect
+   - Exchanges the authorization code with Google's token endpoint for an `id_token`
+   - Calls `supabase.auth.signInWithIdToken({ provider: 'google', token: id_token })` to create a Supabase session
+   - Redirects to `/dashboard` on success
+
+**Why direct?** When using `signInWithOAuth`, Supabase's server initiates the OAuth request, so Google's consent screen shows "to continue to *.supabase.co". The direct flow makes the request come from our domain.
+
+#### GitHub (Supabase-Proxied Flow)
+
+**File:** `apps/web/src/features/auth/components/OAuthButtons.tsx`
+
+1. User clicks "Continue with GitHub".
+2. `supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo } })` is called, with `redirectTo` set to `${window.location.origin}/auth/callback`.
+3. The browser is redirected to GitHub's consent screen (via Supabase).
+4. After the user authenticates, GitHub redirects back through Supabase to `/auth/callback?code=...`.
 
 **File:** `apps/web/src/app/auth/callback/route.ts`
 
@@ -151,7 +174,7 @@ export async function GET(request: NextRequest) {
 ```
 
 6. `exchangeCodeForSession(code)` exchanges the PKCE authorization code for access/refresh tokens and writes them to cookies on the response.
-7. The `next` parameter supports the password reset flow: `ForgotPasswordForm` sets `redirectTo` to `/auth/callback?next=/reset-password`, so after clicking the email link the user lands on the password reset page.
+7. The `next` parameter also supports the password reset flow: `ForgotPasswordForm` sets `redirectTo` to `/auth/callback?next=/reset-password`, so after clicking the email link the user lands on the password reset page.
 8. If the code exchange fails or no code is present, the user is redirected to `/login`.
 
 ### Guest Mode

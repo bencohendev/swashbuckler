@@ -19,7 +19,8 @@ Email/password and OAuth authentication via Supabase Auth, with a guest mode fal
 
 - `src/features/auth/components/` — LoginForm, SignupForm, ForgotPasswordForm, ResetPasswordForm, OAuthButtons
 - `src/app/(auth)/` — login, signup, forgot-password, and reset-password pages
-- `src/app/auth/callback/route.ts` — server-side Route Handler for PKCE code exchange
+- `src/app/auth/callback/route.ts` — server-side Route Handler for GitHub OAuth, email confirmation, and password reset (PKCE code exchange)
+- `src/app/auth/google/callback/route.ts` — server-side Route Handler for direct Google OAuth (code exchange with Google + `signInWithIdToken`)
 - `src/shared/lib/supabase/middleware.ts` — session refresh, auth page redirects, protected route guard
 - `src/shared/hooks/useSessionGuard.ts` — client-side session expiry detection (query + mutation cache)
 - Guest mode enabled by guest cookie; uses Dexie for storage
@@ -60,7 +61,7 @@ All auth forms wrap Supabase calls in try/catch and display network errors with 
 
 ### Callback route error handling
 
-The auth callback route (`src/app/auth/callback/route.ts`) handles failures at every step:
+The general auth callback route (`src/app/auth/callback/route.ts`) handles GitHub OAuth, email confirmation, and password reset failures:
 
 | Scenario | Redirect |
 |----------|----------|
@@ -70,6 +71,16 @@ The auth callback route (`src/app/auth/callback/route.ts`) handles failures at e
 | Code exchange failure (password reset) | `/forgot-password?error=link_expired` |
 | Code exchange failure (account linking) | `/settings/account?error=link_failed` |
 | Code exchange failure (general) | `/login?error=link_expired` |
+
+The Google OAuth callback route (`src/app/auth/google/callback/route.ts`) handles direct Google OAuth failures:
+
+| Scenario | Redirect |
+|----------|----------|
+| Google denied consent | `/login?error=oauth_denied` |
+| CSRF state mismatch | `/login?error=oauth_error` |
+| Missing env vars (Client ID, Secret, Supabase) | `/login?error=oauth_error` |
+| Google token exchange failure | `/login?error=oauth_error` |
+| `signInWithIdToken` failure | `/login?error=oauth_error` |
 
 ### Login page error display
 
@@ -135,9 +146,11 @@ OAuth requires credentials in three places: the provider console, Supabase, and 
 | Setting | Value |
 |---|---|
 | Supabase project URL | `https://nnhhflrdvrtcutibchfv.supabase.co` |
-| Provider callback URL | `https://nnhhflrdvrtcutibchfv.supabase.co/auth/v1/callback` |
-| App redirect URL (dev) | `http://localhost:3000/auth/callback` |
-| App redirect URL (prod) | `https://<production-domain>/auth/callback` |
+| GitHub provider callback URL | `https://nnhhflrdvrtcutibchfv.supabase.co/auth/v1/callback` |
+| GitHub app redirect URL (dev) | `http://localhost:3000/auth/callback` |
+| GitHub app redirect URL (prod) | `https://<production-domain>/auth/callback` |
+| Google redirect URI (dev) | `http://localhost:3000/auth/google/callback` |
+| Google redirect URI (prod) | `https://<production-domain>/auth/google/callback` |
 
 ### GitHub OAuth
 
@@ -146,14 +159,17 @@ OAuth requires credentials in three places: the provider console, Supabase, and 
    - Authorization callback URL: `https://nnhhflrdvrtcutibchfv.supabase.co/auth/v1/callback`
 2. **Supabase** → Authentication → Providers → GitHub → Enable, paste Client ID + Secret
 
-### Google OAuth
+### Google OAuth (Direct Flow)
+
+Google OAuth uses a **direct flow** — the app redirects to Google directly instead of going through Supabase's OAuth proxy. This makes the Google consent screen show the app name instead of the Supabase subdomain.
 
 1. **Google Cloud Console** → APIs & Services → Credentials
    - Configure OAuth consent screen (External, default email/profile scopes)
    - Create OAuth client ID (Web application)
    - Authorized JS origins: `http://localhost:3000` + production domain
-   - Authorized redirect URI: `https://nnhhflrdvrtcutibchfv.supabase.co/auth/v1/callback`
-2. **Supabase** → Authentication → Providers → Google → Enable, paste Client ID + Secret
+   - Authorized redirect URIs: `http://localhost:3000/auth/google/callback` + `https://<production-domain>/auth/google/callback`
+2. **Supabase** → Authentication → Providers → Google → Enable, paste the **same** Client ID + Secret (must match so `signInWithIdToken` accepts the token audience)
+3. **Environment variables** — `NEXT_PUBLIC_GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local`
 
 ### Supabase URL Configuration
 
@@ -161,13 +177,24 @@ In **Supabase → Authentication → URL Configuration**:
 - **Site URL:** production URL
 - **Redirect URLs:** `http://localhost:3000/auth/callback` + production equivalent
 
-### How the flow works
+### How the flows work
 
-1. Client calls `supabase.auth.signInWithOAuth()` with `redirectTo: ${window.location.origin}/auth/callback`
-2. Supabase redirects to the provider (GitHub/Google) for authorization
-3. Provider redirects back to `https://nnhhflrdvrtcutibchfv.supabase.co/auth/v1/callback`
+#### Google (direct flow)
+
+1. Client builds Google OAuth URL with `client_id`, `redirect_uri`, `state` (CSRF token stored in cookie), and `scope=openid email profile`
+2. Browser redirects to `accounts.google.com` — consent screen shows the app name
+3. Google redirects back to `/auth/google/callback?code=...&state=...`
+4. Server-side Route Handler verifies CSRF state, exchanges code with Google's token endpoint for an `id_token`
+5. Calls `supabase.auth.signInWithIdToken({ provider: 'google', token: id_token })` to create the Supabase session
+6. Redirects to `/dashboard` on success, `/login?error=...` on failure
+
+#### GitHub (Supabase-proxied flow)
+
+1. Client calls `supabase.auth.signInWithOAuth({ provider: 'github' })` with `redirectTo: ${window.location.origin}/auth/callback`
+2. Supabase redirects to GitHub for authorization
+3. GitHub redirects back to `https://nnhhflrdvrtcutibchfv.supabase.co/auth/v1/callback`
 4. Supabase exchanges the code and redirects to the app's `/auth/callback` route with a `code` param
-5. The app's server-side Route Handler (`src/app/auth/callback/route.ts`) calls `exchangeCodeForSession(code)` and redirects to `/dashboard` (or the `next` param destination)
+5. The app's server-side Route Handler calls `exchangeCodeForSession(code)` and redirects to `/dashboard`
 6. On failure (denied consent, expired code, missing env vars), redirects to `/login` with an error code — see Error Handling section
 
 ## Known Issues
