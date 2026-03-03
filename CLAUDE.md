@@ -33,6 +33,7 @@ After adding, modifying, or fixing features, run these checks:
 - Never commit directly on `dev`, `main`, or other environment branches
 - Use a descriptive branch name (e.g., `worktree-add-toast-notifications`)
 - Merge the worktree branch back into the target branch only when work is complete and verified
+- **Merging from a worktree:** You cannot check out branches that are already checked out in another worktree. To merge, `cd` to the main repo root (`/Users/bencohen/dev/personal/swashbuckler`), then run `git checkout <target-branch> && git pull origin <target-branch> && git merge <worktree-branch> --no-edit`. Default target is `dev` unless told otherwise.
 
 ## Task Management
 
