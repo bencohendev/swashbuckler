@@ -62,14 +62,14 @@ export const twoUserTest = base.extend<TwoUserFixtures>({
     await use(data)
   },
 
-  userAContext: async ({ browser }, use) => {
+  userAContext: async ({ browser, testData: _testData }, use) => {
     const storagePath = path.join(AUTH_DIR, 'userA.json')
     const context = await browser.newContext({ storageState: storagePath })
     await use(context)
     await context.close()
   },
 
-  userBContext: async ({ browser }, use) => {
+  userBContext: async ({ browser, testData: _testData }, use) => {
     const storagePath = path.join(AUTH_DIR, 'userB.json')
     const context = await browser.newContext({ storageState: storagePath })
     await use(context)
