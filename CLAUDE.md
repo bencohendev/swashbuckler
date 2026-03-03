@@ -15,11 +15,14 @@
 ## Testing & Verification
 
 After adding, modifying, or fixing features, run these checks:
-- **Tests:** `cd apps/web && npx vitest run` — don't let existing tests break; update them to match code changes
+- **Unit tests:** `cd apps/web && npx vitest run` — don't let existing tests break; update them to match code changes
+- **E2e tests:** `cd apps/web && npx playwright test` — required for user-facing changes; run the full suite to catch regressions
 - **Types:** `cd apps/web && npx tsc --noEmit` — all code must pass typecheck with no errors
 - **Lint:** `npm run lint` (from repo root) — don't introduce new lint errors (pre-existing warnings are tracked separately)
 
 ### Test conventions
+- Unit test files live alongside source or in `apps/web/tests/` — colocate with the code they test
+- E2e test files live in `apps/web/tests/e2e/` — use Playwright, tests run against `http://localhost:3000`
 - Test fixtures live in `apps/web/tests/fixtures/` — keep them in sync with current schemas
 - Zod 4 requires RFC4122-compliant UUIDs in tests (no synthetic `00000000-...` IDs)
 
@@ -54,13 +57,16 @@ This is the required workflow for all feature work. **Do not skip steps.**
 - Plan mode files in `.claude/plans/` are scratch — after approval, the permanent spec must be in `.readme/features/` and the plan file deleted
 
 ### 4. Implement
-- Enter a worktree, implement, verify (tests, types, lint)
+- Enter a worktree, implement, and verify (see Testing & Verification below)
+- **Unit tests:** add or update unit tests for new/changed logic — all features and bug fixes must have corresponding unit test coverage
+- **E2e tests:** required for user-facing changes — add Playwright tests in `apps/web/tests/e2e/` that cover the key user flows affected by the change; internal refactors without visible behavior changes can skip e2e
+- Run all checks (unit tests, e2e tests, types, lint) before finishing
 
 ### 5. Finish
-- Update the spec with any implementation details or changes from the original plan
+- **Update the spec** in `.readme/features/` with any implementation details or changes from the original plan
+- **Update user-facing docs** in `apps/docs/content/docs/` — required for any change that affects user-visible behavior; create a new page if needed (see User-Facing Documentation below)
 - Set `**Status:**` to `Done`
 - Move the feature from the Planned table to the Implemented table in `index.md` (if it was planned)
-- If the change affects user-facing behavior, update the corresponding page in `apps/docs/content/docs/` (or create one if needed — see User-Facing Documentation below)
 - Commit doc updates and merge to `dev`
 
 ## Documentation

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { createClient } from "@/shared/lib/supabase/client"
 import { Button } from "@/shared/components/ui/Button"
 import { Input } from "@/shared/components/ui/Input"
@@ -15,9 +16,17 @@ import {
   CardTitle,
 } from "@/shared/components/ui/Card"
 
+const ERROR_MESSAGES: Record<string, string> = {
+  link_expired: "That reset link has expired. Enter your email to get a new one.",
+}
+
 export function ForgotPasswordForm() {
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get("error")
   const [email, setEmail] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(
+    urlError ? ERROR_MESSAGES[urlError] ?? "Something went wrong. Please try again." : null
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -26,19 +35,24 @@ export function ForgotPasswordForm() {
     setError(null)
     setIsLoading(true)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    })
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        setIsLoading(false)
+        return
+      }
+
+      setIsSubmitted(true)
       setIsLoading(false)
-      return
+    } catch {
+      setError("Unable to connect. Please check your internet connection and try again.")
+      setIsLoading(false)
     }
-
-    setIsSubmitted(true)
-    setIsLoading(false)
   }
 
   if (isSubmitted) {
@@ -87,7 +101,7 @@ export function ForgotPasswordForm() {
             />
           </div>
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-destructive" role="alert">{error}</p>
           )}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Sending link..." : "Send reset link"}

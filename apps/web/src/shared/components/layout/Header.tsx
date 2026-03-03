@@ -14,6 +14,7 @@ import {
 } from "@/shared/components/ui/DropdownMenu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
 import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, PaletteIcon, SearchIcon, SettingsIcon, SunIcon, SwordsIcon, UserIcon, UserPlusIcon, ZapIcon } from "lucide-react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useAuth, useCurrentSpace } from "@/shared/lib/data"
 import { useSpacePermission } from "@/features/sharing"
 import { useSidebar } from "@/shared/stores/sidebar"
@@ -27,6 +28,7 @@ export function Header({ email }: { email?: string }) {
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { setMobileOpen } = useSidebar()
+  const queryClient = useQueryClient()
   const { canEdit } = useSpacePermission()
   const isGuest = isLoading ? !email : !user
   const resolvedEmail = user?.email ?? email
@@ -67,8 +69,14 @@ export function Header({ email }: { email?: string }) {
   }, [canEdit])
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch {
+      // Proceed with cleanup even if signOut fails
+    }
+    document.cookie = "swashbuckler-guest=; path=/; max-age=0"
+    queryClient.clear()
     router.push("/login")
     router.refresh()
   }

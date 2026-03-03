@@ -310,9 +310,15 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       }
     }
 
+    // Optimistic update: insert the new space into ownedSpaces immediately
+    // so that switchSpace(id) resolves currentSpace without waiting for refetch
+    setOwnedSpaces(prev => [...prev, newSpace])
+    switchSpace(newSpace.id)
+
+    // Still emit to sync the full list from the server
     emit('spaces')
     return { data: newSpace }
-  }, [spacesClient, supabase])
+  }, [spacesClient, supabase, switchSpace])
 
   const update = useCallback(async (id: string, input: { name?: string; icon?: string }) => {
     const result = await spacesClient.update(id, input)

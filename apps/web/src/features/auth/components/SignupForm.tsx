@@ -27,6 +27,8 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -44,22 +46,50 @@ export function SignupForm() {
 
     setIsLoading(true)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        setIsLoading(false)
+        return
+      }
+
+      setConfirmationSent(true)
+    } catch {
+      setError("Unable to connect. Please check your internet connection and try again.")
       setIsLoading(false)
-      return
+    }
+  }
+
+  async function handleResend() {
+    setIsResending(true)
+    setResendMessage(null)
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+      })
+
+      if (error) {
+        setResendMessage(error.message)
+      } else {
+        setResendMessage("Confirmation email resent. Check your inbox.")
+      }
+    } catch {
+      setResendMessage("Unable to resend. Please check your internet connection.")
     }
 
-    setConfirmationSent(true)
+    setIsResending(false)
   }
 
   if (confirmationSent) {
@@ -77,6 +107,21 @@ export function SignupForm() {
             sign in.
           </CardDescription>
         </CardHeader>
+        <CardContent className="text-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleResend}
+            disabled={isResending}
+          >
+            {isResending ? "Resending..." : "Resend confirmation email"}
+          </Button>
+          {resendMessage && (
+            <p className="mt-2 text-sm text-muted-foreground" role="status">
+              {resendMessage}
+            </p>
+          )}
+        </CardContent>
         <CardFooter className="justify-center">
           <Link href="/login">
             <Button variant="outline">Go to sign in</Button>

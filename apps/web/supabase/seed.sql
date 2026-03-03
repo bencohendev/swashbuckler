@@ -1,0 +1,2 @@
+-- Seed data is created programmatically in tests/e2e/global-setup.ts
+-- via the Supabase Admin API for full control over UUIDs and ordering.

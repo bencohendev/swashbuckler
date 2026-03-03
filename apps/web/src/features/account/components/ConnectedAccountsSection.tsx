@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { User, UserIdentity } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import { Button } from '@/shared/components/ui/Button'
@@ -13,10 +14,15 @@ const PROVIDERS = [
 ] as const
 
 export function ConnectedAccountsSection({ user }: { user: User }) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const identities = user.identities ?? []
   const [isLinking, setIsLinking] = useState<string | null>(null)
   const [isUnlinking, setIsUnlinking] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const urlError = searchParams.get("error")
+  const [error, setError] = useState<string | null>(
+    urlError === "link_failed" ? "Failed to link account. Please try again." : null
+  )
 
   function getIdentity(provider: string): UserIdentity | undefined {
     return identities.find(i => i.provider === provider)
@@ -25,20 +31,25 @@ export function ConnectedAccountsSection({ user }: { user: User }) {
   async function handleLink(provider: 'google' | 'github') {
     setIsLinking(provider)
     setError(null)
-    const supabase = createClient()
 
-    const { error: linkError } = await supabase.auth.linkIdentity({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/settings/account`,
-      },
-    })
+    try {
+      const supabase = createClient()
+      const { error: linkError } = await supabase.auth.linkIdentity({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/settings/account`,
+        },
+      })
 
-    if (linkError) {
-      setError(linkError.message)
+      if (linkError) {
+        setError(linkError.message)
+        setIsLinking(null)
+      }
+      // If successful, the browser redirects to OAuth provider
+    } catch {
+      setError('Unable to connect. Please try again.')
       setIsLinking(null)
     }
-    // If successful, the browser redirects to OAuth provider
   }
 
   async function handleUnlink(identity: UserIdentity) {
@@ -49,12 +60,18 @@ export function ConnectedAccountsSection({ user }: { user: User }) {
 
     setIsUnlinking(identity.provider)
     setError(null)
-    const supabase = createClient()
 
-    const { error: unlinkError } = await supabase.auth.unlinkIdentity(identity)
+    try {
+      const supabase = createClient()
+      const { error: unlinkError } = await supabase.auth.unlinkIdentity(identity)
 
-    if (unlinkError) {
-      setError(unlinkError.message)
+      if (unlinkError) {
+        setError(unlinkError.message)
+      } else {
+        router.refresh()
+      }
+    } catch {
+      setError('Unable to connect. Please try again.')
     }
     setIsUnlinking(null)
   }
@@ -107,7 +124,7 @@ export function ConnectedAccountsSection({ user }: { user: User }) {
           )
         })}
       </div>
-      {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+      {error && <p className="mt-3 text-sm text-destructive" role="alert">{error}</p>}
     </div>
   )
 }
