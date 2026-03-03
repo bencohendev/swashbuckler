@@ -4,18 +4,46 @@ import { useState } from "react"
 import { createClient } from "@/shared/lib/supabase/client"
 import { Button } from "@/shared/components/ui/Button"
 
+function generateState(): string {
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("")
+}
+
+function handleGoogleLogin() {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  if (!clientId) {
+    throw new Error("Google Client ID is not configured")
+  }
+
+  const state = generateState()
+  document.cookie = `google_oauth_state=${state}; path=/; max-age=600; samesite=lax`
+
+  const redirectUri = `${window.location.origin}/auth/google/callback`
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    prompt: "select_account",
+  })
+
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
+}
+
 export function OAuthButtons() {
   const [isLoading, setIsLoading] = useState<"google" | "github" | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleOAuthLogin(provider: "google" | "github") {
-    setIsLoading(provider)
+  async function handleGitHubLogin() {
+    setIsLoading("github")
     setError(null)
 
     try {
       const supabase = createClient()
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: "github",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -31,6 +59,17 @@ export function OAuthButtons() {
     }
   }
 
+  function onGoogleClick() {
+    setIsLoading("google")
+    setError(null)
+    try {
+      handleGoogleLogin()
+    } catch {
+      setError("Unable to connect. Please try again.")
+      setIsLoading(null)
+    }
+  }
+
   return (
     <div className="grid gap-2">
       {error && (
@@ -38,7 +77,7 @@ export function OAuthButtons() {
       )}
       <Button
         variant="outline"
-        onClick={() => handleOAuthLogin("google")}
+        onClick={onGoogleClick}
         disabled={isLoading !== null}
         loading={isLoading === "google"}
       >
@@ -47,7 +86,7 @@ export function OAuthButtons() {
       </Button>
       <Button
         variant="outline"
-        onClick={() => handleOAuthLogin("github")}
+        onClick={handleGitHubLogin}
         disabled={isLoading !== null}
         loading={isLoading === "github"}
       >
