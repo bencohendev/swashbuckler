@@ -6,7 +6,8 @@ test.describe('Spaces', () => {
     await authPage.waitForURL('**/dashboard', { timeout: 15000 })
 
     const switcher = authPage.locator('[data-tour="space-switcher"]')
-    await expect(switcher).toContainText(testData.spaceA.name)
+    // Space data loads asynchronously — wait for it to appear
+    await expect(switcher).toContainText(testData.spaceA.name, { timeout: 15000 })
   })
 
   test('creates a new space', async ({ authPage }) => {

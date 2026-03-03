@@ -93,18 +93,28 @@ export const twoUserTest = base.extend<TwoUserFixtures>({
 
 /** Switch to a shared space in the sidebar space switcher. */
 export async function switchToSpace(page: Page, spaceName: string) {
+  const MAX_RETRIES = 5
   const switcher = page.locator('[data-tour="space-switcher"]')
   await switcher.waitFor({ state: 'visible', timeout: 15000 })
 
-  // Ensure any previous Radix dropdown animation has completed
   const menu = page.locator('[role="menu"]')
-  await menu.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
 
-  // Open the dropdown — retry up to 5 times (Radix menus can miss clicks during re-renders)
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    // Wait for any existing menu to fully close before clicking
+    await menu.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+
     await switcher.click()
-    if (await menu.isVisible({ timeout: 2000 }).catch(() => false)) break
-    await page.waitForTimeout(500)
+
+    try {
+      await menu.waitFor({ state: 'visible', timeout: 3000 })
+      break // Menu opened successfully
+    } catch {
+      // Menu didn't open — press Escape to force close any stuck state, then retry
+      await page.keyboard.press('Escape')
+      if (attempt === MAX_RETRIES - 1) {
+        throw new Error(`Failed to open space switcher after ${MAX_RETRIES} attempts`)
+      }
+    }
   }
 
   // Wait for the target space to appear and click it
