@@ -20,6 +20,13 @@ for (const { email, password, filename } of users) {
     const testDataPath = path.join(AUTH_DIR, 'test-data.json')
     setup.skip(!fs.existsSync(testDataPath), 'Supabase not running — skipping auth setup')
 
+    // Dismiss analytics consent banner and tutorial before login
+    await page.goto('/login', { waitUntil: 'commit' })
+    await page.evaluate(() => {
+      localStorage.setItem('swashbuckler:analyticsConsent', 'accepted')
+      localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
+    })
+
     await page.goto('/login')
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 15000 })
 

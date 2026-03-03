@@ -6,7 +6,8 @@ base.describe('Auth — Password Reset (unauthenticated)', () => {
     await page.goto('/forgot-password')
 
     await expect(page.getByText('Reset your password')).toBeVisible()
-    await page.getByLabel('Email').fill('user-a@test.localhost')
+    // Use a valid email domain — remote Supabase rejects .localhost as invalid
+    await page.getByLabel('Email').fill('reset-test@example.com')
     await page.getByRole('button', { name: /send reset link/i }).click()
 
     // Should show "Check your email" confirmation

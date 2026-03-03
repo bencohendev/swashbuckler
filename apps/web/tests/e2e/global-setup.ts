@@ -28,7 +28,8 @@ export interface TestData {
 
 async function isSupabaseReachable(): Promise<boolean> {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+    // Use auth health endpoint — the REST endpoint returns 401 with newer publishable key formats
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/health`, {
       headers: { apikey: SUPABASE_ANON_KEY },
     })
     return res.ok
