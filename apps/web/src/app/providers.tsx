@@ -9,6 +9,7 @@ import { DataProvider, SpaceProvider, useCurrentSpace } from '@/shared/lib/data'
 import { setQueryClient } from '@/shared/lib/data/events'
 import { DataLayerError } from '@/shared/lib/data/errors'
 import { Toaster } from '@/shared/components/ui/Toast'
+import { AnalyticsBanner } from '@/shared/components/AnalyticsBanner'
 import { CustomThemeApplier } from '@/features/theme-builder'
 import { TutorialController } from '@/features/onboarding'
 import { useSessionGuard } from '@/shared/hooks/useSessionGuard'
@@ -88,6 +89,7 @@ export function Providers({ children }: ProvidersProps) {
         </SpaceProvider>
       </QueryClientProvider>
       <Toaster />
+      <AnalyticsBanner />
     </ThemeProvider>
   )
 }
