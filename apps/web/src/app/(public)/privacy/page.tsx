@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
       <main className="mx-auto max-w-2xl px-6 py-12">
         <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Last updated: February 27, 2026
+          Last updated: March 3, 2026
         </p>
 
         <div className="mt-8 space-y-8 text-muted-foreground leading-relaxed">
@@ -57,9 +57,10 @@ export default function PrivacyPolicyPage() {
 
             <h3 className="mt-4 font-medium text-foreground">Guest mode data</h3>
             <p className="mt-1">
-              If you use Swashbuckler as a guest, your data is stored locally in
-              your browser (IndexedDB). No data is sent to our servers in guest
-              mode.
+              If you use Swashbuckler as a guest, your content is stored locally
+              in your browser (IndexedDB). No content data is sent to our
+              servers in guest mode. Anonymous analytics may still apply unless
+              you decline via the consent banner.
             </p>
 
             <h3 className="mt-4 font-medium text-foreground">Analytics</h3>
@@ -96,6 +97,33 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-foreground">
+              Legal Basis for Processing
+            </h2>
+            <p className="mt-2">
+              We process your personal data under the following legal bases as
+              defined by the GDPR:
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>
+                <strong className="text-foreground">Contractual necessity</strong>{" "}
+                &mdash; processing your account data and stored content is
+                necessary to provide the Swashbuckler service you signed up for
+              </li>
+              <li>
+                <strong className="text-foreground">Legitimate interest</strong>{" "}
+                &mdash; we collect anonymous, aggregated analytics to understand
+                usage patterns and improve the service
+              </li>
+              <li>
+                <strong className="text-foreground">Consent</strong> &mdash; if
+                we introduce optional cookies or features that require it, we
+                will obtain your explicit consent before processing
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-foreground">
               Data Sharing
             </h2>
             <p className="mt-2">
@@ -124,6 +152,55 @@ export default function PrivacyPolicyPage() {
               can delete your content at any time from within the application. If
               you wish to delete your account and all associated data, please
               contact us.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-foreground">
+              Your Rights
+            </h2>
+            <p className="mt-2">
+              Under the GDPR and similar data protection laws, you have the
+              following rights regarding your personal data:
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>
+                <strong className="text-foreground">Right of access</strong>{" "}
+                &mdash; request a copy of the personal data we hold about you
+              </li>
+              <li>
+                <strong className="text-foreground">Right to rectification</strong>{" "}
+                &mdash; request correction of inaccurate or incomplete data
+              </li>
+              <li>
+                <strong className="text-foreground">Right to erasure</strong>{" "}
+                &mdash; request deletion of your personal data
+              </li>
+              <li>
+                <strong className="text-foreground">Right to restrict processing</strong>{" "}
+                &mdash; request that we limit how we use your data
+              </li>
+              <li>
+                <strong className="text-foreground">Right to data portability</strong>{" "}
+                &mdash; request your data in a structured, machine-readable
+                format
+              </li>
+              <li>
+                <strong className="text-foreground">Right to object</strong>{" "}
+                &mdash; object to processing based on legitimate interest
+              </li>
+            </ul>
+            <p className="mt-2">
+              To exercise any of these rights, please open an issue on our{" "}
+              <a
+                href="https://github.com/bencohendev/swashbuckler"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline hover:text-primary/80 transition-colors"
+              >
+                GitHub repository
+              </a>
+              .
             </p>
           </section>
 
