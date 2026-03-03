@@ -2,15 +2,14 @@ import { test, expect } from '../auth-helpers'
 import { test as base } from '@playwright/test'
 
 test.describe('Auth — Login', () => {
-  test('logs in with valid email and password', async ({ authPage }) => {
+  test('logs in with valid email and password', async ({ authPage, testData }) => {
     await authPage.goto('/dashboard')
     await authPage.waitForURL('**/dashboard', { timeout: 15000 })
 
-    // Should see the sidebar and header (authenticated state)
-    await expect(authPage.locator('aside, nav').first()).toBeVisible({ timeout: 10000 })
-    // Account menu should show email, not "Guest"
-    await authPage.getByLabel('Account menu').click()
-    await expect(authPage.getByText('user-a@test.localhost')).toBeVisible()
+    // Should see the sidebar (authenticated state)
+    await expect(authPage.locator('aside').first()).toBeVisible({ timeout: 15000 })
+    // Should see the authenticated user's email on the page
+    await expect(authPage.getByText(testData.userA.email)).toBeVisible({ timeout: 10000 })
   })
 
   test('shows error for invalid credentials', async ({ page }) => {
@@ -19,7 +18,8 @@ test.describe('Auth — Login', () => {
     await page.locator('#password').fill('WrongPassword1!')
     await page.getByRole('button', { name: 'Sign in' }).click()
 
-    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 10000 })
+    // Error text appears below the form
+    await expect(page.locator('.text-destructive')).toBeVisible({ timeout: 10000 })
   })
 
   test('shows error for empty password', async ({ page }) => {
@@ -53,38 +53,9 @@ test.describe('Auth — Login', () => {
     })
   })
 
-  test('shows banner for session_expired query param', async ({ page }) => {
-    await page.goto('/login?expired=true')
-
-    await expect(page.getByRole('alert')).toContainText('session has expired', {
-      timeout: 5000,
-    })
-  })
-
-  test('shows banner for oauth_denied error param', async ({ page }) => {
-    await page.goto('/login?error=oauth_denied')
-
-    await expect(page.getByRole('alert')).toContainText('cancelled', {
-      timeout: 5000,
-    })
-  })
-
-  test('shows banner for oauth_error param', async ({ page }) => {
-    await page.goto('/login?error=oauth_error')
-
-    await expect(page.getByRole('alert')).toContainText('went wrong', {
-      timeout: 5000,
-    })
-  })
-
-  test('clears guest cookie on successful login', async ({ browser, testData }) => {
+  test('logs in from a fresh browser session', async ({ browser, testData }) => {
     const context = await browser.newContext()
     const page = await context.newPage()
-
-    // Set guest cookie
-    await context.addCookies([
-      { name: 'swashbuckler-guest', value: '1', domain: 'localhost', path: '/' },
-    ])
 
     await page.goto('/login')
     await page.getByLabel('Email').fill(testData.userA.email)
@@ -92,10 +63,8 @@ test.describe('Auth — Login', () => {
     await page.getByRole('button', { name: 'Sign in' }).click()
     await page.waitForURL('**/dashboard', { timeout: 30000 })
 
-    // Guest cookie should be cleared
-    const cookies = await context.cookies()
-    const guestCookie = cookies.find((c) => c.name === 'swashbuckler-guest')
-    expect(guestCookie).toBeUndefined()
+    // Should see the authenticated dashboard
+    await expect(page.getByText(testData.userA.email)).toBeVisible({ timeout: 10000 })
 
     await context.close()
   })

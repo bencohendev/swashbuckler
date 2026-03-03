@@ -1,4 +1,4 @@
-import { chromium, type FullConfig } from '@playwright/test'
+import type { FullConfig } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -10,10 +10,10 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const AUTH_DIR = path.join(__dirname, '..', '.auth')
 const TEST_DATA_PATH = path.join(AUTH_DIR, 'test-data.json')
 
-const USER_A_EMAIL = 'user-a@test.localhost'
-const USER_A_PASSWORD = 'TestPassword1!'
-const USER_B_EMAIL = 'user-b@test.localhost'
-const USER_B_PASSWORD = 'TestPassword2!'
+export const USER_A_EMAIL = 'user-a@test.localhost'
+export const USER_A_PASSWORD = 'TestPassword1!'
+export const USER_B_EMAIL = 'user-b@test.localhost'
+export const USER_B_PASSWORD = 'TestPassword2!'
 
 export interface TestData {
   userA: { id: string; email: string }
@@ -85,6 +85,13 @@ export default async function globalSetup(_config: FullConfig) {
   // 2. Query User A's auto-created space and type
   // -----------------------------------------------------------------------
   // The handle_new_user_space trigger creates "My Space" + "Page" type
+  // Rename User A's space to something distinctive (both users auto-get "My Space")
+  const { error: renameError } = await admin
+    .from('spaces')
+    .update({ name: 'User A Space' })
+    .eq('owner_id', userAId)
+  if (renameError) throw new Error(`Failed to rename User A's space: ${renameError.message}`)
+
   const { data: spaceRows, error: spaceError } = await admin
     .from('spaces')
     .select('id, name')
@@ -163,32 +170,5 @@ export default async function globalSetup(_config: FullConfig) {
   fs.mkdirSync(AUTH_DIR, { recursive: true })
   fs.writeFileSync(TEST_DATA_PATH, JSON.stringify(testData, null, 2))
   console.log('[global-setup] Test data saved to', TEST_DATA_PATH)
-
-  // -----------------------------------------------------------------------
-  // 6. Log in as each user via browser and save storageState
-  // -----------------------------------------------------------------------
-  const browser = await chromium.launch()
-
-  for (const { email, password, filename } of [
-    { email: USER_A_EMAIL, password: USER_A_PASSWORD, filename: 'userA.json' },
-    { email: USER_B_EMAIL, password: USER_B_PASSWORD, filename: 'userB.json' },
-  ]) {
-    const context = await browser.newContext()
-    const page = await context.newPage()
-
-    await page.goto('http://localhost:3000/login')
-    await page.getByLabel('Email').fill(email)
-    await page.locator('#password').fill(password)
-    await page.getByRole('button', { name: 'Sign in' }).click()
-    await page.waitForURL('**/dashboard', { timeout: 30000 })
-
-    const storagePath = path.join(AUTH_DIR, filename)
-    await context.storageState({ path: storagePath })
-    console.log(`[global-setup] Saved storageState for ${email} to ${storagePath}`)
-
-    await context.close()
-  }
-
-  await browser.close()
-  console.log('[global-setup] Setup complete')
+  console.log('[global-setup] API setup complete — browser login handled by setup project')
 }

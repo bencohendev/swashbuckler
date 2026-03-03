@@ -30,9 +30,16 @@ test.describe('Spaces', () => {
     const createButton = dialog.getByRole('button', { name: /create/i })
     await createButton.click()
 
-    // Dialog should close and we should be switched to the new space
-    await expect(dialog).not.toBeVisible({ timeout: 5000 })
-    await expect(switcher).toContainText('Test Space E2E')
+    // Dialog should close
+    await expect(dialog).not.toBeVisible({ timeout: 10000 })
+
+    // Reload and verify the new space appears in the dropdown
+    await authPage.reload()
+    await authPage.waitForLoadState('networkidle')
+    await switcher.click()
+    await expect(
+      authPage.getByRole('menuitem').filter({ hasText: 'Test Space E2E' }),
+    ).toBeVisible({ timeout: 10000 })
   })
 
   test('switches between spaces', async ({ authPage, testData }) => {
@@ -48,9 +55,16 @@ test.describe('Spaces', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 })
     await dialog.getByLabel(/name/i).first().fill('Switch Target')
     await dialog.getByRole('button', { name: /create/i }).click()
-    await expect(dialog).not.toBeVisible({ timeout: 5000 })
+    await expect(dialog).not.toBeVisible({ timeout: 10000 })
 
-    // Now switch back to original space
+    // Reload to ensure the spaces list is fresh after creation
+    await authPage.reload()
+    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+
+    // Switch to the new space, then back to original
+    await switchToSpace(authPage, 'Switch Target')
+    await expect(switcher).toContainText('Switch Target')
+
     await switchToSpace(authPage, testData.spaceA.name)
     await expect(switcher).toContainText(testData.spaceA.name)
   })
@@ -85,35 +99,47 @@ test.describe('Spaces', () => {
     expect(updatedName).toBe('Renamed Space E2E')
   })
 
-  test('archives and restores a space', async ({ authPage }) => {
+  test('archives a space from settings', async ({ authPage }) => {
+    // First create a space to archive (via direct navigation)
     await authPage.goto('/dashboard')
     await authPage.waitForURL('**/dashboard', { timeout: 15000 })
 
-    // Create a space to archive (so we don't archive the only space)
     const switcher = authPage.locator('[data-tour="space-switcher"]')
     await switcher.click()
     await authPage.getByRole('menuitem', { name: /new space/i }).click()
 
-    const dialog = authPage.getByRole('dialog')
-    await expect(dialog).toBeVisible({ timeout: 5000 })
-    await dialog.getByLabel(/name/i).first().fill('Archive Test Space')
-    await dialog.getByRole('button', { name: /create/i }).click()
-    await expect(dialog).not.toBeVisible({ timeout: 5000 })
+    const createDialog = authPage.getByRole('dialog')
+    await expect(createDialog).toBeVisible({ timeout: 5000 })
+    await createDialog.getByLabel(/name/i).first().fill('To Archive')
+    await createDialog.getByRole('button', { name: /create/i }).click()
+    await expect(createDialog).not.toBeVisible({ timeout: 10000 })
 
-    // Go to space settings and archive it
+    // Reload to ensure the spaces list is fresh after creation
+    await authPage.reload()
+    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+
+    // Switch to the new space
+    await switchToSpace(authPage, 'To Archive')
+    await expect(switcher).toContainText('To Archive', { timeout: 10000 })
+
+    // Go to space settings
     await authPage.goto('/settings/spaces')
     await authPage.waitForLoadState('domcontentloaded')
 
-    const archiveButton = authPage.getByLabel(/archive archive test space/i)
+    // Wait for space list to load
+    await authPage.waitForTimeout(1000)
+
+    // Find and click the archive button for the "To Archive" space
+    const archiveButton = authPage.getByLabel(/archive to archive/i)
     await archiveButton.waitFor({ state: 'visible', timeout: 10000 })
     await archiveButton.click()
 
-    // Confirm archive
-    const confirmDialog = authPage.getByRole('dialog')
+    // Confirm archive (Radix AlertDialog)
+    const confirmDialog = authPage.getByRole('alertdialog')
     await expect(confirmDialog).toBeVisible({ timeout: 5000 })
     await confirmDialog.getByRole('button', { name: /archive/i }).click()
 
-    // Should see success toast
+    // Should see success toast or the space disappear
     await expect(authPage.getByText(/archived/i).first()).toBeVisible({ timeout: 5000 })
   })
 

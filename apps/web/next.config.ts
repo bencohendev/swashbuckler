@@ -41,7 +41,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self'",
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co${isLocalSupabase ? ' http://localhost:54321 ws://localhost:54321' : ''}`,
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co${isLocalSupabase ? ' http://localhost:54321 ws://localhost:54321 http://127.0.0.1:54321 ws://127.0.0.1:54321' : ''}`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

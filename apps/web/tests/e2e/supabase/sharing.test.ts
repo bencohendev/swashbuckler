@@ -144,13 +144,15 @@ twoUserTest.describe('Sharing — Shared user (User B)', () => {
     // Open switcher and click "Leave Space"
     const switcher = page.locator('[data-tour="space-switcher"]')
     await switcher.click()
+    // Wait for dropdown to stabilize (Radix menus can re-render)
+    await page.waitForTimeout(500)
 
     const leaveItem = page.getByRole('menuitem', { name: /leave space/i })
     if (await leaveItem.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await leaveItem.click()
+      await leaveItem.click({ timeout: 10000 })
 
-      // Confirm
-      const confirmDialog = page.getByRole('dialog')
+      // Confirm (Radix AlertDialog)
+      const confirmDialog = page.getByRole('alertdialog')
       await expect(confirmDialog).toBeVisible({ timeout: 5000 })
       await confirmDialog.getByRole('button', { name: /leave/i }).click()
 

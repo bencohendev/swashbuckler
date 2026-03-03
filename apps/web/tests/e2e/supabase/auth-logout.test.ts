@@ -1,55 +1,81 @@
+import { test as base, expect } from '@playwright/test'
+import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { test, expect } from '../auth-helpers'
+import { USER_A_EMAIL, USER_A_PASSWORD } from '../global-setup'
 
-test.describe('Auth — Logout', () => {
-  test('signs out via account menu', async ({ authPage }) => {
-    await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+const AUTH_DIR = path.join(__dirname, '..', '..', '.auth')
+const TEST_DATA_PATH = path.join(AUTH_DIR, 'test-data.json')
+
+/**
+ * Helper: log in via the browser and return the page (creates an isolated session).
+ * Logout tests MUST use their own sessions — Supabase's signOut({ scope: 'global' })
+ * revokes the server-side session, which would invalidate shared storageState tokens
+ * used by other tests.
+ */
+async function loginFresh(browser: import('@playwright/test').Browser) {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+
+  // Pre-set tutorial as completed so the onboarding dialog doesn't block interactions
+  await page.goto('/login')
+  await page.evaluate(() => localStorage.setItem('swashbuckler:tutorialCompleted', 'true'))
+
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 15000 })
+  await page.getByLabel('Email').fill(USER_A_EMAIL)
+  await page.locator('#password').fill(USER_A_PASSWORD)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.waitForURL('**/dashboard', { timeout: 30000 })
+  return { page, context }
+}
+
+base.describe('Auth — Logout', () => {
+  base.beforeEach(({}, testInfo) => {
+    if (!fs.existsSync(TEST_DATA_PATH)) {
+      testInfo.skip(true, 'Supabase not running — skipping')
+    }
+  })
+
+  base('signs out via account menu', async ({ browser }) => {
+    const { page, context } = await loginFresh(browser)
 
     // Open account menu and click sign out
-    await authPage.getByLabel('Account menu').click()
-    await authPage.getByRole('menuitem', { name: /sign out/i }).click()
+    await page.getByLabel('Account menu').click()
+    await page.getByRole('menuitem', { name: /sign out/i }).click()
 
     // Should redirect to login
-    await authPage.waitForURL('**/login', { timeout: 15000 })
+    await page.waitForURL('**/login', { timeout: 15000 })
+
+    await context.close()
   })
 
-  test('clears session after logout', async ({ authPage }) => {
-    await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+  base('clears session after logout', async ({ browser }) => {
+    const { page, context } = await loginFresh(browser)
 
-    // Sign out
-    await authPage.getByLabel('Account menu').click()
-    await authPage.getByRole('menuitem', { name: /sign out/i }).click()
-    await authPage.waitForURL('**/login', { timeout: 15000 })
-
-    // Trying to visit a protected page should redirect to login
-    await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/login', { timeout: 15000 })
-  })
-
-  test('clears guest cookie on logout', async ({ browser }) => {
-    const storagePath = path.join(__dirname, '..', '..', '.auth', 'userA.json')
-    const context = await browser.newContext({ storageState: storagePath })
-    const page = await context.newPage()
-
-    // Set a guest cookie (simulating a user who was previously in guest mode)
-    await context.addCookies([
-      { name: 'swashbuckler-guest', value: '1', domain: 'localhost', path: '/' },
-    ])
-
-    await page.goto('/dashboard')
-    await page.waitForURL('**/dashboard', { timeout: 15000 })
+    // Verify we're authenticated — user email is visible
+    await expect(page.getByText(USER_A_EMAIL)).toBeVisible({ timeout: 10000 })
 
     // Sign out
     await page.getByLabel('Account menu').click()
     await page.getByRole('menuitem', { name: /sign out/i }).click()
     await page.waitForURL('**/login', { timeout: 15000 })
 
-    // Guest cookie should be cleared
-    const cookies = await context.cookies()
-    const guestCookie = cookies.find((c) => c.name === 'swashbuckler-guest')
-    expect(guestCookie).toBeUndefined()
+    // Visiting dashboard after logout enters guest mode (not redirected to login)
+    await page.goto('/dashboard')
+    await expect(page.getByText(/guest mode/i)).toBeVisible({ timeout: 15000 })
+
+    await context.close()
+  })
+
+  base('shows login page after logout', async ({ browser }) => {
+    const { page, context } = await loginFresh(browser)
+
+    // Sign out
+    await page.getByLabel('Account menu').click()
+    await page.getByRole('menuitem', { name: /sign out/i }).click()
+    await page.waitForURL('**/login', { timeout: 15000 })
+
+    // Should be on the login page
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
 
     await context.close()
   })

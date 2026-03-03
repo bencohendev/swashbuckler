@@ -93,16 +93,24 @@ export const twoUserTest = base.extend<TwoUserFixtures>({
 
 /** Switch to a shared space in the sidebar space switcher. */
 export async function switchToSpace(page: Page, spaceName: string) {
-  // Click the space switcher trigger
   const switcher = page.locator('[data-tour="space-switcher"]')
-  await switcher.click()
+  await switcher.waitFor({ state: 'visible', timeout: 15000 })
+  await page.waitForLoadState('networkidle')
 
-  // Click the target space
+  // Open the dropdown — retry if it didn't open (Radix menus can miss clicks during re-renders)
+  await switcher.click()
+  const menu = page.locator('[role="menu"]')
+  if (!(await menu.isVisible({ timeout: 2000 }).catch(() => false))) {
+    await switcher.click()
+  }
+
+  // Wait for the target space to appear and click it
   const item = page.getByRole('menuitem').filter({ hasText: spaceName })
+  await item.waitFor({ state: 'visible', timeout: 10000 })
   await item.click()
 
-  // Wait for navigation to dashboard
-  await page.waitForURL('**/dashboard', { timeout: 15000 })
+  // Wait for the switcher to show the selected space
+  await expect(switcher).toContainText(spaceName, { timeout: 10000 })
 }
 
 /** Open the share dialog from the space switcher. */
@@ -125,12 +133,12 @@ export async function openObjectByTitle(page: Page, title: string) {
 
 /** Wait for the collaboration connection to be established. */
 export async function waitForCollabReady(page: Page) {
-  // Collaboration is active when the editor is loaded and connected.
-  // The CollaboratorAvatars container is rendered once awareness is set up.
-  // We wait for the editor contenteditable to be present as a proxy.
+  // Wait for the editor to be visible
   await expect(page.locator('[contenteditable="true"]')).toBeVisible({ timeout: 15000 })
-  // Small delay for the Yjs provider to connect via Supabase Broadcast
-  await page.waitForTimeout(2000)
+  // Wait for the "Synced" status indicator — confirms Yjs provider is connected via Supabase Broadcast
+  await expect(page.getByText('Synced')).toBeVisible({ timeout: 15000 })
+  // Additional delay for the broadcast channel to fully establish bidirectional communication
+  await page.waitForTimeout(3000)
 }
 
 export { expect }
