@@ -1,9 +1,8 @@
-import { createClient } from "@/shared/lib/supabase/server"
+import { getUser } from "@/shared/lib/supabase/server"
 import { DashboardContent } from "./DashboardContent"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
 
   return (
     <div className="space-y-6">

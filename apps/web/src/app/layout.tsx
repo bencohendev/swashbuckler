@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono, Cinzel, Lora, Orbitron, Share_Tech_Mono } from "next/font/google"
 import { Providers } from "./providers"
 import { getThemeScript } from "@/features/theme-builder"
+import { getUser } from "@/shared/lib/supabase/server"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -40,18 +41,20 @@ export const metadata: Metadata = {
   description: "Your personal knowledge base",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const initialUser = await getUser()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${lora.variable} ${orbitron.variable} ${shareTechMono.variable} antialiased`}
       >
         <script dangerouslySetInnerHTML={{ __html: getThemeScript() }} />
-        <Providers>
+        <Providers initialUser={initialUser}>
           {children}
         </Providers>
       </body>
