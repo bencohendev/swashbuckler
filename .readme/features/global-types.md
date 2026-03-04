@@ -30,9 +30,9 @@ Event channel: `'globalObjectTypes'`.
 
 ## UI
 
-### Account Settings — Global Types Section
+### Settings — Global Types Page
 
-Card between Preferences and Data Export. State-driven list/create/edit views using `ObjectTypeForm` with `isGlobal={true}`. Supports create, edit, and delete with confirmation dialog.
+Standalone page at `/settings/global-types` linked from the Account section in the settings hub. State-driven list/create/edit views using `ObjectTypeForm` with `isGlobal={true}`. Supports create, edit, and delete with confirmation dialog.
 
 ### Object Type Manager — Import Button
 
@@ -55,5 +55,5 @@ Global types included in export payload as `globalObjectTypes` array.
 - `src/features/global-types/components/GlobalTypeImporter.tsx`
 - `src/features/object-types/components/ObjectTypeForm.tsx` — `isGlobal` prop
 - `src/features/object-types/components/ObjectTypeManager.tsx` — importer integration
-- `src/features/account/components/AccountSettings.tsx` — section integration
+- `src/app/(main)/settings/global-types/page.tsx` — standalone settings page
 - `src/features/account/hooks/useAccountExport.ts` — export integration

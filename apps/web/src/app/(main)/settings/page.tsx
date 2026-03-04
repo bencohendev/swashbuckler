@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileStackIcon, FolderIcon, PaletteIcon, SwatchBookIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
+import { BlocksIcon, FileStackIcon, FolderIcon, PaletteIcon, SwatchBookIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { SpaceSettingsHeading } from './SpaceSettingsHeading'
 
@@ -22,6 +22,12 @@ const accountItems: SettingsItem[] = [
     label: 'Spaces',
     description: 'Manage your spaces',
     icon: FolderIcon,
+  },
+  {
+    href: '/settings/global-types',
+    label: 'Global Types',
+    description: 'Reusable type blueprints for any space',
+    icon: BlocksIcon,
   },
   {
     href: '/settings/themes',
