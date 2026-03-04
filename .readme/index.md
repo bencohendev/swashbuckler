@@ -165,6 +165,7 @@ Dual-storage architecture with a `DataClient` interface:
 | Feature | Description |
 |---------|-------------|
 | Signup Bot Protection | Add CAPTCHA (Cloudflare Turnstile) to signup form to prevent bot/garbage account creation. Supabase has native support; requires Turnstile widget on frontend + passing `captchaToken` in `signUp()` options. |
+| Self-Host Supabase | Migrate from Supabase Cloud to self-hosted Supabase on Hetzner VPS (~$8/mo vs ~$45/mo). Zero code changes — same client library, same PostgreSQL/RLS/Broadcast. Requires: Hetzner CAX21, Docker Compose, Caddy reverse proxy, Resend for SMTP, pg_dump backup cron. Covers auth, database, realtime (including Yjs collab broadcast), storage. Custom domain included via Caddy + Let's Encrypt. |
 
 ## Deferred
 
