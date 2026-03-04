@@ -33,7 +33,10 @@ function getSnapshot(): ConsentState {
 }
 
 function getServerSnapshot(): ConsentState {
-  return 'pending'
+  // Start hidden on server — the client will show the banner after hydration
+  // only if localStorage has no stored consent, preventing a flash for
+  // users who have already made a choice.
+  return 'declined'
 }
 
 function writeConsent(value: 'accepted' | 'declined') {
