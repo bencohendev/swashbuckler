@@ -7,6 +7,7 @@ import {
   USER_B_EMAIL,
   USER_B_PASSWORD,
 } from './global-setup'
+import { ANALYTICS_CONSENT_KEY } from './helpers'
 
 const AUTH_DIR = path.join(__dirname, '..', '.auth')
 
@@ -22,10 +23,10 @@ for (const { email, password, filename } of users) {
 
     // Dismiss analytics consent banner and tutorial before login
     await page.goto('/login', { waitUntil: 'commit' })
-    await page.evaluate(() => {
-      localStorage.setItem('swashbuckler:analyticsConsent', 'accepted')
+    await page.evaluate((key) => {
+      localStorage.setItem(key, 'accepted')
       localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
-    })
+    }, ANALYTICS_CONSENT_KEY)
 
     await page.goto('/login')
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 15000 })

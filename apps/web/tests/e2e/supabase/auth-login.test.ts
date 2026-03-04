@@ -47,8 +47,8 @@ test.describe('Auth — Login', () => {
       await page.waitForTimeout(500)
     }
 
-    // Should show rate limiting message (use getByText to avoid matching the analytics consent banner)
-    await expect(page.getByText(/wait.*seconds/i)).toBeVisible({
+    // Should show rate limiting message
+    await expect(page.getByRole('status')).toContainText(/wait.*seconds/i, {
       timeout: 5000,
     })
   })

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '../../utils/render'
 import userEvent from '@testing-library/user-event'
-import { AnalyticsBanner } from '@/shared/components/AnalyticsBanner'
+import { AnalyticsBanner, ANALYTICS_CONSENT_KEY } from '@/shared/components/AnalyticsBanner'
 
 vi.mock('@vercel/analytics/next', () => ({
   Analytics: () => <div data-testid="vercel-analytics" />,
@@ -17,7 +17,7 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-const STORAGE_KEY = 'swashbuckler:analyticsConsent'
+// Uses ANALYTICS_CONSENT_KEY imported from the component
 
 describe('AnalyticsBanner', () => {
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('AnalyticsBanner', () => {
   it('shows the banner when no consent is stored', () => {
     render(<AnalyticsBanner />)
 
-    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /analytics consent/i })).toBeInTheDocument()
     expect(screen.getByText(/anonymous analytics/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /ok/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /decline/i })).toBeInTheDocument()
@@ -46,8 +46,8 @@ describe('AnalyticsBanner', () => {
 
     await user.click(screen.getByRole('button', { name: /ok/i }))
 
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('accepted')
-    expect(screen.getByRole('status')).toHaveClass('max-h-0', 'invisible')
+    expect(localStorage.getItem(ANALYTICS_CONSENT_KEY)).toBe('accepted')
+    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
   })
 
   it('keeps analytics enabled after accepting', async () => {
@@ -66,8 +66,8 @@ describe('AnalyticsBanner', () => {
 
     await user.click(screen.getByRole('button', { name: /decline/i }))
 
-    expect(localStorage.getItem(STORAGE_KEY)).toBe('declined')
-    expect(screen.getByRole('status')).toHaveClass('max-h-0', 'invisible')
+    expect(localStorage.getItem(ANALYTICS_CONSENT_KEY)).toBe('declined')
+    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
   })
 
   it('removes analytics components after declining', async () => {
@@ -81,18 +81,18 @@ describe('AnalyticsBanner', () => {
   })
 
   it('hides the banner when consent was previously accepted', () => {
-    localStorage.setItem(STORAGE_KEY, 'accepted')
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, 'accepted')
     render(<AnalyticsBanner />)
 
-    expect(screen.getByRole('status')).toHaveClass('max-h-0', 'invisible')
+    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
     expect(screen.getByTestId('vercel-analytics')).toBeInTheDocument()
   })
 
   it('hides the banner and analytics when consent was previously declined', () => {
-    localStorage.setItem(STORAGE_KEY, 'declined')
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, 'declined')
     render(<AnalyticsBanner />)
 
-    expect(screen.getByRole('status')).toHaveClass('max-h-0', 'invisible')
+    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
     expect(screen.queryByTestId('vercel-analytics')).not.toBeInTheDocument()
     expect(screen.queryByTestId('vercel-speed-insights')).not.toBeInTheDocument()
   })

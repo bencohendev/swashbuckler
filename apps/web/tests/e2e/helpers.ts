@@ -1,5 +1,8 @@
 import { test as base, expect, type Page } from '@playwright/test'
 
+// Mirrors ANALYTICS_CONSENT_KEY from AnalyticsBanner.tsx — e2e tests can't import app code
+export const ANALYTICS_CONSENT_KEY = 'swashbuckler:analyticsConsent'
+
 /**
  * Custom fixture that sets up a guest-mode page with the tutorial dismissed.
  */
@@ -16,10 +19,10 @@ export const test = base.extend<{ guestPage: Page }>({
     ])
     // Dismiss the onboarding tutorial and analytics consent banner via localStorage before navigating
     await page.goto('/dashboard', { waitUntil: 'commit' })
-    await page.evaluate(() => {
+    await page.evaluate((key) => {
       localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
-      localStorage.setItem('swashbuckler:analyticsConsent', 'accepted')
-    })
+      localStorage.setItem(key, 'accepted')
+    }, ANALYTICS_CONSENT_KEY)
     // Navigate again so tutorial state is read on mount
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
     // Wait for the sidebar to confirm guest mode loaded
@@ -32,6 +35,32 @@ export const test = base.extend<{ guestPage: Page }>({
 })
 
 export { expect }
+
+// ---------------------------------------------------------------------------
+// Guest mode entry from landing page
+// ---------------------------------------------------------------------------
+
+/**
+ * Enters guest mode from the landing page by clicking "Try as Guest".
+ * Dismisses the consent banner first and retries the click to handle
+ * React hydration timing.
+ *
+ * TODO: The retry is needed because the button is visible before React hydration
+ * attaches the click handler. This is a UX gap — real users also experience an
+ * unresponsive button during hydration. Track as a product bug.
+ */
+export async function enterGuestMode(page: Page) {
+  await page.goto('/', { waitUntil: 'commit' })
+  await page.evaluate((key) => {
+    localStorage.setItem(key, 'accepted')
+  }, ANALYTICS_CONSENT_KEY)
+  await page.goto('/', { waitUntil: 'networkidle' })
+  await expect(page).toHaveURL(/\/landing/)
+  await expect(async () => {
+    await page.getByRole('button', { name: /try as guest/i }).click()
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 3000 })
+  }).toPass({ timeout: 15000 })
+}
 
 // ---------------------------------------------------------------------------
 // Entry helpers

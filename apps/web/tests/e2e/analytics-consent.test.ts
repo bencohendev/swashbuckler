@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { ANALYTICS_CONSENT_KEY } from './helpers'
 
 test.describe('Analytics consent banner', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/landing')
-    await page.evaluate(() => localStorage.removeItem('swashbuckler:analyticsConsent'))
+    await page.evaluate((key) => localStorage.removeItem(key), ANALYTICS_CONSENT_KEY)
   })
 
   test('banner appears on first visit', async ({ page }) => {
@@ -27,7 +28,7 @@ test.describe('Analytics consent banner', () => {
     await expect(page.getByText(/anonymous analytics/i)).not.toBeVisible()
 
     // Verify localStorage value
-    const consent = await page.evaluate(() => localStorage.getItem('swashbuckler:analyticsConsent'))
+    const consent = await page.evaluate((key) => localStorage.getItem(key), ANALYTICS_CONSENT_KEY)
     expect(consent).toBe('accepted')
   })
 
@@ -42,7 +43,7 @@ test.describe('Analytics consent banner', () => {
     await page.reload()
     await expect(page.getByText(/anonymous analytics/i)).not.toBeVisible()
 
-    const consent = await page.evaluate(() => localStorage.getItem('swashbuckler:analyticsConsent'))
+    const consent = await page.evaluate((key) => localStorage.getItem(key), ANALYTICS_CONSENT_KEY)
     expect(consent).toBe('declined')
   })
 
