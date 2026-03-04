@@ -29,9 +29,9 @@ const fantasyLightCore: ThemeCoreColors = {
   primary: '#7a1515',
   secondary: '#e6d4b5',
   accent: '#c8a880',
-  muted: '#d4be9a',
+  muted: '#cbb48a',
   destructive: '#922020',
-  border: '#b89558',
+  border: '#8a6d3a',
 }
 
 const fantasyDarkCore: ThemeCoreColors = {
@@ -40,9 +40,9 @@ const fantasyDarkCore: ThemeCoreColors = {
   primary: '#c9a96e',
   secondary: '#2a1e14',
   accent: '#3a2a1a',
-  muted: '#2a1e14',
-  destructive: '#d44040',
-  border: '#4a3520',
+  muted: '#503a25',
+  destructive: '#e85050',
+  border: '#8a6838',
 }
 
 export const THEME_PRESETS: ThemePresetDefinition[] = [
