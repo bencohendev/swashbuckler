@@ -218,7 +218,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
           {selectedType ? (
             <>
               {/* Level 2: Back header */}
-              <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-2">
+              <div className="flex items-center gap-2 border-b px-3 py-2">
                 <button
                   onClick={returnToLevel1}
                   className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -227,7 +227,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
                   <ChevronLeftIcon className="size-4" />
                 </button>
                 <TypeIcon icon={selectedType.icon} className="size-4 shrink-0 text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   New {selectedType.name}
                 </span>
               </div>
@@ -273,8 +273,8 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
           ) : (
             <>
               {/* Level 1: Type list */}
-              <div className="border-b bg-muted/40 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Create new
+              <div className="border-b px-3 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Create new{selectedIndex < types.length && types[selectedIndex] ? ` ${types[selectedIndex].name}` : ''}
               </div>
               <div className="max-h-72 overflow-y-auto py-1">
                 {types.length === 0 && (
@@ -333,7 +333,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
           )}
 
           {/* Keyboard hints */}
-          <div className="flex items-center gap-3 border-t bg-muted/40 px-3 py-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 border-t px-3 py-1.5 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1">
               <kbd className="inline-flex min-w-4 items-center justify-center rounded border bg-background px-0.5 font-mono text-[10px]">↑</kbd>
               <kbd className="inline-flex min-w-4 items-center justify-center rounded border bg-background px-0.5 font-mono text-[10px]">↓</kbd>
