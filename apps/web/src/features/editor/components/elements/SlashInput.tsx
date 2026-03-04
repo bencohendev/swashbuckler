@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { useEditorRef, PlateElement, type PlateElementProps } from '@udecode/plate/react'
+import EmojiPickerReact, { Theme } from 'emoji-picker-react'
+import { useTheme } from 'next-themes'
 import {
   Heading1,
   Heading2,
@@ -19,6 +21,7 @@ import {
   Image as ImageIcon,
   BracesIcon,
   EyeOff,
+  SmileIcon,
 } from 'lucide-react'
 import { useObjectTypes, TypeIcon } from '@/features/object-types'
 import { useObjects, useNextTitle } from '@/features/objects'
@@ -142,6 +145,14 @@ const menuItems: SlashMenuItem[] = [
     type: 'table',
     category: 'Advanced',
   },
+  {
+    key: 'emoji',
+    label: 'Emoji',
+    description: 'Insert an emoji',
+    icon: <SmileIcon className="size-4" />,
+    type: 'emoji',
+    category: 'Advanced',
+  },
 ]
 
 export function SlashInputElement({ children, element, ...props }: PlateElementProps) {
@@ -155,10 +166,12 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
   const filterInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const { resolvedTheme } = useTheme()
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isKeyboardMode, setIsKeyboardMode] = useState(false)
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   // Auto-focus the filter input on mount (skip on mobile to avoid keyboard flicker)
   useEffect(() => {
@@ -233,9 +246,27 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
 
   const totalItems = filteredItems.length + filteredCreateTypes.length
 
+  // Insert an emoji character at the slash input position
+  const insertEmoji = useCallback(
+    (emoji: string) => {
+      editor.tf.removeNodes({
+        match: (n) => 'type' in n && n.type === 'slash_input',
+      })
+      editor.tf.insertText(emoji)
+      focusEditorAtSelection(editor)
+    },
+    [editor]
+  )
+
   // Select item and insert block
   const selectItem = useCallback(
     (type: string) => {
+      // Handle emoji picker — show picker instead of inserting
+      if (type === 'emoji') {
+        setShowEmojiPicker(true)
+        return
+      }
+
       // Handle template variable insertion (inline elements)
       if (type.startsWith('template_variable:')) {
         const parts = type.split(':')
@@ -660,39 +691,70 @@ export function SlashInputElement({ children, element, ...props }: PlateElementP
               <div className="flex justify-center pb-1 pt-3" aria-hidden="true">
                 <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
               </div>
-              {/* Filter input — visible but not auto-focused */}
-              <div className="px-3 pb-2">
-                <input
-                  ref={filterInputRef}
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  onKeyDown={handleInputKeyDown}
-                  placeholder="Search blocks..."
-                  aria-label="Filter blocks"
-                  className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
-                />
-              </div>
-              {/* Scrollable items */}
-              <div
-                ref={scrollContainerRef}
-                className="max-h-[50vh] overflow-y-auto p-1"
-                onMouseMove={handleMouseMove}
-              >
-                {menuItemsJSX}
-              </div>
+              {showEmojiPicker ? (
+                <div className="flex justify-center pb-2">
+                  <EmojiPickerReact
+                    theme={resolvedTheme === 'dark' ? Theme.DARK : Theme.LIGHT}
+                    onEmojiClick={(emojiData) => insertEmoji(emojiData.emoji)}
+                    skinTonesDisabled
+                    width="100%"
+                    height={350}
+                  />
+                </div>
+              ) : (
+                <>
+                  {/* Filter input — visible but not auto-focused */}
+                  <div className="px-3 pb-2">
+                    <input
+                      ref={filterInputRef}
+                      value={query}
+                      onChange={e => setQuery(e.target.value)}
+                      onKeyDown={handleInputKeyDown}
+                      placeholder="Search blocks..."
+                      aria-label="Filter blocks"
+                      className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
+                    />
+                  </div>
+                  {/* Scrollable items */}
+                  <div
+                    ref={scrollContainerRef}
+                    className="max-h-[50vh] overflow-y-auto p-1"
+                    onMouseMove={handleMouseMove}
+                  >
+                    {menuItemsJSX}
+                  </div>
+                </>
+              )}
             </div>
           </>
         ) : dropdownPos ? (
-          <div
-            ref={dropdownRef}
-            contentEditable={false}
-            style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left }}
-            className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
-          >
-            <div ref={scrollContainerRef} className="max-h-80 overflow-y-auto p-1" onMouseMove={handleMouseMove}>
-              {menuItemsJSX}
+          showEmojiPicker ? (
+            <div
+              ref={dropdownRef}
+              contentEditable={false}
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left }}
+              className="z-50"
+            >
+              <EmojiPickerReact
+                theme={resolvedTheme === 'dark' ? Theme.DARK : Theme.LIGHT}
+                onEmojiClick={(emojiData) => insertEmoji(emojiData.emoji)}
+                skinTonesDisabled
+                width={320}
+                height={400}
+              />
             </div>
-          </div>
+          ) : (
+            <div
+              ref={dropdownRef}
+              contentEditable={false}
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left }}
+              className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
+            >
+              <div ref={scrollContainerRef} className="max-h-80 overflow-y-auto p-1" onMouseMove={handleMouseMove}>
+                {menuItemsJSX}
+              </div>
+            </div>
+          )
         ) : null,
         document.body
       )}
