@@ -21,7 +21,7 @@ const SIDEBAR_TARGETS = new Set([
 ])
 
 export function TutorialController() {
-  const { user, isLoading: isAuthLoading } = useAuth()
+  const { isLoading: isAuthLoading } = useAuth()
   const { active, completed, currentStep, start, next, back, skip } = useTutorial()
   const { collapsed, toggle, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
@@ -35,22 +35,22 @@ export function TutorialController() {
     setTargetEl(null)
   }
 
-  // Auto-start for new authenticated users (once).
+  // Auto-start for new users (both authenticated and guest) once.
   // The ref is set inside the timeout so that if a dependency change (e.g. a new
   // user object reference from a second auth callback) cancels the timer, the
   // next effect run can try again instead of being permanently blocked.
   useEffect(() => {
     if (hasAutoStarted.current) return
-    if (isAuthLoading || !user) return
+    if (isAuthLoading) return
     if (completed || active) return
 
-    // Delay to let UI settle after first sign-in
+    // Delay to let UI settle after first load/sign-in
     const timer = setTimeout(() => {
       hasAutoStarted.current = true
       start()
     }, 1000)
     return () => clearTimeout(timer)
-  }, [isAuthLoading, user, completed, active, start])
+  }, [isAuthLoading, completed, active, start])
 
   // Resolve the target element for the current step
   const resolveTarget = useCallback(() => {
