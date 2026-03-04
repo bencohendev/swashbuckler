@@ -43,6 +43,7 @@ export function SpacesSettings() {
           <SpaceRow
             key={space.id}
             space={space}
+            siblingSpaces={ownedSpaces}
             isCurrent={space.id === currentSpace?.id}
             canDelete={ownedSpaces.length > 1}
             canArchive={ownedSpaces.length > 1}
@@ -108,6 +109,7 @@ function Header() {
 
 interface SpaceRowProps {
   space: Space
+  siblingSpaces: Space[]
   isCurrent: boolean
   canDelete: boolean
   canArchive: boolean
@@ -116,32 +118,55 @@ interface SpaceRowProps {
   onDelete: (id: string) => Promise<void>
 }
 
-function SpaceRow({ space, isCurrent, canDelete, canArchive, onUpdate, onArchive, onDelete }: SpaceRowProps) {
+function SpaceRow({ space, siblingSpaces, isCurrent, canDelete, canArchive, onUpdate, onArchive, onDelete }: SpaceRowProps) {
   const [name, setName] = useState(space.name)
+  const [error, setError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
+  const checkDuplicate = (value: string): string | null => {
+    const lower = value.toLowerCase()
+    const isDuplicate = siblingSpaces.some(
+      s => s.id !== space.id && s.name.toLowerCase() === lower
+    )
+    return isDuplicate ? 'A space with this name already exists' : null
+  }
+
   const handleNameChange = (newName: string) => {
     setName(newName)
+    const trimmed = newName.trim()
+    const duplicateError = trimmed ? checkDuplicate(trimmed) : null
+    setError(duplicateError)
+
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const trimmed = newName.trim()
+    if (duplicateError) return
+
+    debounceRef.current = setTimeout(async () => {
       if (trimmed && trimmed !== space.name) {
-        onUpdate(space.id, { name: trimmed })
+        const result = await onUpdate(space.id, { name: trimmed })
+        if (result.error) {
+          setError(result.error)
+          setName(space.name)
+        }
       }
     }, 500)
   }
 
-  const handleNameBlur = () => {
+  const handleNameBlur = async () => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     const trimmed = name.trim()
-    if (!trimmed) {
+    if (!trimmed || error) {
       setName(space.name)
+      setError(null)
       return
     }
     if (trimmed !== space.name) {
-      onUpdate(space.id, { name: trimmed })
+      const result = await onUpdate(space.id, { name: trimmed })
+      if (result.error) {
+        setError(result.error)
+        setName(space.name)
+      }
     }
   }
 
@@ -162,19 +187,28 @@ function SpaceRow({ space, isCurrent, canDelete, canArchive, onUpdate, onArchive
           </button>
         </EmojiPicker>
 
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <input
-            type="text"
-            value={name}
-            onChange={e => handleNameChange(e.target.value)}
-            onBlur={handleNameBlur}
-            className="min-w-0 flex-1 rounded-md border-transparent bg-transparent px-2 py-1 text-sm outline-none hover:border-border hover:bg-muted/50 focus:border-border focus:bg-muted/50 focus:ring-1 focus:ring-ring"
-            aria-label={`Space name for ${space.name}`}
-          />
-          {isCurrent && (
-            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-              Current
-            </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={name}
+              onChange={e => handleNameChange(e.target.value)}
+              onBlur={handleNameBlur}
+              className={`min-w-0 flex-1 rounded-md border-transparent bg-transparent px-2 py-1 text-sm outline-none hover:border-border hover:bg-muted/50 focus:border-border focus:bg-muted/50 focus:ring-1 ${error ? 'border-destructive focus:ring-destructive' : 'focus:ring-ring'}`}
+              aria-label={`Space name for ${space.name}`}
+              aria-invalid={!!error}
+              aria-describedby={error ? `space-error-${space.id}` : undefined}
+            />
+            {isCurrent && (
+              <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                Current
+              </span>
+            )}
+          </div>
+          {error && (
+            <p id={`space-error-${space.id}`} className="px-2 text-xs text-destructive" role="alert">
+              {error}
+            </p>
           )}
         </div>
 
