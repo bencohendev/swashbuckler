@@ -533,7 +533,7 @@ export function Sidebar() {
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
                     <div className="h-3 w-16 animate-pulse rounded bg-muted" />
                   </div>
-                  <div className="space-y-0.5 pl-8">
+                  <div className="space-y-1 pl-8">
                     {[1, 2, 3].map(i => (
                       <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
                     ))}
@@ -547,7 +547,7 @@ export function Sidebar() {
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
                     <div className="h-3 w-12 animate-pulse rounded bg-muted" />
                   </div>
-                  <div className="space-y-0.5 pl-8">
+                  <div className="space-y-1 pl-8">
                     {[1, 2, 3].map(i => (
                       <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
                     ))}
@@ -561,7 +561,7 @@ export function Sidebar() {
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
                     <div className="h-3 w-14 animate-pulse rounded bg-muted" />
                   </div>
-                  <div className="space-y-0.5 pl-8">
+                  <div className="space-y-1 pl-8">
                     {[1, 2].map(i => (
                       <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
                     ))}

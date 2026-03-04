@@ -39,7 +39,7 @@ export function ObjectList({
   }
 
   return (
-    <div className={compact ? 'space-y-0.5' : 'space-y-2'}>
+    <div className={compact ? 'space-y-1' : 'space-y-2'}>
       {objects.map((object) => (
         <ObjectItem
           key={object.id}
