@@ -35,15 +35,18 @@ export function TutorialController() {
     setTargetEl(null)
   }
 
-  // Auto-start for new authenticated users (once)
+  // Auto-start for new authenticated users (once).
+  // The ref is set inside the timeout so that if a dependency change (e.g. a new
+  // user object reference from a second auth callback) cancels the timer, the
+  // next effect run can try again instead of being permanently blocked.
   useEffect(() => {
     if (hasAutoStarted.current) return
     if (isAuthLoading || !user) return
     if (completed || active) return
 
-    hasAutoStarted.current = true
     // Delay to let UI settle after first sign-in
     const timer = setTimeout(() => {
+      hasAutoStarted.current = true
       start()
     }, 1000)
     return () => clearTimeout(timer)
