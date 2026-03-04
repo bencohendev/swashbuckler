@@ -7,6 +7,7 @@ import { ArchiveIcon, ArrowLeftIcon, FolderIcon, PlusIcon, Trash2Icon } from 'lu
 import { useAuth, useCurrentSpace, useSpaces } from '@/shared/lib/data'
 import type { Space } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
 import { CreateSpaceDialog } from '@/features/sidebar/components/CreateSpaceDialog'
@@ -14,12 +15,28 @@ import { toast } from '@/shared/hooks/useToast'
 
 export function SpacesSettings() {
   const { user, isGuest } = useAuth()
-  const { space: currentSpace, spaces: allSpaces, switchSpace } = useCurrentSpace()
+  const { space: currentSpace, spaces: allSpaces, switchSpace, isLoading } = useCurrentSpace()
   const { create, update, remove, archiveSpace } = useSpaces()
   const router = useRouter()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   const ownedSpaces = isGuest ? allSpaces : allSpaces.filter(s => s.owner_id === user?.id)
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Header />
+        <div className="space-y-1" role="status" aria-label="Loading spaces">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-3 rounded-lg border px-4 py-3">
+              <Skeleton className="size-9 shrink-0" />
+              <Skeleton className="h-5 flex-1" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (isGuest) {
     return (
@@ -43,6 +60,7 @@ export function SpacesSettings() {
           <SpaceRow
             key={space.id}
             space={space}
+            siblingSpaces={ownedSpaces}
             isCurrent={space.id === currentSpace?.id}
             canDelete={ownedSpaces.length > 1}
             canArchive={ownedSpaces.length > 1}
@@ -108,6 +126,7 @@ function Header() {
 
 interface SpaceRowProps {
   space: Space
+  siblingSpaces: Space[]
   isCurrent: boolean
   canDelete: boolean
   canArchive: boolean
@@ -116,32 +135,55 @@ interface SpaceRowProps {
   onDelete: (id: string) => Promise<void>
 }
 
-function SpaceRow({ space, isCurrent, canDelete, canArchive, onUpdate, onArchive, onDelete }: SpaceRowProps) {
+function SpaceRow({ space, siblingSpaces, isCurrent, canDelete, canArchive, onUpdate, onArchive, onDelete }: SpaceRowProps) {
   const [name, setName] = useState(space.name)
+  const [error, setError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
+  const checkDuplicate = (value: string): string | null => {
+    const lower = value.toLowerCase()
+    const isDuplicate = siblingSpaces.some(
+      s => s.id !== space.id && s.name.toLowerCase() === lower
+    )
+    return isDuplicate ? 'A space with this name already exists' : null
+  }
+
   const handleNameChange = (newName: string) => {
     setName(newName)
+    const trimmed = newName.trim()
+    const duplicateError = trimmed ? checkDuplicate(trimmed) : null
+    setError(duplicateError)
+
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const trimmed = newName.trim()
+    if (duplicateError) return
+
+    debounceRef.current = setTimeout(async () => {
       if (trimmed && trimmed !== space.name) {
-        onUpdate(space.id, { name: trimmed })
+        const result = await onUpdate(space.id, { name: trimmed })
+        if (result.error) {
+          setError(result.error)
+          setName(space.name)
+        }
       }
     }, 500)
   }
 
-  const handleNameBlur = () => {
+  const handleNameBlur = async () => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     const trimmed = name.trim()
-    if (!trimmed) {
+    if (!trimmed || error) {
       setName(space.name)
+      setError(null)
       return
     }
     if (trimmed !== space.name) {
-      onUpdate(space.id, { name: trimmed })
+      const result = await onUpdate(space.id, { name: trimmed })
+      if (result.error) {
+        setError(result.error)
+        setName(space.name)
+      }
     }
   }
 
@@ -162,19 +204,28 @@ function SpaceRow({ space, isCurrent, canDelete, canArchive, onUpdate, onArchive
           </button>
         </EmojiPicker>
 
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <input
-            type="text"
-            value={name}
-            onChange={e => handleNameChange(e.target.value)}
-            onBlur={handleNameBlur}
-            className="min-w-0 flex-1 rounded-md border-transparent bg-transparent px-2 py-1 text-sm outline-none hover:border-border hover:bg-muted/50 focus:border-border focus:bg-muted/50 focus:ring-1 focus:ring-ring"
-            aria-label={`Space name for ${space.name}`}
-          />
-          {isCurrent && (
-            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-              Current
-            </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={name}
+              onChange={e => handleNameChange(e.target.value)}
+              onBlur={handleNameBlur}
+              className={`min-w-0 flex-1 rounded-md border-transparent bg-transparent px-2 py-1 text-sm outline-none hover:border-border hover:bg-muted/50 focus:border-border focus:bg-muted/50 focus:ring-1 ${error ? 'border-destructive focus:ring-destructive' : 'focus:ring-ring'}`}
+              aria-label={`Space name for ${space.name}`}
+              aria-invalid={!!error}
+              aria-describedby={error ? `space-error-${space.id}` : undefined}
+            />
+            {isCurrent && (
+              <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                Current
+              </span>
+            )}
+          </div>
+          {error && (
+            <p id={`space-error-${space.id}`} className="px-2 text-xs text-destructive" role="alert">
+              {error}
+            </p>
           )}
         </div>
 

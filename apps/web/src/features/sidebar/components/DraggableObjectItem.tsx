@@ -77,7 +77,7 @@ export function DraggableObjectItem({
       <SidebarLink
         href={`/objects/${object.id}`}
         className={(active) => cn(
-          'group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors',
+          'group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors',
           active
             ? 'bg-accent text-accent-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -85,9 +85,9 @@ export function DraggableObjectItem({
       >
         <GripVerticalIcon className="size-3 shrink-0 cursor-grab opacity-0 group-hover/drag:opacity-50" aria-hidden="true" />
         {object.icon ? (
-          <span className="text-base">{object.icon}</span>
+          <span className="text-lg">{object.icon}</span>
         ) : (
-          <FileIcon className="size-4 shrink-0" />
+          <FileIcon className="size-5 shrink-0" />
         )}
         <span className="min-w-0 flex-1 truncate">{object.title}</span>
         <PinButton

@@ -18,7 +18,7 @@ import {
   useTableCellElementResizable,
 } from '@udecode/plate-table/react';
 import { ResizeHandle } from '@udecode/plate-resizable';
-import { GripVertical, Paintbrush, Check } from 'lucide-react';
+import { Paintbrush, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -248,10 +248,10 @@ function RowHandleMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex size-6 items-center justify-center rounded bg-background/80 shadow-sm backdrop-blur-sm hover:bg-background"
+          className="group/row-handle flex h-8 w-5 items-center justify-center"
           aria-label={`Row ${rowIndex + 1} options`}
         >
-          <GripVertical className="size-3.5 text-muted-foreground" />
+          <div className="h-5 w-0.5 rounded-full bg-primary/40 transition-colors group-hover/row-handle:bg-primary" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="left">
@@ -385,10 +385,10 @@ function ColumnHandleMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex size-6 items-center justify-center rounded bg-background/80 shadow-sm backdrop-blur-sm hover:bg-background"
+          className="group/col-handle flex w-8 h-5 items-center justify-center"
           aria-label={`Column ${colIndex + 1} options`}
         >
-          <GripVertical className="size-3.5 rotate-90 text-muted-foreground" />
+          <div className="w-5 h-0.5 rounded-full bg-primary/40 transition-colors group-hover/col-handle:bg-primary" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">

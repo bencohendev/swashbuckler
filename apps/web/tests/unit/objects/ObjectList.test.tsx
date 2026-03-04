@@ -76,7 +76,7 @@ describe('ObjectList', () => {
     )
 
     const wrapper = container.firstElementChild
-    expect(wrapper?.className).toContain('space-y-0.5')
+    expect(wrapper?.className).toContain('space-y-1')
   })
 
   it('renders regular spacing without compact', () => {

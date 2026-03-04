@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileStackIcon, FolderIcon, PaletteIcon, SwatchBookIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
+import { BlocksIcon, FileStackIcon, FolderIcon, PaletteIcon, SwatchBookIcon, UserIcon, UsersIcon, LayersIcon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { SpaceSettingsHeading } from './SpaceSettingsHeading'
 
@@ -22,6 +22,12 @@ const accountItems: SettingsItem[] = [
     label: 'Spaces',
     description: 'Manage your spaces',
     icon: FolderIcon,
+  },
+  {
+    href: '/settings/global-types',
+    label: 'Global Types',
+    description: 'Reusable type blueprints for any space',
+    icon: BlocksIcon,
   },
   {
     href: '/settings/themes',
@@ -87,7 +93,7 @@ export default function SettingsPage() {
 
       <section aria-labelledby="settings-account-heading">
         <h2 id="settings-account-heading" className="mb-4 text-lg font-medium">Account</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {accountItems.map(item => (
             <SettingsCard key={item.href} {...item} />
           ))}
@@ -96,7 +102,7 @@ export default function SettingsPage() {
 
       <section aria-labelledby="settings-space-heading">
         <SpaceSettingsHeading />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {spaceItems.map(item => (
             <SettingsCard key={item.href} {...item} />
           ))}

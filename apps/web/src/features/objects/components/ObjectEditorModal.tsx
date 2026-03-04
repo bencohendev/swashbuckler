@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { ArrowLeftIcon } from 'lucide-react'
 import { useObjectModal } from '@/shared/stores/objectModal'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
@@ -16,6 +17,12 @@ export function ObjectEditorModal() {
   const { objectId, autoFocus, close } = useObjectModal()
   const isMobile = useIsMobile()
 
+  // Prevent Radix Dialog from stealing focus when autoFocus is set —
+  // ObjectEditor's own useEffect will focus the title input once the object loads
+  const handleOpenAutoFocus = useCallback((e: Event) => {
+    if (autoFocus) e.preventDefault()
+  }, [autoFocus])
+
   if (!objectId) return null
 
   return (
@@ -27,6 +34,7 @@ export function ObjectEditorModal() {
             : "max-h-[85vh] gap-0 overflow-y-auto p-0 sm:max-w-3xl"
         }
         showCloseButton={false}
+        onOpenAutoFocus={handleOpenAutoFocus}
       >
         <DialogTitle className="sr-only">Edit Entry</DialogTitle>
         {isMobile && (

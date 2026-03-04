@@ -323,7 +323,9 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
   const update = useCallback(async (id: string, input: { name?: string; icon?: string }) => {
     const result = await spacesClient.update(id, input)
     if (result.error) {
-      toast({ title: 'Update space', description: result.error.message, variant: 'destructive' })
+      if (result.error.code !== 'DUPLICATE') {
+        toast({ title: 'Update space', description: result.error.message, variant: 'destructive' })
+      }
       return { data: null, error: result.error.message }
     }
     emit('spaces')

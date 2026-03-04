@@ -135,7 +135,7 @@ function DraggableTypeSection({
   }, [drag, drop])
 
   return (
-    <div ref={ref} className="cursor-grab [&_*]:cursor-grab">
+    <div ref={ref}>
       <TypeSection
         type={type}
         objects={objects}
@@ -506,7 +506,7 @@ export function Sidebar() {
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                <item.icon className="size-5 md:size-4" />
+                <item.icon className="size-5" />
               </SidebarLink>
           ))}
         </nav>
@@ -533,7 +533,7 @@ export function Sidebar() {
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
                     <div className="h-3 w-16 animate-pulse rounded bg-muted" />
                   </div>
-                  <div className="space-y-0.5 pl-8">
+                  <div className="space-y-1 pl-8">
                     {[1, 2, 3].map(i => (
                       <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
                     ))}
@@ -547,7 +547,7 @@ export function Sidebar() {
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
                     <div className="h-3 w-12 animate-pulse rounded bg-muted" />
                   </div>
-                  <div className="space-y-0.5 pl-8">
+                  <div className="space-y-1 pl-8">
                     {[1, 2, 3].map(i => (
                       <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
                     ))}
@@ -561,7 +561,7 @@ export function Sidebar() {
                     <div className="size-3.5 animate-pulse rounded bg-muted" />
                     <div className="h-3 w-14 animate-pulse rounded bg-muted" />
                   </div>
-                  <div className="space-y-0.5 pl-8">
+                  <div className="space-y-1 pl-8">
                     {[1, 2].map(i => (
                       <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
                     ))}
@@ -588,12 +588,12 @@ export function Sidebar() {
                 {filteredOrderedTypes.length === 0 ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-sm font-medium text-muted-foreground">No types yet</p>
-                    <p className="mt-1 text-xs text-muted-foreground/70">Create a type to start organizing your entries</p>
+                    <p className="mt-1 text-sm text-muted-foreground/70">Create a type to start organizing your entries</p>
                     {canEditSpace && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="mt-3 gap-1 text-xs text-muted-foreground"
+                        className="mt-3 gap-1 text-sm text-muted-foreground"
                         onClick={() => setCreateTypeOpen(true)}
                       >
                         <PlusIcon className="size-3" />
@@ -640,7 +640,7 @@ export function Sidebar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                    className="w-full justify-start gap-1 text-sm text-muted-foreground"
                     onClick={() => setCreateTypeOpen(true)}
                   >
                     <PlusIcon className="size-3" />
@@ -657,25 +657,25 @@ export function Sidebar() {
                 <SidebarLink
                   href="/archive"
                   className={(isActive) => cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
-                  <ArchiveIcon className="size-4" />
+                  <ArchiveIcon className="size-5" />
                   Archive
                 </SidebarLink>
                 <SidebarLink
                   href="/trash"
                   className={(isActive) => cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
-                  <TrashIcon className="size-4" />
+                  <TrashIcon className="size-5" />
                   Trash
                 </SidebarLink>
               </>
@@ -746,12 +746,25 @@ export function Sidebar() {
                 </div>
               </div>
               <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">Formatting</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["⌘", "B"]} label="Bold" />
+                  <ShortcutRow keys={["⌘", "I"]} label="Italic" />
+                  <ShortcutRow keys={["⌘", "U"]} label="Underline" />
+                  <ShortcutRow keys={["⌘", "E"]} label="Inline code" />
+                  <ShortcutRow keys={["⌘", "⇧", "S"]} label="Strikethrough" />
+                  <ShortcutRow keys={["⌘", "⇧", "H"]} label="Highlight" />
+                  <ShortcutRow keys={["⌘", "⇧", "P"]} label="Private" />
+                </div>
+              </div>
+              <div>
                 <h4 className="mb-1.5 font-medium text-muted-foreground">Markdown</h4>
                 <div className="space-y-1">
                   <ShortcutRow keys={["#"]} label="Heading" />
                   <ShortcutRow keys={[">"]} label="Quote" />
                   <ShortcutRow keys={["-"]} label="Bullet list" />
                   <ShortcutRow keys={["1."]} label="Numbered list" />
+                  <ShortcutRow keys={["[]"]} label="Todo list" />
                   <ShortcutRow keys={["```"]} label="Code block" />
                 </div>
               </div>

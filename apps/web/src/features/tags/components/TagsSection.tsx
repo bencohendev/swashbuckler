@@ -22,7 +22,7 @@ export function TagsSection({ tags, collapseSignal }: TagsSectionProps) {
   return (
     <div>
       <div className="mb-1 flex items-center px-2">
-        <div className="flex flex-1 items-center gap-1 text-xs font-medium text-muted-foreground">
+        <div className="flex flex-1 items-center gap-1 text-sm font-medium text-muted-foreground">
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hover:text-foreground"
@@ -51,7 +51,7 @@ export function TagsSection({ tags, collapseSignal }: TagsSectionProps) {
               key={tag.id}
               href={`/tags/${encodeURIComponent(tag.name)}`}
               className={(isActive) => cn(
-                'flex items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors',
+                'flex items-center justify-between rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors',
                 isActive
                   ? 'bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'

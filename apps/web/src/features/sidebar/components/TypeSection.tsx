@@ -116,7 +116,7 @@ export function TypeSection({
       <ContextMenu.Root>
         <ContextMenu.Trigger asChild>
           <div className="mb-1 flex items-center justify-between px-2">
-            <div className="flex flex-1 items-center gap-1 text-xs font-medium text-muted-foreground">
+            <div className="flex flex-1 items-center gap-1 text-sm font-medium text-muted-foreground">
               <button
                 onClick={() => setCollapsed(!collapsed)}
                 className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 hover:text-foreground"
@@ -133,7 +133,7 @@ export function TypeSection({
               </button>
               <button
                 onClick={() => navigate(`/types/${type.slug}`)}
-                className="flex items-center gap-1.5 hover:text-foreground"
+                className="flex cursor-pointer items-center gap-1.5 hover:text-foreground"
               >
                 <TypeIcon icon={type.icon} className="size-3.5" />
                 <span>{type.plural_name}</span>
@@ -216,7 +216,7 @@ export function TypeSection({
       {!collapsed && (
         <div id={`type-section-${type.id}`} className="pl-8">
           {canReorderObjects && onMoveObject && onDropObject ? (
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {visibleObjects.map((obj, i) => (
                 <DraggableObjectItem
                   key={obj.id}

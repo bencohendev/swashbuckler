@@ -42,6 +42,13 @@ import {
   TemplateVariableElement,
   TodoListElement,
 } from './elements';
+import {
+  BoldMark,
+  ItalicMark,
+  UnderlineMark,
+  StrikethroughMark,
+  CodeMark,
+} from './marks';
 import { PrivateBlockElement } from '../plugins/private-plugin';
 import { useEditorStore } from '../store';
 import { useAutoSave } from '../hooks/useAutoSave';
@@ -82,6 +89,13 @@ interface EditorProps {
 }
 
 const COMPONENT_OVERRIDES = {
+  // Marks (leaf components)
+  bold: BoldMark,
+  italic: ItalicMark,
+  underline: UnderlineMark,
+  strikethrough: StrikethroughMark,
+  code: CodeMark,
+  // Elements
   p: ParagraphElement,
   h1: H1Element,
   h2: H2Element,
