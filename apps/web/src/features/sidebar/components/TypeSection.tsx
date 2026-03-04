@@ -116,7 +116,7 @@ export function TypeSection({
       <ContextMenu.Root>
         <ContextMenu.Trigger asChild>
           <div className="mb-1 flex items-center justify-between px-2">
-            <div className="flex flex-1 items-center gap-1 text-xs font-medium text-muted-foreground">
+            <div className="flex flex-1 items-center gap-1 text-sm font-medium text-muted-foreground">
               <button
                 onClick={() => setCollapsed(!collapsed)}
                 className="min-h-11 min-w-11 inline-flex items-center justify-center sm:min-h-0 sm:min-w-0 hover:text-foreground"
