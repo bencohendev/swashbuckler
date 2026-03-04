@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import type { User, UserIdentity } from '@supabase/supabase-js'
 import { createClient } from '@/shared/lib/supabase/client'
 import { Button } from '@/shared/components/ui/Button'
@@ -14,7 +14,6 @@ const PROVIDERS = [
 ] as const
 
 export function ConnectedAccountsSection({ user }: { user: User }) {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const identities = user.identities ?? []
   const [isLinking, setIsLinking] = useState<string | null>(null)
@@ -68,7 +67,8 @@ export function ConnectedAccountsSection({ user }: { user: User }) {
       if (unlinkError) {
         setError(unlinkError.message)
       } else {
-        router.refresh()
+        // Refresh the session to trigger onAuthStateChange with updated identities
+        await supabase.auth.refreshSession()
       }
     } catch {
       setError('Unable to connect. Please try again.')

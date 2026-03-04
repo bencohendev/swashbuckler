@@ -51,7 +51,7 @@ export function TagsSection({ tags, collapseSignal }: TagsSectionProps) {
               key={tag.id}
               href={`/tags/${encodeURIComponent(tag.name)}`}
               className={(isActive) => cn(
-                'flex items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors',
+                'flex items-center justify-between rounded-md px-2 py-1.5 text-[14px] cursor-pointer transition-colors',
                 isActive
                   ? 'bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'

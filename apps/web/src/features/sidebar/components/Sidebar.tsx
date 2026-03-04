@@ -135,7 +135,7 @@ function DraggableTypeSection({
   }, [drag, drop])
 
   return (
-    <div ref={ref} className="cursor-grab [&_*]:cursor-grab">
+    <div ref={ref}>
       <TypeSection
         type={type}
         objects={objects}
@@ -506,7 +506,7 @@ export function Sidebar() {
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                <item.icon className="size-5 md:size-4" />
+                <item.icon className="size-5" />
               </SidebarLink>
           ))}
         </nav>
@@ -657,25 +657,25 @@ export function Sidebar() {
                 <SidebarLink
                   href="/archive"
                   className={(isActive) => cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-[14px] cursor-pointer transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
-                  <ArchiveIcon className="size-4" />
+                  <ArchiveIcon className="size-5" />
                   Archive
                 </SidebarLink>
                 <SidebarLink
                   href="/trash"
                   className={(isActive) => cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-[14px] cursor-pointer transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
-                  <TrashIcon className="size-4" />
+                  <TrashIcon className="size-5" />
                   Trash
                 </SidebarLink>
               </>
