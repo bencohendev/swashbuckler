@@ -274,7 +274,7 @@ export function QuickCaptureDialog({ open, onOpenChange }: QuickCaptureDialogPro
             <>
               {/* Level 1: Type list */}
               <div className="border-b px-3 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                Create new{selectedIndex < types.length && types[selectedIndex] ? ` ${types[selectedIndex].name}` : ''}
+                Create new{selectedIndex < types.length && types[selectedIndex] ? ` ${types[selectedIndex].name}` : selectedIndex === types.length && isSpaceOwner ? ' Type' : ''}
               </div>
               <div className="max-h-72 overflow-y-auto py-1">
                 {types.length === 0 && (
