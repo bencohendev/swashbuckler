@@ -7,6 +7,7 @@ import { ArchiveIcon, ArrowLeftIcon, FolderIcon, PlusIcon, Trash2Icon } from 'lu
 import { useAuth, useCurrentSpace, useSpaces } from '@/shared/lib/data'
 import type { Space } from '@/shared/lib/data'
 import { Button } from '@/shared/components/ui/Button'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { EmojiPicker } from '@/shared/components/LazyEmojiPicker'
 import { CreateSpaceDialog } from '@/features/sidebar/components/CreateSpaceDialog'
@@ -14,12 +15,28 @@ import { toast } from '@/shared/hooks/useToast'
 
 export function SpacesSettings() {
   const { user, isGuest } = useAuth()
-  const { space: currentSpace, spaces: allSpaces, switchSpace } = useCurrentSpace()
+  const { space: currentSpace, spaces: allSpaces, switchSpace, isLoading } = useCurrentSpace()
   const { create, update, remove, archiveSpace } = useSpaces()
   const router = useRouter()
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   const ownedSpaces = isGuest ? allSpaces : allSpaces.filter(s => s.owner_id === user?.id)
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Header />
+        <div className="space-y-1" role="status" aria-label="Loading spaces">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-3 rounded-lg border px-4 py-3">
+              <Skeleton className="size-9 shrink-0" />
+              <Skeleton className="h-5 flex-1" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (isGuest) {
     return (
