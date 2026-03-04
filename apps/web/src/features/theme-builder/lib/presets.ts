@@ -25,13 +25,13 @@ const scifiDarkCore: ThemeCoreColors = {
 
 const fantasyLightCore: ThemeCoreColors = {
   background: '#f4e4c1',
-  foreground: '#2c1810',
-  primary: '#8b1a1a',
-  secondary: '#ecdcc3',
-  accent: '#d4b896',
-  muted: '#e8d5b8',
-  destructive: '#a02020',
-  border: '#c9a96e',
+  foreground: '#1e0f08',
+  primary: '#7a1515',
+  secondary: '#e6d4b5',
+  accent: '#c8a880',
+  muted: '#d4be9a',
+  destructive: '#922020',
+  border: '#b89558',
 }
 
 const fantasyDarkCore: ThemeCoreColors = {
