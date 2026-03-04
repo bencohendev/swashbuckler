@@ -17,6 +17,7 @@ import { useFocusOnNavigation } from '@/shared/hooks/useFocusOnNavigation'
 
 interface ProvidersProps {
   children: ReactNode
+  initialUser?: User | null
 }
 
 // Inner component that reads space context and passes spaceId to DataProvider
@@ -32,9 +33,9 @@ function DataProviderWithSpace({ children, user, isAuthLoading }: { children: Re
   )
 }
 
-export function Providers({ children }: ProvidersProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isAuthLoading, setIsAuthLoading] = useState(true)
+export function Providers({ children, initialUser = null }: ProvidersProps) {
+  const [user, setUser] = useState<User | null>(initialUser)
+  const [isAuthLoading, setIsAuthLoading] = useState(!initialUser)
   const supabase = useMemo(() => createClient(), [])
 
   const [queryClient] = useState(() => new QueryClient({

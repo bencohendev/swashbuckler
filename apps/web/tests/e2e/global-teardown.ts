@@ -21,9 +21,11 @@ export default async function globalTeardown(_config: FullConfig) {
       const testEmails = [USER_A_EMAIL, USER_B_EMAIL]
 
       for (const user of existing?.users ?? []) {
-        if (testEmails.includes(user.email ?? '')) {
+        const email = user.email ?? ''
+        // Delete known test fixture users and any orphaned signup test users
+        if (testEmails.includes(email) || email.startsWith('signup-')) {
           await admin.auth.admin.deleteUser(user.id)
-          console.log(`[global-teardown] Deleted test user ${user.email}`)
+          console.log(`[global-teardown] Deleted test user ${email}`)
         }
       }
     } catch (err) {

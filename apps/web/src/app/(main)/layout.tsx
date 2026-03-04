@@ -1,5 +1,5 @@
 import { type ReactNode } from "react"
-import { createClient } from "@/shared/lib/supabase/server"
+import { getUser } from "@/shared/lib/supabase/server"
 import { Sidebar } from "@/features/sidebar/components"
 import { SectionErrorBoundary } from "@/shared/components/SectionErrorBoundary"
 import { Header } from "@/shared/components/layout"
@@ -8,8 +8,7 @@ import { LazyObjectEditorModal } from "@/features/objects/components/LazyObjectE
 import { NavigationProgress } from "@/shared/components/NavigationProgress"
 
 export default async function MainLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
 
   return (
     <div className="flex h-dvh">

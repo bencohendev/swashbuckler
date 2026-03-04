@@ -7,7 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { cn } from '@/shared/lib/utils'
 import { Button } from './ui/Button'
 
-const STORAGE_KEY = 'swashbuckler:analyticsConsent'
+export const ANALYTICS_CONSENT_KEY = 'swashbuckler:analyticsConsent'
 
 type ConsentState = 'pending' | 'accepted' | 'declined'
 
@@ -27,7 +27,7 @@ function subscribe(callback: () => void) {
 }
 
 function getSnapshot(): ConsentState {
-  const value = localStorage.getItem(STORAGE_KEY)
+  const value = localStorage.getItem(ANALYTICS_CONSENT_KEY)
   if (value === 'accepted' || value === 'declined') return value
   return 'pending'
 }
@@ -37,7 +37,7 @@ function getServerSnapshot(): ConsentState {
 }
 
 function writeConsent(value: 'accepted' | 'declined') {
-  localStorage.setItem(STORAGE_KEY, value)
+  localStorage.setItem(ANALYTICS_CONSENT_KEY, value)
   emitChange()
 }
 
@@ -56,7 +56,7 @@ export function AnalyticsBanner() {
         </>
       )}
       <div
-        role="status"
+        role="region"
         aria-label="Analytics consent"
         className={cn(
           "fixed bottom-0 inset-x-0 z-50 overflow-hidden transition-all duration-200",

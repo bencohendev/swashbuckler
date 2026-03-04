@@ -1,5 +1,16 @@
+import { cache } from "react"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+
+/**
+ * Cached getUser() — deduplicates multiple calls within a single RSC render pass.
+ * Use this instead of calling createClient() + getUser() separately in layouts/pages.
+ */
+export const getUser = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+})
 
 export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
