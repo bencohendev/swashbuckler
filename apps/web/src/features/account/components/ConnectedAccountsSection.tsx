@@ -100,14 +100,16 @@ export function ConnectedAccountsSection({ user }: { user: User }) {
                     <CheckIcon className="size-3.5" />
                     Connected
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => handleUnlink(identity)}
-                    disabled={isUnlinking === id || identities.length <= 1}
-                  >
-                    {isUnlinking === id ? 'Removing...' : 'Disconnect'}
-                  </Button>
+                  {identities.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => handleUnlink(identity)}
+                      disabled={isUnlinking === id}
+                    >
+                      {isUnlinking === id ? 'Removing...' : 'Disconnect'}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <Button
