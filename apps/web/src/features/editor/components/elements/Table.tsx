@@ -248,10 +248,10 @@ function RowHandleMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="group/row-handle flex h-full w-5 items-center justify-center"
+          className="group/row-handle flex h-8 w-5 items-center justify-center"
           aria-label={`Row ${rowIndex + 1} options`}
         >
-          <div className="h-full w-0.5 rounded-full bg-primary/40 transition-colors group-hover/row-handle:bg-primary" />
+          <div className="h-5 w-0.5 rounded-full bg-primary/40 transition-colors group-hover/row-handle:bg-primary" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="left">
@@ -385,10 +385,10 @@ function ColumnHandleMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="group/col-handle flex w-full h-5 items-center justify-center"
+          className="group/col-handle flex w-8 h-5 items-center justify-center"
           aria-label={`Column ${colIndex + 1} options`}
         >
-          <div className="w-full h-0.5 rounded-full bg-primary/40 transition-colors group-hover/col-handle:bg-primary" />
+          <div className="w-5 h-0.5 rounded-full bg-primary/40 transition-colors group-hover/col-handle:bg-primary" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
@@ -615,9 +615,8 @@ function TableElementContent({
                   key={i}
                   className={`absolute transition-opacity duration-150 ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                   style={{
-                    left: col.left,
-                    width: col.width,
-                    transform: 'translateY(-50%)',
+                    left: col.left + col.width / 2,
+                    transform: 'translate(-50%, -50%)',
                   }}
                 >
                   <ColumnHandleMenu
@@ -649,9 +648,8 @@ function TableElementContent({
                   key={i}
                   className={`absolute transition-opacity duration-150 ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                   style={{
-                    top: row.top,
-                    height: row.height,
-                    transform: 'translateX(-50%)',
+                    top: row.top + row.height / 2,
+                    transform: 'translate(-50%, -50%)',
                   }}
                 >
                   <RowHandleMenu
