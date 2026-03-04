@@ -16,21 +16,11 @@ html[data-preset="fantasy"] [data-slot="card-title"] {
   font-family: var(--font-fantasy-heading), Georgia, serif;
 }
 
-/* ─── Page-wide parchment texture (grain + stains + vignette) ─── */
+/* ─── Page-wide parchment: grain + vignette on body ─── */
 html[data-preset="fantasy"] body {
   position: relative;
+  /* Vignette only — stains are on sections via background-attachment: fixed */
   background:
-    /* Stain / discoloration patches */
-    radial-gradient(ellipse at 10% 15%, rgba(120, 80, 30, 0.25) 0%, transparent 35%),
-    radial-gradient(ellipse at 90% 10%, rgba(110, 70, 25, 0.22) 0%, transparent 30%),
-    radial-gradient(ellipse at 85% 85%, rgba(130, 85, 30, 0.25) 0%, transparent 35%),
-    radial-gradient(ellipse at 5% 90%, rgba(115, 75, 28, 0.22) 0%, transparent 30%),
-    radial-gradient(ellipse at 50% 5%, rgba(125, 82, 30, 0.18) 0%, transparent 25%),
-    radial-gradient(ellipse at 50% 95%, rgba(120, 78, 28, 0.18) 0%, transparent 25%),
-    /* Inner stains */
-    radial-gradient(ellipse at 30% 40%, rgba(160, 120, 50, 0.12) 0%, transparent 45%),
-    radial-gradient(ellipse at 70% 60%, rgba(150, 110, 45, 0.1) 0%, transparent 40%),
-    /* Edge vignette */
     radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(90, 55, 15, 0.2) 70%, rgba(60, 35, 10, 0.4) 100%);
   box-shadow:
     inset 0 0 60px rgba(80, 50, 10, 0.3),
@@ -66,6 +56,26 @@ html[data-preset="fantasy"] body::after {
 html[data-preset="fantasy"] body > * {
   position: relative;
   z-index: 1;
+}
+
+/*
+ * Shared parchment stains — applied to each layout section with
+ * background-attachment: fixed so they share the same viewport
+ * coordinate space and look like one continuous parchment sheet.
+ */
+html[data-preset="fantasy"] main,
+html[data-preset="fantasy"] aside,
+html[data-preset="fantasy"] header {
+  background:
+    radial-gradient(ellipse at 10% 15%, rgba(120, 80, 30, 0.25) 0%, transparent 35%),
+    radial-gradient(ellipse at 90% 10%, rgba(110, 70, 25, 0.22) 0%, transparent 30%),
+    radial-gradient(ellipse at 85% 85%, rgba(130, 85, 30, 0.25) 0%, transparent 35%),
+    radial-gradient(ellipse at 5% 90%, rgba(115, 75, 28, 0.22) 0%, transparent 30%),
+    radial-gradient(ellipse at 50% 5%, rgba(125, 82, 30, 0.18) 0%, transparent 25%),
+    radial-gradient(ellipse at 50% 95%, rgba(120, 78, 28, 0.18) 0%, transparent 25%),
+    radial-gradient(ellipse at 30% 40%, rgba(160, 120, 50, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 60%, rgba(150, 110, 45, 0.1) 0%, transparent 40%);
+  background-attachment: fixed;
 }
 
 html[data-preset="fantasy"] [data-plate-editor] {
@@ -213,17 +223,24 @@ html[data-preset="fantasy"] ::-webkit-scrollbar-thumb:hover {
 /* ─── Dark variant adjustments ─── */
 html[data-preset="fantasy"].dark body {
   background:
-    radial-gradient(ellipse at 10% 15%, rgba(201, 169, 110, 0.08) 0%, transparent 35%),
-    radial-gradient(ellipse at 90% 10%, rgba(201, 169, 110, 0.07) 0%, transparent 30%),
-    radial-gradient(ellipse at 85% 85%, rgba(201, 169, 110, 0.08) 0%, transparent 35%),
-    radial-gradient(ellipse at 5% 90%, rgba(201, 169, 110, 0.07) 0%, transparent 30%),
-    radial-gradient(ellipse at 30% 40%, rgba(201, 169, 110, 0.05) 0%, transparent 45%),
-    radial-gradient(ellipse at 70% 60%, rgba(201, 169, 110, 0.04) 0%, transparent 40%),
     radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.3) 100%);
   box-shadow:
     inset 0 0 60px rgba(0, 0, 0, 0.3),
     inset 0 0 120px rgba(0, 0, 0, 0.15),
     inset 0 0 200px rgba(0, 0, 0, 0.1);
+}
+
+html[data-preset="fantasy"].dark main,
+html[data-preset="fantasy"].dark aside,
+html[data-preset="fantasy"].dark header {
+  background:
+    radial-gradient(ellipse at 10% 15%, rgba(201, 169, 110, 0.08) 0%, transparent 35%),
+    radial-gradient(ellipse at 90% 10%, rgba(201, 169, 110, 0.07) 0%, transparent 30%),
+    radial-gradient(ellipse at 85% 85%, rgba(201, 169, 110, 0.08) 0%, transparent 35%),
+    radial-gradient(ellipse at 5% 90%, rgba(201, 169, 110, 0.07) 0%, transparent 30%),
+    radial-gradient(ellipse at 30% 40%, rgba(201, 169, 110, 0.05) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 60%, rgba(201, 169, 110, 0.04) 0%, transparent 40%);
+  background-attachment: fixed;
 }
 
 html[data-preset="fantasy"].dark body::before {
