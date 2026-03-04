@@ -186,21 +186,6 @@ html[data-preset="fantasy"] [data-slot="separator"] {
     var(--border) 80%,
     transparent 100%
   );
-  position: relative;
-}
-
-html[data-preset="fantasy"] hr::after,
-html[data-preset="fantasy"] [data-slot="separator"]::after {
-  content: "◆";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--background);
-  padding: 0 8px;
-  font-size: 8px;
-  color: var(--border);
-  line-height: 1;
 }
 
 /* ─── Inputs ─── */

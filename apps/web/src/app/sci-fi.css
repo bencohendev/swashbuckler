@@ -130,22 +130,8 @@ html[data-preset="sci-fi"] [data-slot="separator"] {
     var(--border) 80%,
     transparent 100%
   );
-  position: relative;
 }
 
-html[data-preset="sci-fi"] hr::after,
-html[data-preset="sci-fi"] [data-slot="separator"]::after {
-  content: "\2B21";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--background);
-  padding: 0 8px;
-  font-size: 8px;
-  color: var(--primary);
-  line-height: 1;
-}
 
 /* ─── Inputs ─── */
 html[data-preset="sci-fi"] [data-slot="input"] {
