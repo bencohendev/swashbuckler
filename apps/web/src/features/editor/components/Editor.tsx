@@ -283,37 +283,48 @@ function CollaborativeEditor({
     return () => setCollaborative(false);
   }, [setCollaborative]);
 
-  // Seed Y.Doc and bind editor synchronously.
-  // Provider connect/disconnect is handled by useCollaboration.
+  // Seed Y.Doc after the provider has synced (or timed out waiting for peers).
+  // Waiting for sync prevents the race where two peers both see an empty Y.Doc
+  // and both seed, causing duplicate content.
   //
   // Uses a fixed clientID (0) for seeding so every peer produces identical Yjs
   // structs — when a second peer's seed arrives, Yjs sees the same (client, clock)
-  // pairs and skips them, preventing content duplication.
-  // If sharedType already has content (peer synced before mount), skip seeding.
+  // pairs and skips them as a secondary safety net.
   useEffect(() => {
-    const sharedType = doc.get('content', Y.XmlText)
-    if (sharedType.length === 0) {
-      const content = sanitizeContent(initialContent) || initialEditorValue
-      const realClientID = doc.clientID
-      doc.clientID = 0
-      doc.transact(() => {
-        sharedType.applyDelta(slateNodesToInsertDelta(content))
-      })
-      doc.clientID = realClientID
+    let cancelled = false
+
+    function seedAndBind() {
+      if (cancelled) return
+
+      const sharedType = doc.get('content', Y.XmlText)
+      if (sharedType.length === 0) {
+        const content = sanitizeContent(initialContent) || initialEditorValue
+        const realClientID = doc.clientID
+        doc.clientID = 0
+        doc.transact(() => {
+          sharedType.applyDelta(slateNodesToInsertDelta(content))
+        })
+        doc.clientID = realClientID
+      }
+
+      // Bind editor to Y.Doc (syncs Y.Doc content into Slate)
+      const yjsEd = toYjsEditor(editor)
+      if (!YjsEditor.connected(yjsEd)) {
+        YjsEditor.connect(yjsEd)
+      }
+
+      awareness.setLocalStateField('data', cursorData)
+      isBoundRef.current = true
+      // Clear false-positive dirty flag from Y.Doc seeding onChange
+      useEditorStore.getState().markClean()
     }
 
-    // Bind editor to Y.Doc (syncs Y.Doc content into Slate)
-    const yjsEd = toYjsEditor(editor)
-    if (!YjsEditor.connected(yjsEd)) {
-      YjsEditor.connect(yjsEd)
-    }
-
-    awareness.setLocalStateField('data', cursorData)
-    isBoundRef.current = true
-    // Clear false-positive dirty flag from Y.Doc seeding onChange
-    useEditorStore.getState().markClean()
+    // Wait for sync so we know if a peer already has content
+    provider.onSync(seedAndBind)
 
     return () => {
+      cancelled = true
+      provider.offSync(seedAndBind)
       const yjsEd = toYjsEditor(editor)
       if (YjsEditor.connected(yjsEd)) {
         YjsEditor.disconnect(yjsEd)
