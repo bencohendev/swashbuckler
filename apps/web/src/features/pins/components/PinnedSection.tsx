@@ -27,7 +27,7 @@ export function PinnedSection({ pinnedIds, objects, collapseSignal }: PinnedSect
   return (
     <div>
       <div className="mb-1 flex items-center px-2">
-        <div className="flex flex-1 items-center gap-1 text-xs font-medium text-muted-foreground">
+        <div className="flex flex-1 items-center gap-1 text-sm font-medium text-muted-foreground">
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hover:text-foreground"

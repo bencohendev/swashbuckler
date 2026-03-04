@@ -77,7 +77,7 @@ export function DraggableObjectItem({
       <SidebarLink
         href={`/objects/${object.id}`}
         className={(active) => cn(
-          'group flex items-center gap-1 rounded-md px-2 py-1.5 text-[14px] cursor-pointer transition-colors',
+          'group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors',
           active
             ? 'bg-accent text-accent-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'

@@ -588,12 +588,12 @@ export function Sidebar() {
                 {filteredOrderedTypes.length === 0 ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-sm font-medium text-muted-foreground">No types yet</p>
-                    <p className="mt-1 text-xs text-muted-foreground/70">Create a type to start organizing your entries</p>
+                    <p className="mt-1 text-sm text-muted-foreground/70">Create a type to start organizing your entries</p>
                     {canEditSpace && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="mt-3 gap-1 text-xs text-muted-foreground"
+                        className="mt-3 gap-1 text-sm text-muted-foreground"
                         onClick={() => setCreateTypeOpen(true)}
                       >
                         <PlusIcon className="size-3" />
@@ -640,7 +640,7 @@ export function Sidebar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start gap-1 text-xs text-muted-foreground"
+                    className="w-full justify-start gap-1 text-sm text-muted-foreground"
                     onClick={() => setCreateTypeOpen(true)}
                   >
                     <PlusIcon className="size-3" />
@@ -657,7 +657,7 @@ export function Sidebar() {
                 <SidebarLink
                   href="/archive"
                   className={(isActive) => cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-[14px] cursor-pointer transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -669,7 +669,7 @@ export function Sidebar() {
                 <SidebarLink
                   href="/trash"
                   className={(isActive) => cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-[14px] cursor-pointer transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm cursor-pointer transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
