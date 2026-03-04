@@ -87,7 +87,7 @@ export default function SettingsPage() {
 
       <section aria-labelledby="settings-account-heading">
         <h2 id="settings-account-heading" className="mb-4 text-lg font-medium">Account</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {accountItems.map(item => (
             <SettingsCard key={item.href} {...item} />
           ))}
@@ -96,7 +96,7 @@ export default function SettingsPage() {
 
       <section aria-labelledby="settings-space-heading">
         <SpaceSettingsHeading />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {spaceItems.map(item => (
             <SettingsCard key={item.href} {...item} />
           ))}
