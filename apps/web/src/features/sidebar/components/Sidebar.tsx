@@ -746,12 +746,25 @@ export function Sidebar() {
                 </div>
               </div>
               <div>
+                <h4 className="mb-1.5 font-medium text-muted-foreground">Formatting</h4>
+                <div className="space-y-1">
+                  <ShortcutRow keys={["⌘", "B"]} label="Bold" />
+                  <ShortcutRow keys={["⌘", "I"]} label="Italic" />
+                  <ShortcutRow keys={["⌘", "U"]} label="Underline" />
+                  <ShortcutRow keys={["⌘", "E"]} label="Inline code" />
+                  <ShortcutRow keys={["⌘", "⇧", "S"]} label="Strikethrough" />
+                  <ShortcutRow keys={["⌘", "⇧", "H"]} label="Highlight" />
+                  <ShortcutRow keys={["⌘", "⇧", "P"]} label="Private" />
+                </div>
+              </div>
+              <div>
                 <h4 className="mb-1.5 font-medium text-muted-foreground">Markdown</h4>
                 <div className="space-y-1">
                   <ShortcutRow keys={["#"]} label="Heading" />
                   <ShortcutRow keys={[">"]} label="Quote" />
                   <ShortcutRow keys={["-"]} label="Bullet list" />
                   <ShortcutRow keys={["1."]} label="Numbered list" />
+                  <ShortcutRow keys={["[]"]} label="Todo list" />
                   <ShortcutRow keys={["```"]} label="Code block" />
                 </div>
               </div>
