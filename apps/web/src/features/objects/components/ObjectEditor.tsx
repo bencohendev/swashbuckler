@@ -110,9 +110,11 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   }, [object?.id, autoFocus])
 
   // Auto-focus title for newly created entries
+  // Uses requestAnimationFrame to ensure focus happens after dialog layout/animation
   useEffect(() => {
     if (autoFocus && object && titleRef.current) {
-      titleRef.current.focus()
+      const el = titleRef.current
+      requestAnimationFrame(() => el.focus())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on initial load
   }, [object?.id])
