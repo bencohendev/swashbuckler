@@ -108,8 +108,13 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
           const spaceClient = user
             ? createSupabaseDataClient(supabase, newSpaceId, user.id)
             : createLocalDataClient(newSpaceId)
-          await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
+          const welcomePageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
           emit('objects')
+
+          // Navigate to the welcome page so the user lands on content, not an empty dashboard
+          if (welcomePageId && typeof window !== 'undefined') {
+            window.location.replace(`/objects/${welcomePageId}`)
+          }
         } catch (err) {
           console.error('Failed to seed welcome page:', err)
         }

@@ -101,19 +101,25 @@ export const WELCOME_PAGE_CONTENT = [
  * Creates a "Getting Started" welcome page in the given space.
  * Finds the first object type (typically Page) and creates an entry with introductory content.
  */
+/**
+ * Creates a "Getting Started" welcome page in the given space.
+ * Returns the created object's ID so the caller can navigate to it, or null on failure.
+ */
 export async function createWelcomePage(
   objectsClient: ObjectsClient,
   objectTypesClient: ObjectTypesClient,
-): Promise<void> {
+): Promise<string | null> {
   const typesResult = await objectTypesClient.list()
-  if (typesResult.error || typesResult.data.length === 0) return
+  if (typesResult.error || typesResult.data.length === 0) return null
 
   // Use the first available type (should be Page)
   const pageType = typesResult.data.find(t => t.slug === 'page') ?? typesResult.data[0]
 
-  await objectsClient.create({
+  const result = await objectsClient.create({
     title: 'Getting Started',
     type_id: pageType.id,
     content: WELCOME_PAGE_CONTENT,
   })
+
+  return result.data?.id ?? null
 }

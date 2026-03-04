@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef, type MutableRefObject } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
@@ -40,6 +40,39 @@ import { TagPicker } from '@/features/tags'
 import { PinButton } from '@/features/pins'
 import { PropertyFields } from './PropertyFields'
 import { CoverImage } from './CoverImage'
+
+const SAVE_DEBOUNCE_MS = 500
+
+/** Returns a debounced save function. The latest value always wins. */
+function useDebouncedSave<T>(
+  saveFn: MutableRefObject<((value: T) => Promise<unknown>) | null>,
+  delay = SAVE_DEBOUNCE_MS,
+) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestRef = useRef<T | null>(null)
+
+  const flush = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+    if (latestRef.current !== null && saveFn.current) {
+      saveFn.current(latestRef.current)
+      latestRef.current = null
+    }
+  }, [saveFn])
+
+  const schedule = useCallback((value: T) => {
+    latestRef.current = value
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(flush, delay)
+  }, [flush, delay])
+
+  // Flush on unmount so pending changes aren't lost
+  useEffect(() => () => flush(), [flush])
+
+  return { schedule, flush }
+}
 
 interface ObjectEditorProps {
   id: string
@@ -100,14 +133,16 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     trackAccess(id)
   }, [id, trackAccess])
 
-  // Sync title when object changes (e.g., on initial load or navigation)
-  // For new entries (autoFocus), keep title empty so placeholder shows the generated name
+  // Sync title from query data (initial load, navigation, or remote changes).
+  // For new entries (autoFocus), keep title empty so placeholder shows the generated name.
+  // Track whether the user is actively editing to avoid overwriting mid-keystroke.
+  const isTitleFocusedRef = useRef(false)
   useEffect(() => {
-    if (object && !autoFocus) {
+    if (object && !autoFocus && !isTitleFocusedRef.current) {
       setTitle(object.title)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync on id change
-  }, [object?.id, autoFocus])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only sync on id/title change, not every object ref
+  }, [object?.id, object?.title, autoFocus])
 
   // Auto-focus title for newly created entries
   // Uses requestAnimationFrame to ensure focus happens after dialog layout/animation
@@ -119,15 +154,20 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on initial load
   }, [object?.id])
 
-  const handleTitleChange = useCallback(async (newTitle: string) => {
-    setTitle(newTitle)
-    if (!newTitle) return // Don't persist empty — DB keeps generated name
-
-    // Auto-save
+  // Debounced title persistence — local state updates instantly, DB writes are batched
+  const titleSaveFnRef = useRef<((value: string) => Promise<unknown>) | null>(null)
+  titleSaveFnRef.current = async (newTitle: string) => {
     setIsTitleSaving(true)
     await update({ title: newTitle })
     setIsTitleSaving(false)
-  }, [update])
+  }
+  const { schedule: scheduleTitleSave } = useDebouncedSave(titleSaveFnRef)
+
+  const handleTitleChange = useCallback((newTitle: string) => {
+    setTitle(newTitle)
+    if (!newTitle) return // Don't persist empty — DB keeps generated name
+    scheduleTitleSave(newTitle)
+  }, [scheduleTitleSave])
 
   const handleContentSave = useCallback(async (content: Value) => {
     const result = await update({ content })
@@ -143,11 +183,24 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     await update({ icon: emoji })
   }, [update])
 
-  const handlePropertyChange = useCallback(async (fieldId: string, value: unknown) => {
+  // Debounced property persistence — accumulates changes, flushes to DB
+  const pendingPropertiesRef = useRef<Record<string, unknown> | null>(null)
+  const propSaveFnRef = useRef<((value: Record<string, unknown>) => Promise<unknown>) | null>(null)
+  propSaveFnRef.current = async (props: Record<string, unknown>) => {
+    await update({ properties: props })
+    pendingPropertiesRef.current = null
+  }
+  const { schedule: schedulePropSave } = useDebouncedSave(propSaveFnRef)
+
+  const handlePropertyChange = useCallback((fieldId: string, value: unknown) => {
     if (!object) return
-    const updatedProperties = { ...object.properties, [fieldId]: value }
-    await update({ properties: updatedProperties })
-  }, [object, update])
+    // Merge with any already-pending changes so rapid edits to different fields
+    // don't overwrite each other
+    const base = pendingPropertiesRef.current ?? object.properties
+    const updatedProperties = { ...base, [fieldId]: value }
+    pendingPropertiesRef.current = updatedProperties
+    schedulePropSave(updatedProperties)
+  }, [object, schedulePropSave])
 
   const handleCoverChange = useCallback(async (url: string | null) => {
     await update({ cover_image: url })
@@ -417,6 +470,8 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
             type="text"
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
+            onFocus={() => { isTitleFocusedRef.current = true }}
+            onBlur={() => { isTitleFocusedRef.current = false }}
             placeholder={autoFocus && !title && object?.title ? object.title : 'Untitled'}
             readOnly={!canEdit}
             className={`mb-4 w-full border-none bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground${!canEdit ? ' cursor-default' : ''}`}

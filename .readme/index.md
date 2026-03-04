@@ -158,6 +158,9 @@ Dual-storage architecture with a `DataClient` interface:
 | [Content Filtering](features/content-filtering.md) | Extend advanced filters to search entry body content, not just properties and title |
 | [Manual Entry Ordering](features/manual-entry-ordering.md) | Drag-and-drop reordering of entries in sidebar and type pages (table/list views) |
 | [Apply Theme from Themes Page](features/apply-theme-from-themes-page.md) | Activate button on account-level custom themes page to apply a theme to the current space |
+| Editor Slash Menu Emoji | Emoji item in editor slash menu — opens inline picker, inserts emoji as text |
+| Quick Create Modal UI Polish | Restyled heading as uppercase section label with muted background |
+| Quick Create Keyboard Indicators | Keyboard hint footer (↑↓ navigate, ↵ select, esc close) in quick create modal |
 
 
 ## Planned Features
