@@ -16,59 +16,55 @@ html[data-preset="fantasy"] [data-slot="card-title"] {
   font-family: var(--font-fantasy-heading), Georgia, serif;
 }
 
-/* ─── Editor / main parchment texture ─── */
+/* ─── Page-wide parchment grain (covers sidebar, header, main) ─── */
+html[data-preset="fantasy"] body {
+  position: relative;
+}
+
+html[data-preset="fantasy"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3C/svg%3E#n");
+}
+
+html[data-preset="fantasy"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  mix-blend-mode: multiply;
+  filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3C/svg%3E#f");
+}
+
+/* All body children above grain */
+html[data-preset="fantasy"] body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Main parchment stains + vignette ─── */
 html[data-preset="fantasy"] main {
   background:
-    /* Stain / discoloration patches */
     radial-gradient(ellipse at 10% 15%, rgba(120, 80, 30, 0.25) 0%, transparent 35%),
     radial-gradient(ellipse at 90% 10%, rgba(110, 70, 25, 0.22) 0%, transparent 30%),
     radial-gradient(ellipse at 85% 85%, rgba(130, 85, 30, 0.25) 0%, transparent 35%),
     radial-gradient(ellipse at 5% 90%, rgba(115, 75, 28, 0.22) 0%, transparent 30%),
     radial-gradient(ellipse at 50% 5%, rgba(125, 82, 30, 0.18) 0%, transparent 25%),
     radial-gradient(ellipse at 50% 95%, rgba(120, 78, 28, 0.18) 0%, transparent 25%),
-    /* Inner stains for variation */
     radial-gradient(ellipse at 30% 40%, rgba(160, 120, 50, 0.12) 0%, transparent 45%),
     radial-gradient(ellipse at 70% 60%, rgba(150, 110, 45, 0.1) 0%, transparent 40%),
-    /* Crease lines */
-    linear-gradient(155deg, transparent 42%, rgba(130, 90, 40, 0.06) 42.5%, rgba(130, 90, 40, 0.06) 43%, transparent 43.5%),
-    linear-gradient(30deg, transparent 55%, rgba(120, 85, 35, 0.05) 55.5%, rgba(120, 85, 35, 0.05) 56%, transparent 56.5%),
-    /* Heavy edge burn / vignette */
     radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(90, 55, 15, 0.2) 70%, rgba(60, 35, 10, 0.4) 100%);
-  /* Inset shadow for deep edge darkening */
   box-shadow:
     inset 0 0 60px rgba(80, 50, 10, 0.3),
     inset 0 0 120px rgba(80, 50, 10, 0.15),
     inset 0 0 200px rgba(60, 35, 10, 0.1);
-}
-
-/* Parchment grain noise via SVG feTurbulence — two layers for depth */
-html[data-preset="fantasy"] main::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.55;
-  mix-blend-mode: multiply;
-  filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3C/svg%3E#n");
-}
-
-/* Coarse fiber texture layer */
-html[data-preset="fantasy"] main::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.15;
-  mix-blend-mode: multiply;
-  filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3C/svg%3E#f");
-}
-
-/* Ensure main content stays above the grain layers */
-html[data-preset="fantasy"] main > * {
-  position: relative;
-  z-index: 1;
 }
 
 html[data-preset="fantasy"] [data-plate-editor] {
@@ -77,25 +73,19 @@ html[data-preset="fantasy"] [data-plate-editor] {
     inset 0 0 100px rgba(139, 109, 63, 0.06);
 }
 
-/* ─── Sidebar wood grain ─── */
+/* ─── Sidebar parchment ─── */
 html[data-preset="fantasy"] aside {
   background:
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 11px,
-      rgba(139, 109, 63, 0.03) 11px,
-      rgba(139, 109, 63, 0.03) 12px
-    ),
-    repeating-linear-gradient(
-      95deg,
-      transparent,
-      transparent 23px,
-      rgba(101, 75, 40, 0.02) 23px,
-      rgba(101, 75, 40, 0.02) 24px
-    );
+    radial-gradient(ellipse at 20% 10%, rgba(120, 80, 30, 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(130, 85, 30, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(90, 55, 15, 0.12) 100%);
+  box-shadow:
+    inset -20px 0 40px rgba(80, 50, 10, 0.1),
+    inset 0 0 60px rgba(80, 50, 10, 0.08);
   border-right-width: 2px;
 }
+
+/* (header parchment + ornamental border combined below) */
 
 /* ─── Dialogs — scroll-style ─── */
 html[data-preset="fantasy"] [data-slot="dialog-content"] {
@@ -162,8 +152,14 @@ html[data-preset="fantasy"] [data-slot="card"] {
     0 2px 8px rgba(44, 24, 16, 0.1);
 }
 
-/* ─── Header — ornamental border ─── */
+/* ─── Header — parchment + ornamental border ─── */
 html[data-preset="fantasy"] header {
+  background:
+    radial-gradient(ellipse at 10% 50%, rgba(120, 80, 30, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 50%, rgba(130, 85, 30, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(90, 55, 15, 0.08) 100%);
+  box-shadow:
+    inset 0 -10px 30px rgba(80, 50, 10, 0.08);
   border-image: linear-gradient(
     90deg,
     transparent 0%,
@@ -229,6 +225,16 @@ html[data-preset="fantasy"] ::-webkit-scrollbar-thumb:hover {
 }
 
 /* ─── Dark variant adjustments ─── */
+html[data-preset="fantasy"].dark body::before {
+  opacity: 0.25;
+  mix-blend-mode: soft-light;
+}
+
+html[data-preset="fantasy"].dark body::after {
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+}
+
 html[data-preset="fantasy"].dark main {
   background:
     radial-gradient(ellipse at 10% 15%, rgba(201, 169, 110, 0.08) 0%, transparent 35%),
@@ -237,23 +243,11 @@ html[data-preset="fantasy"].dark main {
     radial-gradient(ellipse at 5% 90%, rgba(201, 169, 110, 0.07) 0%, transparent 30%),
     radial-gradient(ellipse at 30% 40%, rgba(201, 169, 110, 0.05) 0%, transparent 45%),
     radial-gradient(ellipse at 70% 60%, rgba(201, 169, 110, 0.04) 0%, transparent 40%),
-    linear-gradient(155deg, transparent 42%, rgba(201, 169, 110, 0.03) 42.5%, rgba(201, 169, 110, 0.03) 43%, transparent 43.5%),
-    linear-gradient(30deg, transparent 55%, rgba(201, 169, 110, 0.025) 55.5%, rgba(201, 169, 110, 0.025) 56%, transparent 56.5%),
     radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.3) 100%);
   box-shadow:
     inset 0 0 60px rgba(0, 0, 0, 0.3),
     inset 0 0 120px rgba(0, 0, 0, 0.15),
     inset 0 0 200px rgba(0, 0, 0, 0.1);
-}
-
-html[data-preset="fantasy"].dark main::before {
-  opacity: 0.25;
-  mix-blend-mode: soft-light;
-}
-
-html[data-preset="fantasy"].dark main::after {
-  opacity: 0.08;
-  mix-blend-mode: soft-light;
 }
 
 html[data-preset="fantasy"].dark [data-plate-editor] {
@@ -264,20 +258,21 @@ html[data-preset="fantasy"].dark [data-plate-editor] {
 
 html[data-preset="fantasy"].dark aside {
   background:
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 11px,
-      rgba(201, 169, 110, 0.02) 11px,
-      rgba(201, 169, 110, 0.02) 12px
-    ),
-    repeating-linear-gradient(
-      95deg,
-      transparent,
-      transparent 23px,
-      rgba(201, 169, 110, 0.015) 23px,
-      rgba(201, 169, 110, 0.015) 24px
-    );
+    radial-gradient(ellipse at 20% 10%, rgba(201, 169, 110, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(201, 169, 110, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.1) 100%);
+  box-shadow:
+    inset -20px 0 40px rgba(0, 0, 0, 0.08),
+    inset 0 0 60px rgba(0, 0, 0, 0.05);
+}
+
+html[data-preset="fantasy"].dark header {
+  background:
+    radial-gradient(ellipse at 10% 50%, rgba(201, 169, 110, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 50%, rgba(201, 169, 110, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.06) 100%);
+  box-shadow:
+    inset 0 -10px 30px rgba(0, 0, 0, 0.06);
 }
 
 html[data-preset="fantasy"].dark [data-slot="dialog-content"] {
