@@ -48,24 +48,9 @@ export function GlobalTypesSection() {
   }
 
   return (
-    <div className="rounded-lg border p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Global Types</h2>
-          <p className="text-sm text-muted-foreground">
-            Reusable type blueprints you can import into any space.
-          </p>
-        </div>
-        {!isCreating && !editingType && (
-          <Button size="sm" onClick={() => setIsCreating(true)}>
-            <PlusIcon className="size-4" />
-            New
-          </Button>
-        )}
-      </div>
-
+    <>
       {isLoading && (
-        <div className="space-y-3">
+        <div className="space-y-1">
           {[1, 2].map(i => (
             <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
           ))}
@@ -108,34 +93,33 @@ export function GlobalTypesSection() {
               No global types yet. Create one to use across spaces.
             </p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {types.map(type => (
                 <div
                   key={type.id}
-                  className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  className="flex items-center gap-3 rounded-lg border px-4 py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex size-9 items-center justify-center rounded-lg bg-muted"
-                      style={type.color ? { backgroundColor: type.color + '20', color: type.color } : undefined}
-                    >
-                      <TypeIcon icon={type.icon} className="size-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{type.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {type.fields.length} field{type.fields.length !== 1 ? 's' : ''}
-                        {' · '}
-                        {type.slug}
-                      </p>
-                    </div>
+                  <div
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted"
+                    style={type.color ? { backgroundColor: type.color + '20', color: type.color } : undefined}
+                  >
+                    <TypeIcon icon={type.icon} className="size-4" />
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{type.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {type.fields.length} field{type.fields.length !== 1 ? 's' : ''}
+                      {' · '}
+                      {type.slug}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
                     <Button
                       size="icon-sm"
                       variant="ghost"
                       onClick={() => setEditingType(type)}
-                      title="Edit global type"
+                      aria-label={`Edit ${type.name}`}
+                      className="text-muted-foreground hover:text-muted-foreground/80"
                     >
                       <EditIcon className="size-4" />
                     </Button>
@@ -143,8 +127,8 @@ export function GlobalTypesSection() {
                       size="icon-sm"
                       variant="ghost"
                       onClick={() => setPendingDeleteType(type)}
-                      title="Delete global type"
-                      className="text-destructive hover:text-destructive"
+                      aria-label={`Delete ${type.name}`}
+                      className="text-muted-foreground hover:text-destructive"
                     >
                       <TrashIcon className="size-4" />
                     </Button>
@@ -156,6 +140,13 @@ export function GlobalTypesSection() {
         </>
       )}
 
+      {!isCreating && !editingType && (
+        <Button variant="outline" onClick={() => setIsCreating(true)}>
+          <PlusIcon className="size-4" />
+          New Global Type
+        </Button>
+      )}
+
       <ConfirmDialog
         open={!!pendingDeleteType}
         onOpenChange={(open) => { if (!open) setPendingDeleteType(null) }}
@@ -165,6 +156,6 @@ export function GlobalTypesSection() {
         destructive
         onConfirm={handleDelete}
       />
-    </div>
+    </>
   )
 }
