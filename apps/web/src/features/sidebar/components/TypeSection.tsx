@@ -216,7 +216,7 @@ export function TypeSection({
       {!collapsed && (
         <div id={`type-section-${type.id}`} className="pl-8">
           {canReorderObjects && onMoveObject && onDropObject ? (
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {visibleObjects.map((obj, i) => (
                 <DraggableObjectItem
                   key={obj.id}
