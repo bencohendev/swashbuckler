@@ -10,6 +10,7 @@ import type { User } from '@supabase/supabase-js'
 import { emit, subscribe } from './events'
 import { STARTER_KITS } from '@/features/starter-kits/data/kits'
 import { importKit } from '@/features/starter-kits/lib/importKit'
+import { createWelcomePage } from '@/features/onboarding/lib/welcomePage'
 
 const STORAGE_KEY = 'swashbuckler:currentSpaceId'
 
@@ -84,18 +85,34 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
     let loadedSpaces = result.data
 
-    // If no spaces exist, create a default one
+    // If no spaces exist, create a default one and seed a welcome page
     if (loadedSpaces.length === 0) {
+      let newSpaceId: string | null = null
       if (user) {
         const createResult = await spacesClient.create({ name: 'My Space' })
         if (createResult.data) {
           loadedSpaces = [createResult.data]
+          newSpaceId = createResult.data.id
         }
       } else {
         const defaultSpace = await ensureLocalDefaultSpace()
         await ensureLocalDefaultTypes()
         emit('objectTypes')
         loadedSpaces = [defaultSpace]
+        newSpaceId = defaultSpace.id
+      }
+
+      // Seed a "Getting Started" welcome page in the new space
+      if (newSpaceId) {
+        try {
+          const spaceClient = user
+            ? createSupabaseDataClient(supabase, newSpaceId, user.id)
+            : createLocalDataClient(newSpaceId)
+          await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
+          emit('objects')
+        } catch (err) {
+          console.error('Failed to seed welcome page:', err)
+        }
       }
     }
 
@@ -155,7 +172,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     }
 
     setIsLoading(false)
-  }, [spacesClient, sharingClient, user])
+  }, [spacesClient, sharingClient, user, supabase])
 
   useEffect(() => {
     if (isAuthLoading) return

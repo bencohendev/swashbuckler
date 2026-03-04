@@ -19,7 +19,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     type: 'dialog',
     target: null,
     title: 'Welcome to Swashbuckler',
-    description: 'Your personal knowledge base. Let\u2019s take a quick tour.',
+    description: 'We\u2019ve created a Getting Started page for you. Let\u2019s take a quick tour of the app.',
     placement: 'bottom',
   },
   {
@@ -43,7 +43,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     type: 'coachmark',
     target: '[data-tour="type-sections"]',
     title: 'Types',
-    description: 'Entries are organized by type \u2014 click + to create one.',
+    description: 'Entries are organized by type \u2014 click + to create a new entry.',
     placement: 'right',
   },
   {
@@ -67,7 +67,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     type: 'coachmark',
     target: '[data-tour="editor-area"]',
     title: 'Editor',
-    description: 'Rich text editor \u2014 type / for commands, @ to link entries.',
+    description: 'Rich text editor \u2014 type / for commands, @ to link entries. Try it out on the Getting Started page!',
     placement: 'left',
   },
   {
