@@ -52,34 +52,34 @@ describe('AnalyticsConsentToggle', () => {
     localStorage.clear()
   })
 
-  it('renders a toggle switch defaulting to off', () => {
+  it('renders a checkbox defaulting to unchecked', () => {
     render(<AnalyticsConsentToggle />)
 
-    const toggle = screen.getByRole('switch')
-    expect(toggle).toHaveAttribute('aria-checked', 'false')
+    const checkbox = screen.getByRole('checkbox')
+    expect(checkbox).not.toBeChecked()
   })
 
-  it('stores accepted on toggle on', async () => {
+  it('stores accepted on check', async () => {
     const user = userEvent.setup()
     render(<AnalyticsConsentToggle />)
 
-    await user.click(screen.getByRole('switch'))
+    await user.click(screen.getByRole('checkbox'))
 
     expect(localStorage.getItem(ANALYTICS_CONSENT_KEY)).toBe('accepted')
-    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('checkbox')).toBeChecked()
   })
 
-  it('stores declined on toggle off', async () => {
+  it('stores declined on uncheck', async () => {
     localStorage.setItem(ANALYTICS_CONSENT_KEY, 'accepted')
     const user = userEvent.setup()
     render(<AnalyticsConsentToggle />)
 
-    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('checkbox')).toBeChecked()
 
-    await user.click(screen.getByRole('switch'))
+    await user.click(screen.getByRole('checkbox'))
 
     expect(localStorage.getItem(ANALYTICS_CONSENT_KEY)).toBe('declined')
-    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('checkbox')).not.toBeChecked()
   })
 
   it('includes a link to the privacy policy', () => {
