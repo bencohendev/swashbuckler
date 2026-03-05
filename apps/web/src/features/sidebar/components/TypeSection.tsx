@@ -7,6 +7,7 @@ import { ContextMenu } from 'radix-ui'
 import { cn } from '@/shared/lib/utils'
 import type { DataObjectSummary, ObjectType, Template } from '@/shared/lib/data'
 import { ObjectList } from '@/features/objects/components'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { DraggableObjectItem } from './DraggableObjectItem'
 import { useTemplates } from '@/features/templates'
 import { TypeIcon } from '@/features/object-types/components/TypeIcon'
@@ -217,18 +218,26 @@ export function TypeSection({
         <div id={`type-section-${type.id}`} className="pl-8">
           {canReorderObjects && onMoveObject && onDropObject ? (
             <div className="space-y-1">
-              {visibleObjects.map((obj, i) => (
-                <DraggableObjectItem
-                  key={obj.id}
-                  index={i}
-                  object={obj}
-                  dragType={`SIDEBAR_OBJECT_${type.id}`}
-                  onMove={onMoveObject}
-                  onDrop={onDropObject}
-                />
-              ))}
-              {visibleObjects.length === 0 && !isLoading && (
-                <p className="text-sm text-muted-foreground">{`No ${type.plural_name.toLowerCase()} yet`}</p>
+              {isLoading && visibleObjects.length === 0 ? (
+                [1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-8" />
+                ))
+              ) : (
+                <>
+                  {visibleObjects.map((obj, i) => (
+                    <DraggableObjectItem
+                      key={obj.id}
+                      index={i}
+                      object={obj}
+                      dragType={`SIDEBAR_OBJECT_${type.id}`}
+                      onMove={onMoveObject}
+                      onDrop={onDropObject}
+                    />
+                  ))}
+                  {visibleObjects.length === 0 && (
+                    <p className="text-sm text-muted-foreground">{`No ${type.plural_name.toLowerCase()} yet`}</p>
+                  )}
+                </>
               )}
             </div>
           ) : (
