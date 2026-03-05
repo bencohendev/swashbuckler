@@ -111,9 +111,15 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
           const welcomePageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
           emit('objects')
 
-          // Navigate to the welcome page so the user lands on content, not an empty dashboard
+          // Navigate to the welcome page so the user lands on content, not an empty dashboard.
+          // Skip the redirect on public pages (e.g. /landing) — only redirect when the user
+          // is on a protected page (authenticated or guest mode).
           if (welcomePageId && typeof window !== 'undefined') {
-            window.location.replace(`/objects/${welcomePageId}`)
+            const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
+              .some(p => window.location.pathname.startsWith(p))
+            if (isProtectedPage) {
+              window.location.replace(`/objects/${welcomePageId}`)
+            }
           }
         } catch (err) {
           console.error('Failed to seed welcome page:', err)

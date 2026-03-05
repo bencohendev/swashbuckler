@@ -25,7 +25,7 @@ for (const { email, password, filename } of users) {
     await page.goto('/login', { waitUntil: 'commit' })
     await page.evaluate((key) => {
       localStorage.setItem(key, 'accepted')
-      localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
+      localStorage.setItem('swashbuckler:toursSkippedAll', 'true')
     }, ANALYTICS_CONSENT_KEY)
 
     await page.goto('/login')
