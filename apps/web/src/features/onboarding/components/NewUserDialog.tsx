@@ -16,10 +16,10 @@ interface NewUserDialogProps {
 }
 
 export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<'blank' | 'example' | false>(false)
 
   const handleChoice = (withExample: boolean) => {
-    setLoading(true)
+    setLoading(withExample ? 'example' : 'blank')
     onChoice(withExample)
   }
 
@@ -36,7 +36,11 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
         {loading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-8">
             <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Setting things up...</p>
+            <p className="text-sm text-muted-foreground">
+              {loading === 'example'
+                ? 'Please wait while your world is being constructed. This may take a few minutes.'
+                : 'Setting things up...'}
+            </p>
           </div>
         ) : (
           <div className="grid gap-3 pt-2">

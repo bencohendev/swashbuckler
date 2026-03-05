@@ -104,7 +104,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
         }
       } else {
         const defaultSpace = await ensureLocalDefaultSpace(
-          wantsExample ? { name: 'The Crimson Tide', icon: '🏴‍☠️' } : undefined,
+          wantsExample ? { name: 'Crimson Tide', icon: '🏴‍☠️' } : undefined,
         )
         await ensureLocalDefaultTypes()
         emit('objectTypes')
@@ -322,16 +322,14 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
     if (withExample) {
       try {
-        // Create a new space for the example campaign
-        const createResult = await spacesClient.create({ name: 'The Crimson Tide', icon: '🏴\u200D☠️' })
-        if (createResult.data) {
-          const exampleSpace = createResult.data
-          const spaceClient = createSupabaseDataClient(supabase, exampleSpace.id, user.id)
+        // Rename the existing default space for the example campaign
+        const targetSpace = ownedSpaces[0]
+        if (targetSpace) {
+          await spacesClient.update(targetSpace.id, { name: 'Crimson Tide', icon: '🏴\u200D☠️' })
+
+          const spaceClient = createSupabaseDataClient(supabase, targetSpace.id, user.id)
           const landingPageId = await seedExampleCampaign(spaceClient)
 
-          // Optimistic update and switch to the new space
-          setOwnedSpaces(prev => [...prev, exampleSpace])
-          switchSpace(exampleSpace.id)
           emit('spaces')
           emit('objects')
           emit('objectTypes')
