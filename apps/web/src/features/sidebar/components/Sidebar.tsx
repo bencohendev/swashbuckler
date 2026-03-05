@@ -203,8 +203,9 @@ export function Sidebar() {
   const [variableDialogOpen, setVariableDialogOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
+  const [prevTypes, setPrevTypes] = useState(types)
   const [collapseSignal, setCollapseSignal] = useState<CollapseSignal | undefined>(undefined)
-  const sidebarLoading = !space || typesLoading || objectsLoading || (isSharedUser && exclusionFilterLoading)
+  const sidebarLoading = !space || typesLoading || (isSharedUser && exclusionFilterLoading)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
 
@@ -255,22 +256,22 @@ export function Sidebar() {
     }
   }, [isMobile, mobileOpen])
 
-  // Sync orderedTypes when upstream types change.
+  // Sync orderedTypes when upstream types change — runs during render to avoid
+  // one-frame flash of empty state between query resolution and effect execution.
   // Only reset order when types are added/removed — not when sort_order updates
   // come back from persistence, which would overwrite our optimistic local order.
-  useEffect(() => {
-    setOrderedTypes((prev) => {
-      const prevIds = new Set(prev.map((t) => t.id))
-      const nextIds = new Set(types.map((t) => t.id))
-      const idsChanged =
-        prevIds.size !== nextIds.size || types.some((t) => !prevIds.has(t.id))
+  if (types !== prevTypes) {
+    setPrevTypes(types)
+    const prevIds = new Set(orderedTypes.map((t) => t.id))
+    const idsChanged =
+      prevIds.size !== types.length || types.some((t) => !prevIds.has(t.id))
 
-      if (idsChanged) return types
-
-      // Preserve local order, but pick up data changes (name, icon, etc.)
-      return prev.map((pt) => types.find((t) => t.id === pt.id) ?? pt)
-    })
-  }, [types])
+    if (idsChanged) {
+      setOrderedTypes(types)
+    } else {
+      setOrderedTypes(orderedTypes.map((pt) => types.find((t) => t.id === pt.id) ?? pt))
+    }
+  }
 
   const handleMoveType = useCallback((fromIndex: number, toIndex: number) => {
     setOrderedTypes((prev) => {
@@ -311,35 +312,32 @@ export function Sidebar() {
   // Optimistic local ordering of objects during sidebar DnD
   const [orderedObjectsByType, setOrderedObjectsByType] = useState<Map<string, DataObjectSummary[]>>(objectsByType)
   const orderedObjectsByTypeRef = useRef(orderedObjectsByType)
+  const [prevObjectsByType, setPrevObjectsByType] = useState(objectsByType)
 
-  useEffect(() => {
-    orderedObjectsByTypeRef.current = orderedObjectsByType
-  }, [orderedObjectsByType])
+  orderedObjectsByTypeRef.current = orderedObjectsByType
 
-  // Sync from upstream when objectsByType changes (new objects added/removed)
-  useEffect(() => {
-    setOrderedObjectsByType((prev) => {
-      const next = new Map<string, DataObjectSummary[]>()
-      for (const [typeId, objs] of objectsByType) {
-        const prevObjs = prev.get(typeId)
-        if (!prevObjs) {
-          next.set(typeId, objs)
-          continue
-        }
-        const prevIds = new Set(prevObjs.map(o => o.id))
-        const nextIds = new Set(objs.map(o => o.id))
-        const idsChanged = prevIds.size !== nextIds.size || objs.some(o => !prevIds.has(o.id))
-        if (idsChanged) {
-          next.set(typeId, objs)
-        } else {
-          // Preserve local order, pick up data changes
-          next.set(typeId, prevObjs.map(po => objs.find(o => o.id === po.id) ?? po))
-        }
+  // Sync from upstream when objectsByType changes — runs during render to avoid
+  // one-frame flash of empty type sections.
+  if (objectsByType !== prevObjectsByType) {
+    setPrevObjectsByType(objectsByType)
+    const next = new Map<string, DataObjectSummary[]>()
+    for (const [typeId, objs] of objectsByType) {
+      const prevObjs = orderedObjectsByType.get(typeId)
+      if (!prevObjs) {
+        next.set(typeId, objs)
+        continue
       }
-      // Remove types that no longer exist
-      return next
-    })
-  }, [objectsByType])
+      const prevIds = new Set(prevObjs.map(o => o.id))
+      const idsChanged = prevIds.size !== objs.length || objs.some(o => !prevIds.has(o.id))
+      if (idsChanged) {
+        next.set(typeId, objs)
+      } else {
+        // Preserve local order, pick up data changes
+        next.set(typeId, prevObjs.map(po => objs.find(o => o.id === po.id) ?? po))
+      }
+    }
+    setOrderedObjectsByType(next)
+  }
 
   const handleMoveObject = useCallback((typeId: string, fromIndex: number, toIndex: number) => {
     setOrderedObjectsByType((prev) => {
