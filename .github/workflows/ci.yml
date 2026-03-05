@@ -45,11 +45,9 @@ jobs:
       - run: npm ci
       - run: npm audit --audit-level=high --omit=dev
 
-  e2e-guest:
-    name: E2E — Guest Mode
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: [lint, test]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,6 +55,35 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      - name: Build Next.js
+        run: cd apps/web && npx next build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' }}
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: apps/web/.next
+          retention-days: 1
+
+  e2e-guest:
+    name: E2E — Guest Mode
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: apps/web/.next
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -68,6 +95,8 @@ jobs:
         run: cd apps/web && npx playwright install --with-deps chromium
       - name: Run guest-mode e2e tests
         run: cd apps/web && npx playwright test --project=chromium
+        env:
+          NEXT_BUILD_SKIP: '1'
       - name: Upload test artifacts
         if: failure()
         uses: actions/upload-artifact@v4
@@ -82,7 +111,7 @@ jobs:
     name: E2E — Supabase
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    needs: [lint, test]
+    needs: [build]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -90,6 +119,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: apps/web/.next
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -118,6 +152,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ steps.supabase.outputs.anon_key }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ steps.supabase.outputs.service_role_key }}
+          NEXT_BUILD_SKIP: '1'
       - name: Stop local Supabase
         if: always()
         run: cd apps/web && supabase stop
@@ -131,19 +166,17 @@ jobs:
             apps/web/test-results/
           retention-days: 14
 
-  build:
-    name: Build
+  check:
+    name: CI Check
     runs-on: ubuntu-latest
-    needs: [lint, test, e2e-guest, e2e-supabase]
-    if: always() && needs.lint.result == 'success' && needs.test.result == 'success'
+    needs: [lint, test, build, e2e-guest, e2e-supabase]
+    if: always()
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npx turbo run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      - name: Verify all jobs passed
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then exit 1; fi
+          if [[ "${{ needs.test.result }}" != "success" ]]; then exit 1; fi
+          if [[ "${{ needs.build.result }}" != "success" ]]; then exit 1; fi
+          # E2E jobs are skipped on push events — only fail if they ran and failed
+          if [[ "${{ needs.e2e-guest.result }}" == "failure" ]]; then exit 1; fi
+          if [[ "${{ needs.e2e-supabase.result }}" == "failure" ]]; then exit 1; fi
