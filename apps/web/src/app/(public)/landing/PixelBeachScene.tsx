@@ -4,7 +4,7 @@ const PALETTE: Record<number, string> = {
   1: "#1B5E20", // dark green (leaf shadow)
   2: "#2E7D32", // green (main leaf)
   3: "#43A047", // light green (leaf highlight)
-  4: "#8B5E3C", // brown (flagpole)
+  4: "#8B5E3C", // brown (chest lid)
   5: "#FFD700", // gold
   6: "#B8860B", // dark gold / coconut
   7: "#D4B870", // sand highlight (dune crest)
@@ -102,9 +102,7 @@ function stamp(
   }
 }
 
-const POLE_COL = 2
-
-function buildScene(includePole: boolean): number[][] {
+function buildScene(): number[][] {
   const grid: number[][] = Array.from({ length: ROWS }, () =>
     Array(COLS).fill(0),
   )
@@ -143,16 +141,7 @@ function buildScene(includePole: boolean): number[][] {
     }
   }
 
-  // 3. Flagpole (desktop only)
-  if (includePole) {
-    const poleSandTop = WATER_SURFACE - islandHeight(POLE_COL)
-    for (let r = 0; r <= poleSandTop; r++) {
-      grid[r][POLE_COL] = 4
-      grid[r][POLE_COL + 1] = 4
-    }
-  }
-
-  // 4. Stamp sprites
+  // 3. Stamp sprites
   const tree1Col = 11
   const tree1Ground = WATER_SURFACE - islandHeight(tree1Col + 4) + 1
   stamp(grid, PALM_SMALL, tree1Col, tree1Ground)
@@ -165,7 +154,7 @@ function buildScene(includePole: boolean): number[][] {
   const chestGround = WATER_SURFACE - islandHeight(chestCol + 6) + 1
   stamp(grid, CHEST, chestCol, chestGround)
 
-  // 5. Scatter coins on sand
+  // 4. Scatter coins on sand
   const coinPositions: [number, number][] = [
     [7, 5],
     [22, 6],
@@ -187,9 +176,8 @@ function buildScene(includePole: boolean): number[][] {
   return grid
 }
 
-// Compute both scenes once at module level
-const SCENE_NO_POLE = buildScene(false)
-const SCENE_WITH_POLE = buildScene(true)
+// Compute scene once at module level
+const SCENE = buildScene()
 
 function transpose(scene: number[][]): number[][] {
   const columns: number[][] = []
@@ -203,8 +191,7 @@ function transpose(scene: number[][]): number[][] {
   return columns
 }
 
-const COLS_NO_POLE = transpose(SCENE_NO_POLE)
-const COLS_WITH_POLE = transpose(SCENE_WITH_POLE)
+const SCENE_COLS = transpose(SCENE)
 
 function PixelGrid({
   columns,
@@ -231,10 +218,5 @@ function PixelGrid({
 }
 
 export function PixelBeachScene() {
-  return (
-    <>
-      <PixelGrid columns={COLS_NO_POLE} className="sm:hidden" />
-      <PixelGrid columns={COLS_WITH_POLE} className="hidden sm:flex" />
-    </>
-  )
+  return <PixelGrid columns={SCENE_COLS} />
 }
