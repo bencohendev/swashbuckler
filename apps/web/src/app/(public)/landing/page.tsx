@@ -69,14 +69,6 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Flagpole running full page height — aligned to left edge of max-w-3xl content */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-[7rem] bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
-        aria-hidden="true"
-      >
-        <div className="h-full w-[16px] bg-[#8B5E3C]" />
-      </div>
-
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b bg-background">
         <span className="text-lg font-bold tracking-tight">Swashbuckler</span>
         <Link
@@ -88,11 +80,11 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="relative z-10 mx-auto max-w-3xl px-6 pt-24 pb-4">
+        <section className="mx-auto max-w-3xl px-6 pt-24 pb-4">
           <PixelPirateFlag />
         </section>
 
-        <section className="relative z-10 mx-auto max-w-3xl px-6 pt-8 pb-6">
+        <section className="mx-auto max-w-3xl px-6 pt-8 pb-6">
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
               Swashbuckler
@@ -105,6 +97,15 @@ export default function LandingPage() {
             </p>
           </div>
         </section>
+
+        {/* Pole + content wrapper — pole starts at CTA and runs to footer */}
+        <div className="relative">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
+            aria-hidden="true"
+          >
+            <div className="h-full w-[16px] bg-[#8B5E3C]" />
+          </div>
 
         <section className="relative z-10 mx-auto max-w-2xl border-y border-border px-6 py-8">
           <div className="flex flex-col items-center gap-4">
@@ -190,6 +191,8 @@ export default function LandingPage() {
             </a>
           </div>
         </section>
+
+        </div>{/* end pole + content wrapper */}
 
       </main>
 
