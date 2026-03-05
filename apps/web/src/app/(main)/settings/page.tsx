@@ -8,6 +8,7 @@ interface SettingsItem {
   label: string
   description: string
   icon: LucideIcon
+  tourId: string
 }
 
 const accountItems: SettingsItem[] = [
@@ -16,24 +17,28 @@ const accountItems: SettingsItem[] = [
     label: 'Account',
     description: 'Profile, security, and preferences',
     icon: UserIcon,
+    tourId: 'settings-card-account',
   },
   {
     href: '/settings/spaces',
     label: 'Spaces',
     description: 'Manage your spaces',
     icon: FolderIcon,
+    tourId: 'settings-card-spaces',
   },
   {
     href: '/settings/global-types',
     label: 'Global Types',
     description: 'Reusable type blueprints for any space',
     icon: BlocksIcon,
+    tourId: 'settings-card-global-types',
   },
   {
     href: '/settings/themes',
     label: 'Custom Themes',
     description: 'Create and manage custom themes',
     icon: SwatchBookIcon,
+    tourId: 'settings-card-themes',
   },
 ]
 
@@ -43,31 +48,36 @@ const spaceItems: SettingsItem[] = [
     label: 'Appearance',
     description: 'Choose a theme for this space',
     icon: PaletteIcon,
+    tourId: 'settings-card-appearance',
   },
   {
     href: '/settings/templates',
     label: 'Templates',
     description: 'Manage your templates',
     icon: FileStackIcon,
+    tourId: 'settings-card-templates',
   },
   {
     href: '/settings/types',
     label: 'Types',
     description: 'Customize types and their properties',
     icon: LayersIcon,
+    tourId: 'settings-card-types',
   },
   {
     href: '/settings/sharing',
     label: 'Sharing',
     description: 'Manage space sharing and permissions',
     icon: UsersIcon,
+    tourId: 'settings-card-sharing',
   },
 ]
 
-function SettingsCard({ href, label, description, icon: Icon }: SettingsItem) {
+function SettingsCard({ href, label, description, icon: Icon, tourId }: SettingsItem) {
   return (
     <Link
       href={href}
+      data-tour={tourId}
       className="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
     >
       <div className="rounded-md bg-muted p-2">
