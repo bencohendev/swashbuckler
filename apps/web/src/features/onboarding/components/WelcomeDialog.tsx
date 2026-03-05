@@ -39,11 +39,11 @@ export function WelcomeDialog({
         <DialogFooter>
           {showSkipAll && onSkipAll && (
             <Button variant="ghost" onClick={onSkipAll} className="mr-auto text-muted-foreground">
-              Skip all tours
+              Don&apos;t show tours
             </Button>
           )}
           <Button variant="outline" onClick={onSkip}>
-            Skip
+            Dismiss
           </Button>
           <Button onClick={onTakeTour}>
             Take a tour

@@ -224,13 +224,13 @@ export function CoachMark({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <button type="button" onClick={onSkip} className="hover:text-foreground transition-colors">
-            Skip tour
+            Dismiss
           </button>
           {onSkipAll && (
             <>
               <span aria-hidden="true">·</span>
               <button type="button" onClick={onSkipAll} className="hover:text-foreground transition-colors">
-                Skip all
+                Don&apos;t show tours
               </button>
             </>
           )}
