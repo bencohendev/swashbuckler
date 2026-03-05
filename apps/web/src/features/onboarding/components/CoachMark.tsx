@@ -34,8 +34,9 @@ function computePosition(
   popoverRect: { width: number; height: number },
   preferred: Placement,
 ): Position {
-  const vw = window.innerWidth
-  const vh = window.innerHeight
+  // clientWidth/Height excludes scrollbars — innerWidth/Height does not
+  const vw = document.documentElement.clientWidth
+  const vh = document.documentElement.clientHeight
 
   // Try preferred placement, then fallback order
   const order: Placement[] = [preferred]
@@ -114,8 +115,11 @@ export function CoachMark({
   const measure = useCallback(() => {
     if (!popoverRef.current || isMobile) return
     const targetRect = targetEl.getBoundingClientRect()
-    const popoverRect = popoverRef.current.getBoundingClientRect()
-    setPosition(computePosition(targetRect, { width: popoverRect.width, height: popoverRect.height }, placement))
+    // Use offsetWidth/Height — getBoundingClientRect is affected by the zoom-in animation
+    // and returns a smaller size mid-transition, causing the clamp to miscalculate.
+    const width = popoverRef.current.offsetWidth
+    const height = popoverRef.current.offsetHeight
+    setPosition(computePosition(targetRect, { width, height }, placement))
   }, [targetEl, placement, isMobile])
 
   useEffect(() => {
