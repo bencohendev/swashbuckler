@@ -35,7 +35,7 @@ const features = [
 
 export default function LandingPage() {
   return (
-    <div className="relative flex min-h-screen flex-col">
+    <div className="dark relative flex min-h-screen flex-col bg-background text-foreground">
       {/* Flagpole running full page height — aligned to left edge of max-w-3xl content */}
       <div
         className="pointer-events-none absolute inset-x-0 top-[7rem] bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
