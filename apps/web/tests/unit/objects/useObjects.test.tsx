@@ -3,7 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { useState, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useObjects, useObject } from '@/features/objects/hooks/useObjects'
-import { DataProvider } from '@/shared/lib/data'
+import { DataProvider, LOCAL_DEFAULT_SPACE_ID } from '@/shared/lib/data'
 import { clearLocalData } from '@/shared/lib/data/local'
 import { setQueryClient } from '@/shared/lib/data/events'
 
@@ -35,7 +35,7 @@ function Wrapper({ children }: { children: ReactNode }) {
   })
   return (
     <QueryClientProvider client={queryClient}>
-      <DataProvider user={null} isAuthLoading={false}>{children}</DataProvider>
+      <DataProvider user={null} isAuthLoading={false} spaceId={LOCAL_DEFAULT_SPACE_ID}>{children}</DataProvider>
     </QueryClientProvider>
   )
 }
