@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/shared/lib/data'
 import { useSidebar } from '@/shared/stores/sidebar'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
+import { createClient } from '@/shared/lib/supabase/client'
 import { useTutorial } from '../hooks/useTutorial'
 import { TOURS } from '../lib/tours'
 import { WelcomeDialog } from './WelcomeDialog'
@@ -23,12 +24,21 @@ const SIDEBAR_TARGETS = new Set([
 
 export function TutorialController() {
   const pathname = usePathname()
-  const { isLoading: isAuthLoading } = useAuth()
-  const { activeTourId, currentStep, next, back, skip, skipAll, startTour, completed } = useTutorial()
+  const { user, isLoading: isAuthLoading } = useAuth()
+  const { activeTourId, currentStep, next, back, skip, skipAll, startTour, completed, hydrateFromDb } = useTutorial()
   const { collapsed, toggle, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const [targetEl, setTargetEl] = useState<Element | null>(null)
   const hasAutoStarted = useRef(false)
+  const hasHydrated = useRef(false)
+  const supabase = useMemo(() => createClient(), [])
+
+  // Hydrate tour completion from DB for authenticated users
+  useEffect(() => {
+    if (hasHydrated.current || isAuthLoading || !user) return
+    hasHydrated.current = true
+    hydrateFromDb(supabase, user.id)
+  }, [isAuthLoading, user, supabase, hydrateFromDb])
 
   const tour = activeTourId ? TOURS[activeTourId] : null
   const steps = tour?.steps ?? []

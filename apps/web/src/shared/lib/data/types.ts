@@ -510,5 +510,21 @@ export interface DataClient {
   isLocal: boolean
 }
 
+// --- User Preferences ---
+
+export interface UserPreferences {
+  user_id: string
+  onboarding_completed_at: string | null
+  completed_tours: string[]
+  tours_skipped_all: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PreferencesClient {
+  get(): Promise<DataResult<UserPreferences | null>>
+  upsert(input: Partial<Pick<UserPreferences, 'onboarding_completed_at' | 'completed_tours' | 'tours_skipped_all'>>): Promise<DataResult<UserPreferences>>
+}
+
 // Storage mode
 export type StorageMode = 'supabase' | 'local'

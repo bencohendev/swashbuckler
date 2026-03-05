@@ -5,6 +5,7 @@ import { toast } from '@/shared/hooks/useToast'
 import type { Space, SpacesClient, SharingClient, SpaceSharePermission, DataClient } from './types'
 import { createSupabaseDataClient } from './supabase'
 import { createLocalDataClient, ensureLocalDefaultSpace, ensureLocalDefaultTypes } from './local'
+import { createSupabasePreferencesClient } from './preferences'
 import { createClient } from '@/shared/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { emit, subscribe } from './events'
@@ -12,6 +13,7 @@ import { STARTER_KITS } from '@/features/starter-kits/data/kits'
 import { importKit } from '@/features/starter-kits/lib/importKit'
 import { createWelcomePage } from '@/features/onboarding/lib/welcomePage'
 import { seedExampleCampaign } from '@/features/onboarding/lib/seedExampleCampaign'
+import { NewUserDialog } from '@/features/onboarding/components/NewUserDialog'
 
 const STORAGE_KEY = 'swashbuckler:currentSpaceId'
 
@@ -57,6 +59,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
   const [shareInfoMap, setShareInfoMap] = useState<Map<string, { shareId: string; permission: SpaceSharePermission }>>(new Map())
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showNewUserDialog, setShowNewUserDialog] = useState(false)
 
   const loadSeqRef = useRef(0)
 
@@ -149,6 +152,20 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     if (!user) {
       await ensureLocalDefaultTypes()
       emit('objectTypes')
+    }
+
+    // Check if authenticated user needs onboarding
+    if (user && loadedSpaces.length > 0) {
+      try {
+        const prefsClient = createSupabasePreferencesClient(supabase, user.id)
+        const prefsResult = await prefsClient.get()
+        // No preferences row or null onboarding_completed_at means new user
+        if (!prefsResult.error && (!prefsResult.data || !prefsResult.data.onboarding_completed_at)) {
+          setShowNewUserDialog(true)
+        }
+      } catch {
+        // Preferences table may not exist yet — skip silently
+      }
     }
 
     // Classify spaces by owner_id (not by cross-referencing getSharedSpaces)
@@ -262,6 +279,43 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     isLoading,
     sharedPermission,
   }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission])
+
+  const handleNewUserChoice = useCallback(async (withExample: boolean) => {
+    if (!user) return
+
+    const prefsClient = createSupabasePreferencesClient(supabase, user.id)
+
+    if (withExample) {
+      try {
+        // Create a new space for the example campaign
+        const createResult = await spacesClient.create({ name: 'The Crimson Tide', icon: '🏴\u200D☠️' })
+        if (createResult.data) {
+          const exampleSpace = createResult.data
+          const spaceClient = createSupabaseDataClient(supabase, exampleSpace.id, user.id)
+          const landingPageId = await seedExampleCampaign(spaceClient)
+
+          // Optimistic update and switch to the new space
+          setOwnedSpaces(prev => [...prev, exampleSpace])
+          switchSpace(exampleSpace.id)
+          emit('spaces')
+          emit('objects')
+          emit('objectTypes')
+
+          // Navigate to the campaign overview
+          if (landingPageId && typeof window !== 'undefined') {
+            window.location.replace(`/objects/${landingPageId}`)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to seed example campaign:', err)
+        toast({ title: 'Setup', description: 'Failed to create example world. You can try again from settings.', variant: 'destructive' })
+      }
+    }
+
+    // Mark onboarding as completed
+    await prefsClient.upsert({ onboarding_completed_at: new Date().toISOString() })
+    setShowNewUserDialog(false)
+  }, [user, supabase, spacesClient, switchSpace])
 
   // Refs for values read inside CRUD callbacks — keeps callbacks stable
   const ownedSpacesRef = useRef(ownedSpaces)
@@ -434,6 +488,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     <SpaceContext.Provider value={spaceContextValue}>
       <SpacesContext.Provider value={spacesContextValue}>
         {children}
+        <NewUserDialog open={showNewUserDialog} onChoice={handleNewUserChoice} />
       </SpacesContext.Provider>
     </SpaceContext.Provider>
   )
