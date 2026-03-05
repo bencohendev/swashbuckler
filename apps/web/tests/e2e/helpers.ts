@@ -54,7 +54,7 @@ export { expect }
  * attaches the click handler. This is a UX gap — real users also experience an
  * unresponsive button during hydration. Track as a product bug.
  */
-export async function enterGuestMode(page: Page) {
+export async function enterGuestMode(page: Page, options?: { example?: boolean }) {
   await page.goto('/', { waitUntil: 'commit' })
   await page.evaluate((key) => {
     localStorage.setItem(key, 'accepted')
@@ -64,13 +64,22 @@ export async function enterGuestMode(page: Page) {
   await expect(page).toHaveURL(/\/landing/)
   await expect(async () => {
     await page.getByRole('button', { name: /try as guest/i }).click()
-    // After clicking, the app navigates to /dashboard. On first visit,
-    // SpaceProvider may redirect to /objects/<id> (welcome page).
-    await expect(page).toHaveURL(/\/(dashboard|objects\/)/, { timeout: 3000 })
+    // A dialog appears with two choices
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 3000 })
   }).toPass({ timeout: 15000 })
+
+  // Pick "Start blank" or "Explore an example campaign"
+  if (options?.example) {
+    await page.getByText('Explore an example campaign').click()
+  } else {
+    await page.getByText('Start blank').click()
+  }
+
+  // After clicking, the app navigates to /dashboard. On first visit,
+  // SpaceProvider may redirect to /objects/<id> (welcome page or overview).
+  await expect(page).toHaveURL(/\/(dashboard|objects\/)/, { timeout: 30000 })
   await page.waitForLoadState('networkidle')
   // Wait for the sidebar to finish loading (skeletons → real content).
-  // The type section (e.g. "Pages") appears once Dexie data loads.
   await expect(page.locator('aside, nav').first()).toBeVisible({ timeout: 15000 })
   await expect(page.getByText(/pages/i).first()).toBeVisible({ timeout: 15000 })
 }

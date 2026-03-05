@@ -11,6 +11,7 @@ import { emit, subscribe } from './events'
 import { STARTER_KITS } from '@/features/starter-kits/data/kits'
 import { importKit } from '@/features/starter-kits/lib/importKit'
 import { createWelcomePage } from '@/features/onboarding/lib/welcomePage'
+import { seedExampleCampaign } from '@/features/onboarding/lib/seedExampleCampaign'
 
 const STORAGE_KEY = 'swashbuckler:currentSpaceId'
 
@@ -85,8 +86,12 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
     let loadedSpaces = result.data
 
-    // If no spaces exist, create a default one and seed a welcome page
+    // If no spaces exist, create a default one and seed content
     if (loadedSpaces.length === 0) {
+      // Check for example campaign cookie (guest mode only)
+      const wantsExample = !user && typeof document !== 'undefined' &&
+        document.cookie.split('; ').some(c => c === 'swashbuckler-guest-example=1')
+
       let newSpaceId: string | null = null
       if (user) {
         const createResult = await spacesClient.create({ name: 'My Space' })
@@ -95,34 +100,47 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
           newSpaceId = createResult.data.id
         }
       } else {
-        const defaultSpace = await ensureLocalDefaultSpace()
+        const defaultSpace = await ensureLocalDefaultSpace(
+          wantsExample ? { name: 'The Crimson Tide', icon: '🏴‍☠️' } : undefined,
+        )
         await ensureLocalDefaultTypes()
         emit('objectTypes')
         loadedSpaces = [defaultSpace]
         newSpaceId = defaultSpace.id
       }
 
-      // Seed a "Getting Started" welcome page in the new space
+      // Seed content into the new space
       if (newSpaceId) {
         try {
           const spaceClient = user
             ? createSupabaseDataClient(supabase, newSpaceId, user.id)
             : createLocalDataClient(newSpaceId)
-          const welcomePageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
+
+          let landingPageId: string | null = null
+
+          if (wantsExample) {
+            // Seed the full example campaign and clear the cookie
+            landingPageId = await seedExampleCampaign(spaceClient)
+            if (typeof document !== 'undefined') {
+              document.cookie = 'swashbuckler-guest-example=; path=/; max-age=0'
+            }
+          } else {
+            landingPageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
+          }
+
           emit('objects')
 
-          // Navigate to the welcome page so the user lands on content, not an empty dashboard.
-          // Skip the redirect on public pages (e.g. /landing) — only redirect when the user
-          // is on a protected page (authenticated or guest mode).
-          if (welcomePageId && typeof window !== 'undefined') {
+          // Navigate to the landing entry so the user lands on content, not an empty dashboard.
+          // Skip the redirect on public pages (e.g. /landing).
+          if (landingPageId && typeof window !== 'undefined') {
             const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
               .some(p => window.location.pathname.startsWith(p))
             if (isProtectedPage) {
-              window.location.replace(`/objects/${welcomePageId}`)
+              window.location.replace(`/objects/${landingPageId}`)
             }
           }
         } catch (err) {
-          console.error('Failed to seed welcome page:', err)
+          console.error('Failed to seed content:', err)
         }
       }
     }

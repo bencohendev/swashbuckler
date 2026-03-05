@@ -1,22 +1,20 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { GuestModeDialog } from "@/features/onboarding/components/GuestModeDialog"
 
 export function GuestButton() {
-  const router = useRouter()
-
-  const handleClick = () => {
-    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-    document.cookie = `swashbuckler-guest=1; path=/; max-age=31536000; SameSite=Lax${secure}`
-    router.push("/dashboard")
-  }
+  const [open, setOpen] = useState(false)
 
   return (
-    <button
-      onClick={handleClick}
-      className="underline underline-offset-4 hover:text-foreground transition-colors"
-    >
-      try as guest
-    </button>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="underline underline-offset-4 hover:text-foreground transition-colors"
+      >
+        try as guest
+      </button>
+      <GuestModeDialog open={open} onOpenChange={setOpen} />
+    </>
   )
 }
