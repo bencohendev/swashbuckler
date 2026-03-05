@@ -60,12 +60,7 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     type ? { typeId: type.id, isDeleted: false } : { typeId: '__none__', isDeleted: false },
   )
 
-  const rawObjects = useMemo(
-    () => (objectsLoading ? [] : objects),
-    [objectsLoading, objects],
-  )
-
-  const objectIds = useMemo(() => rawObjects.map((o) => o.id), [rawObjects])
+  const objectIds = useMemo(() => objects.map((o) => o.id), [objects])
   const { tagsByObject } = useObjectTagsBatch(objectIds)
   const { tags } = useTags()
   const { relationsByObject } = useAllRelations()
@@ -82,11 +77,11 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
 
   const objectTypeByObjectId = useMemo(() => {
     const map: Record<string, string> = {}
-    for (const obj of rawObjects) {
+    for (const obj of objects) {
       map[obj.id] = obj.type_id
     }
     return map
-  }, [rawObjects])
+  }, [objects])
 
   const filterCtx = useMemo<FilterContext>(
     () => ({ tagsByObject, relationsByObject, objectTypeByObjectId, contentTextByObject }),
@@ -99,8 +94,8 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
   )
 
   const filteredObjects = useMemo(
-    () => filterObjects(rawObjects, expression, filterCtx),
-    [rawObjects, expression, filterCtx],
+    () => filterObjects(objects, expression, filterCtx),
+    [objects, expression, filterCtx],
   )
 
   const sortedObjects = useMemo(
@@ -168,7 +163,7 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
     )
   }
 
-  const totalCount = rawObjects.length
+  const totalCount = objects.length
   const filteredCount = filteredObjects.length
   const filtered = hasActiveFilters(expression)
 
@@ -218,7 +213,13 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
         />
       </div>
 
-      {filtered && filteredCount === 0 ? (
+      {objectsLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map(i => (
+            <Skeleton key={i} className="h-10 rounded-lg" />
+          ))}
+        </div>
+      ) : filtered && filteredCount === 0 ? (
         <div className="py-12 text-center text-muted-foreground">
           <p>No {type.plural_name.toLowerCase()} match your filters</p>
           <button
