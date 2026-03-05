@@ -38,7 +38,7 @@ for (const { email, password, filename } of users) {
       await page.getByLabel('Email').fill(email)
       await page.locator('#password').fill(password)
       await page.getByRole('button', { name: 'Sign in' }).click()
-      await expect(page).toHaveURL('**/dashboard', { timeout: 5000 })
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 5000 })
     }).toPass({ timeout: 30000 })
 
     const storagePath = path.join(AUTH_DIR, filename)

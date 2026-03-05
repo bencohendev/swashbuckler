@@ -10,8 +10,11 @@ test.describe('Example campaign guest mode', () => {
   test('seeds campaign data when user picks "Explore an example campaign"', async ({ page }) => {
     await enterGuestMode(page, { example: true })
 
-    // Should land on the Campaign Overview page
-    await expect(page.locator('input').first()).toHaveValue('Campaign Overview', { timeout: 15000 })
+    // Should redirect to the Campaign Overview object page
+    await page.waitForURL(/\/objects\//, { timeout: 30000 })
+    // Wait for the title input to appear and have the expected value
+    const titleInput = page.locator('input.text-3xl, input[placeholder="Untitled"]').first()
+    await expect(titleInput).toHaveValue('Campaign Overview', { timeout: 15000 })
 
     // Sidebar should show campaign types
     await expect(page.getByText('NPCs').first()).toBeVisible({ timeout: 10000 })
@@ -25,8 +28,11 @@ test.describe('Example campaign guest mode', () => {
   test('blank mode still works as before', async ({ page }) => {
     await enterGuestMode(page, { example: false })
 
-    // Should land on the Getting Started page
-    await expect(page.locator('input').first()).toHaveValue('Getting Started', { timeout: 15000 })
+    // Should redirect to the Getting Started object page
+    await page.waitForURL(/\/objects\//, { timeout: 30000 })
+    // Wait for the title input to appear and have the expected value
+    const titleInput = page.locator('input.text-3xl, input[placeholder="Untitled"]').first()
+    await expect(titleInput).toHaveValue('Getting Started', { timeout: 15000 })
 
     // Sidebar should only show Pages type
     await expect(page.getByText('Pages').first()).toBeVisible({ timeout: 10000 })

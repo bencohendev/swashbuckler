@@ -3,7 +3,7 @@ import { test, expect, switchToSpace } from '../auth-helpers'
 test.describe('Spaces', () => {
   test('displays current space in switcher', async ({ authPage, testData }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     const switcher = authPage.locator('[data-tour="space-switcher"]')
     // Space data loads asynchronously — wait for it to appear
@@ -12,7 +12,7 @@ test.describe('Spaces', () => {
 
   test('creates a new space', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // Open space switcher
     const switcher = authPage.locator('[data-tour="space-switcher"]')
@@ -41,7 +41,7 @@ test.describe('Spaces', () => {
 
   test('switches between spaces', async ({ authPage, testData }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     const switcher = authPage.locator('[data-tour="space-switcher"]')
 
@@ -87,7 +87,7 @@ test.describe('Spaces', () => {
   test('archives a space from settings', async ({ authPage, testData }) => {
     // Switch to the pre-seeded archive test space
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await switchToSpace(authPage, testData.archiveSpace.name)
 

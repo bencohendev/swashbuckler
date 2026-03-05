@@ -8,7 +8,7 @@ const hasSupabase = fs.existsSync(path.join(__dirname, '..', '..', '.auth', 'tes
 test.describe('Auth — Login', () => {
   test('logs in with valid email and password', async ({ authPage, testData }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // Should see the sidebar (authenticated state)
     await expect(authPage.locator('aside').first()).toBeVisible({ timeout: 15000 })
@@ -66,7 +66,7 @@ test.describe('Auth — Login', () => {
     await page.getByLabel('Email').fill(testData.userA.email)
     await page.locator('#password').fill('TestPassword1!')
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await page.waitForURL('**/dashboard', { timeout: 30000 })
+    await page.waitForURL(/\/dashboard/, { timeout: 30000 })
 
     // Should see the authenticated dashboard
     await expect(page.getByText(testData.userA.email)).toBeVisible({ timeout: 10000 })

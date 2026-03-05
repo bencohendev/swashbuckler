@@ -3,7 +3,7 @@ import { test, expect, openShareDialog } from '../auth-helpers'
 test.describe('Sharing — Exclusions', () => {
   test('can expand exclusions panel for a share', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 
@@ -33,7 +33,7 @@ test.describe('Sharing — Exclusions', () => {
 
   test('share dialog links to sharing settings', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 
@@ -45,7 +45,7 @@ test.describe('Sharing — Exclusions', () => {
 
   test('share dialog shows correct share count', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 

@@ -8,10 +8,10 @@ twoUserTest.describe('Collaboration', () => {
   }) => {
     // Both users navigate to the collab test page
     await userAPage.goto('/dashboard')
-    await userAPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userAPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await userBPage.goto('/dashboard')
-    await userBPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userBPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // Switch User B to the shared space
     await switchToSpace(userBPage, testData.spaceA.name)
@@ -45,10 +45,10 @@ twoUserTest.describe('Collaboration', () => {
     testData,
   }) => {
     await userAPage.goto('/dashboard')
-    await userAPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userAPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await userBPage.goto('/dashboard')
-    await userBPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userBPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await switchToSpace(userBPage, testData.spaceA.name)
 
@@ -79,10 +79,10 @@ twoUserTest.describe('Collaboration', () => {
     testData,
   }) => {
     await userAPage.goto('/dashboard')
-    await userAPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userAPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await userBPage.goto('/dashboard')
-    await userBPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userBPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await switchToSpace(userBPage, testData.spaceA.name)
 
@@ -121,10 +121,10 @@ twoUserTest.describe('Collaboration', () => {
     testData,
   }) => {
     await userAPage.goto('/dashboard')
-    await userAPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userAPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await userBPage.goto('/dashboard')
-    await userBPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userBPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await switchToSpace(userBPage, testData.spaceA.name)
 
