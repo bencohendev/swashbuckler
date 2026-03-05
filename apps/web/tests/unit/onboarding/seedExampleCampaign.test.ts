@@ -19,7 +19,7 @@ function makeMockClient(): DataClient {
 
   return {
     objectTypes: {
-      list: vi.fn(),
+      list: vi.fn().mockResolvedValue({ data: [], error: null }),
       get: vi.fn(),
       create: vi.fn().mockImplementation(async () => {
         const id = crypto.randomUUID()
@@ -100,6 +100,24 @@ describe('seedExampleCampaign', () => {
     const result = await seedExampleCampaign(client)
     expect(result).toBeTruthy()
     expect(typeof result).toBe('string')
+  })
+
+  it('reuses existing types instead of creating duplicates', async () => {
+    const existingPageId = crypto.randomUUID()
+    vi.mocked(client.objectTypes.list).mockResolvedValueOnce({
+      data: [{ id: existingPageId, slug: 'page', name: 'Page' }] as never,
+      error: null,
+    })
+
+    await seedExampleCampaign(client)
+
+    // Page type already exists, so one fewer create call
+    expect(client.objectTypes.create).toHaveBeenCalledTimes(CAMPAIGN_TYPES.length - 1)
+
+    // Entries with typeKey 'page' should use the existing type ID
+    const createCalls = vi.mocked(client.objects.create).mock.calls
+    const overviewCall = createCalls.find(([input]) => input.title === 'Campaign Overview')
+    expect(overviewCall?.[0].type_id).toBe(existingPageId)
   })
 
   it('patches entries with real IDs and syncs mentions', async () => {

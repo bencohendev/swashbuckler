@@ -89,18 +89,16 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
     let loadedSpaces = result.data
 
-    // If no spaces exist, create a default one and seed content
-    if (loadedSpaces.length === 0) {
-      // Check for example campaign cookie (guest mode only)
-      const wantsExample = !user && typeof document !== 'undefined' &&
-        document.cookie.split('; ').some(c => c === 'swashbuckler-guest-example=1')
+    // Check for example campaign cookie (guest mode only)
+    const wantsExample = !user && typeof document !== 'undefined' &&
+      document.cookie.split('; ').some(c => c === 'swashbuckler-guest-example=1')
 
-      let newSpaceId: string | null = null
+    // If no spaces exist, create a default one and seed a welcome page
+    if (loadedSpaces.length === 0) {
       if (user) {
         const createResult = await spacesClient.create({ name: 'My Space' })
         if (createResult.data) {
           loadedSpaces = [createResult.data]
-          newSpaceId = createResult.data.id
         }
       } else {
         const defaultSpace = await ensureLocalDefaultSpace(
@@ -109,32 +107,19 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
         await ensureLocalDefaultTypes()
         emit('objectTypes')
         loadedSpaces = [defaultSpace]
-        newSpaceId = defaultSpace.id
       }
 
-      // Seed content into the new space
-      if (newSpaceId) {
+      // Seed welcome page for non-example new spaces
+      const newSpaceId = loadedSpaces[0]?.id
+      if (newSpaceId && !wantsExample) {
         try {
           const spaceClient = user
             ? createSupabaseDataClient(supabase, newSpaceId, user.id)
             : createLocalDataClient(newSpaceId)
 
-          let landingPageId: string | null = null
-
-          if (wantsExample) {
-            // Seed the full example campaign and clear the cookie
-            landingPageId = await seedExampleCampaign(spaceClient)
-            if (typeof document !== 'undefined') {
-              document.cookie = 'swashbuckler-guest-example=; path=/; max-age=0'
-            }
-          } else {
-            landingPageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
-          }
-
+          const landingPageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
           emit('objects')
 
-          // Navigate to the landing entry so the user lands on content, not an empty dashboard.
-          // Skip the redirect on public pages (e.g. /landing).
           if (landingPageId && typeof window !== 'undefined') {
             const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
               .some(p => window.location.pathname.startsWith(p))
@@ -143,7 +128,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
             }
           }
         } catch (err) {
-          console.error('Failed to seed content:', err)
+          console.error('Failed to seed welcome page:', err)
         }
       }
     }
@@ -152,6 +137,34 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     if (!user) {
       await ensureLocalDefaultTypes()
       emit('objectTypes')
+    }
+
+    // Seed the example campaign — runs independently of space creation since
+    // the space may have been created on a previous page load (e.g. /landing).
+    if (wantsExample) {
+      const spaceId = loadedSpaces[0]?.id
+      if (spaceId) {
+        try {
+          const spaceClient = createLocalDataClient(spaceId)
+          const landingPageId = await seedExampleCampaign(spaceClient)
+
+          // Clear the cookie so we don't re-seed on next load
+          document.cookie = 'swashbuckler-guest-example=; path=/; max-age=0'
+
+          emit('objects')
+          emit('objectTypes')
+
+          if (landingPageId && typeof window !== 'undefined') {
+            const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
+              .some(p => window.location.pathname.startsWith(p))
+            if (isProtectedPage) {
+              window.location.replace(`/objects/${landingPageId}`)
+            }
+          }
+        } catch (err) {
+          console.error('Failed to seed example campaign:', err)
+        }
+      }
     }
 
     // Check if authenticated user needs onboarding

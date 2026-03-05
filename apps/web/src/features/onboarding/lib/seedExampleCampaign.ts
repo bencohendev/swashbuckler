@@ -9,11 +9,26 @@ import type { Value } from '@udecode/plate'
  * Returns the ID of the Campaign Overview entry for navigation.
  */
 export async function seedExampleCampaign(client: DataClient): Promise<string | null> {
-  // 1. Create types and collect key → ID mapping
+  // 1. Create types and collect key → ID mapping.
+  //    If a type with the same slug already exists (e.g. Page was seeded
+  //    by ensureLocalDefaultTypes), reuse its ID instead of failing.
   const typeKeyToId = new Map<string, string>()
+
+  // Build a slug → ID lookup of existing types
+  const existingTypes = await client.objectTypes.list()
+  const existingBySlug = new Map(
+    (existingTypes.data ?? []).map(t => [t.slug, t.id]),
+  )
 
   for (const campaignType of CAMPAIGN_TYPES) {
     const { key, ...input } = campaignType
+
+    const existingId = existingBySlug.get(input.slug)
+    if (existingId) {
+      typeKeyToId.set(key, existingId)
+      continue
+    }
+
     // Add UUIDs to field definitions
     const fields = (input.fields ?? []).map(f => ({
       ...f,
