@@ -98,16 +98,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Pole + content wrapper — pole starts at CTA and runs to footer */}
-        <div className="relative">
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
-            aria-hidden="true"
-          >
-            <div className="h-full w-[16px] bg-[#8B5E3C]" />
-          </div>
-
-        <section className="relative z-10 mx-auto max-w-2xl border-y border-border px-6 py-8">
+        <section className="mx-auto max-w-2xl border-y border-border px-6 py-8">
           <div className="flex flex-col items-center gap-4">
             <Link
               href="/signup"
@@ -122,7 +113,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-2xl px-6 py-12">
+        <section className="mx-auto max-w-2xl px-6 py-12">
           <h2 className="mb-8 text-center text-xl font-semibold">
             Lore your whole table can believe in
           </h2>
@@ -164,7 +155,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12 text-center space-y-3">
+        <section className="mx-auto max-w-2xl px-6 pb-12 text-center space-y-3">
           <p className="text-sm font-medium text-muted-foreground">
             No AI. No autocomplete. Just your words.
           </p>
@@ -173,7 +164,7 @@ export default function LandingPage() {
           </p>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-24 text-center">
+        <section className="mx-auto max-w-2xl px-6 pb-24 text-center">
           <div className="flex flex-col items-center gap-3">
             <Link
               href="/signup"
@@ -191,8 +182,6 @@ export default function LandingPage() {
             </a>
           </div>
         </section>
-
-        </div>{/* end pole + content wrapper */}
 
       </main>
 
