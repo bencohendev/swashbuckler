@@ -15,10 +15,11 @@ const PALETTE: Record<number, string> = {
   12: "#7EC4DE", // foam / wave crest
 }
 
-const COLS = 80
+const COLS = 92
 const ROWS = 24
 const WATER_DEPTH = 6
 const WATER_SURFACE = ROWS - WATER_DEPTH // row 18
+const ISLAND_OFFSET = 12 // extra ocean columns on the left
 
 // Small palm tree — 9 wide x 10 tall, trunk at col 4
 // prettier-ignore
@@ -124,7 +125,7 @@ function buildScene(): number[][] {
     }
 
     // Wave peaks above the surface line (only where no sand)
-    const ih = islandHeight(c)
+    const ih = islandHeight(c - ISLAND_OFFSET)
     if (ih === 0 && Math.sin(c * 0.6) > 0.5) {
       grid[WATER_SURFACE - 1][c] = 12
     }
@@ -132,7 +133,7 @@ function buildScene(): number[][] {
 
   // 2. Fill sand island (overwrites water at the shoreline)
   for (let c = 0; c < COLS; c++) {
-    const h = islandHeight(c)
+    const h = islandHeight(c - ISLAND_OFFSET)
     if (h > 0) {
       const sandTop = WATER_SURFACE - h
       for (let r = sandTop; r <= WATER_SURFACE; r++) {
@@ -142,28 +143,28 @@ function buildScene(): number[][] {
   }
 
   // 3. Stamp sprites
-  const tree1Col = 11
-  const tree1Ground = WATER_SURFACE - islandHeight(tree1Col + 4) + 1
+  const tree1Col = 11 + ISLAND_OFFSET
+  const tree1Ground = WATER_SURFACE - islandHeight(tree1Col - ISLAND_OFFSET + 4) + 1
   stamp(grid, PALM_SMALL, tree1Col, tree1Ground)
 
-  const tree2Col = 42
-  const tree2Ground = WATER_SURFACE - islandHeight(tree2Col + 6) + 1
+  const tree2Col = 42 + ISLAND_OFFSET
+  const tree2Ground = WATER_SURFACE - islandHeight(tree2Col - ISLAND_OFFSET + 6) + 1
   stamp(grid, PALM_TALL, tree2Col, tree2Ground)
 
-  const chestCol = 26
-  const chestGround = WATER_SURFACE - islandHeight(chestCol + 6) + 1
+  const chestCol = 26 + ISLAND_OFFSET
+  const chestGround = WATER_SURFACE - islandHeight(chestCol - ISLAND_OFFSET + 6) + 1
   stamp(grid, CHEST, chestCol, chestGround)
 
   // 4. Scatter coins on sand
   const coinPositions: [number, number][] = [
-    [7, 5],
-    [22, 6],
-    [38, 5],
-    [56, 6],
+    [7 + ISLAND_OFFSET, 5],
+    [22 + ISLAND_OFFSET, 6],
+    [38 + ISLAND_OFFSET, 5],
+    [56 + ISLAND_OFFSET, 6],
   ]
   for (const [cc, color] of coinPositions) {
     if (cc < COLS) {
-      const h = islandHeight(cc)
+      const h = islandHeight(cc - ISLAND_OFFSET)
       if (h > 0) {
         const surface = WATER_SURFACE - h
         if (surface > 0 && grid[surface - 1][cc] === 0) {
