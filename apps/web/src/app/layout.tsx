@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     url: "https://swashbuckler.quest",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Swashbuckler — The knowledge base built for tabletops",
     description:
       "Organize your TTRPG campaign with custom types, a rich block editor, knowledge graph, real-time collaboration, and granular sharing.",
