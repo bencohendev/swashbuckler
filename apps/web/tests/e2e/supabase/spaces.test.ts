@@ -68,7 +68,7 @@ test.describe('Spaces', () => {
     await nameInput.fill('Renamed Space E2E')
     await nameInput.blur()
     // Wait for debounced save
-    await authPage.waitForTimeout(600)
+    await authPage.waitForTimeout(1000)
 
     // Verify the name changed by reloading
     await authPage.reload()
@@ -80,7 +80,7 @@ test.describe('Spaces', () => {
     if (updatedName === 'Renamed Space E2E') {
       await updatedInput.fill(originalName)
       await updatedInput.blur()
-      await authPage.waitForTimeout(600)
+      await authPage.waitForTimeout(1000)
     }
 
     expect(updatedName).toBe('Renamed Space E2E')

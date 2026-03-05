@@ -169,7 +169,20 @@ export default async function globalSetup(_config: FullConfig) {
   if (collabPageError) throw new Error(`Failed to create collab page: ${collabPageError.message}`)
 
   // -----------------------------------------------------------------------
-  // 5. Save test data
+  // 5. Mark both users' onboarding as complete (prevents NewUserDialog from blocking tests)
+  // -----------------------------------------------------------------------
+  for (const userId of [userAId, userBId]) {
+    const { error: prefError } = await admin
+      .from('user_preferences')
+      .upsert(
+        { user_id: userId, onboarding_completed_at: new Date().toISOString() },
+        { onConflict: 'user_id' },
+      )
+    if (prefError) throw new Error(`Failed to set onboarding prefs for ${userId}: ${prefError.message}`)
+  }
+
+  // -----------------------------------------------------------------------
+  // 6. Save test data
   // -----------------------------------------------------------------------
   const testData: TestData = {
     userA: { id: userAId, email: USER_A_EMAIL },
