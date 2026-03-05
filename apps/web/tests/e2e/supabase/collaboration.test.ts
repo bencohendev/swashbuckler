@@ -96,8 +96,8 @@ twoUserTest.describe('Collaboration', () => {
     await userAPage.locator('[contenteditable="true"]').first().click()
     await userBPage.locator('[contenteditable="true"]').first().click()
 
-    // Wait for awareness sync
-    await userAPage.waitForTimeout(3000)
+    // Wait for awareness sync via broadcast
+    await userAPage.waitForTimeout(1000)
 
     // User A should see User B's avatar (or initials)
     // The CollaboratorAvatars component renders div elements with title={user.name}

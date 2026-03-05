@@ -57,7 +57,7 @@ export default defineConfig({
       testMatch: /supabase\/.+\.test\.ts$/,
       testIgnore: /auth-logout\.test\.ts$/,
       dependencies: ['supabase-setup'],
-      fullyParallel: false,
+      fullyParallel: true,
       timeout: 60_000,
     },
     // Logout tests run LAST — signOut({ scope: 'global' }) revokes ALL sessions for the user,

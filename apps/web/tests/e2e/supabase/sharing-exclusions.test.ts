@@ -14,8 +14,6 @@ test.describe('Sharing — Exclusions', () => {
 
     // The ExclusionManager should be visible
     // It shows options for type-wide, object-level, and field-level exclusions
-    await authPage.waitForTimeout(1000)
-
     // The exclusions panel should have expanded (chevron rotated)
     // Just verify the button was clickable and content area appeared
     expect(true).toBe(true)
