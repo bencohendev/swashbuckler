@@ -1,6 +1,8 @@
 import { test, expect, switchToSpace } from '../auth-helpers'
 
 test.describe('Spaces', () => {
+  // Tests modify shared state (create, rename, archive) — run serially
+  test.describe.configure({ mode: 'serial' })
   test('displays current space in switcher', async ({ authPage, testData }) => {
     await authPage.goto('/dashboard')
     await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
@@ -66,7 +68,7 @@ test.describe('Spaces', () => {
     await nameInput.fill('Renamed Space E2E')
     await nameInput.blur()
     // Wait for debounced save
-    await authPage.waitForTimeout(1000)
+    await authPage.waitForTimeout(600)
 
     // Verify the name changed by reloading
     await authPage.reload()
@@ -78,7 +80,7 @@ test.describe('Spaces', () => {
     if (updatedName === 'Renamed Space E2E') {
       await updatedInput.fill(originalName)
       await updatedInput.blur()
-      await authPage.waitForTimeout(1000)
+      await authPage.waitForTimeout(600)
     }
 
     expect(updatedName).toBe('Renamed Space E2E')
@@ -114,7 +116,7 @@ test.describe('Spaces', () => {
     await authPage.waitForLoadState('domcontentloaded')
 
     // Wait for the space rows to load
-    await authPage.waitForTimeout(2000)
+    await authPage.locator('input[aria-label^="Space name"]').first().waitFor({ state: 'visible', timeout: 10000 })
 
     // If there's only one space, the delete button should not be present
     const spaceRows = authPage.locator('input[aria-label^="Space name"]')

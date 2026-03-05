@@ -149,12 +149,13 @@ export async function openObjectByTitle(page: Page, title: string) {
 
 /** Wait for the collaboration connection to be established. */
 export async function waitForCollabReady(page: Page) {
-  // Wait for the editor to be visible
-  await expect(page.locator('[contenteditable="true"]')).toBeVisible({ timeout: 15000 })
+  // Wait for the editor to be visible and editable
+  const editor = page.locator('[contenteditable="true"]')
+  await expect(editor).toBeVisible({ timeout: 15000 })
   // Wait for the "Synced" status indicator — confirms Yjs provider is connected via Supabase Broadcast
   await expect(page.getByText('Synced')).toBeVisible({ timeout: 15000 })
-  // Additional delay for the broadcast channel to fully establish bidirectional communication
-  await page.waitForTimeout(3000)
+  // Brief pause for broadcast channel to stabilize
+  await page.waitForTimeout(500)
 }
 
 export { expect }

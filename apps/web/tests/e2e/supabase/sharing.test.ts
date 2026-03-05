@@ -2,6 +2,8 @@ import * as path from 'node:path'
 import { test, twoUserTest, expect, openShareDialog, switchToSpace } from '../auth-helpers'
 
 test.describe('Sharing — Owner actions', () => {
+  // Tests modify shared state (permissions) — run serially to avoid conflicts
+  test.describe.configure({ mode: 'serial' })
   test('opens share dialog from space switcher', async ({ authPage }) => {
     await authPage.goto('/dashboard')
     await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
@@ -35,7 +37,7 @@ test.describe('Sharing — Owner actions', () => {
 
     // Current permission is 'edit' (set in global-setup), change to 'view'
     await permissionSelect.selectOption('view')
-    await authPage.waitForTimeout(1000)
+    await authPage.waitForTimeout(500)
 
     // Verify it stuck by reloading
     await authPage.reload()
@@ -47,7 +49,7 @@ test.describe('Sharing — Owner actions', () => {
 
     // Restore to edit for other tests
     await updatedSelect.selectOption('edit')
-    await authPage.waitForTimeout(1000)
+    await authPage.waitForTimeout(500)
   })
 
   test('revokes share access', async ({ authPage }) => {
@@ -63,7 +65,7 @@ test.describe('Sharing — Owner actions', () => {
     await shareButton.click()
 
     // Wait for the share to appear (or error if user doesn't exist)
-    await authPage.waitForTimeout(2000)
+    await authPage.waitForTimeout(1000)
 
     // If the share was created, remove it
     const removeButton = authPage.getByLabel(/remove access for revoke-test/i)
