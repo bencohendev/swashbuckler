@@ -26,6 +26,10 @@ export async function seedExampleCampaign(client: DataClient): Promise<string | 
     const existingId = existingBySlug.get(input.slug)
     if (existingId) {
       typeKeyToId.set(key, existingId)
+      // Update icon to match campaign definition
+      if (input.icon) {
+        await client.objectTypes.update(existingId, { icon: input.icon })
+      }
       continue
     }
 

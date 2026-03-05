@@ -114,6 +114,9 @@ describe('seedExampleCampaign', () => {
     // Page type already exists, so one fewer create call
     expect(client.objectTypes.create).toHaveBeenCalledTimes(CAMPAIGN_TYPES.length - 1)
 
+    // Existing type should have its icon updated
+    expect(client.objectTypes.update).toHaveBeenCalledWith(existingPageId, { icon: '📄' })
+
     // Entries with typeKey 'page' should use the existing type ID
     const createCalls = vi.mocked(client.objects.create).mock.calls
     const overviewCall = createCalls.find(([input]) => input.title === 'Campaign Overview')
