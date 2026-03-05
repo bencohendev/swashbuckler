@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { PenLineIcon, BoxesIcon, NetworkIcon, UsersIcon } from "lucide-react"
+import { PenLineIcon, BoxesIcon, NetworkIcon, UsersIcon, ShieldIcon, EyeOffIcon } from "lucide-react"
 import { GuestButton } from "./GuestButton"
 import { PixelBeachScene } from "./PixelBeachScene"
 import { PixelPirateFlag } from "./PixelPirateFlag"
@@ -111,6 +111,26 @@ export default function LandingPage() {
                 </p>
               </a>
             ))}
+          </div>
+        </section>
+
+        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12">
+          <h2 className="mb-6 text-center text-lg font-semibold">TTRPG Friendly Features</h2>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
+            <div className="rounded-lg border bg-card p-6 text-card-foreground">
+              <ShieldIcon className="size-8 text-muted-foreground" />
+              <h3 className="mt-4 font-semibold">Advanced Sharing</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Fine-tune exactly which types and entries are shared with your party.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-card p-6 text-card-foreground">
+              <EyeOffIcon className="size-8 text-muted-foreground" />
+              <h3 className="mt-4 font-semibold">Private Blocks</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Add hidden notes to shared entries that only you can see.
+              </p>
+            </div>
           </div>
         </section>
 
