@@ -6,6 +6,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 | Bug | Description |
 |-----|-------------|
+| [Tour & onboarding UX issues](tour-onboarding-ux.md) | 6 issues: dismiss intro enables all tours, local DB persists after logout, "Tour this page" shows dialog, tour fires before setup dialog, sharing tour unnecessary, consent banner competes with tour |
 
 ## Closed
 
