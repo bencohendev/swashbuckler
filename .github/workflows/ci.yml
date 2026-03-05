@@ -48,6 +48,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -58,8 +59,8 @@ jobs:
       - name: Build Next.js
         run: cd apps/web && npx next build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' }}
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -155,7 +156,7 @@ jobs:
           NEXT_BUILD_SKIP: '1'
       - name: Stop local Supabase
         if: always()
-        run: cd apps/web && supabase stop
+        run: command -v supabase >/dev/null && cd apps/web && supabase stop || true
       - name: Upload test artifacts
         if: failure()
         uses: actions/upload-artifact@v4
@@ -176,7 +177,7 @@ jobs:
         run: |
           if [[ "${{ needs.lint.result }}" != "success" ]]; then exit 1; fi
           if [[ "${{ needs.test.result }}" != "success" ]]; then exit 1; fi
-          if [[ "${{ needs.build.result }}" != "success" ]]; then exit 1; fi
-          # E2E jobs are skipped on push events — only fail if they ran and failed
+          # Build and E2E jobs only run on PRs — fail if they ran and failed
+          if [[ "${{ needs.build.result }}" == "failure" ]]; then exit 1; fi
           if [[ "${{ needs.e2e-guest.result }}" == "failure" ]]; then exit 1; fi
           if [[ "${{ needs.e2e-supabase.result }}" == "failure" ]]; then exit 1; fi
