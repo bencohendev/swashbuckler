@@ -103,7 +103,7 @@ export default function LandingPage() {
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <h2 className="mb-8 text-center text-xl font-semibold">
-            Everything you need to run your world
+            Lore your whole table can believe in
           </h2>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             {features.map((feature) => {
