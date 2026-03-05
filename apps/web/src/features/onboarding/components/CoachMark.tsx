@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
 import { Button } from '@/shared/components/ui/Button'
@@ -173,7 +174,28 @@ export function CoachMark({
 
   const content = (
     <>
-      <div className="mb-1 text-sm font-semibold">{title}</div>
+      <div className="mb-1 flex items-start justify-between gap-2">
+        <div className="text-sm font-semibold">{title}</div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isFirst}
+            aria-label="Previous step"
+            className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <ChevronLeftIcon className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={isLast ? onNext : onNext}
+            aria-label={isLast ? 'Finish tour' : 'Next step'}
+            className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ChevronRightIcon className="size-4" />
+          </button>
+        </div>
+      </div>
       <p className="mb-1 text-sm text-muted-foreground">{description}</p>
       {docUrl && (
         <a
@@ -199,24 +221,20 @@ export function CoachMark({
           ))}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs text-muted-foreground">
-          Skip tour
-        </Button>
-        {onSkipAll ? (
-          <Button variant="ghost" size="sm" onClick={onSkipAll} className="text-xs text-muted-foreground">
-            Skip all
-          </Button>
-        ) : (
-          <div />
-        )}
-        {!isFirst ? (
-          <Button variant="outline" size="sm" onClick={onBack}>
-            Back
-          </Button>
-        ) : (
-          <div />
-        )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <button type="button" onClick={onSkip} className="hover:text-foreground transition-colors">
+            Skip tour
+          </button>
+          {onSkipAll && (
+            <>
+              <span aria-hidden="true">·</span>
+              <button type="button" onClick={onSkipAll} className="hover:text-foreground transition-colors">
+                Skip all
+              </button>
+            </>
+          )}
+        </div>
         <Button size="sm" onClick={onNext}>
           {isLast ? 'Done' : 'Next'}
         </Button>
