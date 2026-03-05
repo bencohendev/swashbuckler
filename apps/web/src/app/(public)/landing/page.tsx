@@ -46,9 +46,29 @@ const features = [
   },
 ]
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Swashbuckler",
+  url: "https://swashbuckler.quest",
+  applicationCategory: "ProductivityApplication",
+  operatingSystem: "Web",
+  description:
+    "A knowledge base built for tabletop RPGs — organize campaigns with custom types, a rich editor, knowledge graph, real-time collaboration, and granular sharing.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+}
+
 export default function LandingPage() {
   return (
     <div className="dark relative flex min-h-screen flex-col bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Flagpole running full page height — aligned to left edge of max-w-3xl content */}
       <div
         className="pointer-events-none absolute inset-x-0 top-[7rem] bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
