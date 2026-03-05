@@ -89,15 +89,6 @@ export const INTRO_STEPS: TutorialStep[] = [
     docUrl: `${DOCS_BASE}/graph-view`,
   },
   {
-    id: 'tags',
-    type: 'coachmark',
-    target: '[data-tour="tags-section"]',
-    title: 'Tags',
-    description: 'Organize entries with color-coded tags.',
-    placement: 'right',
-    docUrl: `${DOCS_BASE}/tags`,
-  },
-  {
     id: 'sharing',
     type: 'coachmark',
     target: '[data-tour="space-switcher"]',

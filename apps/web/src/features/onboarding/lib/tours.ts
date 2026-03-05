@@ -2,9 +2,9 @@ import { INTRO_STEPS, type TutorialStep } from './steps'
 
 export type TourId =
   | 'intro'
-  | 'editor'
   | 'graph'
   | 'settings'
+  | 'type-page'
 
 export interface TourDefinition {
   id: TourId
@@ -24,65 +24,6 @@ export const TOURS: Record<TourId, TourDefinition> = {
     description: 'Let\u2019s take a quick tour of the app.',
     steps: INTRO_STEPS,
   },
-  editor: {
-    id: 'editor',
-    title: 'Editor',
-    description: 'Learn about the entry editor and its features.',
-    steps: [
-      {
-        id: 'editor-welcome',
-        type: 'dialog',
-        target: null,
-        title: 'Editor',
-        description: 'Learn about the entry editor and its features.',
-        placement: 'bottom',
-      },
-      {
-        id: 'editor-header',
-        type: 'coachmark',
-        target: '[data-tour="editor-header"]',
-        title: 'Entry Header',
-        description: 'Change the icon, see the type, and manage the entry.',
-        placement: 'bottom',
-      },
-      {
-        id: 'editor-properties',
-        type: 'coachmark',
-        target: '[data-tour="editor-properties"]',
-        title: 'Properties',
-        description: 'Custom fields defined by the entry\u2019s type.',
-        placement: 'bottom',
-        docUrl: `${DOCS_BASE}/entries-and-types`,
-      },
-      {
-        id: 'editor-area',
-        type: 'coachmark',
-        target: '[data-tour="editor-area"]',
-        title: 'Editor',
-        description: 'Rich text with slash commands, mentions, and more.',
-        placement: 'left',
-        docUrl: `${DOCS_BASE}/editor`,
-      },
-      {
-        id: 'editor-tags',
-        type: 'coachmark',
-        target: '[data-tour="editor-tags"]',
-        title: 'Tags',
-        description: 'Add color-coded tags to organize entries.',
-        placement: 'top',
-        docUrl: `${DOCS_BASE}/tags`,
-      },
-      {
-        id: 'editor-linked-objects',
-        type: 'coachmark',
-        target: '[data-tour="editor-linked-objects"]',
-        title: 'Linked Entries',
-        description: 'See and manage connections to other entries.',
-        placement: 'top',
-        docUrl: `${DOCS_BASE}/relations-and-linking`,
-      },
-    ],
-  },
   graph: {
     id: 'graph',
     title: 'Graph View',
@@ -101,7 +42,7 @@ export const TOURS: Record<TourId, TourDefinition> = {
         type: 'coachmark',
         target: '[data-tour="graph-layout-toggle"]',
         title: 'Layout Toggle',
-        description: 'Switch between force-directed and radial layouts.',
+        description: 'Switch between force-directed, radial, hierarchical, and clustered layouts.',
         placement: 'bottom',
         docUrl: `${DOCS_BASE}/graph-view`,
       },
@@ -216,12 +157,52 @@ export const TOURS: Record<TourId, TourDefinition> = {
       },
     ],
   },
+  'type-page': {
+    id: 'type-page',
+    title: 'Type Page',
+    description: 'Browse and manage all entries of a type.',
+    steps: [
+      {
+        id: 'type-page-welcome',
+        type: 'dialog',
+        target: null,
+        title: 'Type Page',
+        description: 'Browse and manage all entries of a type. Filter, sort, and switch between different views.',
+        placement: 'bottom',
+      },
+      {
+        id: 'type-page-view-toggle',
+        type: 'coachmark',
+        target: '[data-tour="type-page-view-toggle"]',
+        title: 'View Modes',
+        description: 'Switch between table, list, card, and board layouts.',
+        placement: 'bottom',
+        docUrl: `${DOCS_BASE}/entries-and-types`,
+      },
+      {
+        id: 'type-page-saved-views',
+        type: 'coachmark',
+        target: '[data-tour="type-page-saved-views"]',
+        title: 'Saved Views',
+        description: 'Save a combination of filters, sort, and view mode to quickly switch between them.',
+        placement: 'bottom',
+      },
+      {
+        id: 'type-page-filters',
+        type: 'coachmark',
+        target: '[data-tour="type-page-filters"]',
+        title: 'Filters & Sort',
+        description: 'Filter entries by any property, tag, or content. Sort by name, date, or custom fields.',
+        placement: 'bottom',
+      },
+    ],
+  },
 }
 
 const PATH_TO_TOUR: [RegExp, TourId][] = [
-  [/^\/objects\//, 'editor'],
   [/^\/graph$/, 'graph'],
   [/^\/settings$/, 'settings'],
+  [/^\/types\//, 'type-page'],
 ]
 
 export function getTourIdForPath(pathname: string): TourId | null {

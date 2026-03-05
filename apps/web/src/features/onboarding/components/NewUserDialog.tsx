@@ -31,7 +31,7 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
           <DialogTitle>{loading ? 'Setting things up' : 'Set up your workspace'}</DialogTitle>
           <DialogDescription>
             {loading === 'example'
-              ? 'Please wait while your world is being constructed. This may take a few minutes.'
+              ? 'Please wait while your world is being constructed. This may take a few moments.'
               : loading === 'blank'
                 ? 'Setting things up...'
                 : 'Choose how you\'d like to start. You can always create more spaces later.'}
