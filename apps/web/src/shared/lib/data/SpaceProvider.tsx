@@ -377,7 +377,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
         // Fall through — intro tour will auto-skip editor step if needed
       }
     }
-  }, [user, supabase, spacesClient, switchSpace, ownedSpaces])
+  }, [user, supabase, spacesClient, ownedSpaces])
 
   // Refs for values read inside CRUD callbacks — keeps callbacks stable
   const ownedSpacesRef = useRef(ownedSpaces)

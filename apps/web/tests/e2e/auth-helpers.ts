@@ -31,6 +31,7 @@ export const test = base.extend<AuthFixtures>({
     await use(data)
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- testData dependency ensures auth setup runs first
   authPage: async ({ browser, testData: _testData }, use) => {
     const storagePath = path.join(AUTH_DIR, 'userA.json')
     const context = await browser.newContext({ storageState: storagePath })
@@ -62,6 +63,7 @@ export const twoUserTest = base.extend<TwoUserFixtures>({
     await use(data)
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- testData dependency ensures auth setup runs first
   userAContext: async ({ browser, testData: _testData }, use) => {
     const storagePath = path.join(AUTH_DIR, 'userA.json')
     const context = await browser.newContext({ storageState: storagePath })
@@ -69,6 +71,7 @@ export const twoUserTest = base.extend<TwoUserFixtures>({
     await context.close()
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- testData dependency ensures auth setup runs first
   userBContext: async ({ browser, testData: _testData }, use) => {
     const storagePath = path.join(AUTH_DIR, 'userB.json')
     const context = await browser.newContext({ storageState: storagePath })

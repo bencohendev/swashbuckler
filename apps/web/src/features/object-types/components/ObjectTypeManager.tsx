@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { PlusIcon, EditIcon, TrashIcon, ArchiveIcon } from 'lucide-react'
@@ -23,8 +23,7 @@ export function ObjectTypeManager() {
   const [isCreating, setIsCreating] = useState(false)
   const [pendingDeleteType, setPendingDeleteType] = useState<ObjectType | null>(null)
   const [pendingArchiveType, setPendingArchiveType] = useState<ObjectType | null>(null)
-  const [hasMounted, setHasMounted] = useState(false)
-  useEffect(() => { setHasMounted(true) }, [])
+  const hasMounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
   // Auto-open edit form when ?edit=<typeId> is in the URL
   const editTypeId = searchParams.get('edit')

@@ -119,10 +119,6 @@ function h2(text: string) {
   return { type: 'h2', children: [{ text }] }
 }
 
-function h3(text: string) {
-  return { type: 'h3', children: [{ text }] }
-}
-
 function li(...children: unknown[]) {
   return {
     type: 'li',
