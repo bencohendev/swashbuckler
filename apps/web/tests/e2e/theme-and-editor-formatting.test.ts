@@ -2,6 +2,7 @@ import {
   test,
   expect,
   createEntry,
+  focusEditor,
 } from './helpers'
 
 test.describe('Theme & Editor Formatting — regression tests', () => {
@@ -57,8 +58,7 @@ test.describe('Theme & Editor Formatting — regression tests', () => {
     await createEntry(page)
 
     const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
-    await page.waitForTimeout(300)
+    await focusEditor(page)
 
     // Plate's autoformat: typing **text** applies the bold mark and consumes the ** markers
     await page.keyboard.type('**bold text**')
@@ -75,7 +75,7 @@ test.describe('Theme & Editor Formatting — regression tests', () => {
     await createEntry(page)
 
     const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
+    await focusEditor(page)
 
     // Open slash menu
     await page.keyboard.type('/')
@@ -96,7 +96,7 @@ test.describe('Theme & Editor Formatting — regression tests', () => {
     await createEntry(page)
 
     const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
+    await focusEditor(page)
 
     // Open slash menu and select "To-do"
     await page.keyboard.type('/')

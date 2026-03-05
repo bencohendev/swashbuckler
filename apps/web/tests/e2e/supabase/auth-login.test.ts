@@ -1,5 +1,9 @@
 import { test, expect } from '../auth-helpers'
 import { test as base } from '@playwright/test'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+
+const hasSupabase = fs.existsSync(path.join(__dirname, '..', '..', '.auth', 'test-data.json'))
 
 test.describe('Auth — Login', () => {
   test('logs in with valid email and password', async ({ authPage, testData }) => {
@@ -36,6 +40,7 @@ test.describe('Auth — Login', () => {
   })
 
   test('rate limits after multiple failed attempts', async ({ page }) => {
+    test.skip(!hasSupabase, 'Supabase not running — skipping')
     await page.goto('/login')
 
     // Submit 5 failed login attempts rapidly

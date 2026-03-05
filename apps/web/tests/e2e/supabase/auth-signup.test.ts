@@ -1,4 +1,8 @@
 import { test as base, expect } from '@playwright/test'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+
+const hasSupabase = fs.existsSync(path.join(__dirname, '..', '..', '.auth', 'test-data.json'))
 
 base.describe('Auth — Signup', () => {
   base('has email, password, confirm password, and strength meter', async ({ page }) => {
@@ -38,6 +42,7 @@ base.describe('Auth — Signup', () => {
   })
 
   base('shows confirmation UI after valid signup', async ({ page }) => {
+    base.skip(!hasSupabase, 'Supabase not running — skipping')
     // Use a unique email with a valid domain — remote Supabase rejects .localhost
     const uniqueEmail = `signup-${Date.now()}@example.com`
     await page.goto('/signup')
