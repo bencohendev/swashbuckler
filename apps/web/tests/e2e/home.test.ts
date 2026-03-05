@@ -12,7 +12,7 @@ test.describe('Home page', () => {
     await page.goto('/landing')
 
     // Check for key landing page elements
-    await expect(page.getByRole('heading', { name: 'Swashbuckler' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Swashbuckler', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: /try as guest/i })).toBeVisible()
     await expect(page.getByRole('link', { name: /get started/i }).first()).toBeVisible()
     await expect(page.getByRole('link', { name: /sign in/i })).toBeVisible()

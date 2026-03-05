@@ -17,14 +17,19 @@ export const test = base.extend<{ guestPage: Page }>({
         path: '/',
       },
     ])
-    // Dismiss the onboarding tutorial and analytics consent banner via localStorage before navigating
+    // Dismiss all onboarding tours and analytics consent banner via localStorage before navigating
     await page.goto('/dashboard', { waitUntil: 'commit' })
     await page.evaluate((key) => {
-      localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
+      localStorage.setItem('swashbuckler:toursSkippedAll', 'true')
       localStorage.setItem(key, 'accepted')
     }, ANALYTICS_CONSENT_KEY)
-    // Navigate again so tutorial state is read on mount
+    // Navigate again so tour/consent state is read on mount.
+    // On first-ever guest load, SpaceProvider creates a default space and
+    // welcome page then redirects to /objects/<id> via window.location.replace.
+    // Wait for that redirect to finish so tests start on a stable page.
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
+    await page.waitForURL(/\/(dashboard|objects\/)/, { timeout: 30000 })
+    await page.waitForLoadState('networkidle')
     // Wait for the sidebar to confirm guest mode loaded
     await expect(page.locator('aside, nav').first()).toBeVisible({
       timeout: 30000,
@@ -53,13 +58,21 @@ export async function enterGuestMode(page: Page) {
   await page.goto('/', { waitUntil: 'commit' })
   await page.evaluate((key) => {
     localStorage.setItem(key, 'accepted')
+    localStorage.setItem('swashbuckler:toursSkippedAll', 'true')
   }, ANALYTICS_CONSENT_KEY)
   await page.goto('/', { waitUntil: 'networkidle' })
   await expect(page).toHaveURL(/\/landing/)
   await expect(async () => {
     await page.getByRole('button', { name: /try as guest/i }).click()
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 3000 })
+    // After clicking, the app navigates to /dashboard. On first visit,
+    // SpaceProvider may redirect to /objects/<id> (welcome page).
+    await expect(page).toHaveURL(/\/(dashboard|objects\/)/, { timeout: 3000 })
   }).toPass({ timeout: 15000 })
+  await page.waitForLoadState('networkidle')
+  // Wait for the sidebar to finish loading (skeletons → real content).
+  // The type section (e.g. "Pages") appears once Dexie data loads.
+  await expect(page.locator('aside, nav').first()).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText(/pages/i).first()).toBeVisible({ timeout: 15000 })
 }
 
 // ---------------------------------------------------------------------------
