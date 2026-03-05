@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { enterGuestMode, ANALYTICS_CONSENT_KEY } from './helpers'
+import { enterGuestMode } from './helpers'
 
 test.describe('Example campaign guest mode', () => {
   // These tests seed data in IndexedDB which can be slow on CI.
@@ -50,10 +50,9 @@ test.describe('Example campaign guest mode', () => {
     const page = await context.newPage()
 
     await page.goto('/', { waitUntil: 'commit' })
-    await page.evaluate((key) => {
-      localStorage.setItem(key, 'accepted')
+    await page.evaluate(() => {
       localStorage.setItem('swashbuckler:toursSkippedAll', 'true')
-    }, ANALYTICS_CONSENT_KEY)
+    })
     await page.goto('/', { waitUntil: 'networkidle' })
     await page.getByRole('button', { name: /try as guest/i }).click()
 
