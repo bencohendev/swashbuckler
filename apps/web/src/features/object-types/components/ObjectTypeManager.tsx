@@ -23,6 +23,8 @@ export function ObjectTypeManager() {
   const [isCreating, setIsCreating] = useState(false)
   const [pendingDeleteType, setPendingDeleteType] = useState<ObjectType | null>(null)
   const [pendingArchiveType, setPendingArchiveType] = useState<ObjectType | null>(null)
+  const [hasMounted, setHasMounted] = useState(false)
+  useEffect(() => { setHasMounted(true) }, [])
 
   // Auto-open edit form when ?edit=<typeId> is in the URL
   const editTypeId = searchParams.get('edit')
@@ -64,7 +66,7 @@ export function ObjectTypeManager() {
     }
   }
 
-  if (isLoading) {
+  if (!hasMounted || isLoading) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map(i => (
