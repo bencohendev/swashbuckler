@@ -204,7 +204,7 @@ export function Sidebar() {
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
   const [collapseSignal, setCollapseSignal] = useState<CollapseSignal | undefined>(undefined)
-  const sidebarLoading = !space || typesLoading || (isSharedUser && exclusionFilterLoading)
+  const sidebarLoading = !space || typesLoading || objectsLoading || (isSharedUser && exclusionFilterLoading)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
 
