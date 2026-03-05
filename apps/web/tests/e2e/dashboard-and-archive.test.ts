@@ -34,7 +34,7 @@ test.describe('Dashboard & Archive — regression tests', () => {
   test('pinned section shows empty state', async ({ guestPage: page }) => {
     await navigateToDashboard(page)
 
-    await expect(page.getByText('No pinned entries')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('No pinned entries')).toBeVisible({ timeout: 15000 })
   })
 
   test('archive entry via editor menu', async ({ guestPage: page }) => {

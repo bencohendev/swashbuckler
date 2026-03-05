@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { toast } from '@/shared/hooks/useToast'
 import type { Space, SpacesClient, SharingClient, SpaceSharePermission, DataClient } from './types'
 import { createSupabaseDataClient } from './supabase'
@@ -51,7 +52,10 @@ interface SpaceProviderProps {
   isAuthLoading: boolean
 }
 
+const PUBLIC_PATHS = ['/landing', '/login', '/signup', '/forgot-password', '/reset-password', '/privacy', '/terms']
+
 export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderProps) {
+  const pathname = usePathname()
   const [ownedSpaces, setOwnedSpaces] = useState<Space[]>([])
   const [sharedSpaces, setSharedSpaces] = useState<Space[]>([])
   const [shareInfoMap, setShareInfoMap] = useState<Map<string, { shareId: string; permission: SpaceSharePermission }>>(new Map())
@@ -103,8 +107,13 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
         const defaultSpace = await ensureLocalDefaultSpace(
           wantsExample ? { name: 'The Crimson Tide', icon: '🏴‍☠️' } : undefined,
         )
-        await ensureLocalDefaultTypes()
-        emit('objectTypes')
+        // Only seed default types for blank mode — the example campaign
+        // creates its own types, and ensureLocalDefaultTypes would create
+        // a duplicate 'page' slug that blocks the campaign seed.
+        if (!wantsExample) {
+          await ensureLocalDefaultTypes()
+          emit('objectTypes')
+        }
         loadedSpaces = [defaultSpace]
         newSpaceId = defaultSpace.id
       }
@@ -205,8 +214,11 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
   useEffect(() => {
     if (isAuthLoading) return
+    // Don't create spaces on public pages — wait until user enters the app.
+    // Authenticated users always load; guests only load on protected pages.
+    if (!user && PUBLIC_PATHS.some(p => pathname.startsWith(p))) return
     loadSpaces() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch on mount
-  }, [isAuthLoading, loadSpaces])
+  }, [isAuthLoading, loadSpaces, pathname, user])
 
   // Listen for spaces and spaceShares events to refresh
   useEffect(() => {

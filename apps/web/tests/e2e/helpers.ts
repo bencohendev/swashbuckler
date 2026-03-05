@@ -76,8 +76,9 @@ export async function enterGuestMode(page: Page, options?: { example?: boolean }
   }
 
   // After clicking, the app navigates to /dashboard. On first visit,
-  // SpaceProvider may redirect to /objects/<id> (welcome page or overview).
-  await expect(page).toHaveURL(/\/(dashboard|objects\/)/, { timeout: 30000 })
+  // SpaceProvider seeds data in IndexedDB then calls window.location.replace
+  // to redirect to /objects/<id>. Wait for that final redirect.
+  await page.waitForURL(/\/objects\//, { timeout: 30000 })
   await page.waitForLoadState('networkidle')
   // Wait for the sidebar to finish loading (skeletons → real content).
   await expect(page.locator('aside, nav').first()).toBeVisible({ timeout: 15000 })
