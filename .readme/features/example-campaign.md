@@ -1,6 +1,6 @@
 # Example Campaign (Guest Mode)
 
-**Status:** Active
+**Status:** Done
 
 ## Summary
 
@@ -20,7 +20,7 @@ When users enter guest mode, they choose between a blank workspace or a pre-popu
 ### Space
 
 - Name: "The Crimson Tide"
-- Icon: (pirate flag or ship)
+- Icon: pirate flag emoji
 
 ### Types (7)
 
@@ -91,7 +91,7 @@ After all entries are created, `syncMentions` is called for each entry to create
 ### Modified Files
 - `apps/web/src/app/(public)/landing/GuestButton.tsx` — opens the dialog instead of directly entering guest mode
 - `apps/web/src/shared/lib/data/SpaceProvider.tsx` — check for `swashbuckler-guest-example` cookie/flag and seed example campaign instead of welcome page
-- `apps/web/src/app/(public)/landing/page.tsx` — render the dialog
+- `apps/web/src/shared/lib/data/local.ts` — `ensureLocalDefaultSpace` accepts optional name/icon overrides
 
 ### Seeding Flow
 
