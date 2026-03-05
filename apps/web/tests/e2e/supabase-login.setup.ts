@@ -31,11 +31,15 @@ for (const { email, password, filename } of users) {
     await page.goto('/login')
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 15000 })
 
-    await page.getByLabel('Email').fill(email)
-    await page.locator('#password').fill(password)
-    await page.getByRole('button', { name: 'Sign in' }).click()
-
-    await page.waitForURL('**/dashboard', { timeout: 30000 })
+    // Retry the full fill+click — the button is SSR-visible before React
+    // hydration attaches the onSubmit handler. Early clicks submit a plain
+    // HTML form (page reload), clearing React state and the input values.
+    await expect(async () => {
+      await page.getByLabel('Email').fill(email)
+      await page.locator('#password').fill(password)
+      await page.getByRole('button', { name: 'Sign in' }).click()
+      await expect(page).toHaveURL('**/dashboard', { timeout: 5000 })
+    }).toPass({ timeout: 30000 })
 
     const storagePath = path.join(AUTH_DIR, filename)
     await context.storageState({ path: storagePath })
