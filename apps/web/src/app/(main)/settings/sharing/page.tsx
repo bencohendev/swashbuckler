@@ -132,7 +132,7 @@ function SharingControls({ spaceId }: { spaceId: string }) {
 
   return (
     <div className="space-y-6">
-      <form data-tour="sharing-form" onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-start">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-start">
         <Input
           type="email"
           value={email}
@@ -184,7 +184,7 @@ function SharingControls({ spaceId }: { spaceId: string }) {
         </div>
       )}
 
-      <div data-tour="sharing-list" className="space-y-1">
+      <div className="space-y-1">
         <h3 className="text-sm font-medium text-muted-foreground mb-2">
           {shares.length > 0 ? `Shared with (${shares.length})` : 'Not shared with anyone'}
         </h3>

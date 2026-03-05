@@ -5,7 +5,6 @@ export type TourId =
   | 'editor'
   | 'graph'
   | 'settings'
-  | 'sharing-settings'
 
 export interface TourDefinition {
   id: TourId
@@ -217,46 +216,12 @@ export const TOURS: Record<TourId, TourDefinition> = {
       },
     ],
   },
-  'sharing-settings': {
-    id: 'sharing-settings',
-    title: 'Sharing',
-    description: 'Collaborate by sharing your space with others.',
-    steps: [
-      {
-        id: 'sharing-welcome',
-        type: 'dialog',
-        target: null,
-        title: 'Sharing',
-        description: 'Collaborate by sharing your space with others.',
-        placement: 'bottom',
-      },
-      {
-        id: 'sharing-form',
-        type: 'coachmark',
-        target: '[data-tour="sharing-form"]',
-        title: 'Share Your Space',
-        description: 'Invite someone by email and set their permission level.',
-        placement: 'bottom',
-        docUrl: `${DOCS_BASE}/sharing`,
-      },
-      {
-        id: 'sharing-list',
-        type: 'coachmark',
-        target: '[data-tour="sharing-list"]',
-        title: 'Shared Users',
-        description: 'Manage permissions and per-user content exclusions.',
-        placement: 'top',
-        docUrl: `${DOCS_BASE}/sharing`,
-      },
-    ],
-  },
 }
 
 const PATH_TO_TOUR: [RegExp, TourId][] = [
   [/^\/objects\//, 'editor'],
   [/^\/graph$/, 'graph'],
   [/^\/settings$/, 'settings'],
-  [/^\/settings\/sharing$/, 'sharing-settings'],
 ]
 
 export function getTourIdForPath(pathname: string): TourId | null {

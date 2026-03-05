@@ -42,7 +42,7 @@ import type { CollapseSignal } from "../types"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
 import { RecentSection } from "./RecentSection"
-import { useTutorial, getTourIdForPath } from "@/features/onboarding"
+import { useTutorial, getTourIdForPath, TOURS } from "@/features/onboarding"
 
 const DRAG_TYPE = "OBJECT_TYPE"
 
@@ -715,8 +715,10 @@ export function Sidebar() {
               {(() => {
                 const pageTourId = getTourIdForPath(pathname)
                 if (!pageTourId || pageTourId === 'intro') return null
+                const tour = TOURS[pageTourId]
+                const startStep = tour.steps[0]?.type === 'dialog' ? 1 : 0
                 return (
-                  <DropdownMenuItem onClick={() => restartTour(pageTourId)}>
+                  <DropdownMenuItem onClick={() => restartTour(pageTourId, { startStep })}>
                     <CompassIcon className="size-4" />
                     Tour this page
                   </DropdownMenuItem>

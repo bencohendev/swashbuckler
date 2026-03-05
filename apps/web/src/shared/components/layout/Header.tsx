@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/Avatar"
 import { LogInIcon, LogOutIcon, MenuIcon, MonitorIcon, MoonIcon, PaletteIcon, SearchIcon, SettingsIcon, SunIcon, SwordsIcon, UserIcon, UserPlusIcon, ZapIcon } from "lucide-react"
 import { useQueryClient } from "@tanstack/react-query"
-import { useAuth, useCurrentSpace } from "@/shared/lib/data"
+import { useAuth, useCurrentSpace, clearLocalData } from "@/shared/lib/data"
 import { useSpacePermission } from "@/features/sharing"
 import { useSidebar } from "@/shared/stores/sidebar"
 import { useTheme } from "next-themes"
@@ -78,7 +78,9 @@ export function Header({ email }: { email?: string }) {
       // Proceed with cleanup even if signOut fails
     }
     document.cookie = "swashbuckler-guest=; path=/; max-age=0"
+    document.cookie = "swashbuckler-guest-example=; path=/; max-age=0"
     queryClient.clear()
+    await clearLocalData()
     router.push("/login")
     router.refresh()
   }
