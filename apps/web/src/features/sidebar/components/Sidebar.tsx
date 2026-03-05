@@ -42,7 +42,7 @@ import type { CollapseSignal } from "../types"
 import { TypeSection } from "./TypeSection"
 import { SpaceSwitcher } from "./SpaceSwitcher"
 import { RecentSection } from "./RecentSection"
-import { useTutorial } from "@/features/onboarding"
+import { useTutorial, getTourIdForPath } from "@/features/onboarding"
 
 const DRAG_TYPE = "OBJECT_TYPE"
 
@@ -178,7 +178,7 @@ export function Sidebar() {
   const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const { user, isGuest } = useAuth()
-  const restartTutorial = useTutorial((s) => s.restart)
+  const restartTour = useTutorial((s) => s.restartTour)
   const { space } = useCurrentSpace()
   const { canEdit: canEditSpace, isOwner: isSpaceOwner } = useSpacePermission()
   const { filterTypes, filterObjects, isLoading: exclusionFilterLoading, isSharedUser } = useExclusionFilter()
@@ -708,10 +708,20 @@ export function Sidebar() {
                 </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={restartTutorial}>
+              <DropdownMenuItem onClick={() => restartTour('intro')}>
                 <CompassIcon className="size-4" />
-                Take a tour
+                Intro tour
               </DropdownMenuItem>
+              {(() => {
+                const pageTourId = getTourIdForPath(pathname)
+                if (!pageTourId || pageTourId === 'intro') return null
+                return (
+                  <DropdownMenuItem onClick={() => restartTour(pageTourId)}>
+                    <CompassIcon className="size-4" />
+                    Tour this page
+                  </DropdownMenuItem>
+                )
+              })()}
               <DropdownMenuSeparator />
               <DialogTrigger asChild>
                 <DropdownMenuItem>

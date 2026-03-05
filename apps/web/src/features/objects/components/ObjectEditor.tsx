@@ -347,7 +347,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b px-4 py-3 md:px-6">
+      <header data-tour="editor-header" className="flex items-center justify-between border-b px-4 py-3 md:px-6">
         <div className="flex items-center gap-2">
           {canEdit ? (
             <EmojiPicker value={object.icon ?? ''} onChange={handleIconChange}>
@@ -478,15 +478,19 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
           />
 
           {objectType && objectType.fields.length > 0 && (
-            <PropertyFields
-              fields={objectType ? filterFields(objectType.id, objectType.fields) : []}
-              values={object.properties}
-              onChange={handlePropertyChange}
-              readOnly={!canEdit}
-            />
+            <div data-tour="editor-properties">
+              <PropertyFields
+                fields={objectType ? filterFields(objectType.id, objectType.fields) : []}
+                values={object.properties}
+                onChange={handlePropertyChange}
+                readOnly={!canEdit}
+              />
+            </div>
           )}
 
-          <TagPicker objectId={id} readOnly={!canEdit} />
+          <div data-tour="editor-tags">
+            <TagPicker objectId={id} readOnly={!canEdit} />
+          </div>
 
           <div data-tour="editor-area">
             <EditorErrorBoundary onReset={() => setContentVersion(v => v + 1)}>
@@ -504,7 +508,9 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
             </EditorErrorBoundary>
           </div>
 
-          <LinkedObjects objectId={id} readOnly={!canEdit} />
+          <div data-tour="editor-linked-objects">
+            <LinkedObjects objectId={id} readOnly={!canEdit} />
+          </div>
         </div>
       </main>
 

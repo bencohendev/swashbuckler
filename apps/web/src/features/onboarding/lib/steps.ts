@@ -11,9 +11,13 @@ export interface TutorialStep {
   description: string
   /** Preferred placement of the coach mark relative to the target */
   placement: Placement
+  /** Optional link to the relevant documentation page */
+  docUrl?: string
 }
 
-export const TUTORIAL_STEPS: TutorialStep[] = [
+const DOCS_BASE = 'https://docs.swashbuckler.quest/docs'
+
+export const INTRO_STEPS: TutorialStep[] = [
   {
     id: 'welcome',
     type: 'dialog',
@@ -37,6 +41,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Spaces',
     description: 'Organize work into separate spaces.',
     placement: 'right',
+    docUrl: `${DOCS_BASE}/spaces`,
   },
   {
     id: 'types',
@@ -45,6 +50,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Types',
     description: 'Entries are organized by type \u2014 click + to create a new entry.',
     placement: 'right',
+    docUrl: `${DOCS_BASE}/entries-and-types`,
   },
   {
     id: 'search',
@@ -53,6 +59,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Search',
     description: 'Find anything instantly (\u2318K).',
     placement: 'bottom',
+    docUrl: `${DOCS_BASE}/search`,
   },
   {
     id: 'quick-capture',
@@ -61,6 +68,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Quick Capture',
     description: 'Capture a quick thought without leaving the page (\u2318E).',
     placement: 'top',
+    docUrl: `${DOCS_BASE}/quick-capture`,
   },
   {
     id: 'editor',
@@ -69,6 +77,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Editor',
     description: 'Rich text editor \u2014 type / for commands, @ to link entries. Try it out on the Getting Started page!',
     placement: 'left',
+    docUrl: `${DOCS_BASE}/editor`,
   },
   {
     id: 'graph',
@@ -77,6 +86,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Graph View',
     description: 'Visualize how your entries connect.',
     placement: 'right',
+    docUrl: `${DOCS_BASE}/graph-view`,
   },
   {
     id: 'tags',
@@ -85,6 +95,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Tags',
     description: 'Organize entries with color-coded tags.',
     placement: 'right',
+    docUrl: `${DOCS_BASE}/tags`,
   },
   {
     id: 'sharing',
@@ -93,6 +104,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Sharing',
     description: 'Share your space for real-time collaboration.',
     placement: 'right',
+    docUrl: `${DOCS_BASE}/sharing`,
   },
   {
     id: 'help',
@@ -103,3 +115,6 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     placement: 'top',
   },
 ]
+
+/** @deprecated Use INTRO_STEPS instead */
+export const TUTORIAL_STEPS = INTRO_STEPS

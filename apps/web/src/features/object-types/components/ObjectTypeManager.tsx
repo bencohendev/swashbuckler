@@ -109,7 +109,7 @@ export function ObjectTypeManager() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div data-tour="types-actions" className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           {types.length} type{types.length !== 1 ? 's' : ''}
         </p>
@@ -127,7 +127,7 @@ export function ObjectTypeManager() {
         <p className="py-8 text-center text-sm text-muted-foreground">
           No types yet. Create one to get started.
         </p>
-      ) : <div className="space-y-2">
+      ) : <div data-tour="types-list" className="space-y-2">
         {types.map((type) => (
           <div
             key={type.id}

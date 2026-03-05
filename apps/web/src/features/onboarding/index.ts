@@ -1,2 +1,5 @@
 export { TutorialController } from './components/TutorialController'
+export { PageTourTrigger } from './components/PageTourTrigger'
 export { useTutorial } from './hooks/useTutorial'
+export { getTourIdForPath } from './lib/tours'
+export type { TourId } from './lib/tours'

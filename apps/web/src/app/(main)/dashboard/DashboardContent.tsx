@@ -23,7 +23,7 @@ export function DashboardContent() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <section className="rounded-lg border p-6">
+      <section data-tour="dashboard-pinned" className="rounded-lg border p-6">
         <h2 className="mb-4 font-medium">Pinned</h2>
         <ObjectList
           objects={pinnedObjects}
@@ -38,7 +38,7 @@ export function DashboardContent() {
         />
       </section>
 
-      <section className="rounded-lg border p-6">
+      <section data-tour="dashboard-recent" className="rounded-lg border p-6">
         <h2 className="mb-4 font-medium">Recent</h2>
         <ObjectList
           objects={recentObjects}

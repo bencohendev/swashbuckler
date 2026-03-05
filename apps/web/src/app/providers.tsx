@@ -11,7 +11,7 @@ import { DataLayerError } from '@/shared/lib/data/errors'
 import { Toaster } from '@/shared/components/ui/Toast'
 import { AnalyticsBanner } from '@/shared/components/AnalyticsBanner'
 import { CustomThemeApplier } from '@/features/theme-builder'
-import { TutorialController } from '@/features/onboarding'
+import { TutorialController, PageTourTrigger } from '@/features/onboarding'
 import { useSessionGuard } from '@/shared/hooks/useSessionGuard'
 import { useFocusOnNavigation } from '@/shared/hooks/useFocusOnNavigation'
 
@@ -86,6 +86,7 @@ export function Providers({ children, initialUser = null }: ProvidersProps) {
           <DataProviderWithSpace user={user} isAuthLoading={isAuthLoading}>
             {children}
             <TutorialController />
+            <PageTourTrigger />
           </DataProviderWithSpace>
         </SpaceProvider>
       </QueryClientProvider>

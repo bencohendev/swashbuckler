@@ -17,7 +17,7 @@ export function GraphLayoutToggle() {
   const setLayoutMode = useGraphStore((s) => s.setLayoutMode)
 
   return (
-    <div role="group" aria-label="Graph layout mode" className="absolute top-2 left-2 flex items-center gap-0.5 rounded-lg border bg-muted/50 p-0.5 backdrop-blur md:top-9 md:left-9">
+    <div role="group" aria-label="Graph layout mode" data-tour="graph-layout-toggle" className="absolute top-2 left-2 flex items-center gap-0.5 rounded-lg border bg-muted/50 p-0.5 backdrop-blur md:top-9 md:left-9">
       {modes.map(({ value, icon: Icon, label }) => (
         <button
           key={value}

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { cn } from '@/shared/lib/utils'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
 import { Button } from '@/shared/components/ui/Button'
-import { TUTORIAL_STEPS } from '../lib/steps'
 import type { Placement } from '../lib/steps'
 
 const GAP = 12 // px between target and popover
@@ -17,9 +16,11 @@ interface CoachMarkProps {
   placement: Placement
   currentStep: number
   totalSteps: number
+  docUrl?: string
   onNext: () => void
   onBack: () => void
   onSkip: () => void
+  onSkipAll?: () => void
 }
 
 interface Position {
@@ -99,9 +100,11 @@ export function CoachMark({
   placement,
   currentStep,
   totalSteps,
+  docUrl,
   onNext,
   onBack,
   onSkip,
+  onSkipAll,
 }: CoachMarkProps) {
   const popoverRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()
@@ -154,30 +157,51 @@ export function CoachMark({
   const isLast = currentStep === totalSteps - 1
   const isFirst = currentStep === 0
 
-  // Step dots (only for coachmark steps — skip index 0 which is the welcome dialog)
-  const coachmarkSteps = TUTORIAL_STEPS.filter((s) => s.type === 'coachmark')
+  // Compute coachmark-only step dots (skip dialog steps)
+  // currentStep is 0-based index into all steps; step 0 is usually the dialog
+  // so coachmark steps start at index 1
+  const coachmarkCount = totalSteps - 1 // total minus the welcome dialog
   const coachmarkIndex = currentStep - 1 // offset by welcome dialog step
 
   const content = (
     <>
       <div className="mb-1 text-sm font-semibold">{title}</div>
-      <p className="mb-3 text-sm text-muted-foreground">{description}</p>
+      <p className="mb-1 text-sm text-muted-foreground">{description}</p>
+      {docUrl && (
+        <a
+          href={docUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-2 inline-block text-xs text-primary hover:underline"
+        >
+          Learn more
+        </a>
+      )}
       {/* Step dots */}
-      <div className="mb-3 flex justify-center gap-1" aria-hidden="true">
-        {coachmarkSteps.map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              'size-1.5 rounded-full transition-colors',
-              i === coachmarkIndex ? 'bg-primary' : 'bg-muted-foreground/30',
-            )}
-          />
-        ))}
-      </div>
+      {coachmarkCount > 0 && (
+        <div className="mb-3 flex justify-center gap-1" aria-hidden="true">
+          {Array.from({ length: coachmarkCount }, (_, i) => (
+            <div
+              key={i}
+              className={cn(
+                'size-1.5 rounded-full transition-colors',
+                i === coachmarkIndex ? 'bg-primary' : 'bg-muted-foreground/30',
+              )}
+            />
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between gap-2">
-        <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs text-muted-foreground">
-          Skip tour
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs text-muted-foreground">
+            Skip tour
+          </Button>
+          {onSkipAll && (
+            <Button variant="ghost" size="sm" onClick={onSkipAll} className="text-xs text-muted-foreground">
+              Skip all
+            </Button>
+          )}
+        </div>
         <div className="flex gap-2">
           {!isFirst && (
             <Button variant="outline" size="sm" onClick={onBack}>
