@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/shared/lib/data'
+import { useAuth, useCurrentSpace } from '@/shared/lib/data'
 import { useSidebar } from '@/shared/stores/sidebar'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
 import { createClient } from '@/shared/lib/supabase/client'
@@ -26,6 +27,7 @@ export function TutorialController() {
   const pathname = usePathname()
   const { user, isLoading: isAuthLoading } = useAuth()
   const { activeTourId, currentStep, next, back, skip, skipAll, startTour, completed, hydrateFromDb } = useTutorial()
+  const { isOnboarding } = useCurrentSpace()
   const { collapsed, toggle, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const [targetEl, setTargetEl] = useState<Element | null>(null)
@@ -51,10 +53,11 @@ export function TutorialController() {
     setTargetEl(null)
   }
 
-  // Auto-start intro tour for new users
+  // Auto-start intro tour for new users (wait for onboarding dialog to close)
   useEffect(() => {
     if (hasAutoStarted.current) return
     if (isAuthLoading) return
+    if (isOnboarding) return
     if (completed || activeTourId !== null) return
 
     const timer = setTimeout(() => {
@@ -62,7 +65,7 @@ export function TutorialController() {
       startTour('intro')
     }, 1000)
     return () => clearTimeout(timer)
-  }, [isAuthLoading, completed, activeTourId, startTour])
+  }, [isAuthLoading, isOnboarding, completed, activeTourId, startTour])
 
   // Cancel active page tour if pathname changes away (but not for intro)
   useEffect(() => {
@@ -147,8 +150,8 @@ export function TutorialController() {
     )
   }
 
-  // Coach mark steps
-  return (
+  // Coach mark steps — portal to body to avoid stacking context issues (e.g. graph page)
+  return createPortal(
     <>
       <div aria-live="polite" className="sr-only">{announcement}</div>
       <SpotlightOverlay targetEl={targetEl} />
@@ -168,6 +171,7 @@ export function TutorialController() {
           onSkipAll={skipAll}
         />
       )}
-    </>
+    </>,
+    document.body,
   )
 }

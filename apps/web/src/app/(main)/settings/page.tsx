@@ -91,7 +91,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <section aria-labelledby="settings-account-heading">
+      <section aria-labelledby="settings-account-heading" data-tour="settings-account">
         <h2 id="settings-account-heading" className="mb-4 text-lg font-medium">Account</h2>
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {accountItems.map(item => (
@@ -100,7 +100,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section aria-labelledby="settings-space-heading">
+      <section aria-labelledby="settings-space-heading" data-tour="settings-space">
         <SpaceSettingsHeading />
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {spaceItems.map(item => (

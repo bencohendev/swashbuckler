@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTutorial } from '../hooks/useTutorial'
-import { getTourIdForPath } from '../lib/tours'
+import { getTourIdForPath, TOURS } from '../lib/tours'
 
 /**
  * Auto-triggers page-specific tours on first visit.
@@ -30,8 +30,12 @@ export function PageTourTrigger() {
 
     lastTriggeredPath.current = pathname
 
+    // Skip the welcome dialog for page tours — the user already opted in via the intro tour
+    const tour = TOURS[tourId]
+    const startStep = tour.steps[0]?.type === 'dialog' ? 1 : 0
+
     const timer = setTimeout(() => {
-      startTour(tourId)
+      startTour(tourId, { startStep })
     }, 1500)
     return () => clearTimeout(timer)
   }, [pathname, activeTourId, startTour, isTourCompleted, allSkipped])
