@@ -184,33 +184,39 @@ export function TypeTableView({ slug }: TypeTableViewProps) {
               ? `${filteredCount} of ${totalCount}`
               : totalCount}
         </span>
-        <ViewToggle slug={slug} />
+        <span data-tour="type-page-view-toggle">
+          <ViewToggle slug={slug} />
+        </span>
         {type && (
-          <SavedViewSelector
-            typeId={type.id}
-            views={views}
-            expression={expression}
-            sort={sort}
-            viewMode={mode}
-            boardGroupFieldId={groupFieldId}
-            onApplyView={handleApplyView}
-            onCreateView={createView}
-            onUpdateView={updateView}
-            onDeleteView={deleteView}
-          />
+          <span data-tour="type-page-saved-views">
+            <SavedViewSelector
+              typeId={type.id}
+              views={views}
+              expression={expression}
+              sort={sort}
+              viewMode={mode}
+              boardGroupFieldId={groupFieldId}
+              onApplyView={handleApplyView}
+              onCreateView={createView}
+              onUpdateView={updateView}
+              onDeleteView={deleteView}
+            />
+          </span>
         )}
       </div>
 
-      <TypePageFilterBar
-        type={type}
-        tags={tags}
-        expression={expression}
-        onExpressionChange={setExpression}
-        sort={sort}
-        onSortChange={handleSortChange}
-        totalCount={totalCount}
-        filteredCount={filteredCount}
-      />
+      <div data-tour="type-page-filters">
+        <TypePageFilterBar
+          type={type}
+          tags={tags}
+          expression={expression}
+          onExpressionChange={setExpression}
+          sort={sort}
+          onSortChange={handleSortChange}
+          totalCount={totalCount}
+          filteredCount={filteredCount}
+        />
+      </div>
 
       {filtered && filteredCount === 0 ? (
         <div className="py-12 text-center text-muted-foreground">

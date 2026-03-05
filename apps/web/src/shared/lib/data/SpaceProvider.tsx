@@ -129,15 +129,16 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
             : createLocalDataClient(newSpaceId)
 
           const landingPageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
-          emit('objects')
 
           if (landingPageId && typeof window !== 'undefined') {
             const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
               .some(p => window.location.pathname.startsWith(p))
             if (isProtectedPage) {
               window.location.replace(`/objects/${landingPageId}`)
+              return // Stay in loading state until redirect completes
             }
           }
+          emit('objects')
         } catch (err) {
           console.error('Failed to seed welcome page:', err)
         }
@@ -162,16 +163,16 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
           // Clear the cookie so we don't re-seed on next load
           document.cookie = 'swashbuckler-guest-example=; path=/; max-age=0'
 
-          emit('objects')
-          emit('objectTypes')
-
           if (landingPageId && typeof window !== 'undefined') {
             const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
               .some(p => window.location.pathname.startsWith(p))
             if (isProtectedPage) {
               window.location.replace(`/objects/${landingPageId}`)
+              return // Stay in loading state until redirect completes
             }
           }
+          emit('objects')
+          emit('objectTypes')
         } catch (err) {
           console.error('Failed to seed example campaign:', err)
         }
