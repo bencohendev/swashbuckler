@@ -66,6 +66,7 @@ jobs:
         with:
           name: nextjs-build
           path: apps/web/.next
+          include-hidden-files: true
           retention-days: 1
 
   e2e-guest:
