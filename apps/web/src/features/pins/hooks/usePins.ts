@@ -30,6 +30,7 @@ export function usePins(): UsePinsReturn {
       if (result.error) throw new Error(result.error.message)
       return result.data.map(p => p.object_id)
     },
+    enabled: !!spaceId,
     placeholderData: keepPreviousData,
   })
 

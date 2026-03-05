@@ -49,7 +49,7 @@ export function useObjects(options: UseObjectsOptions = {}): UseObjectsReturn {
       if (result.error) throw new Error(result.error.message)
       return result.data
     },
-    enabled,
+    enabled: enabled && !!spaceId,
     placeholderData: keepPreviousData,
   })
 

@@ -45,6 +45,7 @@ export function useObjectTypes(options: UseObjectTypesOptions = {}): UseObjectTy
       if (result.error) throw new Error(result.error.message)
       return result.data
     },
+    enabled: !!spaceId,
     placeholderData: keepPreviousData,
   })
 
