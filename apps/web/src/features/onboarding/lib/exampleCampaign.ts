@@ -27,7 +27,7 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
     name: 'Page',
     plural_name: 'Pages',
     slug: 'page',
-    icon: 'file-text',
+    icon: '📄',
     fields: [],
   },
   {
@@ -35,7 +35,7 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
     name: 'NPC',
     plural_name: 'NPCs',
     slug: 'npc',
-    icon: 'user',
+    icon: '🧑',
     fields: [
       { ...field('Role', 'select', { options: ['Ally', 'Neutral', 'Enemy', 'Unknown'] }), sort_order: 0 },
       { ...field('Location', 'text'), sort_order: 1 },
@@ -46,7 +46,7 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
     name: 'Location',
     plural_name: 'Locations',
     slug: 'location',
-    icon: 'map-pin',
+    icon: '📍',
     fields: [
       { ...field('Region', 'select', { options: ['The Shattered Isles', 'The Mainland', 'The Deep'] }), sort_order: 0 },
       { ...field('Type', 'select', { options: ['City', 'Port', 'Island', 'Dungeon', 'Wilderness', 'Ship'] }), sort_order: 1 },
@@ -57,7 +57,7 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
     name: 'Faction',
     plural_name: 'Factions',
     slug: 'faction',
-    icon: 'shield',
+    icon: '⚔️',
     fields: [
       { ...field('Alignment', 'select', { options: ['Ally', 'Neutral', 'Enemy', 'Unknown'] }), sort_order: 0 },
       { ...field('Influence', 'select', { options: ['Local', 'Regional', 'Global'] }), sort_order: 1 },
@@ -68,7 +68,7 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
     name: 'Session Log',
     plural_name: 'Session Logs',
     slug: 'session-log',
-    icon: 'scroll',
+    icon: '📜',
     fields: [
       { ...field('Session Number', 'number', { required: true }), sort_order: 0 },
       { ...field('Date', 'date'), sort_order: 1 },
@@ -79,7 +79,7 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
     name: 'Item',
     plural_name: 'Items',
     slug: 'item',
-    icon: 'gem',
+    icon: '💎',
     fields: [
       { ...field('Rarity', 'select', { options: ['Common', 'Uncommon', 'Rare', 'Legendary'] }), sort_order: 0 },
       { ...field('Type', 'select', { options: ['Weapon', 'Armor', 'Potion', 'Artifact', 'Treasure', 'Other'] }), sort_order: 1 },
@@ -90,7 +90,7 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
     name: 'Quest',
     plural_name: 'Quests',
     slug: 'quest',
-    icon: 'compass',
+    icon: '🧭',
     fields: [
       { ...field('Status', 'select', { options: ['Active', 'Completed', 'Failed', 'Rumor'] }), sort_order: 0 },
       { ...field('Priority', 'select', { options: ['Main', 'Side', 'Personal'] }), sort_order: 1 },
