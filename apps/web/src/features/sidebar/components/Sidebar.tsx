@@ -194,7 +194,7 @@ export function Sidebar() {
     allNonDeleted.filter(obj => !obj.is_archived),
     [allNonDeleted]
   )
-  const { types, create: createType, update: updateType, remove: removeType } = useObjectTypes()
+  const { types, isLoading: typesLoading, create: createType, update: updateType, remove: removeType } = useObjectTypes()
   const { pinnedIds } = usePins()
   const { tags } = useTags()
   const { createFromTemplate, createFromTemplateWithVariables, getTemplateVariables } = useTemplates()
@@ -204,7 +204,7 @@ export function Sidebar() {
   const [pendingTemplate, setPendingTemplate] = useState<{ id: string; customVariables: string[] } | null>(null)
   const [orderedTypes, setOrderedTypes] = useState<ObjectType[]>(types)
   const [collapseSignal, setCollapseSignal] = useState<CollapseSignal | undefined>(undefined)
-  const sidebarLoading = !space || (isSharedUser && exclusionFilterLoading)
+  const sidebarLoading = !space || typesLoading || (isSharedUser && exclusionFilterLoading)
   const orderedTypesRef = useRef(orderedTypes)
   orderedTypesRef.current = orderedTypes
 
