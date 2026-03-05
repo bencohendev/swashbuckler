@@ -130,17 +130,8 @@ export const TOURS: Record<TourId, TourDefinition> = {
         type: 'dialog',
         target: null,
         title: 'Graph View',
-        description: 'Visualize how your entries connect.',
+        description: 'Visualize how your entries connect. Click and drag to explore, click a node to see details.',
         placement: 'bottom',
-      },
-      {
-        id: 'graph-canvas',
-        type: 'coachmark',
-        target: '[data-tour="graph-canvas"]',
-        title: 'Graph Canvas',
-        description: 'Click and drag to explore. Click a node to see details.',
-        placement: 'bottom',
-        docUrl: `${DOCS_BASE}/graph-view`,
       },
       {
         id: 'graph-layout-toggle',

@@ -96,7 +96,7 @@ export function SpotlightOverlay({ targetEl, padding = 6 }: SpotlightOverlayProp
       <path
         d={clipPath}
         fillRule="evenodd"
-        className="fill-black/60"
+        className="fill-black/75"
       />
     </svg>
   )
