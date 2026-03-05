@@ -13,6 +13,12 @@ import { WelcomeDialog } from './WelcomeDialog'
 import { SpotlightOverlay } from './SpotlightOverlay'
 import { CoachMark } from './CoachMark'
 
+/** Only run tours on main app routes (not landing, auth, or public pages) */
+const MAIN_APP_PREFIXES = ['/dashboard', '/objects', '/graph', '/settings', '/archive', '/trash', '/tags', '/templates', '/types']
+function isMainAppRoute(pathname: string): boolean {
+  return MAIN_APP_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+}
+
 /** Sidebar-targeted steps that require the sidebar to be visible */
 const SIDEBAR_TARGETS = new Set([
   'sidebar-nav',
@@ -58,6 +64,7 @@ export function TutorialController() {
     if (hasAutoStarted.current) return
     if (isAuthLoading) return
     if (isOnboarding) return
+    if (!isMainAppRoute(pathname)) return
     if (completed || activeTourId !== null) return
 
     const timer = setTimeout(() => {
@@ -65,7 +72,7 @@ export function TutorialController() {
       startTour('intro')
     }, 1000)
     return () => clearTimeout(timer)
-  }, [isAuthLoading, isOnboarding, completed, activeTourId, startTour])
+  }, [pathname, isAuthLoading, isOnboarding, completed, activeTourId, startTour])
 
   // Cancel active page tour if pathname changes away (but not for intro)
   useEffect(() => {
@@ -130,7 +137,7 @@ export function TutorialController() {
   // Live announcement for step transitions
   const announcement = activeTourId && step ? `Tutorial step: ${step.title}. ${step.description}` : ''
 
-  if (!activeTourId || !step) return null
+  if (!activeTourId || !step || !isMainAppRoute(pathname)) return null
 
   // Welcome dialog
   if (step.type === 'dialog') {
