@@ -140,7 +140,7 @@ export function GraphFilterPanel({ types, nodes }: GraphFilterPanelProps) {
   }
 
   return (
-    <div className="absolute top-9 right-9 w-48 rounded-lg border bg-background/95 backdrop-blur-sm shadow-lg">
+    <div data-tour="graph-filter-panel" className="absolute top-9 right-9 w-48 rounded-lg border bg-background/95 backdrop-blur-sm shadow-lg">
       <div className="px-2.5 pt-2.5 pb-1 text-xs font-medium">Filters</div>
       <div className="px-2.5 pb-2.5 space-y-2">
         <Input

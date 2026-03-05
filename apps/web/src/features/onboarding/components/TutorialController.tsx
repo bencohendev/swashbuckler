@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/shared/lib/data'
 import { useSidebar } from '@/shared/stores/sidebar'
 import { useIsMobile } from '@/shared/hooks/useIsMobile'
 import { useTutorial } from '../hooks/useTutorial'
-import { TUTORIAL_STEPS } from '../lib/steps'
+import { TOURS } from '../lib/tours'
 import { WelcomeDialog } from './WelcomeDialog'
 import { SpotlightOverlay } from './SpotlightOverlay'
 import { CoachMark } from './CoachMark'
@@ -21,12 +22,17 @@ const SIDEBAR_TARGETS = new Set([
 ])
 
 export function TutorialController() {
+  const pathname = usePathname()
   const { isLoading: isAuthLoading } = useAuth()
-  const { active, completed, currentStep, start, next, back, skip } = useTutorial()
+  const { activeTourId, currentStep, next, back, skip, skipAll, startTour, completed } = useTutorial()
   const { collapsed, toggle, setMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
   const [targetEl, setTargetEl] = useState<Element | null>(null)
   const hasAutoStarted = useRef(false)
+
+  const tour = activeTourId ? TOURS[activeTourId] : null
+  const steps = tour?.steps ?? []
+  const step = steps[currentStep] ?? null
 
   // Clear target immediately when step changes so CoachMark hides before repositioning
   const [prevStep, setPrevStep] = useState(currentStep)
@@ -35,26 +41,29 @@ export function TutorialController() {
     setTargetEl(null)
   }
 
-  // Auto-start for new users (both authenticated and guest) once.
-  // The ref is set inside the timeout so that if a dependency change (e.g. a new
-  // user object reference from a second auth callback) cancels the timer, the
-  // next effect run can try again instead of being permanently blocked.
+  // Auto-start intro tour for new users
   useEffect(() => {
     if (hasAutoStarted.current) return
     if (isAuthLoading) return
-    if (completed || active) return
+    if (completed || activeTourId !== null) return
 
-    // Delay to let UI settle after first load/sign-in
     const timer = setTimeout(() => {
       hasAutoStarted.current = true
-      start()
+      startTour('intro')
     }, 1000)
     return () => clearTimeout(timer)
-  }, [isAuthLoading, completed, active, start])
+  }, [isAuthLoading, completed, activeTourId, startTour])
+
+  // Cancel active page tour if pathname changes away (but not for intro)
+  useEffect(() => {
+    if (!activeTourId || activeTourId === 'intro') return
+    // The tour should only be active on its target page. If the user navigated away, skip it.
+    skip()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to pathname changes
+  }, [pathname])
 
   // Resolve the target element for the current step
   const resolveTarget = useCallback(() => {
-    const step = TUTORIAL_STEPS[currentStep]
     if (!step || step.type === 'dialog' || !step.target) {
       setTargetEl(null)
       return
@@ -63,72 +72,66 @@ export function TutorialController() {
     const el = document.querySelector(step.target)
     setTargetEl(el)
     return el
-  }, [currentStep])
+  }, [step])
 
   // Ensure sidebar is visible for sidebar-targeted steps
   useEffect(() => {
-    if (!active) return
-    const step = TUTORIAL_STEPS[currentStep]
-    if (!step || step.type === 'dialog') return
+    if (!activeTourId || !step || step.type === 'dialog') return
 
-    // Extract the data-tour value from the selector
     const match = step.target?.match(/data-tour="([^"]+)"/)
-    const tourId = match?.[1]
+    const tourAttr = match?.[1]
 
-    if (tourId && SIDEBAR_TARGETS.has(tourId)) {
+    if (tourAttr && SIDEBAR_TARGETS.has(tourAttr)) {
       if (isMobile) {
         setMobileOpen(true)
       } else if (collapsed) {
         toggle()
       }
     }
-  }, [active, currentStep, isMobile, collapsed, toggle, setMobileOpen])
+  }, [activeTourId, step, isMobile, collapsed, toggle, setMobileOpen])
 
   // Resolve target on step change
   useEffect(() => {
-    if (!active) return
+    if (!activeTourId || !step || step.type === 'dialog') return
 
-    const step = TUTORIAL_STEPS[currentStep]
-    if (!step || step.type === 'dialog') return
-
-    // Determine if this step targets a sidebar element (needs longer delay for sidebar animation)
     const match = step.target?.match(/data-tour="([^"]+)"/)
-    const tourId = match?.[1]
-    const needsSidebarDelay = tourId ? SIDEBAR_TARGETS.has(tourId) : false
+    const tourAttr = match?.[1]
+    const needsSidebarDelay = tourAttr ? SIDEBAR_TARGETS.has(tourAttr) : false
     const delay = needsSidebarDelay ? 300 : 50
 
     const timer = setTimeout(() => {
-      // Scroll target into view if needed (e.g. tags section below the fold)
       if (step.target) {
         const scrollTarget = document.querySelector(step.target)
         scrollTarget?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       }
 
       const el = resolveTarget()
-      // Auto-skip if target is missing
       if (!el) {
         next()
       }
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [active, currentStep, resolveTarget, next])
+  }, [activeTourId, step, resolveTarget, next])
 
   // Live announcement for step transitions
-  const step = TUTORIAL_STEPS[currentStep]
-  const announcement = active && step ? `Tutorial step: ${step.title}. ${step.description}` : ''
+  const announcement = activeTourId && step ? `Tutorial step: ${step.title}. ${step.description}` : ''
 
-  if (!active) return null
+  if (!activeTourId || !step) return null
 
-  // Welcome dialog (step 0)
-  if (step?.type === 'dialog') {
+  // Welcome dialog
+  if (step.type === 'dialog') {
     return (
       <>
         <div aria-live="polite" className="sr-only">{announcement}</div>
         <WelcomeDialog
           open
+          title={tour?.title}
+          description={tour?.description}
+          showSkipAll
           onTakeTour={next}
           onSkip={skip}
+          onSkipAll={skipAll}
         />
       </>
     )
@@ -141,16 +144,18 @@ export function TutorialController() {
       <SpotlightOverlay targetEl={targetEl} />
       {targetEl && (
         <CoachMark
-          key={currentStep}
+          key={`${activeTourId}-${currentStep}`}
           targetEl={targetEl}
-          title={step?.title ?? ''}
-          description={step?.description ?? ''}
-          placement={step?.placement ?? 'bottom'}
+          title={step.title}
+          description={step.description}
+          placement={step.placement}
           currentStep={currentStep}
-          totalSteps={TUTORIAL_STEPS.length}
+          totalSteps={steps.length}
+          docUrl={step.docUrl}
           onNext={next}
           onBack={back}
           onSkip={skip}
+          onSkipAll={skipAll}
         />
       )}
     </>
