@@ -13,9 +13,9 @@ export function GuestButton() {
   return (
     <button
       onClick={handleClick}
-      className="inline-flex h-14 w-full items-center justify-center rounded-md border bg-background px-10 text-lg font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors sm:w-auto"
+      className="underline underline-offset-4 hover:text-foreground transition-colors"
     >
-      Try as Guest
+      try as guest
     </button>
   )
 }

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { PenLineIcon, BoxesIcon, NetworkIcon, UsersIcon } from "lucide-react"
+import { PenLineIcon, BoxesIcon, NetworkIcon, UsersIcon, ShieldIcon, EyeOffIcon } from "lucide-react"
 import { GuestButton } from "./GuestButton"
 import { PixelBeachScene } from "./PixelBeachScene"
 import { PixelPirateFlag } from "./PixelPirateFlag"
@@ -7,35 +7,48 @@ import { PixelPirateFlag } from "./PixelPirateFlag"
 const features = [
   {
     icon: PenLineIcon,
-    title: "Block Editor",
+    title: "Rich Block Editor",
     description:
-      "Rich text with slash commands, mentions, tables, and code blocks.",
+      "Write session notes, lore entries, and NPC backstories with slash commands, mentions, tables, and more.",
     href: "https://docs.swashbuckler.quest/docs/editor",
   },
   {
     icon: BoxesIcon,
     title: "Custom Types",
     description:
-      "Define your own entry types with custom fields and templates.",
+      "Organize NPCs, Locations, Factions, Items — or define your own entry types with custom fields and templates.",
     href: "https://docs.swashbuckler.quest/docs/entries-and-types",
   },
   {
     icon: NetworkIcon,
     title: "Knowledge Graph",
-    description: "Visualize connections between your entries.",
+    description:
+      "See how your world connects — visualize relationships between characters, places, and plot threads.",
     href: "https://docs.swashbuckler.quest/docs/graph-view",
   },
   {
     icon: UsersIcon,
     title: "Real-time Collaboration",
-    description: "Share spaces and edit together in real time.",
+    description: "Co-author with your party in real time. Share a space and build your world together.",
     href: "https://docs.swashbuckler.quest/docs/realtime-collaboration",
+  },
+  {
+    icon: ShieldIcon,
+    title: "Advanced Sharing",
+    description:
+      "Fine-tune exactly which types and entries are shared with your party. Keep your secrets safe.",
+  },
+  {
+    icon: EyeOffIcon,
+    title: "Private Blocks",
+    description:
+      "Add hidden notes to shared entries that only you can see — perfect for GM-only details.",
   },
 ]
 
 export default function LandingPage() {
   return (
-    <div className="relative flex min-h-screen flex-col">
+    <div className="dark relative flex min-h-screen flex-col bg-background text-foreground">
       {/* Flagpole running full page height — aligned to left edge of max-w-3xl content */}
       <div
         className="pointer-events-none absolute inset-x-0 top-[7rem] bottom-0 mx-auto hidden max-w-3xl px-6 sm:block"
@@ -61,62 +74,83 @@ export default function LandingPage() {
 
         <section className="relative z-10 mx-auto max-w-3xl px-6 pt-8 pb-6">
           <div className="text-center">
-            <p className="text-lg text-muted-foreground">
-              Avast ye matey, welcome to
-            </p>
-            <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
               Swashbuckler
             </h1>
-            <p className="mt-3 text-base text-muted-foreground/80">
-              Your personal knowledge base
+            <p className="mt-3 text-lg text-muted-foreground">
+              The knowledge base built for game masters.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground/70">
+              Your campaign. Organized.
             </p>
           </div>
         </section>
 
         <section className="relative z-10 mx-auto max-w-2xl border-y border-border px-6 py-8">
-          <div className="flex flex-col items-center gap-6">
-            <div className="flex w-full flex-col items-center gap-2 sm:w-auto">
-              <p className="text-sm text-muted-foreground">Create an account and</p>
-              <Link
-                href="/signup"
-                className="inline-flex h-14 w-full items-center justify-center rounded-md bg-primary px-10 text-lg font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors sm:w-auto"
-              >
-                Get Started
-              </Link>
-            </div>
-            <div className="flex w-full flex-col items-center gap-2 sm:w-auto">
-              <p className="text-sm text-muted-foreground">or</p>
+          <div className="flex flex-col items-center gap-4">
+            <Link
+              href="/signup"
+              className="inline-flex h-14 w-full items-center justify-center rounded-md bg-primary px-10 text-lg font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors sm:w-auto"
+            >
+              Get Started
+            </Link>
+            <p className="text-sm text-muted-foreground">
+              or{" "}
               <GuestButton />
-            </div>
+            </p>
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12">
-          <p className="mb-6 text-center text-muted-foreground">
-            Swashbuckler is a fully featured note-taking app. Take advantage of:
-          </p>
+        <section className="relative z-10 mx-auto max-w-2xl px-6 py-12">
+          <h2 className="mb-8 text-center text-xl font-semibold">
+            Everything you need to run your world
+          </h2>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
-            {features.map((feature) => (
-              <a
-                key={feature.title}
-                href={feature.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg border bg-card p-6 text-card-foreground transition-colors hover:border-primary/40 hover:bg-accent"
-              >
-                <feature.icon className="size-8 text-muted-foreground" />
-                <h2 className="mt-4 font-semibold">{feature.title}</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {feature.description}
-                </p>
-              </a>
-            ))}
+            {features.map((feature) => {
+              const content = (
+                <>
+                  <feature.icon className="size-8 text-muted-foreground" />
+                  <h3 className="mt-4 font-semibold">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {feature.description}
+                  </p>
+                </>
+              )
+
+              if (feature.href) {
+                return (
+                  <a
+                    key={feature.title}
+                    href={feature.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg border bg-card p-6 text-card-foreground transition-colors hover:border-primary/40 hover:bg-accent"
+                  >
+                    {content}
+                  </a>
+                )
+              }
+
+              return (
+                <div
+                  key={feature.title}
+                  className="rounded-lg border bg-card p-6 text-card-foreground"
+                >
+                  {content}
+                </div>
+              )
+            })}
           </div>
+        </section>
+
+        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12 text-center">
+          <p className="text-sm text-muted-foreground/70">
+            Not a GM? Swashbuckler works great as a general-purpose wiki for worldbuilding, research, or any project.
+          </p>
         </section>
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 pb-24 text-center">
-          <p className="text-muted-foreground">...and much more</p>
-          <div className="mt-4 flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3">
             <Link
               href="/signup"
               className="inline-flex h-10 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 transition-colors"
