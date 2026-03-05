@@ -2,12 +2,9 @@ import { INTRO_STEPS, type TutorialStep } from './steps'
 
 export type TourId =
   | 'intro'
-  | 'dashboard'
   | 'editor'
   | 'graph'
   | 'settings'
-  | 'types-settings'
-  | 'themes-settings'
   | 'sharing-settings'
 
 export interface TourDefinition {
@@ -27,39 +24,6 @@ export const TOURS: Record<TourId, TourDefinition> = {
     title: 'Welcome to Swashbuckler',
     description: 'Let\u2019s take a quick tour of the app.',
     steps: INTRO_STEPS,
-  },
-  dashboard: {
-    id: 'dashboard',
-    title: 'Dashboard',
-    description: 'Your home base \u2014 pinned and recent entries at a glance.',
-    steps: [
-      {
-        id: 'dashboard-welcome',
-        type: 'dialog',
-        target: null,
-        title: 'Dashboard',
-        description: 'Your home base \u2014 pinned and recent entries at a glance.',
-        placement: 'bottom',
-      },
-      {
-        id: 'dashboard-pinned',
-        type: 'coachmark',
-        target: '[data-tour="dashboard-pinned"]',
-        title: 'Pinned Entries',
-        description: 'Pin your most important entries for quick access.',
-        placement: 'bottom',
-        docUrl: `${DOCS_BASE}/dashboard`,
-      },
-      {
-        id: 'dashboard-recent',
-        type: 'coachmark',
-        target: '[data-tour="dashboard-recent"]',
-        title: 'Recent Entries',
-        description: 'Your most recently accessed entries appear here.',
-        placement: 'bottom',
-        docUrl: `${DOCS_BASE}/dashboard`,
-      },
-    ],
   },
   editor: {
     id: 'editor',
@@ -163,90 +127,93 @@ export const TOURS: Record<TourId, TourDefinition> = {
         type: 'dialog',
         target: null,
         title: 'Settings',
-        description: 'Manage your account, space, and workspace preferences.',
+        description: 'Manage your account, space, and workspace preferences. Let\u2019s walk through each option.',
         placement: 'bottom',
       },
       {
-        id: 'settings-account',
+        id: 'settings-account-section',
         type: 'coachmark',
         target: '[data-tour="settings-account"]',
         title: 'Account Settings',
-        description: 'Profile, security, spaces, global types, and custom themes.',
+        description: 'These settings follow you across all your spaces.',
         placement: 'bottom',
       },
       {
-        id: 'settings-space',
+        id: 'settings-account-card',
+        type: 'coachmark',
+        target: '[data-tour="settings-card-account"]',
+        title: 'Account',
+        description: 'Update your display name, email, password, and profile picture.',
+        placement: 'bottom',
+      },
+      {
+        id: 'settings-spaces-card',
+        type: 'coachmark',
+        target: '[data-tour="settings-card-spaces"]',
+        title: 'Spaces',
+        description: 'Create, rename, or delete spaces. Each space is an independent workspace with its own entries, types, and collaborators.',
+        placement: 'bottom',
+        docUrl: `${DOCS_BASE}/spaces`,
+      },
+      {
+        id: 'settings-global-types-card',
+        type: 'coachmark',
+        target: '[data-tour="settings-card-global-types"]',
+        title: 'Global Types',
+        description: 'Define reusable type blueprints that can be installed into any space, so you don\u2019t have to recreate them each time.',
+        placement: 'bottom',
+        docUrl: `${DOCS_BASE}/entries-and-types`,
+      },
+      {
+        id: 'settings-themes-card',
+        type: 'coachmark',
+        target: '[data-tour="settings-card-themes"]',
+        title: 'Custom Themes',
+        description: 'Build your own color themes with the visual theme builder and apply them to any space.',
+        placement: 'bottom',
+        docUrl: `${DOCS_BASE}/themes`,
+      },
+      {
+        id: 'settings-space-section',
         type: 'coachmark',
         target: '[data-tour="settings-space"]',
         title: 'Space Settings',
-        description: 'Appearance, templates, types, and sharing for the current space.',
+        description: 'These settings only affect the current space.',
         placement: 'top',
       },
-    ],
-  },
-  'types-settings': {
-    id: 'types-settings',
-    title: 'Types',
-    description: 'Manage your entry types and their fields.',
-    steps: [
       {
-        id: 'types-welcome',
-        type: 'dialog',
-        target: null,
+        id: 'settings-appearance-card',
+        type: 'coachmark',
+        target: '[data-tour="settings-card-appearance"]',
+        title: 'Appearance',
+        description: 'Choose a light, dark, or custom theme for this space. Each space can have its own look.',
+        placement: 'bottom',
+      },
+      {
+        id: 'settings-templates-card',
+        type: 'coachmark',
+        target: '[data-tour="settings-card-templates"]',
+        title: 'Templates',
+        description: 'Create reusable templates for your entries. New entries of a given type can start from a template instead of a blank page.',
+        placement: 'bottom',
+      },
+      {
+        id: 'settings-types-card',
+        type: 'coachmark',
+        target: '[data-tour="settings-card-types"]',
         title: 'Types',
-        description: 'Manage your entry types and their fields.',
-        placement: 'bottom',
-      },
-      {
-        id: 'types-actions',
-        type: 'coachmark',
-        target: '[data-tour="types-actions"]',
-        title: 'Actions',
-        description: 'Create new types, import from the library, or install starter kits.',
+        description: 'Customize the entry types in this space \u2014 add properties, change icons, or create new types from scratch.',
         placement: 'bottom',
         docUrl: `${DOCS_BASE}/entries-and-types`,
       },
       {
-        id: 'types-list',
+        id: 'settings-sharing-card',
         type: 'coachmark',
-        target: '[data-tour="types-list"]',
-        title: 'Your Types',
-        description: 'Edit, archive, or delete types from the list.',
-        placement: 'top',
-        docUrl: `${DOCS_BASE}/entries-and-types`,
-      },
-    ],
-  },
-  'themes-settings': {
-    id: 'themes-settings',
-    title: 'Custom Themes',
-    description: 'Personalize the look of your workspace.',
-    steps: [
-      {
-        id: 'themes-welcome',
-        type: 'dialog',
-        target: null,
-        title: 'Custom Themes',
-        description: 'Personalize the look of your workspace.',
+        target: '[data-tour="settings-card-sharing"]',
+        title: 'Sharing',
+        description: 'Invite others to collaborate in this space. Set permissions per user and control what they can see and edit.',
         placement: 'bottom',
-      },
-      {
-        id: 'themes-grid',
-        type: 'coachmark',
-        target: '[data-tour="themes-grid"]',
-        title: 'Theme Gallery',
-        description: 'Browse and activate your custom themes.',
-        placement: 'bottom',
-        docUrl: `${DOCS_BASE}/themes`,
-      },
-      {
-        id: 'themes-create-button',
-        type: 'coachmark',
-        target: '[data-tour="themes-create-button"]',
-        title: 'Create a Theme',
-        description: 'Build a theme from scratch with the theme builder.',
-        placement: 'bottom',
-        docUrl: `${DOCS_BASE}/themes`,
+        docUrl: `${DOCS_BASE}/sharing`,
       },
     ],
   },
@@ -286,12 +253,9 @@ export const TOURS: Record<TourId, TourDefinition> = {
 }
 
 const PATH_TO_TOUR: [RegExp, TourId][] = [
-  [/^\/dashboard$/, 'dashboard'],
   [/^\/objects\//, 'editor'],
   [/^\/graph$/, 'graph'],
   [/^\/settings$/, 'settings'],
-  [/^\/settings\/types$/, 'types-settings'],
-  [/^\/settings\/themes$/, 'themes-settings'],
   [/^\/settings\/sharing$/, 'sharing-settings'],
 ]
 

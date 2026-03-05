@@ -45,7 +45,7 @@ export function CustomThemeSettings() {
             </p>
           </div>
           {builder.mode === 'closed' && (
-            <Button data-tour="themes-create-button" onClick={() => setBuilder({ mode: 'create' })}>
+            <Button onClick={() => setBuilder({ mode: 'create' })}>
               <PlusIcon />
               New Theme
             </Button>
@@ -66,7 +66,7 @@ export function CustomThemeSettings() {
           />
         </div>
       ) : themes.length > 0 ? (
-        <div data-tour="themes-grid" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {themes.map(t => (
             <ThemeCard
               key={t.id}
