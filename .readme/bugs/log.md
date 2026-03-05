@@ -43,6 +43,7 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 | 2026-02-24 | Table blocks have no row/column controls | Add floating toolbar on hover with add row, add column, delete row, delete column, delete table buttons |
 | 2026-02-24 | Sidebar skeleton spacing off | Change `px-2` → `p-2` on skeleton sections to add vertical padding |
 | 2026-02-24 | Duplicate names allowed for spaces, types, templates, tags | Add case-insensitive unique constraints (Supabase migration 021), pre-mutation Dexie checks, surface DUPLICATE errors in UI |
+| 2026-03-05 | Sidebar & types page empty state flash | Restored `typesLoading` to sidebar skeleton gate; removed forced empty array in TypeTableView during loading, replaced with skeleton rows |
 | 2026-02-24 | Site-wide content flickers | Rewrote useIsMobile with useSyncExternalStore, sync sidebar hydration, added keepPreviousData to sidebar queries, decomposed all-or-nothing sidebar skeleton, migrated tag counts and space shares to TanStack Query, fixed QuickCaptureButton/GraphView/LinkedObjects/GuestBanner pop-in |
 | 2026-02-24 | Graph node tap not working on mobile | Add 5px drag threshold so touch jitter doesn't prevent node selection |
 | 2026-02-24 | Guest mode: no "New Type" button and no default type | Treat `owner_id === 'local'` as owner in permission resolver; seed Page type on first local space creation |
