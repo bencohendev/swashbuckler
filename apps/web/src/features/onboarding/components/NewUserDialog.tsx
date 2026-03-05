@@ -27,20 +27,19 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
     <Dialog open={open} onOpenChange={() => { /* prevent closing without a choice */ }}>
       <DialogContent showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Set up your workspace</DialogTitle>
+          <DialogTitle>{loading ? 'Setting things up' : 'Set up your workspace'}</DialogTitle>
           <DialogDescription>
-            Choose how you'd like to start. You can always create more spaces later.
+            {loading === 'example'
+              ? 'Please wait while your world is being constructed. This may take a few minutes.'
+              : loading === 'blank'
+                ? 'Setting things up...'
+                : 'Choose how you\'d like to start. You can always create more spaces later.'}
           </DialogDescription>
         </DialogHeader>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-8">
+          <div className="flex items-center justify-center py-8">
             <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              {loading === 'example'
-                ? 'Please wait while your world is being constructed. This may take a few minutes.'
-                : 'Setting things up...'}
-            </p>
           </div>
         ) : (
           <div className="grid gap-3 pt-2">
