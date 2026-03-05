@@ -78,7 +78,7 @@ export default function LandingPage() {
               Swashbuckler
             </h1>
             <p className="mt-3 text-lg text-muted-foreground">
-              The knowledge base built for game masters.
+              The knowledge base built for tabletops.
             </p>
             <p className="mt-2 text-sm text-muted-foreground/70">
               Because your world deserves better than a Google Doc.
