@@ -126,7 +126,7 @@ Dual-storage architecture with a `DataClient` interface:
 | [Documentation Site](features/docs-site.md) | Fumadocs site in Turborepo monorepo at docs.swashbuckler.quest |
 | [Archive](features/archive.md) | Hide entries, types, and spaces without deleting them |
 | [Delete Space](features/delete-space.md) | Permanently delete a space and all its contents |
-| [Analytics Consent](features/analytics-consent.md) | Analytics consent banner with opt-out + GDPR compliance (legal basis, user rights) |
+| [Analytics Consent](features/analytics-consent.md) | Analytics consent during onboarding + GDPR compliance (legal basis, user rights) |
 | [Table Hover Menus](features/table-hover-menus.md) | Per-row/column hover handles with insert/delete dropdown menus |
 | [Table Column Resize](features/table-column-resize.md) | Drag-to-resize columns in editor tables |
 | [Apply Template](features/apply-template.md) | Apply an existing template to an entry retroactively |

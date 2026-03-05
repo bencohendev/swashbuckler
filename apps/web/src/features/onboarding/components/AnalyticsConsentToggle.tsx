@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ANALYTICS_CONSENT_KEY, writeAnalyticsConsent } from '@/shared/components/AnalyticsBanner'
+import { ANALYTICS_CONSENT_KEY, writeAnalyticsConsent } from '@/shared/components/AnalyticsConsent'
 
 export function AnalyticsConsentToggle() {
   const [enabled, setEnabled] = useState(() => {

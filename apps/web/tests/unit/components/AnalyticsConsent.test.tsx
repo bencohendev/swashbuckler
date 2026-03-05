@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '../../utils/render'
 import userEvent from '@testing-library/user-event'
-import { AnalyticsProvider, ANALYTICS_CONSENT_KEY } from '@/shared/components/AnalyticsBanner'
+import { AnalyticsProvider, ANALYTICS_CONSENT_KEY } from '@/shared/components/AnalyticsConsent'
 import { AnalyticsConsentToggle } from '@/features/onboarding/components/AnalyticsConsentToggle'
 
 vi.mock('@vercel/analytics/next', () => ({

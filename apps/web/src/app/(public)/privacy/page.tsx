@@ -60,7 +60,7 @@ export default function PrivacyPolicyPage() {
               If you use Swashbuckler as a guest, your content is stored locally
               in your browser (IndexedDB). No content data is sent to our
               servers in guest mode. Anonymous analytics may still apply unless
-              you decline via the consent banner.
+              you decline during setup.
             </p>
 
             <h3 className="mt-4 font-medium text-foreground">Analytics</h3>

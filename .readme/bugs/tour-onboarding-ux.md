@@ -42,10 +42,6 @@ Six related bugs affecting the new-user experience.
 
 **Files**: `tours.ts`, `steps.ts` (if referenced), `/settings/sharing/page.tsx`
 
-## 6. Consent banner competes with tours / poor UX
+## 6. ~~Consent banner competes with tours / poor UX~~ (Fixed)
 
-**Current**: `AnalyticsBanner` renders as a fixed full-width bottom bar immediately on first visit. It competes with the tour overlay and onboarding dialog. Users either don't notice it or find it annoying.
-
-**Fix**: Move analytics consent into the "Set up your workspace" dialog (`NewUserDialog`) and the guest mode dialog (`GuestModeDialog`) as a small toggle/checkbox. Remove the standalone `AnalyticsBanner` component. For users who already made a choice (existing localStorage value), respect it. Default to analytics disabled until consent is given.
-
-**Files**: `AnalyticsBanner.tsx` (remove), `NewUserDialog.tsx` (add toggle), `GuestModeDialog.tsx` (add toggle), `providers.tsx` (remove banner mount)
+Consent moved to a checkbox in onboarding dialogs (`NewUserDialog` / `GuestModeDialog`). Banner removed. Analytics disabled by default until user opts in.
