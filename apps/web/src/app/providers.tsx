@@ -9,7 +9,7 @@ import { DataProvider, SpaceProvider, useCurrentSpace } from '@/shared/lib/data'
 import { setQueryClient } from '@/shared/lib/data/events'
 import { DataLayerError } from '@/shared/lib/data/errors'
 import { Toaster } from '@/shared/components/ui/Toast'
-import { AnalyticsBanner } from '@/shared/components/AnalyticsBanner'
+import { AnalyticsProvider } from '@/shared/components/AnalyticsBanner'
 import { CustomThemeApplier } from '@/features/theme-builder'
 import { TutorialController, PageTourTrigger } from '@/features/onboarding'
 import { useSessionGuard } from '@/shared/hooks/useSessionGuard'
@@ -91,7 +91,7 @@ export function Providers({ children, initialUser = null }: ProvidersProps) {
         </SpaceProvider>
       </QueryClientProvider>
       <Toaster />
-      <AnalyticsBanner />
+      <AnalyticsProvider />
     </ThemeProvider>
   )
 }

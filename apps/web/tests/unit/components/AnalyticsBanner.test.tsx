@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '../../utils/render'
 import userEvent from '@testing-library/user-event'
-import { AnalyticsBanner, ANALYTICS_CONSENT_KEY } from '@/shared/components/AnalyticsBanner'
+import { AnalyticsProvider, ANALYTICS_CONSENT_KEY } from '@/shared/components/AnalyticsBanner'
+import { AnalyticsConsentToggle } from '@/features/onboarding/components/AnalyticsConsentToggle'
 
 vi.mock('@vercel/analytics/next', () => ({
   Analytics: () => <div data-testid="vercel-analytics" />,
@@ -12,93 +13,77 @@ vi.mock('@vercel/speed-insights/next', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
+  default: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => (
+    <a href={href} {...rest}>{children}</a>
   ),
 }))
 
-// Uses ANALYTICS_CONSENT_KEY imported from the component
-
-describe('AnalyticsBanner', () => {
+describe('AnalyticsProvider', () => {
   beforeEach(() => {
     localStorage.clear()
   })
 
-  it('shows the banner when no consent is stored', () => {
-    render(<AnalyticsBanner />)
+  it('does not render analytics when no consent is stored', () => {
+    render(<AnalyticsProvider />)
 
-    expect(screen.getByRole('region', { name: /analytics consent/i })).toBeInTheDocument()
-    expect(screen.getByText(/anonymous analytics/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /ok/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /decline/i })).toBeInTheDocument()
+    expect(screen.queryByTestId('vercel-analytics')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('vercel-speed-insights')).not.toBeInTheDocument()
   })
 
-  it('renders Analytics and SpeedInsights by default', () => {
-    render(<AnalyticsBanner />)
+  it('renders analytics when consent is accepted', () => {
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, 'accepted')
+    render(<AnalyticsProvider />)
 
     expect(screen.getByTestId('vercel-analytics')).toBeInTheDocument()
     expect(screen.getByTestId('vercel-speed-insights')).toBeInTheDocument()
   })
 
-  it('hides the banner and stores accepted on OK click', async () => {
-    const user = userEvent.setup()
-    render(<AnalyticsBanner />)
+  it('does not render analytics when consent is declined', () => {
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, 'declined')
+    render(<AnalyticsProvider />)
 
-    await user.click(screen.getByRole('button', { name: /ok/i }))
+    expect(screen.queryByTestId('vercel-analytics')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('vercel-speed-insights')).not.toBeInTheDocument()
+  })
+})
+
+describe('AnalyticsConsentToggle', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('renders a toggle switch defaulting to off', () => {
+    render(<AnalyticsConsentToggle />)
+
+    const toggle = screen.getByRole('switch')
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('stores accepted on toggle on', async () => {
+    const user = userEvent.setup()
+    render(<AnalyticsConsentToggle />)
+
+    await user.click(screen.getByRole('switch'))
 
     expect(localStorage.getItem(ANALYTICS_CONSENT_KEY)).toBe('accepted')
-    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
   })
 
-  it('keeps analytics enabled after accepting', async () => {
+  it('stores declined on toggle off', async () => {
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, 'accepted')
     const user = userEvent.setup()
-    render(<AnalyticsBanner />)
+    render(<AnalyticsConsentToggle />)
 
-    await user.click(screen.getByRole('button', { name: /ok/i }))
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
 
-    expect(screen.getByTestId('vercel-analytics')).toBeInTheDocument()
-    expect(screen.getByTestId('vercel-speed-insights')).toBeInTheDocument()
-  })
-
-  it('hides the banner and stores declined on Decline click', async () => {
-    const user = userEvent.setup()
-    render(<AnalyticsBanner />)
-
-    await user.click(screen.getByRole('button', { name: /decline/i }))
+    await user.click(screen.getByRole('switch'))
 
     expect(localStorage.getItem(ANALYTICS_CONSENT_KEY)).toBe('declined')
-    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
-  })
-
-  it('removes analytics components after declining', async () => {
-    const user = userEvent.setup()
-    render(<AnalyticsBanner />)
-
-    await user.click(screen.getByRole('button', { name: /decline/i }))
-
-    expect(screen.queryByTestId('vercel-analytics')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('vercel-speed-insights')).not.toBeInTheDocument()
-  })
-
-  it('hides the banner when consent was previously accepted', () => {
-    localStorage.setItem(ANALYTICS_CONSENT_KEY, 'accepted')
-    render(<AnalyticsBanner />)
-
-    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
-    expect(screen.getByTestId('vercel-analytics')).toBeInTheDocument()
-  })
-
-  it('hides the banner and analytics when consent was previously declined', () => {
-    localStorage.setItem(ANALYTICS_CONSENT_KEY, 'declined')
-    render(<AnalyticsBanner />)
-
-    expect(screen.getByRole('region', { name: /analytics consent/i })).toHaveClass('max-h-0', 'invisible')
-    expect(screen.queryByTestId('vercel-analytics')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('vercel-speed-insights')).not.toBeInTheDocument()
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
   })
 
   it('includes a link to the privacy policy', () => {
-    render(<AnalyticsBanner />)
+    render(<AnalyticsConsentToggle />)
 
     const link = screen.getByRole('link', { name: /privacy policy/i })
     expect(link).toHaveAttribute('href', '/privacy')

@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/shared/components/ui/Dialog'
+import { AnalyticsConsentToggle } from './AnalyticsConsentToggle'
 
 interface NewUserDialogProps {
   open: boolean
@@ -69,6 +70,8 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
                 </p>
               </div>
             </button>
+
+            <AnalyticsConsentToggle />
           </div>
         )}
       </DialogContent>

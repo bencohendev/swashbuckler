@@ -148,9 +148,9 @@ export function TutorialController() {
           open
           title={tour?.title}
           description={tour?.description}
-          showSkipAll
+          showSkipAll={activeTourId !== 'intro'}
           onTakeTour={next}
-          onSkip={skip}
+          onSkip={activeTourId === 'intro' ? skipAll : skip}
           onSkipAll={skipAll}
         />
       </>

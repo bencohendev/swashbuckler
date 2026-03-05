@@ -25,7 +25,7 @@ interface SpaceContextValue {
   leaveSpace: (spaceId: string) => Promise<void>
   isLoading: boolean
   sharedPermission: SpaceSharePermission | null
-  /** True while the new-user onboarding dialog is open */
+  /** True while spaces are loading or the new-user onboarding dialog is open */
   isOnboarding: boolean
 }
 
@@ -324,7 +324,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     leaveSpace,
     isLoading,
     sharedPermission,
-    isOnboarding: showNewUserDialog,
+    isOnboarding: isLoading || showNewUserDialog,
   }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission, showNewUserDialog])
 
   const handleNewUserChoice = useCallback(async (withExample: boolean) => {

@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/shared/components/ui/Dialog'
+import { AnalyticsConsentToggle } from './AnalyticsConsentToggle'
 
 interface GuestModeDialogProps {
   open: boolean
@@ -63,6 +64,8 @@ export function GuestModeDialog({ open, onOpenChange }: GuestModeDialogProps) {
               </p>
             </div>
           </button>
+
+          <AnalyticsConsentToggle />
         </div>
       </DialogContent>
     </Dialog>

@@ -99,7 +99,7 @@ interface TutorialState {
   skip: () => void
   skipAll: () => void
   complete: () => void
-  restartTour: (id: TourId) => void
+  restartTour: (id: TourId, options?: { startStep?: number }) => void
 
   /** @deprecated Use startTour('intro') */
   start: () => void
@@ -184,7 +184,7 @@ export const useTutorial = create<TutorialState>((set, get) => {
         return markTourCompleted(state, state.activeTourId)
       }),
 
-    restartTour: (id) => {
+    restartTour: (id, options) => {
       const state = get()
       localStorage.removeItem(storageKey(id))
       const newCompleted = new Set(state.completedTours)
@@ -194,7 +194,7 @@ export const useTutorial = create<TutorialState>((set, get) => {
       persistToDb(newCompleted, false)
       set({
         activeTourId: id,
-        currentStep: 0,
+        currentStep: options?.startStep ?? 0,
         completedTours: newCompleted,
         allSkipped: false,
         active: true,
