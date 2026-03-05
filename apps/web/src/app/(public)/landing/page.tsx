@@ -13,6 +13,12 @@ const features = [
     href: "https://docs.swashbuckler.quest/docs/editor",
   },
   {
+    icon: UsersIcon,
+    title: "Real-time Collaboration",
+    description: "Share spaces and edit together in real time.",
+    href: "https://docs.swashbuckler.quest/docs/realtime-collaboration",
+  },
+  {
     icon: BoxesIcon,
     title: "Custom Types",
     description:
@@ -24,12 +30,6 @@ const features = [
     title: "Knowledge Graph",
     description: "Visualize connections between your entries.",
     href: "https://docs.swashbuckler.quest/docs/graph-view",
-  },
-  {
-    icon: UsersIcon,
-    title: "Real-time Collaboration",
-    description: "Share spaces and edit together in real time.",
-    href: "https://docs.swashbuckler.quest/docs/realtime-collaboration",
   },
 ]
 
@@ -92,8 +92,8 @@ export default function LandingPage() {
         </section>
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12">
-          <p className="mb-6 text-center text-muted-foreground">
-            Swashbuckler is a fully featured note-taking app. Take advantage of:
+          <p className="my-6 text-center text-muted-foreground">
+            Swashbuckler is an <strong>AI free</strong>, fully featured note-taking app. Take advantage of:
           </p>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             {features.map((feature) => (
