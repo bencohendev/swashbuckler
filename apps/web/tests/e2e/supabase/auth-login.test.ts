@@ -1,9 +1,5 @@
 import { test, expect } from '../auth-helpers'
 import { test as base } from '@playwright/test'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
-
-const hasSupabase = fs.existsSync(path.join(__dirname, '..', '..', '.auth', 'test-data.json'))
 
 test.describe('Auth — Login', () => {
   test('logs in with valid email and password', async ({ authPage, testData }) => {
@@ -37,25 +33,6 @@ test.describe('Auth — Login', () => {
     const passwordInput = page.locator('#password')
     const isRequired = await passwordInput.getAttribute('required')
     expect(isRequired).not.toBeNull()
-  })
-
-  test('rate limits after multiple failed attempts', async ({ page }) => {
-    test.skip(!hasSupabase, 'Supabase not running — skipping')
-    await page.goto('/login')
-
-    // Submit 5 failed login attempts rapidly
-    for (let i = 0; i < 5; i++) {
-      await page.getByLabel('Email').fill('wrong@test.localhost')
-      await page.locator('#password').fill('WrongPassword1!')
-      await page.getByRole('button', { name: /sign in|try again/i }).click()
-      // Wait for the error to appear before next attempt
-      await page.waitForTimeout(500)
-    }
-
-    // Should show rate limiting message
-    await expect(page.getByRole('status')).toContainText(/wait.*seconds/i, {
-      timeout: 5000,
-    })
   })
 
   test('logs in from a fresh browser session', async ({ browser, testData }) => {

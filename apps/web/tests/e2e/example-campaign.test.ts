@@ -2,19 +2,21 @@ import { test, expect } from '@playwright/test'
 import { enterGuestMode, ANALYTICS_CONSENT_KEY } from './helpers'
 
 test.describe('Example campaign guest mode', () => {
-  test.beforeEach(async ({ page }) => {
-    // Clear any existing guest state
-    await page.context().clearCookies()
-  })
+  // These tests seed data in IndexedDB which can be slow on CI.
+  // Each test uses a fresh browser context to guarantee no leftover
+  // Dexie data from other tests (IndexedDB persists across navigations
+  // and cannot be reliably deleted while the app holds a connection).
+  test.setTimeout(60_000)
 
-  test('seeds campaign data when user picks "Explore an example campaign"', async ({ page }) => {
+  test('seeds campaign data when user picks "Explore an example campaign"', async ({ browser }) => {
+    const context = await browser.newContext()
+    const page = await context.newPage()
+
     await enterGuestMode(page, { example: true })
 
-    // Should redirect to the Campaign Overview object page
-    await page.waitForURL(/\/objects\//, { timeout: 30000 })
-    // Wait for the title input to appear and have the expected value
+    // Wait for the title input — it only exists on an object page after redirect.
     const titleInput = page.locator('input.text-3xl, input[placeholder="Untitled"]').first()
-    await expect(titleInput).toHaveValue('Campaign Overview', { timeout: 15000 })
+    await expect(titleInput).toHaveValue('Campaign Overview', { timeout: 30000 })
 
     // Sidebar should show campaign types
     await expect(page.getByText('NPCs').first()).toBeVisible({ timeout: 10000 })
@@ -23,22 +25,30 @@ test.describe('Example campaign guest mode', () => {
     await expect(page.getByText('Session Logs').first()).toBeVisible({ timeout: 10000 })
     await expect(page.getByText('Items').first()).toBeVisible({ timeout: 10000 })
     await expect(page.getByText('Quests').first()).toBeVisible({ timeout: 10000 })
+
+    await context.close()
   })
 
-  test('blank mode still works as before', async ({ page }) => {
+  test('blank mode still works as before', async ({ browser }) => {
+    const context = await browser.newContext()
+    const page = await context.newPage()
+
     await enterGuestMode(page, { example: false })
 
-    // Should redirect to the Getting Started object page
-    await page.waitForURL(/\/objects\//, { timeout: 30000 })
-    // Wait for the title input to appear and have the expected value
+    // Wait for the title input — it only exists on an object page after redirect.
     const titleInput = page.locator('input.text-3xl, input[placeholder="Untitled"]').first()
-    await expect(titleInput).toHaveValue('Getting Started', { timeout: 15000 })
+    await expect(titleInput).toHaveValue('Getting Started', { timeout: 30000 })
 
     // Sidebar should only show Pages type
     await expect(page.getByText('Pages').first()).toBeVisible({ timeout: 10000 })
+
+    await context.close()
   })
 
-  test('guest mode dialog appears when clicking try as guest', async ({ page }) => {
+  test('guest mode dialog appears when clicking try as guest', async ({ browser }) => {
+    const context = await browser.newContext()
+    const page = await context.newPage()
+
     await page.goto('/', { waitUntil: 'commit' })
     await page.evaluate((key) => {
       localStorage.setItem(key, 'accepted')
@@ -51,5 +61,7 @@ test.describe('Example campaign guest mode', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 })
     await expect(dialog.getByText('Start blank')).toBeVisible()
     await expect(dialog.getByText('Explore an example campaign')).toBeVisible()
+
+    await context.close()
   })
 })
