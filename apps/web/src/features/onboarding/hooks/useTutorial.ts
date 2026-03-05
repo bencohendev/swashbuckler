@@ -93,7 +93,7 @@ interface TutorialState {
   _supabase: SupabaseClient | null
   _userId: string | null
 
-  startTour: (id: TourId) => void
+  startTour: (id: TourId, options?: { startStep?: number }) => void
   next: () => void
   back: () => void
   skip: () => void
@@ -128,13 +128,13 @@ export const useTutorial = create<TutorialState>((set, get) => {
     completed: initialCompleted.has('intro'),
     active: false,
 
-    startTour: (id) => {
+    startTour: (id, options) => {
       const state = get()
       // No-op if another tour is active
       if (state.activeTourId !== null) return
       set({
         activeTourId: id,
-        currentStep: 0,
+        currentStep: options?.startStep ?? 0,
         active: true,
       })
     },

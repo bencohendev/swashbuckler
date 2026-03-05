@@ -24,6 +24,8 @@ interface SpaceContextValue {
   leaveSpace: (spaceId: string) => Promise<void>
   isLoading: boolean
   sharedPermission: SpaceSharePermission | null
+  /** True while the new-user onboarding dialog is open */
+  isOnboarding: boolean
 }
 
 interface CreateSpaceInput {
@@ -175,6 +177,25 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
         // No preferences row or null onboarding_completed_at means new user
         if (!prefsResult.error && (!prefsResult.data || !prefsResult.data.onboarding_completed_at)) {
           setShowNewUserDialog(true)
+        } else {
+          // Returning user whose onboarding is done but intro tour hasn't run yet:
+          // redirect to the welcome page so the intro tour targets (editor, etc.) are visible.
+          const introCompleted = typeof window !== 'undefined' &&
+            (localStorage.getItem('swashbuckler:tour:intro') === 'true' ||
+             localStorage.getItem('swashbuckler:toursSkippedAll') === 'true')
+          if (!introCompleted && typeof window !== 'undefined' && !window.location.pathname.startsWith('/objects/')) {
+            try {
+              const firstSpace = loadedSpaces[0]
+              const spaceClient = createSupabaseDataClient(supabase, firstSpace.id, user.id)
+              const objectsResult = await spaceClient.objects.list()
+              if (!objectsResult.error && objectsResult.data.length > 0) {
+                window.location.replace(`/objects/${objectsResult.data[0].id}`)
+                return
+              }
+            } catch {
+              // Fall through
+            }
+          }
         }
       } catch {
         // Preferences table may not exist yet — skip silently
@@ -291,7 +312,8 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     leaveSpace,
     isLoading,
     sharedPermission,
-  }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission])
+    isOnboarding: showNewUserDialog,
+  }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission, showNewUserDialog])
 
   const handleNewUserChoice = useCallback(async (withExample: boolean) => {
     if (!user) return
@@ -328,7 +350,24 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     // Mark onboarding as completed
     await prefsClient.upsert({ onboarding_completed_at: new Date().toISOString() })
     setShowNewUserDialog(false)
-  }, [user, supabase, spacesClient, switchSpace])
+
+    // For "Start blank" users, redirect to the welcome page (created by DB trigger)
+    // so the intro tour can highlight the editor.
+    if (!withExample && typeof window !== 'undefined' && !window.location.pathname.startsWith('/objects/')) {
+      try {
+        const firstSpace = ownedSpaces[0]
+        if (firstSpace) {
+          const spaceClient = createSupabaseDataClient(supabase, firstSpace.id, user.id)
+          const objectsResult = await spaceClient.objects.list()
+          if (!objectsResult.error && objectsResult.data.length > 0) {
+            window.location.replace(`/objects/${objectsResult.data[0].id}`)
+          }
+        }
+      } catch {
+        // Fall through — intro tour will auto-skip editor step if needed
+      }
+    }
+  }, [user, supabase, spacesClient, switchSpace, ownedSpaces])
 
   // Refs for values read inside CRUD callbacks — keeps callbacks stable
   const ownedSpacesRef = useRef(ownedSpaces)

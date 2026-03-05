@@ -5,6 +5,7 @@ export type TourId =
   | 'dashboard'
   | 'editor'
   | 'graph'
+  | 'settings'
   | 'types-settings'
   | 'themes-settings'
   | 'sharing-settings'
@@ -161,6 +162,37 @@ export const TOURS: Record<TourId, TourDefinition> = {
       },
     ],
   },
+  settings: {
+    id: 'settings',
+    title: 'Settings',
+    description: 'Manage your account, space, and workspace preferences.',
+    steps: [
+      {
+        id: 'settings-welcome',
+        type: 'dialog',
+        target: null,
+        title: 'Settings',
+        description: 'Manage your account, space, and workspace preferences.',
+        placement: 'bottom',
+      },
+      {
+        id: 'settings-account',
+        type: 'coachmark',
+        target: '[data-tour="settings-account"]',
+        title: 'Account Settings',
+        description: 'Profile, security, spaces, global types, and custom themes.',
+        placement: 'bottom',
+      },
+      {
+        id: 'settings-space',
+        type: 'coachmark',
+        target: '[data-tour="settings-space"]',
+        title: 'Space Settings',
+        description: 'Appearance, templates, types, and sharing for the current space.',
+        placement: 'top',
+      },
+    ],
+  },
   'types-settings': {
     id: 'types-settings',
     title: 'Types',
@@ -266,6 +298,7 @@ const PATH_TO_TOUR: [RegExp, TourId][] = [
   [/^\/dashboard$/, 'dashboard'],
   [/^\/objects\//, 'editor'],
   [/^\/graph$/, 'graph'],
+  [/^\/settings$/, 'settings'],
   [/^\/settings\/types$/, 'types-settings'],
   [/^\/settings\/themes$/, 'themes-settings'],
   [/^\/settings\/sharing$/, 'sharing-settings'],
