@@ -81,7 +81,7 @@ export default function LandingPage() {
               The knowledge base built for game masters.
             </p>
             <p className="mt-2 text-sm text-muted-foreground/70">
-              Your campaign. Organized.
+              Because your world deserves better than a Google Doc.
             </p>
           </div>
         </section>
