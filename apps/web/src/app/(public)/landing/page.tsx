@@ -115,7 +115,7 @@ export default function LandingPage() {
         </section>
 
         <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12">
-          <h2 className="mb-6 text-center text-lg font-semibold">TTRPG Friendly Features</h2>
+          <h3 className="mb-6 text-center text-lg font-semibold">Use Swashbuckler as your next campaign repository with these <br></br>TTRPG Friendly Features</h3>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2">
             <div className="rounded-lg border bg-card p-6 text-card-foreground">
               <ShieldIcon className="size-8 text-muted-foreground" />
