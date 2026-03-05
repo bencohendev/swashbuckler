@@ -199,28 +199,27 @@ export function CoachMark({
           ))}
         </div>
       )}
-      <div className="flex items-center justify-end gap-2">
-        {!isFirst && (
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs text-muted-foreground">
+          Skip tour
+        </Button>
+        {onSkipAll ? (
+          <Button variant="ghost" size="sm" onClick={onSkipAll} className="text-xs text-muted-foreground">
+            Skip all
+          </Button>
+        ) : (
+          <div />
+        )}
+        {!isFirst ? (
           <Button variant="outline" size="sm" onClick={onBack}>
             Back
           </Button>
+        ) : (
+          <div />
         )}
         <Button size="sm" onClick={onNext}>
           {isLast ? 'Done' : 'Next'}
         </Button>
-      </div>
-      <div className="mt-2 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-        <button type="button" onClick={onSkip} className="hover:text-foreground transition-colors">
-          Skip tour
-        </button>
-        {onSkipAll && (
-          <>
-            <span aria-hidden="true">·</span>
-            <button type="button" onClick={onSkipAll} className="hover:text-foreground transition-colors">
-              Skip all tours
-            </button>
-          </>
-        )}
       </div>
     </>
   )
