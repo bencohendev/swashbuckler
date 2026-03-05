@@ -143,7 +143,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12 text-center">
+        <section className="relative z-10 mx-auto max-w-2xl px-6 pb-12 text-center space-y-3">
+          <p className="text-sm font-medium text-muted-foreground">
+            No AI. No autocomplete. Just your words.
+          </p>
           <p className="text-sm text-muted-foreground/70">
             Not a GM? Swashbuckler works great as a general-purpose wiki for worldbuilding, research, or any project.
           </p>
