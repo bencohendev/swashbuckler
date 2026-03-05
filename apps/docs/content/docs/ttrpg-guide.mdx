@@ -1,0 +1,82 @@
+---
+title: Tabletop RPG Guide
+description: How to use Swashbuckler to organize your TTRPG campaign — types, sharing, private content, and the knowledge graph.
+---
+
+## Overview
+
+Swashbuckler was built with tabletop RPGs in mind. This guide walks through setting up a campaign workspace, from creating types for your world's entities to sharing lore with your players while keeping GM secrets hidden.
+
+## Setting Up Your Campaign
+
+### Create a Space
+
+Start by [creating a space](/docs/spaces) for your campaign. Give it a name (e.g., "Curse of the Crimson Tide") and pick an icon. Each campaign gets its own space with isolated types, entries, and tags.
+
+### Import the Roleplaying Starter Kit
+
+Instead of building types from scratch, import the **Roleplaying** starter kit:
+
+1. Go to **Settings > Types**
+2. Click **Starter Kits**
+3. Expand **Roleplaying** to preview the types: Character, Location, Faction, Session Log, Item
+4. Click **Import**
+
+Each type comes with relevant properties already configured — Character has fields for race, class, and alignment; Location has region and description; and so on.
+
+You can customize these types after importing, or create additional types for things like Quests, Lore, or Encounters.
+
+### Build Your World
+
+Create entries for the people, places, and factions in your world. A few tips:
+
+- **Use `@` mentions** to connect entries as you write. Mention a Location in a Character's backstory, or reference an NPC in a Session Log. These connections build your [knowledge graph](/docs/graph-view) organically.
+- **Add cover images** to key entries — a portrait for an NPC, a map for a region.
+- **Use templates** to speed up entry creation. Set up a [template](/docs/templates) for Session Logs with a standard structure (date, location, NPCs present, events, loot) so each session starts the same way.
+- **Pin important entries** to your [dashboard](/docs/dashboard) — the current quest, the party roster, or a map of the region.
+
+## Sharing with Your Party
+
+[Share your campaign space](/docs/sharing) with your players so they can browse the lore, read session recaps, and look up NPCs they've met.
+
+### Permissions
+
+- **View** permission lets players browse and read, but not edit. Good for most players.
+- **Edit** permission lets players create and modify entries. Useful if players maintain their own character journals or contribute to session notes.
+
+### Hiding GM Secrets with Exclusions
+
+Not everything should be visible to players. Use [exclusions](/docs/sharing#exclusions) to control what your party sees:
+
+- **Hide an entire type** — Exclude your "Quests" or "Plot Threads" type so players can't see your plans.
+- **Hide specific entries** — Share the Locations type but exclude the entries for places the party hasn't discovered yet.
+- **Hide specific fields** — Share NPC entries but exclude a "Secret Motivation" property from players.
+
+Exclusions can be set per-player or space-wide. Hidden content is completely invisible — no "locked" placeholders or hints that something is hidden.
+
+### Private Blocks for Inline Secrets
+
+Sometimes you want to share an entry but keep certain details to yourself. [Private blocks](/docs/private-content) let you add GM-only notes directly inside a shared entry.
+
+Type `/private` in the editor to insert a private block. Write your notes inside — stat blocks, plot hooks, secret motivations — and they'll be completely invisible to your players. You can also mark inline text as private with <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> or the `|||triple pipe|||` syntax.
+
+Example: share an NPC entry with your players showing personality, appearance, and known history, but hide a private block at the bottom with their true allegiance and combat stats.
+
+## Collaborating in Real Time
+
+If your players have **edit** permission, [real-time collaboration](/docs/realtime-collaboration) activates automatically. You'll see each other's cursors and edits as they happen — useful for collaborative session notes or a shared party journal.
+
+## Using the Knowledge Graph
+
+The [graph view](/docs/graph-view) turns your campaign into a visual map of connections. Every `@` mention and manual link creates an edge between entries.
+
+- **Force-directed layout** lets clusters of related entries group naturally — you'll see factions form around their members, locations cluster by region.
+- **Clustered layout** groups entries by type, so you can see how Characters connect to Locations, or which Factions are intertwined.
+- **Filter by type** to focus on specific aspects of your world — show only Characters and Factions to map political alliances.
+
+## Tips
+
+- **Session Logs as connective tissue**: Mention every NPC, location, and item that appeared in a session. This creates a rich web of connections that makes the graph increasingly useful over time.
+- **Tags for cross-cutting concerns**: Use [tags](/docs/tags) for things that span types — "Arc 1", "Completed", "Player Favorite" — so you can find related entries regardless of type.
+- **Board view for quest tracking**: Create a Quest type with a Status property (e.g., "Available", "Active", "Completed") and use [board view](/docs/board-view) to manage quests as a kanban board.
+- **Quick Capture for mid-session ideas**: Press <kbd>Cmd</kbd>+<kbd>E</kbd> to open [Quick Capture](/docs/quick-capture) and jot down an NPC name or plot hook without leaving what you're doing.
