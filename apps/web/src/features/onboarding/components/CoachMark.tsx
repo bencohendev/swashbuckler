@@ -85,10 +85,11 @@ function computePosition(
     }
   }
 
-  // Last resort: place below
+  // Last resort: place below, clamped to viewport
+  const fallbackLeft = targetRect.left + targetRect.width / 2 - popoverRect.width / 2
   return {
-    top: targetRect.bottom + GAP,
-    left: Math.max(EDGE_PADDING, targetRect.left + targetRect.width / 2 - popoverRect.width / 2),
+    top: Math.min(targetRect.bottom + GAP, vh - popoverRect.height - EDGE_PADDING),
+    left: Math.max(EDGE_PADDING, Math.min(fallbackLeft, vw - popoverRect.width - EDGE_PADDING)),
     actualPlacement: 'bottom',
   }
 }
@@ -118,8 +119,11 @@ export function CoachMark({
   }, [targetEl, placement, isMobile])
 
   useEffect(() => {
-    // Measure after initial render so popoverRef has dimensions
-    requestAnimationFrame(measure)
+    // Measure after initial render so popoverRef has dimensions.
+    // Double-rAF: first frame lays out the hidden popover, second frame measures accurately.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(measure)
+    })
   }, [measure])
 
   useEffect(() => {
@@ -239,7 +243,7 @@ export function CoachMark({
       role="dialog"
       aria-label={title}
       tabIndex={-1}
-      className="fixed z-[51] w-72 rounded-lg border bg-background p-4 shadow-xl outline-none animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none"
+      className="fixed z-[51] w-72 max-w-[calc(100vw-1rem)] rounded-lg border bg-background p-4 shadow-xl outline-none animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none"
       style={
         position
           ? { top: position.top, left: position.left }
