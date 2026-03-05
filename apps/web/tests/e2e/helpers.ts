@@ -85,6 +85,34 @@ export async function enterGuestMode(page: Page, options?: { example?: boolean }
 }
 
 // ---------------------------------------------------------------------------
+// Editor focus helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Waits for the Slate editor to be visible and accepting keyboard input.
+ * Slate editors sometimes don't process input immediately after click() due to
+ * React hydration or internal initialization timing. This helper retries until
+ * typing actually produces content in the editor.
+ */
+export async function focusEditor(page: Page): Promise<void> {
+  const editor = page.locator('[data-slate-editor="true"]')
+  await editor.waitFor({ state: 'visible', timeout: 10000 })
+
+  await expect(async () => {
+    await editor.click()
+    await page.waitForTimeout(100)
+    // Type a probe character and verify it appears
+    await page.keyboard.insertText('x')
+    const text = await editor.textContent()
+    if (!text?.includes('x')) throw new Error('Editor not accepting input')
+  }).toPass({ timeout: 10000 })
+
+  // Clean up the probe character
+  await page.keyboard.press('Backspace')
+  await page.waitForTimeout(50)
+}
+
+// ---------------------------------------------------------------------------
 // Entry helpers
 // ---------------------------------------------------------------------------
 
@@ -115,6 +143,7 @@ export async function createEntry(page: Page): Promise<string> {
 
 /**
  * Creates a new entry and fills in the title.
+ * Waits for the title to persist by checking it appears in the sidebar.
  */
 export async function createEntryWithTitle(
   page: Page,
@@ -123,9 +152,13 @@ export async function createEntryWithTitle(
   const id = await createEntry(page)
   const input = titleInput(page)
   await input.waitFor({ state: 'visible', timeout: 10000 })
+  // Click to focus, then clear + type for reliable input with controlled React components
+  await input.click()
+  await page.waitForTimeout(200)
   await input.fill(title)
-  // Brief wait for debounced save
-  await page.waitForTimeout(500)
+  // Wait for the debounced save (500ms) to persist and sidebar to update
+  const sidebar = page.locator('aside, nav').first()
+  await expect(sidebar.getByText(title, { exact: true }).first()).toBeVisible({ timeout: 10000 })
   return id
 }
 

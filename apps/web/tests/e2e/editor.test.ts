@@ -1,4 +1,4 @@
-import { test, expect, createEntry, createEntryWithTitle } from './helpers'
+import { test, expect, createEntry, createEntryWithTitle, focusEditor } from './helpers'
 
 test.describe('Editor — regression tests', () => {
   test('editor loads with contenteditable area', async ({ guestPage: page }) => {
@@ -13,7 +13,7 @@ test.describe('Editor — regression tests', () => {
     await createEntry(page)
 
     const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
+    await focusEditor(page)
     await page.keyboard.type('Hello world')
 
     await expect(editor).toContainText('Hello world')
@@ -24,7 +24,7 @@ test.describe('Editor — regression tests', () => {
     await createEntry(page)
 
     const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
+    await focusEditor(page)
     await page.keyboard.type('First line')
     await page.keyboard.press('Enter')
     await page.keyboard.type('Second line')
@@ -37,8 +37,7 @@ test.describe('Editor — regression tests', () => {
   test('slash menu opens on / keystroke', async ({ guestPage: page }) => {
     await createEntry(page)
 
-    const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
+    await focusEditor(page)
     await page.keyboard.type('/')
 
     // Slash menu appears as a popover with block options
@@ -50,7 +49,7 @@ test.describe('Editor — regression tests', () => {
     await createEntry(page)
 
     const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
+    await focusEditor(page)
     await page.keyboard.type('/')
 
     // Wait for the slash menu and click Heading 1
@@ -67,7 +66,7 @@ test.describe('Editor — regression tests', () => {
     await createEntry(page)
 
     const editor = page.locator('[data-slate-editor="true"]')
-    await editor.click()
+    await focusEditor(page)
     await page.keyboard.type('/')
 
     // Look for code block option
