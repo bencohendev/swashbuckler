@@ -1,6 +1,6 @@
 # Example Campaign (Guest Mode)
 
-**Status:** Not started
+**Status:** Active
 
 ## Summary
 
