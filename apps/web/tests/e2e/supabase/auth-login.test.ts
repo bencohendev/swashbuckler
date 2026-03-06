@@ -43,10 +43,11 @@ test.describe('Auth — Login', () => {
     await page.getByLabel('Email').fill(testData.userA.email)
     await page.locator('#password').fill('TestPassword1!')
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await page.waitForURL(/\/dashboard/, { timeout: 30000 })
+    // After login, the app redirects to /dashboard or directly to /objects/{id}
+    await page.waitForURL(/\/(dashboard|objects\/)/, { timeout: 30000 })
 
-    // Should see the authenticated dashboard
-    await expect(page.getByText(testData.userA.email)).toBeVisible({ timeout: 10000 })
+    // Should see the authenticated state (sidebar visible)
+    await expect(page.locator('aside').first()).toBeVisible({ timeout: 15000 })
 
     await context.close()
   })

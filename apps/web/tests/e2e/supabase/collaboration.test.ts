@@ -1,12 +1,29 @@
 import { twoUserTest, expect, waitForCollabReady } from '../auth-helpers'
 
-/** Navigate both users directly to a shared object (skips dashboard + switchToSpace). */
+const SPACE_STORAGE_KEY = 'swashbuckler:currentSpaceId'
+
+/** Navigate both users directly to a shared object.
+ *  Sets currentSpaceId in localStorage so SpaceProvider picks the correct space
+ *  without needing the dashboard → switchToSpace UI flow. */
 async function setupCollab(
   userAPage: import('@playwright/test').Page,
   userBPage: import('@playwright/test').Page,
   objectId: string,
+  spaceId: string,
 ) {
-  // Navigate both users directly to the object — no dashboard detour
+  // Set the shared space as current for both users before navigating.
+  // This ensures SpaceProvider initializes with the correct space so
+  // isSharedSpace evaluates correctly and collab mode activates.
+  await Promise.all([
+    userAPage.goto('about:blank').then(() =>
+      userAPage.evaluate(([key, id]) => localStorage.setItem(key, id), [SPACE_STORAGE_KEY, spaceId] as const),
+    ),
+    userBPage.goto('about:blank').then(() =>
+      userBPage.evaluate(([key, id]) => localStorage.setItem(key, id), [SPACE_STORAGE_KEY, spaceId] as const),
+    ),
+  ])
+
+  // Navigate both users directly to the object
   await Promise.all([
     userAPage.goto(`/objects/${objectId}`, { waitUntil: 'domcontentloaded' }),
     userBPage.goto(`/objects/${objectId}`, { waitUntil: 'domcontentloaded' }),
@@ -25,7 +42,7 @@ twoUserTest.describe('Collaboration', () => {
     userBPage,
     testData,
   }) => {
-    await setupCollab(userAPage, userBPage, testData.collabPageId)
+    await setupCollab(userAPage, userBPage, testData.collabPageId, testData.spaceA.id)
 
     const userAEditor = userAPage.locator('[contenteditable="true"]').first()
     await userAEditor.click()
@@ -44,7 +61,7 @@ twoUserTest.describe('Collaboration', () => {
     userBPage,
     testData,
   }) => {
-    await setupCollab(userAPage, userBPage, testData.collabPageId)
+    await setupCollab(userAPage, userBPage, testData.collabPageId, testData.spaceA.id)
 
     const userBEditor = userBPage.locator('[contenteditable="true"]').first()
     await userBEditor.click()
@@ -63,7 +80,7 @@ twoUserTest.describe('Collaboration', () => {
     userBPage,
     testData,
   }) => {
-    await setupCollab(userAPage, userBPage, testData.collabPageId)
+    await setupCollab(userAPage, userBPage, testData.collabPageId, testData.spaceA.id)
 
     // Both users click in the editor to establish awareness
     await userAPage.locator('[contenteditable="true"]').first().click()
@@ -83,7 +100,7 @@ twoUserTest.describe('Collaboration', () => {
     userBPage,
     testData,
   }) => {
-    await setupCollab(userAPage, userBPage, testData.sharedPageId)
+    await setupCollab(userAPage, userBPage, testData.sharedPageId, testData.spaceA.id)
 
     const textA = `SimultaneousA-${Date.now()}`
     const textB = `SimultaneousB-${Date.now()}`
