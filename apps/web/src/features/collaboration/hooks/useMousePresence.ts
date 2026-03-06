@@ -30,7 +30,7 @@ export function useMousePresence({ containerRef, awareness, enabled }: UseMouseP
     rafRef.current = requestAnimationFrame(() => {
       const rect = container.getBoundingClientRect()
       const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10
-      const y = Math.round(e.clientY - rect.top + container.scrollTop)
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10
 
       const last = lastPositionRef.current
       if (last && last.x === x && last.y === y) return
