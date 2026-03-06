@@ -6,23 +6,19 @@ import type { Awareness } from 'y-protocols/awareness'
 const THROTTLE_MS = 50
 
 interface UseMousePresenceOptions {
-  /** Element to listen for mouse events on (typically the scrollable area) */
   containerRef: RefObject<HTMLElement | null>
-  /** Element to measure coordinates from (where the cursor overlay renders).
-   *  Falls back to containerRef if not provided. */
-  coordinateRef?: RefObject<HTMLElement | null>
   awareness: Awareness | null
   enabled: boolean
 }
 
-export function useMousePresence({ containerRef, coordinateRef, awareness, enabled }: UseMousePresenceOptions): void {
+export function useMousePresence({ containerRef, awareness, enabled }: UseMousePresenceOptions): void {
   const rafRef = useRef<number | null>(null)
   const lastSentRef = useRef<number>(0)
   const lastPositionRef = useRef<{ x: number; y: number } | null>(null)
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    const coordEl = coordinateRef?.current ?? containerRef.current
-    if (!coordEl || !awareness) return
+    const container = containerRef.current
+    if (!container || !awareness) return
 
     const now = performance.now()
     if (now - lastSentRef.current < THROTTLE_MS) return
@@ -32,12 +28,9 @@ export function useMousePresence({ containerRef, coordinateRef, awareness, enabl
     }
 
     rafRef.current = requestAnimationFrame(() => {
-      const rect = coordEl.getBoundingClientRect()
+      const rect = container.getBoundingClientRect()
       const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10
-      // getBoundingClientRect is scroll-aware: rect.top shifts as the
-      // parent scrolls, so no manual scrollTop adjustment is needed when
-      // coordinateRef is a non-scrolling child of a scrollable container.
-      const y = Math.round(e.clientY - rect.top + coordEl.scrollTop)
+      const y = Math.round(e.clientY - rect.top + container.scrollTop)
 
       const last = lastPositionRef.current
       if (last && last.x === x && last.y === y) return
@@ -47,7 +40,7 @@ export function useMousePresence({ containerRef, coordinateRef, awareness, enabl
       lastSentRef.current = performance.now()
       rafRef.current = null
     })
-  }, [containerRef, coordinateRef, awareness])
+  }, [containerRef, awareness])
 
   const clearMouse = useCallback(() => {
     if (rafRef.current !== null) {
