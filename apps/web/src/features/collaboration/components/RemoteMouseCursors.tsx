@@ -63,7 +63,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
             className="absolute will-change-transform"
             style={{
               left: `${cursor.x}%`,
-              top: `${cursor.y}%`,
+              top: cursor.y,
               transition: 'left 80ms linear, top 80ms linear',
             }}
           >
