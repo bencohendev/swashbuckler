@@ -4,7 +4,7 @@
 // "Cannot resolve a DOM node" crashes from slate-react timing gaps.
 import '../lib/patchSlateDom';
 
-import { createContext, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import { createContext, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Plate, PlateContent, usePlateEditor } from '@udecode/plate/react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -207,6 +207,7 @@ function CollaborativeEditor({
   const { setContent, isSaving, isDirty, lastSaved, setCollaborative } = useEditorStore();
   const { provider, doc, awareness, cursorData } = collaborationOptions;
   const isBoundRef = useRef(false);
+  const [isSynced, setIsSynced] = useState(false);
 
   const plugins = useMemo(
     () => [
@@ -315,6 +316,7 @@ function CollaborativeEditor({
 
       awareness.setLocalStateField('data', cursorData)
       isBoundRef.current = true
+      setIsSynced(true)
       // Clear false-positive dirty flag from Y.Doc seeding onChange
       useEditorStore.getState().markClean()
     }
@@ -398,14 +400,23 @@ function CollaborativeEditor({
     <EditorModeContext value={{ isTemplateMode: isTemplateMode ?? false, isOwner }}>
       <DndProvider backend={HTML5Backend}>
         <div className="relative min-h-[200px]">
-          <Plate editor={editor} onChange={handleChange}>
-            <PlateContent
-              readOnly={readOnly}
-              placeholder={placeholder}
-              className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
-            />
-            <RemoteCursorOverlay awareness={awareness} doc={doc} />
-          </Plate>
+          {!isSynced && (
+            <div className="absolute inset-0 z-10 animate-pulse space-y-3" role="status" aria-label="Loading editor content">
+              <div className="h-4 w-full rounded bg-muted" />
+              <div className="h-4 w-5/6 rounded bg-muted" />
+              <div className="h-4 w-4/6 rounded bg-muted" />
+            </div>
+          )}
+          <div className={isSynced ? undefined : 'invisible'}>
+            <Plate editor={editor} onChange={handleChange}>
+              <PlateContent
+                readOnly={readOnly}
+                placeholder={placeholder}
+                className="prose prose-sm max-w-none min-h-[200px] outline-none dark:prose-invert"
+              />
+              <RemoteCursorOverlay awareness={awareness} doc={doc} />
+            </Plate>
+          </div>
 
           {onSave && (
             <div className="absolute right-2 top-2 text-xs text-gray-400">
