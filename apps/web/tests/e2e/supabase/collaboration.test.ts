@@ -11,23 +11,15 @@ async function setupCollab(
   objectId: string,
   spaceId: string,
 ) {
-  // Set the shared space as current for both users before navigating.
-  // This ensures SpaceProvider initializes with the correct space so
-  // isSharedSpace evaluates correctly and collab mode activates.
-  await Promise.all([
-    userAPage.goto('about:blank').then(() =>
-      userAPage.evaluate(([key, id]) => localStorage.setItem(key, id), [SPACE_STORAGE_KEY, spaceId] as const),
-    ),
-    userBPage.goto('about:blank').then(() =>
-      userBPage.evaluate(([key, id]) => localStorage.setItem(key, id), [SPACE_STORAGE_KEY, spaceId] as const),
-    ),
-  ])
+  // Navigate to the app origin first so localStorage is accessible,
+  // then set currentSpaceId so SpaceProvider picks the shared space.
+  async function seedSpace(page: import('@playwright/test').Page) {
+    await page.goto(`/objects/${objectId}`, { waitUntil: 'commit' })
+    await page.evaluate(([key, id]) => localStorage.setItem(key, id), [SPACE_STORAGE_KEY, spaceId] as const)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+  }
 
-  // Navigate both users directly to the object
-  await Promise.all([
-    userAPage.goto(`/objects/${objectId}`, { waitUntil: 'domcontentloaded' }),
-    userBPage.goto(`/objects/${objectId}`, { waitUntil: 'domcontentloaded' }),
-  ])
+  await Promise.all([seedSpace(userAPage), seedSpace(userBPage)])
 
   // Wait for both editors to connect to Supabase Broadcast
   await Promise.all([
