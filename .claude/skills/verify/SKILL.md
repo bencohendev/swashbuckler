@@ -24,9 +24,11 @@ Run all verification checks and audit documentation completeness for the most re
 
    a. **Feature spec** (`.readme/features/`) — Read the spec. Confirm it reflects the actual implementation: correct file paths, accurate decisions, verification checklist checked off, and status set appropriately (`Done` if finished, `Active` if still in progress).
 
-   b. **User-facing docs** (`apps/docs/content/docs/`) — Check if the feature affects user-visible behavior. If so, confirm there is a corresponding docs page that accurately describes the current behavior. If no page exists and one is needed, flag it. If a page exists but is outdated, flag the specific gaps.
+   b. **Other `.readme/` docs** — Scan `.readme/` for any other files that reference affected areas (e.g., `bugs/log.md`, other feature specs). If any content is stale or contradicts the current implementation, flag it or update it.
 
-   c. **Master index** (`.readme/index.md`) — Confirm the feature is in the correct table (Implemented vs Planned) and the spec link is present.
+   c. **User-facing docs** (`apps/docs/content/docs/`) — Check if the feature affects user-visible behavior. If so, confirm there is a corresponding docs page that accurately describes the current behavior. If no page exists and one is needed, flag it. If a page exists but is outdated, flag the specific gaps.
+
+   d. **Master index** (`.readme/index.md`) — Confirm the feature is in the correct table (Implemented vs Planned) and the spec link is present.
 
 7. **Fix issues** — If any check failed or documentation gaps were found:
    - Enter a worktree if code or doc fixes are needed
@@ -50,6 +52,7 @@ Run all verification checks and audit documentation completeness for the most re
 
 ### Documentation Audit
 - **Feature spec:** Up to date / <specific gaps>
+- **Other .readme/ docs:** Up to date / <stale references found>
 - **User docs:** Up to date / Missing page / <specific gaps>
 - **Index:** Correct / <issue>
 
