@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { Awareness } from 'y-protocols/awareness'
 
 interface AwarenessUser {
@@ -17,6 +17,15 @@ const MAX_VISIBLE = 5
 
 export function CollaboratorAvatars({ awareness }: CollaboratorAvatarsProps) {
   const [users, setUsers] = useState<{ clientId: number; user: AwarenessUser }[]>([])
+  const [brokenAvatars, setBrokenAvatars] = useState<Set<number>>(new Set())
+
+  const handleAvatarError = useCallback((clientId: number) => {
+    setBrokenAvatars(prev => {
+      const next = new Set(prev)
+      next.add(clientId)
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     function update() {
@@ -49,7 +58,7 @@ export function CollaboratorAvatars({ awareness }: CollaboratorAvatarsProps) {
   return (
     <div className="flex items-center -space-x-1.5">
       {visible.map(({ clientId, user }) => (
-        user.avatarUrl ? (
+        user.avatarUrl && !brokenAvatars.has(clientId) ? (
           <div
             key={clientId}
             className="relative size-6 overflow-hidden rounded-full border-2 border-background"
@@ -60,6 +69,7 @@ export function CollaboratorAvatars({ awareness }: CollaboratorAvatarsProps) {
               src={user.avatarUrl}
               alt={user.name}
               className="h-full w-full object-cover"
+              onError={() => handleAvatarError(clientId)}
             />
           </div>
         ) : (

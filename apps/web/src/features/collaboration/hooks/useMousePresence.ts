@@ -7,11 +7,12 @@ const THROTTLE_MS = 50
 
 interface UseMousePresenceOptions {
   containerRef: RefObject<HTMLElement | null>
+  scrollRef?: RefObject<HTMLElement | null>
   awareness: Awareness | null
   enabled: boolean
 }
 
-export function useMousePresence({ containerRef, awareness, enabled }: UseMousePresenceOptions): void {
+export function useMousePresence({ containerRef, scrollRef, awareness, enabled }: UseMousePresenceOptions): void {
   const rafRef = useRef<number | null>(null)
   const lastSentRef = useRef<number>(0)
   const lastPositionRef = useRef<{ x: number; y: number } | null>(null)
@@ -29,8 +30,9 @@ export function useMousePresence({ containerRef, awareness, enabled }: UseMouseP
 
     rafRef.current = requestAnimationFrame(() => {
       const rect = container.getBoundingClientRect()
+      const scrollTop = scrollRef?.current?.scrollTop ?? container.scrollTop
       const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10
-      const y = Math.round(e.clientY - rect.top + container.scrollTop)
+      const y = Math.round(e.clientY - rect.top + scrollTop)
 
       const last = lastPositionRef.current
       if (last && last.x === x && last.y === y) return
@@ -40,7 +42,7 @@ export function useMousePresence({ containerRef, awareness, enabled }: UseMouseP
       lastSentRef.current = performance.now()
       rafRef.current = null
     })
-  }, [containerRef, awareness])
+  }, [containerRef, scrollRef, awareness])
 
   const clearMouse = useCallback(() => {
     if (rafRef.current !== null) {
@@ -63,13 +65,16 @@ export function useMousePresence({ containerRef, awareness, enabled }: UseMouseP
     const container = containerRef.current
     if (!container) return
 
-    container.addEventListener('mousemove', handleMouseMove)
-    container.addEventListener('mouseleave', clearMouse)
+    // Attach events to the scroll container if provided, otherwise the content container
+    const eventTarget = scrollRef?.current ?? container
+
+    eventTarget.addEventListener('mousemove', handleMouseMove)
+    eventTarget.addEventListener('mouseleave', clearMouse)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
-      container.removeEventListener('mousemove', handleMouseMove)
-      container.removeEventListener('mouseleave', clearMouse)
+      eventTarget.removeEventListener('mousemove', handleMouseMove)
+      eventTarget.removeEventListener('mouseleave', clearMouse)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
 
       if (rafRef.current !== null) {
@@ -77,5 +82,5 @@ export function useMousePresence({ containerRef, awareness, enabled }: UseMouseP
       }
       awareness.setLocalStateField('mouse', null)
     }
-  }, [enabled, containerRef, awareness, handleMouseMove, clearMouse, handleVisibilityChange])
+  }, [enabled, containerRef, scrollRef, awareness, handleMouseMove, clearMouse, handleVisibilityChange])
 }
