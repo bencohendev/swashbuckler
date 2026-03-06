@@ -25,7 +25,7 @@ interface SpaceContextValue {
   leaveSpace: (spaceId: string) => Promise<void>
   isLoading: boolean
   sharedPermission: SpaceSharePermission | null
-  /** True while spaces are loading or the new-user onboarding dialog is open */
+  /** True until preferences check resolves and new-user dialog is dismissed */
   isOnboarding: boolean
 }
 
@@ -66,6 +66,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showNewUserDialog, setShowNewUserDialog] = useState(false)
+  const [isOnboardingResolved, setIsOnboardingResolved] = useState(false)
 
   const loadSeqRef = useRef(0)
 
@@ -212,6 +213,11 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
       }
     }
 
+    // Mark onboarding check as resolved — preferences have been checked (auth)
+    // or don't apply (guest). Must happen before setIsLoading(false) so
+    // isOnboarding never has a false gap between isLoading and showNewUserDialog.
+    setIsOnboardingResolved(true)
+
     // Classify spaces by owner_id (not by cross-referencing getSharedSpaces)
     const newShareInfoMap = new Map<string, { shareId: string; permission: SpaceSharePermission }>()
     let owned: Space[]
@@ -325,8 +331,8 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     leaveSpace,
     isLoading,
     sharedPermission,
-    isOnboarding: isLoading || showNewUserDialog,
-  }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission, showNewUserDialog])
+    isOnboarding: !isOnboardingResolved || showNewUserDialog,
+  }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission, isOnboardingResolved, showNewUserDialog])
 
   const handleNewUserChoice = useCallback(async (withExample: boolean) => {
     if (!user) return

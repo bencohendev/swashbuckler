@@ -4,11 +4,13 @@ All bugs are tracked here. If a bug needs root-cause analysis or detailed invest
 
 ## Open
 
-| Bug | Description |
-|-----|-------------|
-| [Tour & onboarding UX issues](tour-onboarding-ux.md) | 6 issues: dismiss intro enables all tours, local DB persists after logout, "Tour this page" shows dialog, tour fires before setup dialog, sharing tour unnecessary, ~~consent banner competes with tour~~ (fixed) |
+No open bugs.
 
 ## Closed
+
+| Date | Bug | Fix |
+|------|-----|-----|
+| 2026-03-06 | [Tour & onboarding UX issues](tour-onboarding-ux.md) | All 6 issues fixed: skipAll on intro dismiss, clearLocalData on logout, skip dialog step on restart, isOnboardingResolved flag for race condition, removed sharing tour, consent moved to onboarding dialogs |
 
 | Date | Bug | Fix |
 |------|-----|-----|
