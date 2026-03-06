@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef, type MutableRefObject } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon, MousePointerIcon } from 'lucide-react'
+import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
@@ -15,7 +15,7 @@ import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
 import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
 import { useSpacePermission, useExclusionFilter, useSpaceShares } from '@/features/sharing'
-import { useCollaboration, useMousePresence, useMouseCursorPreference, CollaboratorAvatars, ConnectionStatus, RemoteMouseCursors } from '@/features/collaboration'
+import { useCollaboration, CollaboratorAvatars, ConnectionStatus } from '@/features/collaboration'
 import { applyTemplateContent, mergeProperties } from '@/features/templates/lib/applyTemplate'
 import {
   resolveContentVariables,
@@ -83,8 +83,6 @@ interface ObjectEditorProps {
 
 export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
-  const mainRef = useRef<HTMLElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const editorRef = useRef<EditorHandle>(null)
   const dataClient = useDataClient()
@@ -92,14 +90,33 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const { user } = useAuth()
   const { space, sharedPermission } = useCurrentSpace()
   const supabase = useMemo(() => createClient(), [])
-  const { object, isLoading, error, update, remove, archive } = useObject(id)
-  const { objectType } = useObjectType(object?.type_id ?? null)
+  const { object, isLoading: isObjectLoading, error, update, remove, archive } = useObject(id)
+  const { objectType, isLoading: isTypeLoading } = useObjectType(object?.type_id ?? null)
   const { templates, saveObjectAsTemplate, getTemplateVariables } = useTemplates()
   const { canEdit, isOwner } = useSpacePermission()
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
-  const { shares } = useSpaceShares(space?.id ?? null)
+  const { shares, isLoading: isSharesLoading } = useSpaceShares(space?.id ?? null)
   const { isDirty: editorDirty, isSaving: editorSaving, lastSaved: editorLastSaved } = useEditorStore()
-  const [title, setTitle] = useState('')
+
+  // Unified loading: wait for the object, its type, AND the collaborative-mode
+  // decision before rendering content. For Supabase owners with edit rights, we
+  // must know whether shares exist before choosing Solo vs Collaborative editor —
+  // otherwise the editor renders Solo first, then switches to Collaborative when
+  // shares load, causing a visible flash (the Collaborative editor starts with its
+  // own isSynced=false loading overlay).
+  // Once content has been shown, never regress to the skeleton — context changes
+  // (e.g. space loading, DataProvider cascade) can briefly re-trigger query loading
+  // states, causing a visible flash.
+  const spaceResolved = storageMode !== 'supabase' || !!space
+  const sharesResolved = storageMode !== 'supabase' || !canEdit || !isOwner || !isSharesLoading
+  const isQueryLoading = isObjectLoading || (!!object?.type_id && isTypeLoading) || !spaceResolved || !sharesResolved
+  const hasRenderedContentRef = useRef(false)
+  if (!isQueryLoading && object) {
+    hasRenderedContentRef.current = true
+  }
+  const isLoading = isQueryLoading && !hasRenderedContentRef.current
+
+  const [title, setTitle] = useState(() => (!autoFocus && object?.title) ? object.title : '')
   const [isTitleSaving, setIsTitleSaving] = useState(false)
   const [isTemplateMode, setIsTemplateMode] = useState(false)
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
@@ -112,8 +129,6 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const isSharedSpace = isOwner ? shares.length > 0 : sharedPermission !== null
   const isCollaborative = storageMode === 'supabase' && canEdit && isSharedSpace
 
-  const { showMouseCursors, toggleMouseCursors } = useMouseCursorPreference()
-
   const collaborationOptions = useCollaboration({
     spaceId: space?.id ?? '',
     documentId: id,
@@ -122,13 +137,6 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     userName: user?.email?.split('@')[0] ?? 'Anonymous',
     avatarUrl: user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture,
     enabled: isCollaborative,
-  })
-
-  useMousePresence({
-    containerRef: contentRef,
-    scrollRef: mainRef,
-    awareness: collaborationOptions?.awareness ?? null,
-    enabled: isCollaborative && !!collaborationOptions && showMouseCursors,
   })
 
   // Track access for recent-entries ordering
@@ -315,12 +323,18 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
             <div className="size-8 rounded-md bg-muted" />
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <div className="h-9 w-2/3 rounded bg-muted" />
-          <div className="mt-6 space-y-3">
-            <div className="h-4 w-full rounded bg-muted" />
-            <div className="h-4 w-5/6 rounded bg-muted" />
-            <div className="h-4 w-4/6 rounded bg-muted" />
+        <main className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
+          <div className="mx-auto max-w-[1024px]">
+            <div className="h-9 w-2/3 rounded bg-muted" />
+            <div className="mt-4 space-y-2">
+              <div className="h-4 w-24 rounded bg-muted" />
+              <div className="h-4 w-32 rounded bg-muted" />
+            </div>
+            <div className="mt-6 space-y-3">
+              <div className="h-4 w-full rounded bg-muted" />
+              <div className="h-4 w-5/6 rounded bg-muted" />
+              <div className="h-4 w-4/6 rounded bg-muted" />
+            </div>
           </div>
         </main>
       </div>
@@ -381,19 +395,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         </div>
         <div className="flex items-center gap-1">
           {collaborationOptions && (
-            <>
-              <Button
-                size="icon-sm"
-                variant={showMouseCursors ? 'ghost' : 'outline'}
-                onClick={toggleMouseCursors}
-                title={showMouseCursors ? 'Hide collaborator cursors' : 'Show collaborator cursors'}
-                aria-label={showMouseCursors ? 'Hide collaborator cursors' : 'Show collaborator cursors'}
-                aria-pressed={showMouseCursors}
-              >
-                <MousePointerIcon className={`size-4 ${showMouseCursors ? '' : 'text-muted-foreground'}`} />
-              </Button>
-              <CollaboratorAvatars awareness={collaborationOptions.awareness} />
-            </>
+            <CollaboratorAvatars awareness={collaborationOptions.awareness} />
           )}
           <PinButton objectId={id} />
           {canEdit && (
@@ -466,15 +468,8 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         </div>
       </header>
 
-      <main ref={mainRef} className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
-        <div ref={contentRef} className="relative mx-auto max-w-[1024px]">
-          {collaborationOptions && showMouseCursors && (
-            <RemoteMouseCursors
-              awareness={collaborationOptions.awareness}
-              containerRef={contentRef}
-              scrollRef={mainRef}
-            />
-          )}
+      <main className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
+        <div className="relative mx-auto max-w-[1024px]">
           {isTemplateMode && (
             <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
               Template mode — variable insertion enabled

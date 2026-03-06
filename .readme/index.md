@@ -170,7 +170,6 @@ Dual-storage architecture with a `DataClient` interface:
 |---------|-------------|
 | Signup Bot Protection | Add CAPTCHA (Cloudflare Turnstile) to signup form to prevent bot/garbage account creation. Supabase has native support; requires Turnstile widget on frontend + passing `captchaToken` in `signUp()` options. |
 | Self-Host Supabase | Migrate from Supabase Cloud to self-hosted Supabase on Hetzner VPS (~$8/mo vs ~$45/mo). Zero code changes — same client library, same PostgreSQL/RLS/Broadcast. Requires: Hetzner CAX21, Docker Compose, Caddy reverse proxy, Resend for SMTP, pg_dump backup cron. Covers auth, database, realtime (including Yjs collab broadcast), storage. Custom domain included via Caddy + Let's Encrypt. |
-| Collab Cursor Visibility Toggle | User setting to show/hide remote mouse cursors during collaborative editing. Toggle in space or account settings; persisted per-user. When hidden, text cursors/selections remain visible but mouse pointer overlays are suppressed. |
 
 ## Deferred
 
