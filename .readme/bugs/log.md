@@ -10,6 +10,7 @@ No open bugs.
 
 | Date | Bug | Fix |
 |------|-----|-----|
+| 2026-03-06 | Editor flashes loading screen when sidebar finishes loading | Solo→Collaborative editor switch: before space loaded, `canEdit` defaulted to false, so editor rendered Solo content immediately. When space + shares loaded, `isCollaborative` flipped, switching to CollaborativeEditor with its own `isSynced=false` overlay. Fixed by gating on space availability + shares resolution before rendering in Supabase mode, plus server-side type hydration to eliminate staggered loads |
 | 2026-03-06 | [Tour & onboarding UX issues](tour-onboarding-ux.md) | All 6 resolved: 5 fixed (skipAll on dismiss, clearLocalData on logout, skip dialog step, removed sharing tour, consent in dialogs) + 1 not-a-bug (tour race condition — `isLoading` already guards correctly) |
 | 2026-03-01 | Password reset link redirects to landing page instead of reset form | Race condition in client-side callback: `getSession()` resolved before `PASSWORD_RECOVERY` event, and middleware treated `/auth/callback` as an auth page. Replaced with server-side Route Handler that exchanges PKCE code and redirects via `next` query param |
 | 2026-02-27 | Focus lost and cursor at wrong position after inline link/mention insertion | Shared `focusEditorAtSelection` helper sets DOM selection from Slate via `DOMEditor.toDOMRange` before focusing, preventing cursor jump. `onClose` callback on objectModal store restores editor focus at correct position when modal closes |
