@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import type { Awareness } from 'y-protocols/awareness'
 import { useRemoteMouseCursors } from '../hooks/useRemoteMouseCursors'
 import { MouseCursorIcon } from './MouseCursorIcon'
@@ -14,6 +14,15 @@ interface RemoteMouseCursorsProps {
 export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
   const cursors = useRemoteMouseCursors(awareness)
   const prevPositions = useRef(new Map<number, string>())
+  const [brokenAvatars, setBrokenAvatars] = useState<Set<number>>(new Set())
+
+  const handleAvatarError = useCallback((clientId: number) => {
+    setBrokenAvatars(prev => {
+      const next = new Set(prev)
+      next.add(clientId)
+      return next
+    })
+  }, [])
   const [activityMap, setActivityMap] = useState<Map<number, number>>(new Map())
   const [now, setNow] = useState(() => Date.now())
 
@@ -75,7 +84,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
                 transition: isActive ? 'opacity 0.15s ease' : 'opacity 1s ease',
               }}
             >
-              {cursor.avatarUrl ? (
+              {cursor.avatarUrl && !brokenAvatars.has(cursor.clientId) ? (
                 <div
                   className="size-6 overflow-hidden rounded-full p-[1.5px] shadow-sm"
                   style={{ backgroundColor: cursor.color }}
@@ -85,6 +94,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
                     src={cursor.avatarUrl}
                     alt={cursor.name}
                     className="block h-full w-full rounded-full object-cover"
+                    onError={() => handleAvatarError(cursor.clientId)}
                   />
                 </div>
               ) : (
