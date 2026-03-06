@@ -1,6 +1,6 @@
 # 08 -- Realtime Collaboration
 
-This is the most technically complex feature in Swashbuckler. It enables multiple users to edit the same document simultaneously with live cursor and selection presence, mouse cursor overlays, and conflict-free merging of edits. The system is built on Yjs (a CRDT library) synced over Supabase Broadcast channels -- not a traditional WebSocket server.
+This is the most technically complex feature in Swashbuckler. It enables multiple users to edit the same document simultaneously with live cursor and selection presence and conflict-free merging of edits. The system is built on Yjs (a CRDT library) synced over Supabase Broadcast channels -- not a traditional WebSocket server.
 
 ---
 
@@ -11,7 +11,7 @@ The collaboration system has four layers:
 1. **Yjs CRDT** -- the shared document model that merges concurrent edits without conflicts
 2. **Supabase Broadcast** -- the transport layer that relays Yjs updates between peers
 3. **Plate/Slate integration** -- binds the Yjs document to the rich-text editor
-4. **Presence** -- text cursor positions (via Yjs awareness) and mouse cursors (via awareness fields)
+4. **Presence** -- text cursor positions (via Yjs awareness)
 
 All collaboration code lives under `apps/web/src/features/collaboration/`.
 
@@ -341,62 +341,6 @@ The solo editor uses `useAutoSave` from `apps/web/src/features/editor/hooks/useA
 
 ---
 
-## Mouse Presence
-
-Mouse cursor presence is separate from text cursor presence. Text cursors go through Yjs awareness `selection` field. Mouse cursors go through the `mouse` field on the same awareness object.
-
-### Sending: useMousePresence
-
-**File:** `apps/web/src/features/collaboration/hooks/useMousePresence.ts`
-
-This hook tracks the local user's mouse position within the editor container and broadcasts it:
-
-```typescript
-awareness.setLocalStateField('mouse', { x, y })
-```
-
-Key details:
-- **Throttled at 50ms** (`THROTTLE_MS`) using `performance.now()` timestamps
-- **Uses `requestAnimationFrame`** to batch position calculations with the browser paint cycle
-- **Coordinates**: `x` is a percentage of container width (0-100, one decimal place), `y` is absolute pixels from container top plus scroll offset
-- **Cleanup**: sets `mouse` to `null` on mouse leave, visibility change (tab hidden), and unmount
-- **Deduplication**: skips broadcast if position has not changed
-
-### Receiving: useRemoteMouseCursors
-
-**File:** `apps/web/src/features/collaboration/hooks/useRemoteMouseCursors.ts`
-
-This hook reads awareness states and extracts remote mouse positions:
-
-```typescript
-states.forEach((state, clientId) => {
-  if (clientId === awareness.clientID) return  // skip self
-  if (!state.user || !state.mouse) return      // skip peers without mouse data
-
-  remoteCursors.push({
-    clientId,
-    name: state.user.name,
-    color: state.user.color,
-    avatarUrl: state.data?.avatarUrl ?? state.user.avatarUrl,
-    x: state.mouse.x,
-    y: state.mouse.y,
-  })
-})
-```
-
-It uses a module-level `const EMPTY: RemoteMouseCursor[] = []` for the empty fallback -- this prevents infinite re-render loops when the array is consumed by `useEffect` dependencies (a pattern used throughout the codebase; see `CLAUDE.md`).
-
-### Rendering: RemoteMouseCursors
-
-**File:** `apps/web/src/features/collaboration/components/RemoteMouseCursors.tsx`
-
-Renders each remote cursor as a pointer-events-none overlay with:
-- An SVG cursor icon (`MouseCursorIcon`) in the user's color
-- A label (user name or avatar) that fades out after 3 seconds of inactivity (`LABEL_FADE_MS`)
-- Smooth 80ms CSS transitions on position changes
-
----
-
 ## Text Cursor Overlay
 
 **File:** `apps/web/src/features/collaboration/components/RemoteCursorOverlay.tsx`
@@ -494,15 +438,11 @@ Since `UnifiedProvider` does not expose events, the component polls the provider
 |------|---------|
 | `src/features/collaboration/lib/supabase-yjs-provider.ts` | Custom Yjs provider over Supabase Broadcast |
 | `src/features/collaboration/hooks/useCollaboration.ts` | Creates Y.Doc, Awareness, and provider for a document |
-| `src/features/collaboration/hooks/useMousePresence.ts` | Tracks and broadcasts local mouse position |
-| `src/features/collaboration/hooks/useRemoteMouseCursors.ts` | Reads remote mouse positions from awareness |
 | `src/features/collaboration/lib/yjs-utils.ts` | Base64 encoding/decoding, Y.Doc seeding utility |
 | `src/features/collaboration/lib/user-colors.ts` | Deterministic user color assignment |
 | `src/features/collaboration/components/CollaboratorAvatars.tsx` | Active user avatars in document header |
 | `src/features/collaboration/components/ConnectionStatus.tsx` | Sync state indicator |
 | `src/features/collaboration/components/RemoteCursorOverlay.tsx` | Remote text cursor and selection rendering |
-| `src/features/collaboration/components/RemoteMouseCursors.tsx` | Remote mouse cursor rendering |
-| `src/features/collaboration/components/MouseCursorIcon.tsx` | SVG cursor pointer icon |
 | `src/features/editor/components/Editor.tsx` | `CollaborativeEditor` with Yjs plugin setup and leader-elected auto-save |
 | `src/features/objects/components/ObjectEditor.tsx` | Activation conditions for collaborative mode |
 
@@ -544,6 +484,4 @@ All paths above are relative to `apps/web/`.
 
 3. In `ObjectEditor.tsx`, identify the three conditions that gate `isCollaborative`. Trace where `storageMode`, `canEdit`, and `isSharedSpace` each come from. Pay attention to the difference between owner and recipient logic for `isSharedSpace`.
 
-4. Trace the full lifecycle of mouse presence: how `useMousePresence` attaches to a container element, throttles and broadcasts position, how `useRemoteMouseCursors` reads those positions from awareness, and how `RemoteMouseCursors` renders the overlay with fade-out labels.
-
-5. Understand why `crypto.randomUUID()` is used for the sender filter instead of `userId`. Open the same document in two browser tabs logged in as the same user, and observe that both tabs collaborate with each other -- this would fail if `userId` were used as the sender ID.
+4. Understand why `crypto.randomUUID()` is used for the sender filter instead of `userId`. Open the same document in two browser tabs logged in as the same user, and observe that both tabs collaborate with each other -- this would fail if `userId` were used as the sender ID.

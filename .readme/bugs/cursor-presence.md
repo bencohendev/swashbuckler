@@ -6,7 +6,7 @@
 
 ## Description
 
-When two users are collaboratively editing a shared document, remote cursor positions (caret line + colored selection highlight + user name label) do not appear. The Figma-style mouse cursor presence works, but the text editor cursor overlay does not.
+When two users are collaboratively editing a shared document, remote cursor positions (caret line + colored selection highlight + user name label) do not appear.
 
 ## Architecture
 
