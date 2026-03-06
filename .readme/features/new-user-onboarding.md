@@ -1,6 +1,6 @@
 # New User Onboarding & User Preferences
 
-**Status:** Active
+**Status:** Done
 
 ## Summary
 
