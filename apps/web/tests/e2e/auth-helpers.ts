@@ -91,50 +91,55 @@ export const twoUserTest = base.extend<TwoUserFixtures>({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Switch to a shared space in the sidebar space switcher. */
+/** Switch to a shared space in the sidebar space switcher.
+ *  Retries the entire open→find→click flow to handle async space loading. */
 export async function switchToSpace(page: Page, spaceName: string) {
-  const MAX_RETRIES = 5
   const switcher = page.locator('[data-tour="space-switcher"]')
   await switcher.waitFor({ state: 'visible', timeout: 15000 })
 
-  const menu = page.locator('[role="menu"]')
+  await expect(async () => {
+    const menu = page.locator('[role="menu"]')
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    // Wait for any existing menu to fully close before clicking
-    await menu.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-
-    await switcher.click()
-
-    try {
-      await menu.waitFor({ state: 'visible', timeout: 3000 })
-      break // Menu opened successfully
-    } catch {
-      // Menu didn't open — press Escape to force close any stuck state, then retry
+    // Close any existing menu
+    if (await menu.isVisible().catch(() => false)) {
       await page.keyboard.press('Escape')
-      if (attempt === MAX_RETRIES - 1) {
-        throw new Error(`Failed to open space switcher after ${MAX_RETRIES} attempts`)
-      }
+      await menu.waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {})
     }
-  }
 
-  // Wait for the target space to appear and click it
-  const item = page.getByRole('menuitem').filter({ hasText: spaceName })
-  await item.waitFor({ state: 'visible', timeout: 15000 })
-  await item.click()
+    // Open the menu
+    await switcher.click()
+    await menu.waitFor({ state: 'visible', timeout: 3000 })
 
-  // Wait for the switcher to show the selected space
-  await expect(switcher).toContainText(spaceName, { timeout: 10000 })
+    // Find and click the target space
+    const item = page.getByRole('menuitem').filter({ hasText: spaceName })
+    await item.waitFor({ state: 'visible', timeout: 3000 })
+    await item.click()
+
+    // Confirm the switch took effect
+    await expect(switcher).toContainText(spaceName, { timeout: 5000 })
+  }).toPass({ timeout: 30000, intervals: [500, 1000, 2000] })
 }
 
 /** Open the share dialog from the space switcher. */
 export async function openShareDialog(page: Page) {
-  const switcher = page.locator('[data-tour="space-switcher"]')
-  await switcher.click()
+  await expect(async () => {
+    const switcher = page.locator('[data-tour="space-switcher"]')
+    const menu = page.locator('[role="menu"]')
 
-  const shareItem = page.getByRole('menuitem', { name: 'Share Space' })
-  await shareItem.click()
+    // Close any existing menu
+    if (await menu.isVisible().catch(() => false)) {
+      await page.keyboard.press('Escape')
+      await menu.waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {})
+    }
 
-  await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
+    await switcher.click()
+    await menu.waitFor({ state: 'visible', timeout: 3000 })
+
+    const shareItem = page.getByRole('menuitem', { name: 'Share Space' })
+    await shareItem.click()
+
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 3000 })
+  }).toPass({ timeout: 15000 })
 }
 
 /** Navigate to an object by its title from the sidebar. */
@@ -150,8 +155,8 @@ export async function waitForCollabReady(page: Page) {
   await expect(page.locator('[contenteditable="true"]')).toBeVisible({ timeout: 15000 })
   // Wait for the "Synced" status indicator — confirms Yjs provider is connected via Supabase Broadcast
   await expect(page.getByText('Synced')).toBeVisible({ timeout: 15000 })
-  // Additional delay for the broadcast channel to fully establish bidirectional communication
-  await page.waitForTimeout(3000)
+  // Brief pause for broadcast channel to fully establish bidirectional communication
+  await page.waitForTimeout(500)
 }
 
 export { expect }
