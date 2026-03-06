@@ -97,15 +97,20 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const { templates, saveObjectAsTemplate, getTemplateVariables } = useTemplates()
   const { canEdit, isOwner } = useSpacePermission()
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
-  const { shares } = useSpaceShares(space?.id ?? null)
+  const { shares, isLoading: isSharesLoading } = useSpaceShares(space?.id ?? null)
   const { isDirty: editorDirty, isSaving: editorSaving, lastSaved: editorLastSaved } = useEditorStore()
 
-  // Unified loading: wait for both the object and its type before rendering content.
-  // This prevents staggered content jumps (title → properties → content).
+  // Unified loading: wait for the object, its type, AND the collaborative-mode
+  // decision before rendering content. For Supabase owners with edit rights, we
+  // must know whether shares exist before choosing Solo vs Collaborative editor —
+  // otherwise the editor renders Solo first, then switches to Collaborative when
+  // shares load, causing a visible flash (the Collaborative editor starts with its
+  // own isSynced=false loading overlay).
   // Once content has been shown, never regress to the skeleton — context changes
   // (e.g. space loading, DataProvider cascade) can briefly re-trigger query loading
   // states, causing a visible flash.
-  const isQueryLoading = isObjectLoading || (!!object?.type_id && isTypeLoading)
+  const sharesResolved = storageMode !== 'supabase' || !canEdit || !isOwner || !isSharesLoading
+  const isQueryLoading = isObjectLoading || (!!object?.type_id && isTypeLoading) || !sharesResolved
   const hasRenderedContentRef = useRef(false)
   if (!isQueryLoading && object) {
     hasRenderedContentRef.current = true
