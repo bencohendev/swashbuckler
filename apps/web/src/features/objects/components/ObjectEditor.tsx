@@ -109,8 +109,9 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   // Once content has been shown, never regress to the skeleton — context changes
   // (e.g. space loading, DataProvider cascade) can briefly re-trigger query loading
   // states, causing a visible flash.
+  const spaceResolved = storageMode !== 'supabase' || !!space
   const sharesResolved = storageMode !== 'supabase' || !canEdit || !isOwner || !isSharesLoading
-  const isQueryLoading = isObjectLoading || (!!object?.type_id && isTypeLoading) || !sharesResolved
+  const isQueryLoading = isObjectLoading || (!!object?.type_id && isTypeLoading) || !spaceResolved || !sharesResolved
   const hasRenderedContentRef = useRef(false)
   if (!isQueryLoading && object) {
     hasRenderedContentRef.current = true
