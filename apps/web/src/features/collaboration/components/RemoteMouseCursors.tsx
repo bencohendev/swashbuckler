@@ -52,7 +52,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
   if (!hasCursors) return null
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-50">
       {cursors.map((cursor) => {
         const lastMoved = activityMap.get(cursor.clientId) ?? now
         const isActive = now - lastMoved < LABEL_FADE_MS
