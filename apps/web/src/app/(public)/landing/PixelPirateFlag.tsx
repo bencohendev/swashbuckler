@@ -101,17 +101,10 @@ function FlagGrid({ includePole }: { includePole: boolean }) {
 
 export function PixelPirateFlag() {
   return (
-    <>
-      {/* Mobile: no pole, centered */}
-      <div className="flex justify-center sm:hidden" aria-hidden="true">
-        <div className="flex items-start">
-          <FlagGrid includePole={false} />
-        </div>
+    <div className="flex justify-center" aria-hidden="true">
+      <div className="flex items-start">
+        <FlagGrid includePole={false} />
       </div>
-      {/* Desktop: with pole, left-aligned */}
-      <div className="hidden sm:flex items-start" aria-hidden="true">
-        <FlagGrid includePole={true} />
-      </div>
-    </>
+    </div>
   )
 }

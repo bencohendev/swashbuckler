@@ -2,6 +2,7 @@
   "root": true,
   "pages": [
     "index",
+    "ttrpg-guide",
     "---Core Concepts---",
     "spaces",
     "entries-and-types",
@@ -27,6 +28,8 @@
     "---Customization---",
     "themes",
     "export",
-    "settings"
+    "settings",
+    "---",
+    "changelog"
   ]
 }

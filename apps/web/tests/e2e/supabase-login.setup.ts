@@ -7,7 +7,6 @@ import {
   USER_B_EMAIL,
   USER_B_PASSWORD,
 } from './global-setup'
-import { ANALYTICS_CONSENT_KEY } from './helpers'
 
 const AUTH_DIR = path.join(__dirname, '..', '.auth')
 
@@ -21,21 +20,24 @@ for (const { email, password, filename } of users) {
     const testDataPath = path.join(AUTH_DIR, 'test-data.json')
     setup.skip(!fs.existsSync(testDataPath), 'Supabase not running — skipping auth setup')
 
-    // Dismiss analytics consent banner and tutorial before login
+    // Dismiss onboarding tours before login
     await page.goto('/login', { waitUntil: 'commit' })
-    await page.evaluate((key) => {
-      localStorage.setItem(key, 'accepted')
-      localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
-    }, ANALYTICS_CONSENT_KEY)
+    await page.evaluate(() => {
+      localStorage.setItem('swashbuckler:toursSkippedAll', 'true')
+    })
 
     await page.goto('/login')
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible({ timeout: 15000 })
 
-    await page.getByLabel('Email').fill(email)
-    await page.locator('#password').fill(password)
-    await page.getByRole('button', { name: 'Sign in' }).click()
-
-    await page.waitForURL('**/dashboard', { timeout: 30000 })
+    // Retry the full fill+click — the button is SSR-visible before React
+    // hydration attaches the onSubmit handler. Early clicks submit a plain
+    // HTML form (page reload), clearing React state and the input values.
+    await expect(async () => {
+      await page.getByLabel('Email').fill(email)
+      await page.locator('#password').fill(password)
+      await page.getByRole('button', { name: 'Sign in' }).click()
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 5000 })
+    }).toPass({ timeout: 30000 })
 
     const storagePath = path.join(AUTH_DIR, filename)
     await context.storageState({ path: storagePath })

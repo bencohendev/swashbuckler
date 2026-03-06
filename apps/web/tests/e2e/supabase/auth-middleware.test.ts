@@ -4,17 +4,17 @@ import { test as base, expect } from '@playwright/test'
 test.describe('Auth Middleware — Authenticated', () => {
   test('redirects / to /dashboard for authenticated user', async ({ authPage }) => {
     await authPage.goto('/')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
   })
 
   test('redirects /login to /dashboard for authenticated user', async ({ authPage }) => {
     await authPage.goto('/login')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
   })
 
   test('redirects /signup to /dashboard for authenticated user', async ({ authPage }) => {
     await authPage.goto('/signup')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
   })
 })
 

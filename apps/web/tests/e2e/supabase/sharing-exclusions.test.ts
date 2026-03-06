@@ -3,7 +3,7 @@ import { test, expect, openShareDialog } from '../auth-helpers'
 test.describe('Sharing — Exclusions', () => {
   test('can expand exclusions panel for a share', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 
@@ -14,8 +14,6 @@ test.describe('Sharing — Exclusions', () => {
 
     // The ExclusionManager should be visible
     // It shows options for type-wide, object-level, and field-level exclusions
-    await authPage.waitForTimeout(1000)
-
     // The exclusions panel should have expanded (chevron rotated)
     // Just verify the button was clickable and content area appeared
     expect(true).toBe(true)
@@ -33,7 +31,7 @@ test.describe('Sharing — Exclusions', () => {
 
   test('share dialog links to sharing settings', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 
@@ -45,7 +43,7 @@ test.describe('Sharing — Exclusions', () => {
 
   test('share dialog shows correct share count', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 

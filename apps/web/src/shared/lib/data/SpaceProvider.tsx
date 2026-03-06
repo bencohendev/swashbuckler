@@ -1,16 +1,20 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { toast } from '@/shared/hooks/useToast'
 import type { Space, SpacesClient, SharingClient, SpaceSharePermission, DataClient } from './types'
 import { createSupabaseDataClient } from './supabase'
 import { createLocalDataClient, ensureLocalDefaultSpace, ensureLocalDefaultTypes } from './local'
+import { createSupabasePreferencesClient } from './preferences'
 import { createClient } from '@/shared/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { emit, subscribe } from './events'
 import { STARTER_KITS } from '@/features/starter-kits/data/kits'
 import { importKit } from '@/features/starter-kits/lib/importKit'
 import { createWelcomePage } from '@/features/onboarding/lib/welcomePage'
+import { seedExampleCampaign } from '@/features/onboarding/lib/seedExampleCampaign'
+import { NewUserDialog } from '@/features/onboarding/components/NewUserDialog'
 
 const STORAGE_KEY = 'swashbuckler:currentSpaceId'
 
@@ -21,6 +25,8 @@ interface SpaceContextValue {
   leaveSpace: (spaceId: string) => Promise<void>
   isLoading: boolean
   sharedPermission: SpaceSharePermission | null
+  /** True while spaces are loading or the new-user onboarding dialog is open */
+  isOnboarding: boolean
 }
 
 interface CreateSpaceInput {
@@ -50,12 +56,16 @@ interface SpaceProviderProps {
   isAuthLoading: boolean
 }
 
+const PUBLIC_PATHS = ['/landing', '/login', '/signup', '/forgot-password', '/reset-password', '/privacy', '/terms']
+
 export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderProps) {
+  const pathname = usePathname()
   const [ownedSpaces, setOwnedSpaces] = useState<Space[]>([])
   const [sharedSpaces, setSharedSpaces] = useState<Space[]>([])
   const [shareInfoMap, setShareInfoMap] = useState<Map<string, { shareId: string; permission: SpaceSharePermission }>>(new Map())
   const [currentSpaceId, setCurrentSpaceId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showNewUserDialog, setShowNewUserDialog] = useState(false)
 
   const loadSeqRef = useRef(0)
 
@@ -85,36 +95,50 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
     let loadedSpaces = result.data
 
+    // Check for example campaign cookie (guest mode only)
+    const wantsExample = !user && typeof document !== 'undefined' &&
+      document.cookie.split('; ').some(c => c === 'swashbuckler-guest-example=1')
+
     // If no spaces exist, create a default one and seed a welcome page
     if (loadedSpaces.length === 0) {
-      let newSpaceId: string | null = null
       if (user) {
         const createResult = await spacesClient.create({ name: 'My Space' })
         if (createResult.data) {
           loadedSpaces = [createResult.data]
-          newSpaceId = createResult.data.id
         }
       } else {
-        const defaultSpace = await ensureLocalDefaultSpace()
-        await ensureLocalDefaultTypes()
-        emit('objectTypes')
+        const defaultSpace = await ensureLocalDefaultSpace(
+          wantsExample ? { name: 'Crimson Tide', icon: '🏴‍☠️' } : undefined,
+        )
+        // Only seed default types for blank mode — the example campaign
+        // creates its own types, and ensureLocalDefaultTypes would create
+        // a duplicate 'page' slug that blocks the campaign seed.
+        if (!wantsExample) {
+          await ensureLocalDefaultTypes()
+          emit('objectTypes')
+        }
         loadedSpaces = [defaultSpace]
-        newSpaceId = defaultSpace.id
       }
 
-      // Seed a "Getting Started" welcome page in the new space
-      if (newSpaceId) {
+      // Seed welcome page for non-example new spaces
+      const newSpaceId = loadedSpaces[0]?.id
+      if (newSpaceId && !wantsExample) {
         try {
           const spaceClient = user
             ? createSupabaseDataClient(supabase, newSpaceId, user.id)
             : createLocalDataClient(newSpaceId)
-          const welcomePageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
-          emit('objects')
 
-          // Navigate to the welcome page so the user lands on content, not an empty dashboard
-          if (welcomePageId && typeof window !== 'undefined') {
-            window.location.replace(`/objects/${welcomePageId}`)
+          const landingPageId = await createWelcomePage(spaceClient.objects, spaceClient.objectTypes)
+
+          if (landingPageId && typeof window !== 'undefined') {
+            const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
+              .some(p => window.location.pathname.startsWith(p))
+            if (isProtectedPage) {
+              window.location.replace(`/objects/${landingPageId}`)
+              return // Stay in loading state until redirect completes
+            }
           }
+          emit('objects')
         } catch (err) {
           console.error('Failed to seed welcome page:', err)
         }
@@ -125,6 +149,67 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     if (!user) {
       await ensureLocalDefaultTypes()
       emit('objectTypes')
+    }
+
+    // Seed the example campaign — runs independently of space creation since
+    // the space may have been created on a previous page load (e.g. /landing).
+    if (wantsExample) {
+      const spaceId = loadedSpaces[0]?.id
+      if (spaceId) {
+        try {
+          const spaceClient = createLocalDataClient(spaceId)
+          const landingPageId = await seedExampleCampaign(spaceClient)
+
+          // Clear the cookie so we don't re-seed on next load
+          document.cookie = 'swashbuckler-guest-example=; path=/; max-age=0'
+
+          if (landingPageId && typeof window !== 'undefined') {
+            const isProtectedPage = ['/dashboard', '/settings', '/objects', '/trash', '/archive', '/graph', '/types', '/tags', '/templates']
+              .some(p => window.location.pathname.startsWith(p))
+            if (isProtectedPage) {
+              window.location.replace(`/objects/${landingPageId}`)
+              return // Stay in loading state until redirect completes
+            }
+          }
+          emit('objects')
+          emit('objectTypes')
+        } catch (err) {
+          console.error('Failed to seed example campaign:', err)
+        }
+      }
+    }
+
+    // Check if authenticated user needs onboarding
+    if (user && loadedSpaces.length > 0) {
+      try {
+        const prefsClient = createSupabasePreferencesClient(supabase, user.id)
+        const prefsResult = await prefsClient.get()
+        // No preferences row or null onboarding_completed_at means new user
+        if (!prefsResult.error && (!prefsResult.data || !prefsResult.data.onboarding_completed_at)) {
+          setShowNewUserDialog(true)
+        } else {
+          // Returning user whose onboarding is done but intro tour hasn't run yet:
+          // redirect to the welcome page so the intro tour targets (editor, etc.) are visible.
+          const introCompleted = typeof window !== 'undefined' &&
+            (localStorage.getItem('swashbuckler:tour:intro') === 'true' ||
+             localStorage.getItem('swashbuckler:toursSkippedAll') === 'true')
+          if (!introCompleted && typeof window !== 'undefined' && !window.location.pathname.startsWith('/objects/')) {
+            try {
+              const firstSpace = loadedSpaces[0]
+              const spaceClient = createSupabaseDataClient(supabase, firstSpace.id, user.id)
+              const objectsResult = await spaceClient.objects.list()
+              if (!objectsResult.error && objectsResult.data.length > 0) {
+                window.location.replace(`/objects/${objectsResult.data[0].id}`)
+                return
+              }
+            } catch {
+              // Fall through
+            }
+          }
+        }
+      } catch {
+        // Preferences table may not exist yet — skip silently
+      }
     }
 
     // Classify spaces by owner_id (not by cross-referencing getSharedSpaces)
@@ -181,8 +266,11 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
 
   useEffect(() => {
     if (isAuthLoading) return
+    // Don't create spaces on public pages — wait until user enters the app.
+    // Authenticated users always load; guests only load on protected pages.
+    if (!user && PUBLIC_PATHS.some(p => pathname.startsWith(p))) return
     loadSpaces() // eslint-disable-line react-hooks/set-state-in-effect -- async data fetch on mount
-  }, [isAuthLoading, loadSpaces])
+  }, [isAuthLoading, loadSpaces, pathname, user])
 
   // Listen for spaces and spaceShares events to refresh
   useEffect(() => {
@@ -237,7 +325,60 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     leaveSpace,
     isLoading,
     sharedPermission,
-  }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission])
+    isOnboarding: isLoading || showNewUserDialog,
+  }), [currentSpace, spaces, switchSpace, leaveSpace, isLoading, sharedPermission, showNewUserDialog])
+
+  const handleNewUserChoice = useCallback(async (withExample: boolean) => {
+    if (!user) return
+
+    const prefsClient = createSupabasePreferencesClient(supabase, user.id)
+
+    if (withExample) {
+      try {
+        // Rename the existing default space for the example campaign
+        const targetSpace = ownedSpaces[0]
+        if (targetSpace) {
+          await spacesClient.update(targetSpace.id, { name: 'Crimson Tide', icon: '🏴\u200D☠️' })
+
+          const spaceClient = createSupabaseDataClient(supabase, targetSpace.id, user.id)
+          const landingPageId = await seedExampleCampaign(spaceClient)
+
+          emit('spaces')
+          emit('objects')
+          emit('objectTypes')
+
+          // Navigate to the campaign overview
+          if (landingPageId && typeof window !== 'undefined') {
+            window.location.replace(`/objects/${landingPageId}`)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to seed example campaign:', err)
+        toast({ title: 'Setup', description: 'Failed to create example world. You can try again from settings.', variant: 'destructive' })
+      }
+    }
+
+    // Mark onboarding as completed
+    await prefsClient.upsert({ onboarding_completed_at: new Date().toISOString() })
+    setShowNewUserDialog(false)
+
+    // For "Start blank" users, redirect to the welcome page (created by DB trigger)
+    // so the intro tour can highlight the editor.
+    if (!withExample && typeof window !== 'undefined' && !window.location.pathname.startsWith('/objects/')) {
+      try {
+        const firstSpace = ownedSpaces[0]
+        if (firstSpace) {
+          const spaceClient = createSupabaseDataClient(supabase, firstSpace.id, user.id)
+          const objectsResult = await spaceClient.objects.list()
+          if (!objectsResult.error && objectsResult.data.length > 0) {
+            window.location.replace(`/objects/${objectsResult.data[0].id}`)
+          }
+        }
+      } catch {
+        // Fall through — intro tour will auto-skip editor step if needed
+      }
+    }
+  }, [user, supabase, spacesClient, ownedSpaces])
 
   // Refs for values read inside CRUD callbacks — keeps callbacks stable
   const ownedSpacesRef = useRef(ownedSpaces)
@@ -410,6 +551,7 @@ export function SpaceProvider({ children, user, isAuthLoading }: SpaceProviderPr
     <SpaceContext.Provider value={spaceContextValue}>
       <SpacesContext.Provider value={spacesContextValue}>
         {children}
+        <NewUserDialog open={showNewUserDialog} onChoice={handleNewUserChoice} />
       </SpacesContext.Provider>
     </SpaceContext.Provider>
   )

@@ -1,8 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
 
-// Mirrors ANALYTICS_CONSENT_KEY from AnalyticsBanner.tsx — e2e tests can't import app code
-export const ANALYTICS_CONSENT_KEY = 'swashbuckler:analyticsConsent'
-
 /**
  * Custom fixture that sets up a guest-mode page with the tutorial dismissed.
  */
@@ -17,14 +14,18 @@ export const test = base.extend<{ guestPage: Page }>({
         path: '/',
       },
     ])
-    // Dismiss the onboarding tutorial and analytics consent banner via localStorage before navigating
+    // Dismiss all onboarding tours via localStorage before navigating
     await page.goto('/dashboard', { waitUntil: 'commit' })
-    await page.evaluate((key) => {
-      localStorage.setItem('swashbuckler:tutorialCompleted', 'true')
-      localStorage.setItem(key, 'accepted')
-    }, ANALYTICS_CONSENT_KEY)
-    // Navigate again so tutorial state is read on mount
+    await page.evaluate(() => {
+      localStorage.setItem('swashbuckler:toursSkippedAll', 'true')
+    })
+    // Navigate again so tour state is read on mount.
+    // On first-ever guest load, SpaceProvider creates a default space and
+    // welcome page then redirects to /objects/<id> via window.location.replace.
+    // Wait for that redirect to finish so tests start on a stable page.
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
+    await page.waitForURL(/\/(dashboard|objects\/)/, { timeout: 30000 })
+    await page.waitForLoadState('networkidle')
     // Wait for the sidebar to confirm guest mode loaded
     await expect(page.locator('aside, nav').first()).toBeVisible({
       timeout: 30000,
@@ -42,24 +43,68 @@ export { expect }
 
 /**
  * Enters guest mode from the landing page by clicking "Try as Guest".
- * Dismisses the consent banner first and retries the click to handle
- * React hydration timing.
+ * Retries the click to handle React hydration timing.
  *
  * TODO: The retry is needed because the button is visible before React hydration
  * attaches the click handler. This is a UX gap — real users also experience an
  * unresponsive button during hydration. Track as a product bug.
  */
-export async function enterGuestMode(page: Page) {
+export async function enterGuestMode(page: Page, options?: { example?: boolean }) {
   await page.goto('/', { waitUntil: 'commit' })
-  await page.evaluate((key) => {
-    localStorage.setItem(key, 'accepted')
-  }, ANALYTICS_CONSENT_KEY)
+  await page.evaluate(() => {
+    localStorage.setItem('swashbuckler:toursSkippedAll', 'true')
+  })
   await page.goto('/', { waitUntil: 'networkidle' })
   await expect(page).toHaveURL(/\/landing/)
   await expect(async () => {
     await page.getByRole('button', { name: /try as guest/i }).click()
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 3000 })
+    // A dialog appears with two choices
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 3000 })
   }).toPass({ timeout: 15000 })
+
+  // Pick "Start blank" or "Explore an example campaign"
+  if (options?.example) {
+    await page.getByText('Explore an example campaign').click()
+  } else {
+    await page.getByText('Start blank').click()
+  }
+
+  // After clicking, the app navigates to /dashboard. On first visit,
+  // SpaceProvider seeds data in IndexedDB then calls window.location.replace
+  // to redirect to /objects/<id>. Wait for that final redirect.
+  await page.waitForURL(/\/objects\//, { timeout: 30000 })
+  await page.waitForLoadState('networkidle')
+  // Wait for the sidebar to finish loading (skeletons → real content).
+  await expect(page.locator('aside, nav').first()).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText(/pages/i).first()).toBeVisible({ timeout: 15000 })
+}
+
+// ---------------------------------------------------------------------------
+// Editor focus helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Waits for the Slate editor to be visible and accepting keyboard input.
+ * Slate editors sometimes don't process input immediately after click() due to
+ * React hydration or internal initialization timing. This helper retries until
+ * typing actually produces content in the editor.
+ */
+export async function focusEditor(page: Page): Promise<void> {
+  const editor = page.locator('[data-slate-editor="true"]')
+  await editor.waitFor({ state: 'visible', timeout: 10000 })
+
+  await expect(async () => {
+    await editor.click()
+    await page.waitForTimeout(100)
+    // Type a probe character and verify it appears
+    await page.keyboard.insertText('x')
+    const text = await editor.textContent()
+    if (!text?.includes('x')) throw new Error('Editor not accepting input')
+  }).toPass({ timeout: 10000 })
+
+  // Clean up the probe character
+  await page.keyboard.press('Backspace')
+  await page.waitForTimeout(50)
 }
 
 // ---------------------------------------------------------------------------
@@ -74,16 +119,18 @@ function titleInput(page: Page) {
 
 /**
  * Creates a new entry via the type's "..." menu > "Create" in the sidebar.
- * Waits for navigation to the new object page.
+ * Retries the menu interaction to handle sidebar loading timing.
  */
 export async function createEntry(page: Page): Promise<string> {
-  // Open the type options dropdown (the "..." button next to "Pages")
-  const optionsButton = page.getByRole('button', { name: /options/i }).first()
-  await optionsButton.click()
+  await expect(async () => {
+    // Open the type options dropdown (the "..." button next to "Pages")
+    const optionsButton = page.getByRole('button', { name: /options/i }).first()
+    await optionsButton.click()
 
-  // Click "Create" in the dropdown
-  const createItem = page.getByRole('menuitem', { name: /^create$/i })
-  await createItem.click()
+    // Click "Create" in the dropdown
+    const createItem = page.getByRole('menuitem', { name: /^create$/i })
+    await createItem.click({ timeout: 3000 })
+  }).toPass({ timeout: 15000 })
 
   await page.waitForURL(/\/objects\//, { timeout: 10000 })
   const url = page.url()
@@ -93,6 +140,7 @@ export async function createEntry(page: Page): Promise<string> {
 
 /**
  * Creates a new entry and fills in the title.
+ * Waits for the title to persist by checking it appears in the sidebar.
  */
 export async function createEntryWithTitle(
   page: Page,
@@ -101,9 +149,13 @@ export async function createEntryWithTitle(
   const id = await createEntry(page)
   const input = titleInput(page)
   await input.waitFor({ state: 'visible', timeout: 10000 })
+  // Click to focus, then clear + type for reliable input with controlled React components
+  await input.click()
+  await page.waitForTimeout(200)
   await input.fill(title)
-  // Brief wait for debounced save
-  await page.waitForTimeout(500)
+  // Wait for the debounced save (500ms) to persist and sidebar to update
+  const sidebar = page.locator('aside, nav').first()
+  await expect(sidebar.getByText(title, { exact: true }).first()).toBeVisible({ timeout: 10000 })
   return id
 }
 
@@ -138,29 +190,40 @@ export async function createType(
 // Navigation helpers
 // ---------------------------------------------------------------------------
 
+/** Navigate with retry — handles ERR_ABORTED from in-flight requests during redirects. */
+async function safeGoto(page: Page, path: string): Promise<void> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded' })
+      return
+    } catch (err) {
+      if (attempt === 0 && String(err).includes('ERR_ABORTED')) {
+        await page.waitForTimeout(500)
+        continue
+      }
+      throw err
+    }
+  }
+}
+
 export async function navigateToDashboard(page: Page): Promise<void> {
-  await page.goto('/dashboard')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/dashboard')
 }
 
 export async function navigateToGraph(page: Page): Promise<void> {
-  await page.goto('/graph')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/graph')
 }
 
 export async function navigateToTrash(page: Page): Promise<void> {
-  await page.goto('/trash')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/trash')
 }
 
 export async function navigateToArchive(page: Page): Promise<void> {
-  await page.goto('/archive')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/archive')
 }
 
 export async function navigateToSettings(page: Page): Promise<void> {
-  await page.goto('/settings')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/settings')
 }
 
 export async function openSearch(page: Page): Promise<void> {

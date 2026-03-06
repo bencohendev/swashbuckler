@@ -1,8 +1,13 @@
 import { test as base, expect } from '@playwright/test'
 import { test } from '../auth-helpers'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+
+const hasSupabase = fs.existsSync(path.join(__dirname, '..', '..', '.auth', 'test-data.json'))
 
 base.describe('Auth — Password Reset (unauthenticated)', () => {
   base('forgot-password form submits and shows confirmation', async ({ page }) => {
+    base.skip(!hasSupabase, 'Supabase not running — skipping')
     await page.goto('/forgot-password')
 
     await expect(page.getByText('Reset your password')).toBeVisible()

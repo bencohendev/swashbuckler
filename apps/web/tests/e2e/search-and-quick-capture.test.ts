@@ -92,7 +92,7 @@ test.describe('Search & Quick Capture — regression tests', () => {
     }
 
     // Should show at least the default Page type
-    await expect(dialog.getByText(/page/i).first()).toBeVisible({ timeout: 5000 })
+    await expect(dialog.locator('button').filter({ hasText: /^page$/i }).first()).toBeVisible({ timeout: 5000 })
   })
 
   test('quick capture creates entry', async ({ guestPage: page }) => {
@@ -110,13 +110,15 @@ test.describe('Search & Quick Capture — regression tests', () => {
 
     await expect(dialog).toBeVisible({ timeout: 5000 })
 
-    // Click on the Page type to create an entry
-    const pageType = dialog.getByText(/page/i).first()
+    // Click the Page type button (not the header which also contains "Page")
+    const pageType = dialog.locator('button').filter({ hasText: /^page$/i }).first()
     await pageType.click()
 
     // Entry is created — opens as modal overlay on dashboard
-    // Verify the entry editor/title appeared
-    await expect(page.getByText('Start writing...')).toBeVisible({ timeout: 10000 })
+    // Verify the modal editor appeared (title input or editor placeholder)
+    await expect(
+      page.locator('input[placeholder="Untitled"], input.text-3xl, [data-slate-editor="true"]').first()
+    ).toBeVisible({ timeout: 10000 })
   })
 
   test('keyboard navigation in search results', async ({ guestPage: page }) => {

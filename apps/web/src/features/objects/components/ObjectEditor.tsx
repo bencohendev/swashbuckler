@@ -478,12 +478,14 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
           />
 
           {objectType && objectType.fields.length > 0 && (
-            <PropertyFields
-              fields={objectType ? filterFields(objectType.id, objectType.fields) : []}
-              values={object.properties}
-              onChange={handlePropertyChange}
-              readOnly={!canEdit}
-            />
+            <div>
+              <PropertyFields
+                fields={objectType ? filterFields(objectType.id, objectType.fields) : []}
+                values={object.properties}
+                onChange={handlePropertyChange}
+                readOnly={!canEdit}
+              />
+            </div>
           )}
 
           <TagPicker objectId={id} readOnly={!canEdit} />

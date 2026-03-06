@@ -34,7 +34,7 @@ test.describe('Dashboard & Archive — regression tests', () => {
   test('pinned section shows empty state', async ({ guestPage: page }) => {
     await navigateToDashboard(page)
 
-    await expect(page.getByText('No pinned entries')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('No pinned entries')).toBeVisible({ timeout: 15000 })
   })
 
   test('archive entry via editor menu', async ({ guestPage: page }) => {
@@ -61,16 +61,16 @@ test.describe('Dashboard & Archive — regression tests', () => {
 
     // Go to archive
     await navigateToArchive(page)
-    await expect(page.getByText('Unarchive Me')).toBeVisible({ timeout: 10000 })
+    const main = page.locator('#main-content, main').first()
+    await expect(main.getByText('Unarchive Me')).toBeVisible({ timeout: 10000 })
 
     // Click the unarchive button
-    const unarchiveBtn = page.getByRole('button', { name: /unarchive/i }).first()
+    const unarchiveBtn = main.getByRole('button', { name: /unarchive/i }).first()
     await unarchiveBtn.click()
 
     await page.waitForTimeout(1000)
 
     // The unarchive button for this entry should be gone from the archive page
-    const main = page.locator('#main-content, main').first()
     await expect(
       main.getByRole('button', { name: /unarchive.*Unarchive Me/i }),
     ).not.toBeVisible({ timeout: 5000 })

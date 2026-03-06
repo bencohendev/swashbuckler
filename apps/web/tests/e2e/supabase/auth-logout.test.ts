@@ -27,7 +27,7 @@ async function loginFresh(browser: import('@playwright/test').Browser) {
   await page.getByLabel('Email').fill(USER_A_EMAIL)
   await page.locator('#password').fill(USER_A_PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await page.waitForURL('**/dashboard', { timeout: 30000 })
+  await page.waitForURL(/\/dashboard/, { timeout: 30000 })
 
   // After client-side login, the auth cookie may not be ready for the first
   // server render (router.push fires before the cookie setter completes).

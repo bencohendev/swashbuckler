@@ -37,6 +37,7 @@ export function useTags(): UseTagsReturn {
       if (result.error) throw new Error(result.error.message)
       return result.data
     },
+    enabled: !!spaceId,
     placeholderData: keepPreviousData,
   })
 

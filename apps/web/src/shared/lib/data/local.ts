@@ -2264,7 +2264,9 @@ export async function ensureLocalDefaultTypes(): Promise<void> {
   await database.objectTypes.bulkAdd(DEFAULT_TYPES)
 }
 
-export async function ensureLocalDefaultSpace(): Promise<Space> {
+export async function ensureLocalDefaultSpace(
+  overrides?: { name?: string; icon?: string },
+): Promise<Space> {
   const database = getDB()
   const existing = await database.spaces.get(LOCAL_DEFAULT_SPACE_ID)
   if (existing) return existing
@@ -2272,8 +2274,8 @@ export async function ensureLocalDefaultSpace(): Promise<Space> {
   const now = new Date().toISOString()
   const space: Space = {
     id: LOCAL_DEFAULT_SPACE_ID,
-    name: 'My Space',
-    icon: '📁',
+    name: overrides?.name ?? 'My Space',
+    icon: overrides?.icon ?? '📁',
     owner_id: LOCAL_OWNER_ID,
     is_archived: false,
     archived_at: null,

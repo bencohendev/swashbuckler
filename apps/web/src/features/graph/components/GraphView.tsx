@@ -65,7 +65,7 @@ export function GraphView() {
     : ''
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+    <div ref={containerRef} data-tour="graph-canvas" className="relative w-full h-full overflow-hidden">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>

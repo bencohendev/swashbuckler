@@ -12,11 +12,15 @@ if (fs.existsSync(envLocalPath)) {
 const PW_PORT = Number(process.env.PLAYWRIGHT_PORT ?? 3002)
 const BASE_URL = `http://localhost:${PW_PORT}`
 
+// In CI, the build is done as a separate job and downloaded as an artifact.
+// Set NEXT_BUILD_SKIP=1 to skip the build step and only run `next start`.
+const skipBuild = process.env.NEXT_BUILD_SKIP === '1'
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? '50%' : undefined,
   reporter: process.env.CI ? [['github'], ['html']] : 'html',
   globalSetup: './tests/e2e/global-setup.ts',
@@ -53,7 +57,7 @@ export default defineConfig({
       testMatch: /supabase\/.+\.test\.ts$/,
       testIgnore: /auth-logout\.test\.ts$/,
       dependencies: ['supabase-setup'],
-      fullyParallel: false,
+      fullyParallel: true,
       timeout: 60_000,
     },
     // Logout tests run LAST — signOut({ scope: 'global' }) revokes ALL sessions for the user,
@@ -68,10 +72,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npx next build && npx next start --port ${PW_PORT}`,
+    command: skipBuild
+      ? `npx next start --port ${PW_PORT}`
+      : `npx next build && npx next start --port ${PW_PORT}`,
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
+    timeout: skipBuild ? 30_000 : 180_000,
     env: {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://localhost:54321',
       NEXT_PUBLIC_SUPABASE_ANON_KEY:

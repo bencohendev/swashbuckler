@@ -37,8 +37,41 @@ const shareTechMono = Share_Tech_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Swashbuckler",
-  description: "Your personal knowledge base",
+  title: {
+    default: "Swashbuckler — The knowledge base built for tabletops",
+    template: "%s | Swashbuckler",
+  },
+  description:
+    "Organize your TTRPG campaign with custom types, a rich block editor, knowledge graph, real-time collaboration, and granular sharing. No AI — just your words.",
+  keywords: [
+    "TTRPG",
+    "tabletop RPG",
+    "campaign manager",
+    "knowledge base",
+    "worldbuilding",
+    "D&D",
+    "DnD",
+    "game master",
+    "dungeon master",
+    "session notes",
+    "campaign notes",
+    "wiki",
+  ],
+  metadataBase: new URL("https://swashbuckler.quest"),
+  openGraph: {
+    type: "website",
+    siteName: "Swashbuckler",
+    title: "Swashbuckler — The knowledge base built for tabletops",
+    description:
+      "Organize your TTRPG campaign with custom types, a rich block editor, knowledge graph, real-time collaboration, and granular sharing.",
+    url: "https://swashbuckler.quest",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Swashbuckler — The knowledge base built for tabletops",
+    description:
+      "Organize your TTRPG campaign with custom types, a rich block editor, knowledge graph, real-time collaboration, and granular sharing.",
+  },
 }
 
 export default async function RootLayout({

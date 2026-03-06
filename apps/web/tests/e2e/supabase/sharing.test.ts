@@ -2,9 +2,11 @@ import * as path from 'node:path'
 import { test, twoUserTest, expect, openShareDialog, switchToSpace } from '../auth-helpers'
 
 test.describe('Sharing — Owner actions', () => {
+  // Tests modify shared state (permissions) — run serially to avoid conflicts
+  test.describe.configure({ mode: 'serial' })
   test('opens share dialog from space switcher', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 
@@ -14,7 +16,7 @@ test.describe('Sharing — Owner actions', () => {
 
   test('invites a user by email with view permission', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 
@@ -25,7 +27,7 @@ test.describe('Sharing — Owner actions', () => {
 
   test('updates share permission from edit to view', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await openShareDialog(authPage)
 
@@ -35,7 +37,7 @@ test.describe('Sharing — Owner actions', () => {
 
     // Current permission is 'edit' (set in global-setup), change to 'view'
     await permissionSelect.selectOption('view')
-    await authPage.waitForTimeout(1000)
+    await authPage.waitForTimeout(500)
 
     // Verify it stuck by reloading
     await authPage.reload()
@@ -47,12 +49,12 @@ test.describe('Sharing — Owner actions', () => {
 
     // Restore to edit for other tests
     await updatedSelect.selectOption('edit')
-    await authPage.waitForTimeout(1000)
+    await authPage.waitForTimeout(500)
   })
 
   test('revokes share access', async ({ authPage }) => {
     await authPage.goto('/dashboard')
-    await authPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await authPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // First share with a new email so we don't break other tests
     await openShareDialog(authPage)
@@ -63,7 +65,7 @@ test.describe('Sharing — Owner actions', () => {
     await shareButton.click()
 
     // Wait for the share to appear (or error if user doesn't exist)
-    await authPage.waitForTimeout(2000)
+    await authPage.waitForTimeout(1000)
 
     // If the share was created, remove it
     const removeButton = authPage.getByLabel(/remove access for revoke-test/i)
@@ -82,7 +84,7 @@ test.describe('Sharing — Owner actions', () => {
 twoUserTest.describe('Sharing — Shared user (User B)', () => {
   twoUserTest('User B sees shared space in space switcher', async ({ userBPage, testData }) => {
     await userBPage.goto('/dashboard')
-    await userBPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userBPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // Open space switcher
     const switcher = userBPage.locator('[data-tour="space-switcher"]')
@@ -98,7 +100,7 @@ twoUserTest.describe('Sharing — Shared user (User B)', () => {
 
   twoUserTest('User B with edit permission can create objects', async ({ userBPage, testData }) => {
     await userBPage.goto('/dashboard')
-    await userBPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userBPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // Switch to the shared space
     await switchToSpace(userBPage, testData.spaceA.name)
@@ -119,7 +121,7 @@ twoUserTest.describe('Sharing — Shared user (User B)', () => {
 
   twoUserTest('User B sees shared objects in sidebar', async ({ userBPage, testData }) => {
     await userBPage.goto('/dashboard')
-    await userBPage.waitForURL('**/dashboard', { timeout: 15000 })
+    await userBPage.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     await switchToSpace(userBPage, testData.spaceA.name)
 
@@ -136,7 +138,7 @@ twoUserTest.describe('Sharing — Shared user (User B)', () => {
     const page = await context.newPage()
 
     await page.goto('/dashboard')
-    await page.waitForURL('**/dashboard', { timeout: 15000 })
+    await page.waitForURL(/\/dashboard/, { timeout: 15000 })
 
     // Switch to shared space
     await switchToSpace(page, testData.spaceA.name)

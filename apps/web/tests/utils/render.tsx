@@ -1,7 +1,7 @@
 import { render, type RenderOptions } from '@testing-library/react'
 import { useState, type ReactElement, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { DataProvider } from '@/shared/lib/data'
+import { DataProvider, LOCAL_DEFAULT_SPACE_ID } from '@/shared/lib/data'
 import { setQueryClient } from '@/shared/lib/data/events'
 
 type WrapperProps = {
@@ -33,7 +33,7 @@ export function createHookWrapper() {
     })
     return (
       <QueryClientProvider client={queryClient}>
-        <DataProvider user={null} isAuthLoading={false}>{children}</DataProvider>
+        <DataProvider user={null} isAuthLoading={false} spaceId={LOCAL_DEFAULT_SPACE_ID}>{children}</DataProvider>
       </QueryClientProvider>
     )
   }

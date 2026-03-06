@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { useState, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { DataProvider, useDataClient, useStorageMode, useAuth } from '@/shared/lib/data'
+import { DataProvider, useDataClient, useStorageMode, useAuth, LOCAL_DEFAULT_SPACE_ID } from '@/shared/lib/data'
 import { clearLocalData } from '@/shared/lib/data/local'
 
 // Mock Supabase client
@@ -26,7 +26,7 @@ function Wrapper({ children }: { children: ReactNode }) {
   }))
   return (
     <QueryClientProvider client={queryClient}>
-      <DataProvider user={null} isAuthLoading={false}>{children}</DataProvider>
+      <DataProvider user={null} isAuthLoading={false} spaceId={LOCAL_DEFAULT_SPACE_ID}>{children}</DataProvider>
     </QueryClientProvider>
   )
 }
