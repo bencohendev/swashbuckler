@@ -469,7 +469,11 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
       <main ref={mainRef} className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
         <div ref={contentRef} className="relative mx-auto max-w-[1024px]">
           {collaborationOptions && showMouseCursors && (
-            <RemoteMouseCursors awareness={collaborationOptions.awareness} />
+            <RemoteMouseCursors
+              awareness={collaborationOptions.awareness}
+              containerRef={contentRef}
+              scrollRef={mainRef}
+            />
           )}
           {isTemplateMode && (
             <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">

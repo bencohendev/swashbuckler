@@ -13,7 +13,7 @@ export function PrivateBlockElement({ children, element, ...props }: PlateElemen
 
   if (!isOwner) {
     return (
-      <PlateElement {...props} element={element} className="hidden">
+      <PlateElement {...props} element={element} data-private-block className="hidden">
         <div contentEditable={false}>{children}</div>
       </PlateElement>
     );
@@ -23,6 +23,7 @@ export function PrivateBlockElement({ children, element, ...props }: PlateElemen
     <PlateElement
       {...props}
       element={element}
+      data-private-block
       className="my-4 rounded-lg border-2 border-dashed border-purple-300 bg-purple-50/50 p-4 dark:border-purple-700 dark:bg-purple-950/30"
     >
       <span contentEditable={false} className="mb-2 flex items-center gap-1.5 text-xs font-medium text-purple-500 dark:text-purple-400">

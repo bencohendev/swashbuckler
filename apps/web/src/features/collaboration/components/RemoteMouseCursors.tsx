@@ -1,17 +1,20 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, type RefObject } from 'react'
 import type { Awareness } from 'y-protocols/awareness'
 import { useRemoteMouseCursors } from '../hooks/useRemoteMouseCursors'
 import { MouseCursorIcon } from './MouseCursorIcon'
+import { getPrivateBlockOffsetAbove } from '../lib/privateBlockOffset'
 
 const LABEL_FADE_MS = 3000
 
 interface RemoteMouseCursorsProps {
   awareness: Awareness
+  containerRef: RefObject<HTMLElement | null>
+  scrollRef?: RefObject<HTMLElement | null>
 }
 
-export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
+export function RemoteMouseCursors({ awareness, containerRef, scrollRef }: RemoteMouseCursorsProps) {
   const cursors = useRemoteMouseCursors(awareness)
   const prevPositions = useRef(new Map<number, string>())
   const [brokenAvatars, setBrokenAvatars] = useState<Set<number>>(new Set())
@@ -24,12 +27,16 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
     })
   }, [])
   const [activityMap, setActivityMap] = useState<Map<number, number>>(new Map())
+  const [privateOffsets, setPrivateOffsets] = useState<Map<number, number>>(new Map())
   const [now, setNow] = useState(() => Date.now())
 
-  // Track position changes and clean up departed cursors
+  // Track position changes, compute private block offsets, and clean up departed cursors
   useEffect(() => {
     const currentTime = Date.now()
     const activeIds = new Set(cursors.map(c => c.clientId))
+
+    const container = containerRef.current
+    const scrollTop = scrollRef?.current?.scrollTop ?? container?.scrollTop ?? 0
 
     setActivityMap(prev => {
       const next = new Map(prev)
@@ -48,7 +55,16 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
       }
       return next
     })
-  }, [cursors])
+
+    // Compute private block offsets for each cursor
+    if (container) {
+      const offsets = new Map<number, number>()
+      for (const cursor of cursors) {
+        offsets.set(cursor.clientId, getPrivateBlockOffsetAbove(container, cursor.y, scrollTop))
+      }
+      setPrivateOffsets(offsets)
+    }
+  }, [cursors, containerRef, scrollRef])
 
   // Periodic re-render to trigger fade transitions
   const hasCursors = cursors.length > 0
@@ -65,6 +81,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
       {cursors.map((cursor) => {
         const lastMoved = activityMap.get(cursor.clientId) ?? now
         const isActive = now - lastMoved < LABEL_FADE_MS
+        const adjustedY = cursor.y + (privateOffsets.get(cursor.clientId) ?? 0)
 
         return (
           <div
@@ -72,7 +89,7 @@ export function RemoteMouseCursors({ awareness }: RemoteMouseCursorsProps) {
             className="absolute will-change-transform"
             style={{
               left: `${cursor.x}%`,
-              top: cursor.y,
+              top: adjustedY,
               transition: 'left 80ms linear, top 80ms linear',
             }}
           >
