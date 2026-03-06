@@ -185,7 +185,7 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="relative z-10 bg-[#0C2D48] pb-4 overflow-visible">
+      <footer className="relative z-10 bg-[#0C2D48] pt-8 sm:pt-10 pb-4 overflow-visible">
         <div className="mx-auto max-w-3xl pl-2 pr-6 -mt-8 sm:-mt-10" aria-hidden="true">
           <PixelBeachScene />
         </div>
