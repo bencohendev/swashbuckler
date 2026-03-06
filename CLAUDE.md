@@ -54,7 +54,7 @@ This is the required workflow for all feature work. **Do not skip steps.**
 
 ### 3. Ensure a Spec Exists
 - **If a spec exists:** read it, confirm scope with the user, then begin implementation
-- **If no spec exists:** write the spec in `.readme/features/` first, add it to `index.md`, get user approval, then begin
+- **If no spec exists:** check if the work fits as an addition to an existing related spec — if so, update that spec with the new scope. Only create a new spec in `.readme/features/` if the work is a standalone feature large enough to warrant its own document. Add to `index.md` if new, get user approval, then begin
 - Plan mode files in `.claude/plans/` are scratch — after approval, the permanent spec must be in `.readme/features/` and the plan file deleted
 
 ### 4. Implement
@@ -64,10 +64,12 @@ This is the required workflow for all feature work. **Do not skip steps.**
 - Run all checks (unit tests, e2e tests, types, lint) before finishing
 
 ### 5. Finish
-- **Update the spec** in `.readme/features/` with any implementation details or changes from the original plan
-- **Update user-facing docs** in `apps/docs/content/docs/` — required for any change that affects user-visible behavior; create a new page if needed (see User-Facing Documentation below)
-- Set `**Status:**` to `Done`
-- Move the feature from the Planned table to the Implemented table in `index.md` (if it was planned)
+- **Run all checks** — unit tests, e2e tests, types, lint must all pass before any documentation or merge steps
+- **Documentation audit** — review and update ALL of the following. Read each file before editing:
+  - **Feature spec** (`.readme/features/`) — update the existing related spec with implementation details, file paths, decisions that changed during implementation, and check off verification items. Set `**Status:**` to `Done`. Prefer adding to an existing spec over creating a new one — only create a separate spec if the work is a standalone feature large enough to warrant its own document
+  - **User-facing docs** (`apps/docs/content/docs/`) — required for any change that affects user-visible behavior. Read the existing page (if any) and update it to match the current implementation. Create a new MDX page + `meta.json` entry if none exists
+  - **Master index** (`.readme/index.md`) — move the feature from Planned to Implemented (if applicable), ensure the spec link is correct
+- Do NOT skip the documentation audit — it is as important as the code itself
 - Commit doc updates and merge to `dev`
 
 ## Documentation
