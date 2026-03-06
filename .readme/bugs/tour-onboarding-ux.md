@@ -14,13 +14,9 @@ Six related bugs affecting the new-user experience.
 
 Sidebar help menu now computes `startStep` to skip step 0 when it's a dialog type.
 
-## 4. Tour fires before setup dialog / loading states not resolved
+## 4. ~~Tour fires before setup dialog / loading states not resolved~~ (Not a bug)
 
-**Current**: Intro tour auto-starts after 1s delay, checking `isOnboarding` flag. But `isOnboarding` is set asynchronously (preferences fetch). Race condition: tour can start before the "Set up your workspace" dialog appears, causing a flash of tour → dialog overlap.
-
-**Fix**: Add an `isSpaceReady` flag to SpaceProvider that only becomes `true` after all async loading is complete (spaces loaded, preferences checked, onboarding dialog decision made). Tour auto-start waits for this flag.
-
-**Files**: `TutorialController.tsx`, `SpaceProvider.tsx`
+Analysis: `isLoading` starts `true` and stays `true` throughout `loadSpaces()`. `setShowNewUserDialog(true)` (line 190) always runs before `setIsLoading(false)` (line 270). So `isOnboarding` (`isLoading || showNewUserDialog`) is always `true` until the dialog decision is made — there is no gap. No code change needed.
 
 ## 5. ~~Remove sharing page tour~~ (Fixed)
 
