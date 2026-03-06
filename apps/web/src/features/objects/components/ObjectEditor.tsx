@@ -84,6 +84,7 @@ interface ObjectEditorProps {
 export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
   const mainRef = useRef<HTMLElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const editorRef = useRef<EditorHandle>(null)
   const dataClient = useDataClient()
@@ -125,6 +126,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
   useMousePresence({
     containerRef: mainRef,
+    coordinateRef: contentRef,
     awareness: collaborationOptions?.awareness ?? null,
     enabled: isCollaborative && !!collaborationOptions && showMouseCursors,
   })
@@ -465,7 +467,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
       </header>
 
       <main ref={mainRef} className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
-        <div className="relative mx-auto max-w-[1024px]">
+        <div ref={contentRef} className="relative mx-auto max-w-[1024px]">
           {collaborationOptions && showMouseCursors && (
             <RemoteMouseCursors awareness={collaborationOptions.awareness} />
           )}
