@@ -22,6 +22,16 @@ async function fetchObject(id: string) {
   return data
 }
 
+async function fetchObjectType(typeId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('object_types')
+    .select('*')
+    .eq('id', typeId)
+    .single()
+  return data
+}
+
 export async function generateMetadata({ params }: ObjectPageProps): Promise<Metadata> {
   const { id } = await params
   const object = await fetchObject(id)
@@ -37,6 +47,13 @@ export default async function ObjectPage({ params, searchParams }: ObjectPagePro
   const object = await fetchObject(id)
   if (object) {
     queryClient.setQueryData(queryKeys.objects.detail(id), object)
+
+    if (object.type_id) {
+      const objectType = await fetchObjectType(object.type_id)
+      if (objectType) {
+        queryClient.setQueryData(queryKeys.objectTypes.detail(object.type_id), objectType)
+      }
+    }
   }
 
   return (

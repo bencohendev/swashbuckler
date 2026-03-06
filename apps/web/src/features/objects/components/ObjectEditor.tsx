@@ -102,7 +102,15 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
   // Unified loading: wait for both the object and its type before rendering content.
   // This prevents staggered content jumps (title → properties → content).
-  const isLoading = isObjectLoading || (!!object?.type_id && isTypeLoading)
+  // Once content has been shown, never regress to the skeleton — context changes
+  // (e.g. space loading, DataProvider cascade) can briefly re-trigger query loading
+  // states, causing a visible flash.
+  const isQueryLoading = isObjectLoading || (!!object?.type_id && isTypeLoading)
+  const hasRenderedContentRef = useRef(false)
+  if (!isQueryLoading && object) {
+    hasRenderedContentRef.current = true
+  }
+  const isLoading = isQueryLoading && !hasRenderedContentRef.current
 
   const [title, setTitle] = useState(() => (!autoFocus && object?.title) ? object.title : '')
   const [isTitleSaving, setIsTitleSaving] = useState(false)
