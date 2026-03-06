@@ -91,14 +91,19 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const { user } = useAuth()
   const { space, sharedPermission } = useCurrentSpace()
   const supabase = useMemo(() => createClient(), [])
-  const { object, isLoading, error, update, remove, archive } = useObject(id)
-  const { objectType } = useObjectType(object?.type_id ?? null)
+  const { object, isLoading: isObjectLoading, error, update, remove, archive } = useObject(id)
+  const { objectType, isLoading: isTypeLoading } = useObjectType(object?.type_id ?? null)
   const { templates, saveObjectAsTemplate, getTemplateVariables } = useTemplates()
   const { canEdit, isOwner } = useSpacePermission()
   const { filterFields, isTypeExcluded, isObjectExcluded } = useExclusionFilter()
   const { shares } = useSpaceShares(space?.id ?? null)
   const { isDirty: editorDirty, isSaving: editorSaving, lastSaved: editorLastSaved } = useEditorStore()
-  const [title, setTitle] = useState('')
+
+  // Unified loading: wait for both the object and its type before rendering content.
+  // This prevents staggered content jumps (title → properties → content).
+  const isLoading = isObjectLoading || (!!object?.type_id && isTypeLoading)
+
+  const [title, setTitle] = useState(() => (!autoFocus && object?.title) ? object.title : '')
   const [isTitleSaving, setIsTitleSaving] = useState(false)
   const [isTemplateMode, setIsTemplateMode] = useState(false)
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
@@ -313,12 +318,18 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
             <div className="size-8 rounded-md bg-muted" />
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <div className="h-9 w-2/3 rounded bg-muted" />
-          <div className="mt-6 space-y-3">
-            <div className="h-4 w-full rounded bg-muted" />
-            <div className="h-4 w-5/6 rounded bg-muted" />
-            <div className="h-4 w-4/6 rounded bg-muted" />
+        <main className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
+          <div className="mx-auto max-w-[1024px]">
+            <div className="h-9 w-2/3 rounded bg-muted" />
+            <div className="mt-4 space-y-2">
+              <div className="h-4 w-24 rounded bg-muted" />
+              <div className="h-4 w-32 rounded bg-muted" />
+            </div>
+            <div className="mt-6 space-y-3">
+              <div className="h-4 w-full rounded bg-muted" />
+              <div className="h-4 w-5/6 rounded bg-muted" />
+              <div className="h-4 w-4/6 rounded bg-muted" />
+            </div>
           </div>
         </main>
       </div>
