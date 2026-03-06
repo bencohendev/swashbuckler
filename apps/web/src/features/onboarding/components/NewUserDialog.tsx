@@ -27,13 +27,15 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={() => { /* prevent closing without a choice */ }}>
       <DialogContent showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader className={loading ? 'sm:text-center sm:items-center' : undefined}>
-          <DialogTitle>{loading ? 'Setting things up' : 'Set up your workspace'}</DialogTitle>
-          <DialogDescription>
+        <DialogHeader>
+          <DialogTitle className={loading ? 'text-center' : undefined}>
+            {loading ? 'Setting things up' : 'Set up your workspace'}
+          </DialogTitle>
+          <DialogDescription className={loading ? 'text-center' : undefined}>
             {loading === 'example'
-              ? 'Please wait while your world is being constructed. This may take a few moments.'
+              ? <>Please wait while your world is being constructed.<br />This may take a few moments.</>
               : loading === 'blank'
-                ? 'Setting things up...'
+                ? <>Setting things up.<br />This may take a few moments.</>
                 : 'Choose how you\'d like to start. You can always create more spaces later.'}
           </DialogDescription>
         </DialogHeader>
