@@ -37,7 +37,7 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
             ) : loading === 'blank' ? (
               <>Setting things up.<br />This may take a few moments.</>
             ) : (
-              'Choose how you\'d like to start. You can always create more spaces later.'
+              <>Choose how you&apos;d like to start.<br />You can always create more spaces later.</>
             )}
           </DialogDescription>
         </DialogHeader>
