@@ -517,13 +517,14 @@ export interface UserPreferences {
   onboarding_completed_at: string | null
   completed_tours: string[]
   tours_skipped_all: boolean
+  show_mouse_cursors: boolean
   created_at: string
   updated_at: string
 }
 
 export interface PreferencesClient {
   get(): Promise<DataResult<UserPreferences | null>>
-  upsert(input: Partial<Pick<UserPreferences, 'onboarding_completed_at' | 'completed_tours' | 'tours_skipped_all'>>): Promise<DataResult<UserPreferences>>
+  upsert(input: Partial<Pick<UserPreferences, 'onboarding_completed_at' | 'completed_tours' | 'tours_skipped_all' | 'show_mouse_cursors'>>): Promise<DataResult<UserPreferences>>
 }
 
 // Storage mode

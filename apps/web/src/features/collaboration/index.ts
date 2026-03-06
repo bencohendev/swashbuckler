@@ -1,6 +1,7 @@
 // Hooks
 export { useCollaboration } from './hooks/useCollaboration'
 export { useMousePresence } from './hooks/useMousePresence'
+export { useMouseCursorPreference } from './hooks/useMouseCursorPreference'
 
 // Components
 export { CollaboratorAvatars } from './components/CollaboratorAvatars'
