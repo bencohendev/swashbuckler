@@ -27,7 +27,7 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={() => { /* prevent closing without a choice */ }}>
       <DialogContent showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader className={loading ? 'sm:text-center' : undefined}>
+        <DialogHeader className={loading ? 'sm:text-center sm:items-center' : undefined}>
           <DialogTitle>{loading ? 'Setting things up' : 'Set up your workspace'}</DialogTitle>
           <DialogDescription>
             {loading === 'example'
