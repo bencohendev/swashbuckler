@@ -9,8 +9,9 @@ test.describe('Type Settings & Properties — regression tests', () => {
     // Navigate to settings/types
     await page.goto('/settings/types', { waitUntil: 'domcontentloaded' })
 
-    // Click the Edit button on the Page type
+    // Click the Edit button on the Page type — wait for it to render
     const editBtn = page.locator('button[title="Edit type"]').first()
+    await editBtn.waitFor({ state: 'visible', timeout: 10000 })
     await editBtn.click()
 
     // Click "Add Field"
@@ -37,6 +38,7 @@ test.describe('Type Settings & Properties — regression tests', () => {
     // First add a field to the type
     await page.goto('/settings/types', { waitUntil: 'domcontentloaded' })
     const editBtn = page.locator('button[title="Edit type"]').first()
+    await editBtn.waitFor({ state: 'visible', timeout: 10000 })
     await editBtn.click()
 
     const addFieldBtn = page.getByRole('button', { name: /add field/i })
@@ -63,6 +65,7 @@ test.describe('Type Settings & Properties — regression tests', () => {
     // Add a field
     await page.goto('/settings/types', { waitUntil: 'domcontentloaded' })
     const editBtn = page.locator('button[title="Edit type"]').first()
+    await editBtn.waitFor({ state: 'visible', timeout: 10000 })
     await editBtn.click()
 
     const addFieldBtn = page.getByRole('button', { name: /add field/i })
@@ -104,6 +107,7 @@ test.describe('Type Settings & Properties — regression tests', () => {
   test('add select field with options', async ({ guestPage: page }) => {
     await page.goto('/settings/types', { waitUntil: 'domcontentloaded' })
     const editBtn = page.locator('button[title="Edit type"]').first()
+    await editBtn.waitFor({ state: 'visible', timeout: 10000 })
     await editBtn.click()
 
     const addFieldBtn = page.getByRole('button', { name: /add field/i })

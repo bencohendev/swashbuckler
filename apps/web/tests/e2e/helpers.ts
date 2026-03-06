@@ -119,16 +119,18 @@ function titleInput(page: Page) {
 
 /**
  * Creates a new entry via the type's "..." menu > "Create" in the sidebar.
- * Waits for navigation to the new object page.
+ * Retries the menu interaction to handle sidebar loading timing.
  */
 export async function createEntry(page: Page): Promise<string> {
-  // Open the type options dropdown (the "..." button next to "Pages")
-  const optionsButton = page.getByRole('button', { name: /options/i }).first()
-  await optionsButton.click()
+  await expect(async () => {
+    // Open the type options dropdown (the "..." button next to "Pages")
+    const optionsButton = page.getByRole('button', { name: /options/i }).first()
+    await optionsButton.click()
 
-  // Click "Create" in the dropdown
-  const createItem = page.getByRole('menuitem', { name: /^create$/i })
-  await createItem.click()
+    // Click "Create" in the dropdown
+    const createItem = page.getByRole('menuitem', { name: /^create$/i })
+    await createItem.click({ timeout: 3000 })
+  }).toPass({ timeout: 15000 })
 
   await page.waitForURL(/\/objects\//, { timeout: 10000 })
   const url = page.url()
@@ -188,29 +190,40 @@ export async function createType(
 // Navigation helpers
 // ---------------------------------------------------------------------------
 
+/** Navigate with retry — handles ERR_ABORTED from in-flight requests during redirects. */
+async function safeGoto(page: Page, path: string): Promise<void> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await page.goto(path, { waitUntil: 'domcontentloaded' })
+      return
+    } catch (err) {
+      if (attempt === 0 && String(err).includes('ERR_ABORTED')) {
+        await page.waitForTimeout(500)
+        continue
+      }
+      throw err
+    }
+  }
+}
+
 export async function navigateToDashboard(page: Page): Promise<void> {
-  await page.goto('/dashboard')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/dashboard')
 }
 
 export async function navigateToGraph(page: Page): Promise<void> {
-  await page.goto('/graph')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/graph')
 }
 
 export async function navigateToTrash(page: Page): Promise<void> {
-  await page.goto('/trash')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/trash')
 }
 
 export async function navigateToArchive(page: Page): Promise<void> {
-  await page.goto('/archive')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/archive')
 }
 
 export async function navigateToSettings(page: Page): Promise<void> {
-  await page.goto('/settings')
-  await page.waitForLoadState('domcontentloaded')
+  await safeGoto(page, '/settings')
 }
 
 export async function openSearch(page: Page): Promise<void> {
