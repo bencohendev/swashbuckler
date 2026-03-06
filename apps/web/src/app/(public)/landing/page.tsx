@@ -37,12 +37,14 @@ const features = [
     title: "Advanced Sharing",
     description:
       "Fine-tune exactly which types and entries are shared with your party. Keep your secrets safe.",
+    href: "https://docs.swashbuckler.quest/docs/sharing",
   },
   {
     icon: EyeOffIcon,
     title: "Private Blocks",
     description:
       "Add hidden notes to shared entries that only you can see — perfect for GM-only details.",
+    href: "https://docs.swashbuckler.quest/docs/private-content",
   },
 ]
 
