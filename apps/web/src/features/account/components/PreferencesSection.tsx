@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
 import { useSpaces } from '@/shared/lib/data'
 import { useTutorial } from '@/features/onboarding'
+import { useMouseCursorPreference } from '@/features/collaboration'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import { createClient } from '@/shared/lib/supabase/client'
 export function PreferencesSection({ user }: { user: User }) {
   const { spaces } = useSpaces()
   const restartTutorial = useTutorial((s) => s.restart)
+  const { showMouseCursors, toggleMouseCursors } = useMouseCursorPreference()
 
   const metadata = user.user_metadata ?? {}
   const [defaultSpaceId, setDefaultSpaceId] = useState<string>(metadata.default_space_id ?? '')
@@ -74,6 +76,20 @@ export function PreferencesSection({ user }: { user: User }) {
             </p>
           </div>
         )}
+        <div>
+          <span className="mb-1 block text-sm font-medium">Show collaborator mouse cursors</span>
+          <Button
+            variant={showMouseCursors ? 'default' : 'outline'}
+            size="sm"
+            onClick={toggleMouseCursors}
+            aria-pressed={showMouseCursors}
+          >
+            {showMouseCursors ? 'On' : 'Off'}
+          </Button>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Display other users&apos; mouse positions when editing together.
+          </p>
+        </div>
         <div>
           <span className="mb-1 block text-sm font-medium">Tutorial</span>
           <Button variant="outline" size="sm" onClick={restartTutorial}>

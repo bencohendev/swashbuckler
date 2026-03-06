@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef, type MutableRefObject } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon } from 'lucide-react'
+import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon, MousePointerIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
@@ -15,7 +15,7 @@ import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
 import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
 import { useSpacePermission, useExclusionFilter, useSpaceShares } from '@/features/sharing'
-import { useCollaboration, useMousePresence, CollaboratorAvatars, ConnectionStatus, RemoteMouseCursors } from '@/features/collaboration'
+import { useCollaboration, useMousePresence, useMouseCursorPreference, CollaboratorAvatars, ConnectionStatus, RemoteMouseCursors } from '@/features/collaboration'
 import { applyTemplateContent, mergeProperties } from '@/features/templates/lib/applyTemplate'
 import {
   resolveContentVariables,
@@ -111,6 +111,8 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const isSharedSpace = isOwner ? shares.length > 0 : sharedPermission !== null
   const isCollaborative = storageMode === 'supabase' && canEdit && isSharedSpace
 
+  const { showMouseCursors, toggleMouseCursors } = useMouseCursorPreference()
+
   const collaborationOptions = useCollaboration({
     spaceId: space?.id ?? '',
     documentId: id,
@@ -124,7 +126,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   useMousePresence({
     containerRef: mainRef,
     awareness: collaborationOptions?.awareness ?? null,
-    enabled: isCollaborative && !!collaborationOptions,
+    enabled: isCollaborative && !!collaborationOptions && showMouseCursors,
   })
 
   // Track access for recent-entries ordering
@@ -377,7 +379,19 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         </div>
         <div className="flex items-center gap-1">
           {collaborationOptions && (
-            <CollaboratorAvatars awareness={collaborationOptions.awareness} />
+            <>
+              <Button
+                size="icon-sm"
+                variant={showMouseCursors ? 'ghost' : 'outline'}
+                onClick={toggleMouseCursors}
+                title={showMouseCursors ? 'Hide collaborator cursors' : 'Show collaborator cursors'}
+                aria-label={showMouseCursors ? 'Hide collaborator cursors' : 'Show collaborator cursors'}
+                aria-pressed={showMouseCursors}
+              >
+                <MousePointerIcon className={`size-4 ${showMouseCursors ? '' : 'text-muted-foreground'}`} />
+              </Button>
+              <CollaboratorAvatars awareness={collaborationOptions.awareness} />
+            </>
           )}
           <PinButton objectId={id} />
           {canEdit && (
@@ -452,7 +466,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
 
       <main ref={mainRef} className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
         <div className="relative mx-auto max-w-[1024px]">
-          {collaborationOptions && (
+          {collaborationOptions && showMouseCursors && (
             <RemoteMouseCursors awareness={collaborationOptions.awareness} />
           )}
           {isTemplateMode && (

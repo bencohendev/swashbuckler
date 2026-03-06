@@ -34,8 +34,11 @@ src/features/collaboration/
     user-colors.ts              # Deterministic 12-color palette from user ID
   hooks/
     useCollaboration.ts         # Creates Y.Doc, Awareness, Provider for a document
+    useMousePresence.ts         # Broadcasts local mouse position via Awareness
+    useMouseCursorPreference.ts # Toggle for showing/hiding remote mouse cursors
   components/
     RemoteCursorOverlay.tsx     # Renders colored cursors + selection highlights
+    RemoteMouseCursors.tsx      # Renders remote users' mouse pointers
     CollaboratorAvatars.tsx     # Avatar stack in document header
     ConnectionStatus.tsx        # Sync status indicator (Synced/Syncing/Offline)
   index.ts                      # Public exports
@@ -69,6 +72,18 @@ All binary data is base64-encoded for JSON transport.
 - Leader election: lowest Yjs `clientID` persists to DB
 - Reads content from `editor.children` (current Slate state)
 - Force-saves on unmount if changes pending
+
+## Mouse Cursor Preference
+
+Remote mouse cursors (not text selection cursors) can be toggled on/off via a persistent user preference (`show_mouse_cursors`, default `true`).
+
+**Toggle locations:**
+- **Editor header** — MousePointer icon button next to CollaboratorAvatars (only visible during collaborative sessions)
+- **Account settings** — "Show collaborator mouse cursors" On/Off toggle in PreferencesSection
+
+**Storage:** `show_mouse_cursors` boolean column on `user_preferences` table (migration `034`). Also cached in localStorage (`swashbuckler:showMouseCursors`) for instant reads. In guest/local mode, defaults to `true` (localStorage only).
+
+**Behavior:** When disabled, `useMousePresence` stops broadcasting the local mouse position and `RemoteMouseCursors` is not rendered. Text selection cursors (`RemoteCursorOverlay`) remain always visible.
 
 ## Edge Cases
 
