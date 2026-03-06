@@ -37,12 +37,14 @@ const features = [
     title: "Advanced Sharing",
     description:
       "Fine-tune exactly which types and entries are shared with your party. Keep your secrets safe.",
+    href: "https://docs.swashbuckler.quest/docs/sharing",
   },
   {
     icon: EyeOffIcon,
     title: "Private Blocks",
     description:
       "Add hidden notes to shared entries that only you can see — perfect for GM-only details.",
+    href: "https://docs.swashbuckler.quest/docs/private-content",
   },
 ]
 
@@ -185,8 +187,8 @@ export default function LandingPage() {
 
       </main>
 
-      <footer className="relative z-10 bg-[#0C2D48] pb-4">
-        <div className="mx-auto max-w-3xl overflow-hidden pl-2 pr-6" aria-hidden="true">
+      <footer className="relative z-10 bg-[#0C2D48] pb-4 overflow-visible">
+        <div className="mx-auto max-w-3xl pl-2 pr-6 -mt-4 sm:-mt-5" aria-hidden="true">
           <PixelBeachScene />
         </div>
         <p className="mt-4 px-6 text-center text-sm text-[#7EC4DE]">
