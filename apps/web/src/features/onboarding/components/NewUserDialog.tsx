@@ -31,13 +31,19 @@ export function NewUserDialog({ open, onChoice }: NewUserDialogProps) {
           <DialogTitle>
             {loading ? 'Setting things up' : 'Set up your workspace'}
           </DialogTitle>
-          <DialogDescription>
-            {loading === 'example'
-              ? <span>Please wait while your world is being constructed.<br />This may take a few moments.</span>
-              : loading === 'blank'
-                ? <span>Setting things up.<br />This may take a few moments.</span>
-                : 'Choose how you\'d like to start. You can always create more spaces later.'}
-          </DialogDescription>
+          {loading === 'example' ? (
+            <DialogDescription className="whitespace-pre-line">
+              {'Please wait while your world is being constructed.\nThis may take a few moments.'}
+            </DialogDescription>
+          ) : loading === 'blank' ? (
+            <DialogDescription className="whitespace-pre-line">
+              {'Setting things up.\nThis may take a few moments.'}
+            </DialogDescription>
+          ) : (
+            <DialogDescription>
+              Choose how you&apos;d like to start. You can always create more spaces later.
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         {loading ? (
