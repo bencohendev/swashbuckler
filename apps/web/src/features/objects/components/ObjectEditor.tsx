@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef, type MutableRefObject } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon, MousePointerIcon } from 'lucide-react'
+import { ArchiveIcon, TrashIcon, MoreHorizontalIcon, CopyIcon, SmilePlusIcon, ImageIcon, BracesIcon, LayoutTemplateIcon } from 'lucide-react'
 import type { Value } from '@udecode/plate'
 import { useObject } from '../hooks/useObjects'
 import { useObjectType } from '@/features/object-types'
@@ -15,7 +15,7 @@ import { useCurrentSpace } from '@/shared/lib/data/SpaceProvider'
 import { createClient } from '@/shared/lib/supabase/client'
 import { emit } from '@/shared/lib/data/events'
 import { useSpacePermission, useExclusionFilter, useSpaceShares } from '@/features/sharing'
-import { useCollaboration, useMousePresence, useMouseCursorPreference, CollaboratorAvatars, ConnectionStatus, RemoteMouseCursors } from '@/features/collaboration'
+import { useCollaboration, CollaboratorAvatars, ConnectionStatus } from '@/features/collaboration'
 import { applyTemplateContent, mergeProperties } from '@/features/templates/lib/applyTemplate'
 import {
   resolveContentVariables,
@@ -83,8 +83,6 @@ interface ObjectEditorProps {
 
 export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: ObjectEditorProps) {
   const router = useRouter()
-  const mainRef = useRef<HTMLElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const editorRef = useRef<EditorHandle>(null)
   const dataClient = useDataClient()
@@ -112,8 +110,6 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
   const isSharedSpace = isOwner ? shares.length > 0 : sharedPermission !== null
   const isCollaborative = storageMode === 'supabase' && canEdit && isSharedSpace
 
-  const { showMouseCursors, toggleMouseCursors } = useMouseCursorPreference()
-
   const collaborationOptions = useCollaboration({
     spaceId: space?.id ?? '',
     documentId: id,
@@ -122,13 +118,6 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
     userName: user?.email?.split('@')[0] ?? 'Anonymous',
     avatarUrl: user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture,
     enabled: isCollaborative,
-  })
-
-  useMousePresence({
-    containerRef: contentRef,
-    scrollRef: mainRef,
-    awareness: collaborationOptions?.awareness ?? null,
-    enabled: isCollaborative && !!collaborationOptions && showMouseCursors,
   })
 
   // Track access for recent-entries ordering
@@ -381,19 +370,7 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         </div>
         <div className="flex items-center gap-1">
           {collaborationOptions && (
-            <>
-              <Button
-                size="icon-sm"
-                variant={showMouseCursors ? 'ghost' : 'outline'}
-                onClick={toggleMouseCursors}
-                title={showMouseCursors ? 'Hide collaborator cursors' : 'Show collaborator cursors'}
-                aria-label={showMouseCursors ? 'Hide collaborator cursors' : 'Show collaborator cursors'}
-                aria-pressed={showMouseCursors}
-              >
-                <MousePointerIcon className={`size-4 ${showMouseCursors ? '' : 'text-muted-foreground'}`} />
-              </Button>
-              <CollaboratorAvatars awareness={collaborationOptions.awareness} />
-            </>
+            <CollaboratorAvatars awareness={collaborationOptions.awareness} />
           )}
           <PinButton objectId={id} />
           {canEdit && (
@@ -466,15 +443,8 @@ export function ObjectEditor({ id, autoFocus, onDelete, onNavigateAway }: Object
         </div>
       </header>
 
-      <main ref={mainRef} className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
-        <div ref={contentRef} className="relative mx-auto max-w-[1024px]">
-          {collaborationOptions && showMouseCursors && (
-            <RemoteMouseCursors
-              awareness={collaborationOptions.awareness}
-              containerRef={contentRef}
-              scrollRef={mainRef}
-            />
-          )}
+      <main className="flex-1 overflow-auto p-4 md:pl-16 md:pr-6 md:py-6">
+        <div className="relative mx-auto max-w-[1024px]">
           {isTemplateMode && (
             <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
               Template mode — variable insertion enabled
