@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, type RefObject } from 'react'
 import type { Awareness } from 'y-protocols/awareness'
+import { getPrivateBlockOffsetAbove } from '../lib/privateBlockOffset'
 
 const THROTTLE_MS = 50
 
@@ -32,7 +33,9 @@ export function useMousePresence({ containerRef, scrollRef, awareness, enabled }
       const rect = container.getBoundingClientRect()
       const scrollTop = scrollRef?.current?.scrollTop ?? container.scrollTop
       const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10
-      const y = Math.round(e.clientY - rect.top + scrollTop)
+      const rawY = e.clientY - rect.top + scrollTop
+      const privateOffset = getPrivateBlockOffsetAbove(container, rawY, scrollTop)
+      const y = Math.round(rawY - privateOffset)
 
       const last = lastPositionRef.current
       if (last && last.x === x && last.y === y) return
