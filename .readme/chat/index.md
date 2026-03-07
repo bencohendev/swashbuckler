@@ -16,6 +16,10 @@ Real-time chat tied to shared spaces. Appears as a collapsible right sidebar in 
 - **Embed:** Main app renders `<iframe src="/chat/space/{spaceId}" />` in collapsible right sidebar
 - **Pop-out:** `window.open('/chat/space/{spaceId}')` — same origin, full access
 
+## Implementation Plan
+
+See [implementation-plan.md](implementation-plan.md) for the ordered build checklist (phases 1–6).
+
 ## Features
 
 | Feature | Spec | Status |
