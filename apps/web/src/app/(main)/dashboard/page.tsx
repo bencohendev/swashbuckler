@@ -18,7 +18,9 @@ export default async function DashboardPage() {
           {user ? (isFirstLogin(user) ? "Welcome" : "Welcome back") : "Welcome"}
         </h1>
         <p className="text-muted-foreground">
-          {user?.email ?? "You're using Swashbuckler as a guest. Sign up to save your work."}
+          {user
+            ? (user.user_metadata?.display_name ?? user.email)
+            : "You're using Swashbuckler as a guest. Sign up to save your work."}
         </p>
       </div>
 

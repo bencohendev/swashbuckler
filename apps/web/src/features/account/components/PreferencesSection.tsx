@@ -12,12 +12,13 @@ import {
 } from '@/shared/components/ui/DropdownMenu'
 import { Button } from '@/shared/components/ui/Button'
 import type { User } from '@supabase/supabase-js'
+import type { UserMetadata } from '@/shared/lib/data/types'
 import { createClient } from '@/shared/lib/supabase/client'
 
 export function PreferencesSection({ user }: { user: User }) {
   const { spaces } = useSpaces()
   const restartTutorial = useTutorial((s) => s.restart)
-  const metadata = user.user_metadata ?? {}
+  const metadata: UserMetadata = user.user_metadata ?? {}
   const [defaultSpaceId, setDefaultSpaceId] = useState<string>(metadata.default_space_id ?? '')
 
   async function handleDefaultSpaceChange(spaceId: string) {
