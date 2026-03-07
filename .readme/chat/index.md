@@ -20,7 +20,7 @@ Real-time chat tied to shared spaces. Appears as a collapsible right sidebar in 
 
 | Feature | Spec | Status |
 |---------|------|--------|
-| [Chat v1](features/chat-v1.md) | Space channels, DMs, markdown, reactions, threads, dice roller, notifications | Not started |
+| [Chat v1](features/chat-v1.md) | Space channels, DMs, markdown, reactions, threads, dice roller, notifications | Active |
 
 ## Planned Features
 
