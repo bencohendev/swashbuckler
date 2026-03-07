@@ -114,8 +114,8 @@ When the user submits a `/r` command with invalid notation:
 ## Private Rolls
 
 - `is_private_roll = true` on the message row
-- RLS policy: only the `user_id` who sent the message can read `metadata` when `is_private_roll = true`
-- Other members receive the message row with `metadata` redacted (nulled by RLS or a view)
+- The RLS SELECT policy on `chat_messages` nulls `metadata` for private roll rows belonging to other users, so direct queries (page load, history fetch) are safe
+- **Realtime guard (client-side):** Supabase Realtime broadcasts the full row and cannot null columns mid-stream. When a Realtime INSERT event arrives with `is_private_roll = true` AND `user_id !== currentUser.id`, the client **must** discard the event's `metadata` and render the placeholder immediately — do not trust the Realtime payload for private rolls you don't own
 - Message content shown to others: `[private roll]`
 - Roller sees the full `DiceResult` card
 

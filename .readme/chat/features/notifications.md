@@ -15,11 +15,10 @@ Multiple notification surfaces keep users aware of new messages across different
 
 ### Mechanism
 
-- Table: `chat_read_cursors` — one row per user per channel/conversation
-  - Channel rows use `channel_id`; DM conversation rows use `conversation_id` (with `channel_id = null`)
+- Table: `chat_read_cursors` — one row per user per channel
 - `last_read_at` is compared against `chat_messages.created_at` to compute unread count
-- Unread count = number of messages with `created_at > last_read_at` in the channel or DM
-- The aggregate unread badge shown in the notes app sidebar is the **sum of unread across all channels + all DM conversations**
+- Unread count = number of messages with `created_at > last_read_at` in the channel (excluding thread replies: `thread_parent_id IS NULL`)
+- The aggregate unread badge shown in the notes app sidebar is the sum of unread across all channels the user is a member of
 
 ### Cursor Updates
 
@@ -39,7 +38,7 @@ The cursor is not updated while the user is scrolled up reading history.
   ```json
   { "type": "unread-count", "count": 3 }
   ```
-- The `ChatSidebar` component in `apps/web` listens via `window.addEventListener('message', ...)`
+- The `ChatSidebar` component in `apps/web` listens via `window.addEventListener('message', ...)`, validating `event.origin` before processing
 - Renders a numeric badge on the sidebar toggle button when count > 0
 - Badge clears when count returns to 0
 
@@ -47,7 +46,7 @@ The cursor is not updated while the user is scrolled up reading history.
 
 **File:** `apps/chat/src/lib/stores/unread.ts`
 
-Manages unread count per channel/DM, fires the postMessage on change.
+Manages unread count per channel, fires the postMessage on change.
 
 ### Panel Collapse State
 
@@ -64,7 +63,8 @@ The iframe stores this value. When deciding whether to play sound, the iframe tr
 ## Sound
 
 - Audio file: `apps/chat/static/sounds/message.mp3`
-- Played via **Web Audio API** (not `<audio>` element — avoids autoplay restrictions in some browsers)
+- Played via **Web Audio API** (preferred over `<audio>` for precise timing and keeping a decoded buffer in memory ready to fire)
+- `AudioContext` must be created and `resume()`d within a user gesture (e.g., the first message send) to satisfy browser autoplay policy — the same policy applies to both Web Audio API and `<audio>` elements
 - Triggered on new incoming message (not own messages) when either:
   - The browser tab is not active (`document.hidden === true`), or
   - The chat panel is collapsed in the notes app sidebar
@@ -98,7 +98,7 @@ Show a browser notification when a new message arrives and:
 
 ### Click Behavior
 
-Clicking the notification focuses the browser tab/window and scrolls the chat to the relevant message.
+Clicking the notification focuses the browser tab/window and scrolls the chat to the relevant message. When the chat panel is collapsed, the click handler must also send a `{ type: "panel-state", collapsed: false }` equivalent to expand the sidebar before scrolling.
 
 ---
 
@@ -107,24 +107,25 @@ Clicking the notification focuses the browser tab/window and scrolls the chat to
 - A message is considered a priority mention if its `content` contains `@{currentUserDisplayName}`
 - Priority mentions trigger a browser notification **even when `document.hidden === false`** (tab is visible)
 - Priority mentions also bypass the "panel collapsed" check for sound — sound plays regardless
+- Known limitation: plain-text matching can produce false positives if one display name is a substring of another (e.g., `@Ali` inside `@Alice`). Acceptable for Phase 1.
 
 ---
 
 ## Verification Checklist
 
-- [ ] Unread count increments correctly as new messages arrive
+- [ ] Unread count increments correctly as new messages arrive (excluding thread replies)
 - [ ] `last_read_at` cursor updates on scroll-to-bottom or focus
 - [ ] Unread count clears when messages are read
-- [ ] iframe postMessages `{ type: 'unread-count', count: N }` to parent window
+- [ ] iframe postMessages `{ type: 'unread-count', count: N }` to parent window; origin validated on receipt
 - [ ] Notes app sidebar badge reflects current unread count
 - [ ] Badge disappears when count reaches 0
 - [ ] Sound plays when new message arrives and tab is not active
 - [ ] Sound plays when new message arrives and panel is collapsed
 - [ ] Sound does not play for own messages
 - [ ] Sound is suppressed when `prefers-reduced-motion` is set
+- [ ] AudioContext initialized within a user gesture; no autoplay errors in console
 - [ ] Notes app parent sends `{ type: 'panel-state', collapsed: boolean }` to iframe on sidebar toggle; iframe uses it for sound decisions
-- [ ] DM unread counts tracked via `conversation_id` in `chat_read_cursors`; included in aggregate sidebar badge
 - [ ] Browser notification permission requested after user sends first message (not on load, not on receive)
 - [ ] Browser notification fires when document is hidden
 - [ ] @mention triggers browser notification even when document is visible
-- [ ] Clicking browser notification focuses the tab and scrolls to message
+- [ ] Clicking browser notification focuses the tab, expands the sidebar if collapsed, and scrolls to message

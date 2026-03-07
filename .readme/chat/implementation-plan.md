@@ -10,13 +10,13 @@ Ordered checklist for building Chat v1 from scratch. Each phase builds on the pr
 ## Phase 1 — Foundation
 
 - [ ] **`packages/design-tokens`** — Tailwind preset + CSS custom properties (theming prerequisite for both apps)
-- [ ] **DB migration** — `023_chat.sql` + RLS policies + Supabase Realtime publication
-- [ ] **`apps/chat` scaffold** — SvelteKit init, Supabase SSR client, auth hook, Tailwind + design tokens wired up
-- [ ] **Routing** — `/chat/space/[spaceId]`, `/chat/dm/[conversationId]`, standalone layout detection (`window.opener`)
+- [ ] **DB migration** — `024_chat.sql` + RLS policies + Supabase Realtime publication
+- [ ] **`apps/chat` scaffold** — SvelteKit init, Supabase SSR client, auth hook, Tailwind + design tokens wired up, Vitest + Playwright test setup
+- [ ] **Routing** — `/chat/space/[spaceId]`, standalone layout detection (`window.opener`)
 
 ## Phase 2 — Core Messaging (MVP)
 
-- [ ] **Channel view** — message list, infinite scroll (load older on scroll up), Realtime subscription
+- [ ] **Channel view** — message list (`WHERE thread_parent_id IS NULL`), infinite scroll (load older on scroll up), Realtime subscription
 - [ ] **Composer** — textarea, markdown preview toggle, Enter/Shift+Enter, empty guard, char limit (4000), draft persistence
 - [ ] **Notes app integration** — `ChatSidebar.tsx`, `ChatFrame.tsx`, collapse state + `panel-state` postMessage, pop-out window
 
@@ -36,12 +36,11 @@ Ordered checklist for building Chat v1 from scratch. Each phase builds on the pr
 ## Phase 5 — Power Features
 
 - [ ] **Dice roller** — parser module (`parser.ts`), result card component, inline error surface, `/r`/`/roll` command dispatch
-- [ ] **DMs** — conversation list, member picker, DM composer
 - [ ] **Notifications** — unread cursors, `unread-count` postMessage, sound (Web Audio API), `panel-state` consumer, browser Notification API, @mention priority
 
 ## Phase 6 — Polish
 
-- [ ] **GIF support** — Tenor API integration, `/gif` command, inline rendering
+- [ ] **GIF support** — Tenor API server-side proxy route, `/gif` command, inline rendering
 - [ ] **Typing indicators** — Supabase presence channel per room
 - [ ] **Pinned messages** — pin action (space owner only), sticky pin strip in channel header
 - [ ] **Jump-to-unread** — scroll button, first unread message marker
