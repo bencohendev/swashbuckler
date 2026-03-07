@@ -16,25 +16,25 @@ Real-time chat tied to shared spaces. Each shared space gets a single channel au
 
 ### Phase 1 Features
 
-| Feature | Description |
-|---------|-------------|
-| Space channel | One channel per shared space, auto-created when a space is shared |
-| Direct messages | 1:1 DMs between members of a shared space |
-| Markdown composer | Plain textarea with rendered markdown output (marked.js) |
-| Reactions | Emoji reactions on any message |
-| Threads | Reply threads on any message (one level deep) |
-| Dice roller | Full TTRPG notation via `/r` or `/roll` command |
-| Private rolls | `/rp` or `/r ... !private` — result hidden from others |
-| Notifications | Unread badge, sound, browser Notification API, @mention priority |
-| GIF/image embeds | Tenor API for GIF search (`/gif`), URL-based image auto-embed |
-| @mentions | Autocomplete from space members, triggers priority notification |
-| Typing indicators | "[username] is typing..." shown in channel footer |
-| Spoiler tags | `\|\|text\|\|` renders as click-to-reveal |
-| Message editing | Edit own messages; "edited" marker shown |
-| Pinned messages | Space owner can pin messages to a sticky header strip |
-| Jump-to-unread | Button to scroll to first unread message |
-| Sidebar embed | Collapsible right panel in notes app via same-origin iframe |
-| Pop-out window | `window.open('/chat/space/{id}')` — standalone window mode |
+| Feature | Spec | Description |
+|---------|------|-------------|
+| Space channel | — | One channel per shared space, auto-created when a space is shared |
+| Direct messages | — | 1:1 DMs between members of a shared space |
+| Markdown composer | [composer.md](composer.md) | Plain textarea with rendered markdown output (marked.js) |
+| @mentions | [composer.md](composer.md) | Autocomplete from space members, triggers priority notification |
+| Spoiler tags | [composer.md](composer.md) | `\|\|text\|\|` renders as click-to-reveal |
+| Message editing | [composer.md](composer.md) | Edit own messages; "edited" marker shown |
+| Reactions | [reactions-and-threads.md](reactions-and-threads.md) | Emoji reactions on any message |
+| Threads | [reactions-and-threads.md](reactions-and-threads.md) | Reply threads on any message (one level deep) |
+| Dice roller | [dice-roller.md](dice-roller.md) | Full TTRPG notation via `/r` or `/roll` command |
+| Private rolls | [dice-roller.md](dice-roller.md) | `/rp` or `/r ... !private` — result hidden from others |
+| Notifications | [notifications.md](notifications.md) | Unread badge, sound, browser Notification API, @mention priority |
+| GIF/image embeds | — | Tenor API for GIF search (`/gif`), URL-based image auto-embed |
+| Typing indicators | — | "[username] is typing..." shown in channel footer |
+| Pinned messages | — | Space owner can pin messages to a sticky header strip |
+| Jump-to-unread | — | Button to scroll to first unread message |
+| Sidebar embed | — | Collapsible right panel in notes app via same-origin iframe |
+| Pop-out window | — | `window.open('/chat/space/{id}')` — standalone window mode |
 
 ### Out of Scope (Phase 1)
 
@@ -81,50 +81,7 @@ The iframe postMessages unread counts to the parent window. The notes app sideba
 
 ## Dice Roller
 
-### Notation Reference
-
-| Notation | Description | Example |
-|----------|-------------|---------|
-| `XdY` | Roll X dice of Y sides | `2d6` |
-| `+N` / `-N` | Modifier | `1d20+5` |
-| `XdY!` | Exploding dice (max value → roll again, add) | `2d6!` |
-| `XdYkhN` | Keep highest N | `4d6kh3` (D&D stat rolling) |
-| `XdYklN` | Keep lowest N | `2d20kl1` (disadvantage) |
-| `XdYrN` | Reroll values equal to N | `2d6r1` (Halfling Luck) |
-| `XdYtN` | Count successes (dice showing N+) | `5d6t4` (World of Darkness) |
-| `XdF` | Fudge/FATE dice (-1, 0, +1) | `4dF` |
-| Mixed groups | Multiple dice types summed | `1d8+2d6+3` |
-| Label | Append text after notation | `2d6+3 Fireball damage` |
-
-### Commands
-
-- `/r <notation>` or `/roll <notation>` — public roll, result visible to all
-- `/rp <notation>` or `/r <notation> !private` — private roll, shows `[private roll]` to others; full result visible only to roller
-
-### Result Storage
-
-Dice rolls are stored as `chat_messages` with `type = 'dice'` and full result data in `metadata JSONB`:
-
-```json
-{
-  "notation": "4d6kh3",
-  "groups": [
-    {
-      "count": 4,
-      "sides": 6,
-      "rolls": [3, 5, 2, 6],
-      "kept": [5, 6, 3],
-      "dropped": [2],
-      "exploded": []
-    }
-  ],
-  "total": 14,
-  "label": "Strength check",
-  "private": false
-}
-```
-
-The dice parser is a standalone TypeScript module with no dependencies — reusable in the tabletop simulator.
+See [dice-roller.md](dice-roller.md) for full notation reference, parser module details, result storage schema, and private roll behavior.
 
 ---
 
@@ -213,21 +170,7 @@ Enable Supabase Realtime publication for `chat_messages` and `chat_reactions`. T
 
 ## Notifications
 
-### Unread Count
-
-`chat_read_cursors.last_read_at` compared to `chat_messages.created_at` to compute unread count per channel/conversation. Updated on scroll-to-bottom or window focus.
-
-### Sound
-
-Small audio file (`/sounds/message.mp3`) played via Web Audio API on new messages when the tab is not active or the chat panel is collapsed. Respect `prefers-reduced-motion` — no sound if reduced motion is set.
-
-### Browser Notifications
-
-Request `Notification` permission after first message received. Show notification for new messages when document is hidden. @mentions trigger notifications even when document is visible (priority).
-
-### Unread Badge (in notes app)
-
-iframe postMessages `{ type: 'unread-count', count: N }` to `window.parent` on change. The `ChatSidebar` component in the notes app listens and renders a badge on the sidebar toggle button.
+See [notifications.md](notifications.md) for unread tracking, badge postMessage protocol, sound behavior, browser Notification API, and @mention priority details.
 
 ---
 
@@ -302,24 +245,15 @@ apps/chat/
 
 ## Verification Checklist
 
+Feature-specific checks live in each sub-spec. This list covers shared infrastructure.
+
 - [ ] Space channel auto-created when a space is shared
 - [ ] Messages send and appear in real time for all connected members
-- [ ] Markdown renders correctly (bold, italic, code, links, lists)
-- [ ] Dice roller handles all notation types and stores results in metadata
-- [ ] Private rolls show `[private roll]` to other members
 - [ ] DMs only available between members of a shared space
-- [ ] Reactions add/remove correctly with unique constraint enforced
-- [ ] Thread replies nest correctly under parent messages
-- [ ] Unread count increments correctly and clears on read
-- [ ] Notification sound plays only when not active/visible
-- [ ] Browser notification fires on new message when document hidden
-- [ ] @mention triggers priority notification
-- [ ] Spoiler tags render as click-to-reveal
 - [ ] GIF search returns results and inserts correctly
 - [ ] Typing indicator appears and clears correctly
 - [ ] Sidebar collapses and restores state from localStorage
 - [ ] Pop-out opens in new window with standalone layout
-- [ ] Unread badge in notes app sidebar reflects actual unread count
 - [ ] RLS prevents members of one space reading another space's messages
 - [ ] Custom themes from notes app apply correctly inside the iframe
-- [ ] Accessible: keyboard navigable, ARIA roles on message list, focus management in composer
+- [ ] Sub-spec checklists: [composer](composer.md) · [dice roller](dice-roller.md) · [reactions & threads](reactions-and-threads.md) · [notifications](notifications.md)

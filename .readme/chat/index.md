@@ -20,7 +20,11 @@ Real-time chat tied to shared spaces. Appears as a collapsible right sidebar in 
 
 | Feature | Spec | Status |
 |---------|------|--------|
-| [Chat v1](features/chat-v1.md) | Space channels, DMs, markdown, reactions, threads, dice roller, notifications | Active |
+| [Chat v1](features/chat-v1.md) | Space channels, DMs, shared architecture, GIFs, typing indicators, sidebar embed | Active |
+| [Composer](features/composer.md) | Markdown, @mentions, spoiler tags, message editing | Not started |
+| [Dice Roller](features/dice-roller.md) | TTRPG notation, private rolls, result cards | Not started |
+| [Reactions and Threads](features/reactions-and-threads.md) | Emoji reactions, reply threads (one level deep) | Not started |
+| [Notifications](features/notifications.md) | Unread badge, sound, browser Notification API, @mention priority | Not started |
 
 ## Planned Features
 
