@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import type { User } from '@supabase/supabase-js'
+import type { UserMetadata } from '@/shared/lib/data/types'
 import { CameraIcon, LoaderIcon } from 'lucide-react'
 import { createClient } from '@/shared/lib/supabase/client'
 import { uploadImage, ACCEPTED_IMAGE_TYPES } from '@/shared/lib/supabase/upload'
@@ -9,7 +10,7 @@ import { Button } from '@/shared/components/ui/Button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/shared/components/ui/Avatar'
 
 export function ProfileSection({ user }: { user: User }) {
-  const metadata = user.user_metadata ?? {}
+  const metadata: UserMetadata = user.user_metadata ?? {}
   const [displayName, setDisplayName] = useState(metadata.display_name ?? metadata.full_name ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

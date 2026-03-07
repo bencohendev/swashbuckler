@@ -510,6 +510,16 @@ export interface DataClient {
   isLocal: boolean
 }
 
+// --- User Metadata ---
+
+export interface UserMetadata {
+  display_name?: string
+  full_name?: string
+  avatar_url?: string
+  picture?: string
+  default_space_id?: string
+}
+
 // --- User Preferences ---
 
 export interface UserPreferences {
