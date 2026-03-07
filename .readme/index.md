@@ -25,13 +25,21 @@ packages/
 | [Chat](chat/index.md) | Real-time chat tied to shared spaces | In development | SvelteKit |
 | [Tabletop Simulator](tabletop-sim/index.md) | Shared maps, dice, cards, character sheets | Planned | SvelteKit |
 
-## Shared Documentation
+## Per-App Documentation
+
+Each app area contains its own `api/`, `onboarding/`, `features/`, and `bugs/` folders as it grows.
+
+| App | API Docs | Onboarding |
+|-----|----------|------------|
+| [Notes App](notes-app/index.md) | [notes-app/api/](notes-app/api/index.md) | [notes-app/onboarding/](notes-app/onboarding/index.md) |
+| [Chat](chat/index.md) | — | — |
+| [Tabletop Simulator](tabletop-sim/index.md) | — | — |
+
+## Shared
 
 | Section | Description |
 |---------|-------------|
-| [API Reference](api/index.md) | Supabase schema, RLS, RPC functions, hooks, auth, storage, events — shared across all apps |
-| [Onboarding](onboarding/index.md) | 10-doc structured guide to the notes-app codebase |
-| [Archive](archive/) | Exploratory analyses and historical plans |
+| [Archive](archive/) | Exploratory analyses and historical plans (cross-cutting) |
 
 ## Tech Stack
 
@@ -62,4 +70,4 @@ Shared theming: CSS custom properties defined in `packages/design-tokens` are im
 | Document | Description |
 |----------|-------------|
 | [v1 Implementation Plan](archive/v1-archive.md) | Original v1 plan (SvelteKit → Next.js rewrite) |
-| [SvelteKit Migration Analysis](archive/sveltekit-migration-analysis.md) | Full-app migration analysis — concluded too costly due to Plate.js |
+| [SvelteKit Migration Analysis](archive/sveltekit-migration-analysis.md) | Full-app migration analysis — concluded too costly due to Plate.js; microfrontend approach chosen instead |

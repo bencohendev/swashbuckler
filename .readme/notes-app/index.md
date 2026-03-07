@@ -5,7 +5,7 @@
 
 ## Onboarding
 
-New to the notes-app codebase? Start with the [Onboarding Guide](../onboarding/index.md) — a structured 10-document learning program covering architecture, data layer, database, auth, routing, editor, sharing, collaboration, state management, and testing.
+New to the notes-app codebase? Start with the [Onboarding Guide](onboarding/index.md) — a structured 10-document learning program covering architecture, data layer, database, auth, routing, editor, sharing, collaboration, state management, and testing.
 
 ## Overview
 

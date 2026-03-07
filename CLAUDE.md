@@ -75,11 +75,12 @@ This is the required workflow for all feature work. **Do not skip steps.**
 ## Documentation
 
 ### Structure
-- Feature specs live in `.readme/{app-area}/features/` with kebab-case names — `notes-app`, `chat`, or `tabletop-sim` (e.g., `.readme/chat/features/chat-v1.md`)
+- Each app area (`notes-app`, `chat`, `tabletop-sim`) has its own subfolder under `.readme/{app-area}/` containing: `features/`, `bugs/`, `api/`, `onboarding/` as needed
+- Feature specs live in `.readme/{app-area}/features/` with kebab-case names (e.g., `.readme/chat/features/chat-v1.md`)
 - Bug tracking lives in `.readme/{app-area}/bugs/log.md` — all bugs get a row there; complex bugs also get individual files in the same directory, linked from the log
 - `.readme/index.md` is the master navigation hub — links to each app area's own index
 - Each app area has its own index at `.readme/{app-area}/index.md` — update it when adding or completing features in that area
-- Shared docs (API, onboarding, archive) live directly under `.readme/` — they apply across all apps
+- Only truly cross-cutting docs (archive) live directly under `.readme/`
 - `.claude/plans/` is for Claude Code plan mode working files only — no permanent docs
 
 ### Feature Status
