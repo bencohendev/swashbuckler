@@ -8,13 +8,13 @@ Tracking list for documentation media assets (`apps/docs`).
 
 ## Screenshots — Tier 1 (Hero / High-Impact)
 
-- [ ] **S1** Getting Started — Dashboard with pinned + recent entries, sidebar expanded
-- [ ] **S2** Editor — Slash menu open, heading + bullet list + callout visible
+- [x ] **S1** Getting Started — Dashboard with pinned + recent entries, sidebar expanded
+- [x ] **S2** Editor — Slash menu open, heading + bullet list + callout visible
 - [ ] **S3** Editor — Floating toolbar with formatting active on selected text
-- [ ] **S4** Entries & Types — Type settings with custom fields (text, date, select, checkbox)
-- [ ] **S5** Type Pages — Table view with entries and property columns
-- [ ] **S6** Graph View — Force-directed graph with 10-15 nodes, one selected
-- [ ] **S7** Themes — Fantasy and Sci-Fi preset themes (side-by-side or separate shots)
+- [ x] **S4** Entries & Types — Type settings with custom fields (text, date, select, checkbox)
+- [x ] **S5** Type Pages — Table view with entries and property columns
+- [ x] **S6** Graph View — Force-directed graph with 10-15 nodes, one selected
+- [x ] **S7** Themes — Fantasy and Sci-Fi preset themes (side-by-side or separate shots)
 - [ ] **S8** Realtime Collaboration — Two cursors editing same doc with presence avatars
 
 ## Screenshots — Tier 2 (Feature Documentation)
@@ -42,10 +42,10 @@ Tracking list for documentation media assets (`apps/docs`).
 - [ ] **S20** Table with hover row/column menus visible
 - [ ] **S21** Code block with syntax highlighting
 - [ ] **S22** Image with resize handle
-- [ ] **S23** Mention dropdown triggered by `@`
+- [ x] **S23** Mention dropdown triggered by `@`
 
 ### Private Content
-- [ ] **S24** Private block (dashed purple border + eye icon)
+- [ x] **S24** Private block (dashed purple border + eye icon)
 - [ ] **S25** Private inline mark with `|||text|||`
 
 ### Relations & Linking
