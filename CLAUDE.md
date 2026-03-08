@@ -33,7 +33,7 @@ After adding, modifying, or fixing features, run these checks:
 - Never commit directly on `dev`, `main`, or other environment branches
 - Use a descriptive branch name (e.g., `worktree-add-toast-notifications`)
 - Merge the worktree branch back into the target branch only when work is complete and verified
-- **Merging from a worktree:** You cannot check out branches that are already checked out in another worktree. To merge, `cd` to the main repo root (`/Users/bencohen/dev/personal/swashbuckler`), then run `git checkout <target-branch> && git pull origin <target-branch> && git merge <worktree-branch> --no-edit`. Default target is `dev` unless told otherwise.
+- **Merging from a worktree:** You cannot check out branches that are already checked out in another worktree. To merge, `cd` to the main repo root (`/home/ben/dev/repos/swashbuckler`), then run `git checkout <target-branch> && git pull origin <target-branch> && git merge <worktree-branch> --no-edit`. Default target is `dev` unless told otherwise.
 
 ## Task Management
 
@@ -54,7 +54,7 @@ This is the required workflow for all feature work. **Do not skip steps.**
 
 ### 3. Ensure a Spec Exists
 - **If a spec exists:** read it, confirm scope with the user, then begin implementation
-- **If no spec exists:** check if the work fits as an addition to an existing related spec — if so, update that spec with the new scope. Only create a new spec in `.readme/features/` if the work is a standalone feature large enough to warrant its own document. Add to `index.md` if new, get user approval, then begin
+- **If no spec exists:** check if the work fits as an addition to an existing related spec — if so, update that spec with the new scope. Only create a new spec in `.readme/{app-area}/features/` if the work is a standalone feature large enough to warrant its own document. Add to that area's `index.md` if new, get user approval, then begin
 - Plan mode files in `.claude/plans/` are scratch — after approval, the permanent spec must be in `.readme/features/` and the plan file deleted
 
 ### 4. Implement
@@ -66,18 +66,21 @@ This is the required workflow for all feature work. **Do not skip steps.**
 ### 5. Finish
 - **Run all checks** — unit tests, e2e tests, types, lint must all pass before any documentation or merge steps
 - **Documentation audit** — review and update ALL of the following. Read each file before editing:
-  - **Feature spec** (`.readme/features/`) — update the existing related spec with implementation details, file paths, decisions that changed during implementation, and check off verification items. Set `**Status:**` to `Done`. Prefer adding to an existing spec over creating a new one — only create a separate spec if the work is a standalone feature large enough to warrant its own document
+  - **Feature spec** (`.readme/{app-area}/features/`) — update the existing related spec with implementation details, file paths, decisions that changed during implementation, and check off verification items. Set `**Status:**` to `Done`. Prefer adding to an existing spec over creating a new one — only create a separate spec if the work is a standalone feature large enough to warrant its own document
   - **User-facing docs** (`apps/docs/content/docs/`) — required for any change that affects user-visible behavior. Read the existing page (if any) and update it to match the current implementation. Create a new MDX page + `meta.json` entry if none exists
-  - **Master index** (`.readme/index.md`) — move the feature from Planned to Implemented (if applicable), ensure the spec link is correct
+  - **Area index** (`.readme/{app-area}/index.md`) — move the feature from Planned to Implemented (if applicable), ensure the spec link is correct
 - Do NOT skip the documentation audit — it is as important as the code itself
 - Commit doc updates and merge to `dev`
 
 ## Documentation
 
 ### Structure
-- Feature specs live in `.readme/features/` with kebab-case names (e.g., `custom-themes.md`)
-- Bug tracking lives in `.readme/bugs/log.md` — all bugs get a row there; complex bugs with root-cause analysis also get individual files in the same directory, linked from the log
-- `.readme/index.md` is the master index — update it when adding or completing features
+- Each app area (`notes-app`, `chat`, `tabletop-sim`) has its own subfolder under `.readme/{app-area}/` containing: `features/`, `bugs/`, `api/`, `onboarding/` as needed
+- Feature specs live in `.readme/{app-area}/features/` with kebab-case names (e.g., `.readme/chat/features/chat-v1.md`)
+- Bug tracking lives in `.readme/{app-area}/bugs/log.md` — all bugs get a row there; complex bugs also get individual files in the same directory, linked from the log
+- `.readme/index.md` is the master navigation hub — links to each app area's own index
+- Each app area has its own index at `.readme/{app-area}/index.md` — update it when adding or completing features in that area
+- Only truly cross-cutting docs (archive) live directly under `.readme/`
 - `.claude/plans/` is for Claude Code plan mode working files only — no permanent docs
 
 ### Feature Status
