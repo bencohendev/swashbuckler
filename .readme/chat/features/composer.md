@@ -33,9 +33,17 @@ The message composer handles text input, markdown preview, @mention autocomplete
 
 ## Markdown Rendering
 
-**Library:** `marked.js`
+**Libraries:** `marked.js` + `DOMPurify`
 
 Rendered markdown displayed in message list via `MessageItem.svelte`. Preview mode in composer renders the same output before sending.
+
+**XSS prevention is mandatory.** marked.js v5+ removed its built-in `sanitize` option. Rendering `marked.parse(content)` alone is a direct XSS vector — `<script>alert(1)</script>` and `<img onerror=.../>` pass through unchanged. Every render path **must** use:
+
+```ts
+DOMPurify.sanitize(marked.parse(content))
+```
+
+Both steps in that order, always. No exceptions for "trusted" content.
 
 ### Supported Syntax
 
@@ -50,7 +58,7 @@ Rendered markdown displayed in message list via `MessageItem.svelte`. Preview mo
 | `1. item` | Ordered list |
 | `> quote` | Blockquote |
 
-Raw HTML is stripped (sanitized output only).
+Raw HTML is stripped by DOMPurify after marked.js parsing.
 
 Pasting a bare URL inserts it as plain text — no auto-formatting and no link unfurl in Phase 1.
 
@@ -67,7 +75,7 @@ Pasting a bare URL inserts it as plain text — no auto-formatting and no link u
 
 ### Autocomplete Data
 
-- Source: space member roster fetched from `workspace_shares` for the current space
+- Source: space member roster fetched from `space_shares` for the current space (`workspace_shares` was dropped in migration 011)
 - Display: avatar + display name
 - Filter: case-insensitive prefix match on display name
 
@@ -106,10 +114,10 @@ Mention stored as plain text in message content (e.g., `@username`). The notific
 ## Message Editing
 
 - Edit action available only on the current user's own messages (via message context menu or `ArrowUp` shortcut)
-- Clicking edit loads existing content into the composer, replacing placeholder text
+- Clicking edit saves the current draft to `localStorage`, then loads existing message content into the composer
 - Saving submits a `PATCH` to update `chat_messages.content` and sets `is_edited = true`
 - An "(edited)" marker is shown after the message timestamp
-- Cancel restores the composer to its empty state
+- Cancel restores the in-progress draft that was active before edit mode opened (not an empty state) — the draft is read back from `localStorage`
 
 ### Edit Constraints
 
@@ -129,6 +137,15 @@ Mention stored as plain text in message content (e.g., `@username`). The notific
 
 ---
 
+## Open Issues
+
+- **Spoiler tag syntax is not built into marked.js** — `||hidden text||` is not standard markdown. marked.js has no built-in support for it. Needs either a custom marked.js extension or a pre/post-processing step (regex replace before `marked.parse`, then DOMPurify). Implementation path must be decided before building.
+
+All other issues resolved:
+- **XSS** — resolved: mandatory `DOMPurify.sanitize(marked.parse(content))` pattern documented above
+- **`workspace_shares`** — resolved: confirmed table is `space_shares`
+- **Draft + cancel ambiguity** — resolved: cancel restores the pre-edit draft from `localStorage`
+
 ## Verification Checklist
 
 - [ ] Enter sends message; Shift+Enter inserts newline
@@ -136,13 +153,14 @@ Mention stored as plain text in message content (e.g., `@username`). The notific
 - [ ] Pasting a bare URL inserts plain text (no auto-formatting)
 - [ ] Draft persists in localStorage keyed by channel/conversation ID; restored on page load; cleared on send
 - [ ] Character counter appears within 200 chars of limit; turns red at 0; send blocked at limit
-- [ ] Markdown preview toggle renders correctly before sending
+- [ ] Markdown preview toggle renders correctly before sending; output passes through `DOMPurify.sanitize(marked.parse(content))`
+- [ ] `<script>alert(1)</script>` in message content is stripped and not executed
 - [ ] `@` triggers autocomplete filtered to space members
 - [ ] Selecting a mention inserts it into the composer
 - [ ] `||spoiler||` renders as hidden text, revealed on click
 - [ ] Edit action loads message content into composer
 - [ ] Saving edit updates message and shows "(edited)" marker
-- [ ] Cancel edit restores empty composer state
+- [ ] Cancel edit restores the draft that was active before edit mode opened (not an empty state)
 - [ ] ArrowUp on empty composer opens edit for last own message
 - [ ] Escape closes autocomplete without inserting
 - [ ] Dice and system messages have no edit action

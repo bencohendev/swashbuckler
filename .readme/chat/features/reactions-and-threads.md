@@ -26,7 +26,8 @@ Emoji reactions let members respond to messages with emojis. Reply threads let m
 
 - Reactions grouped by emoji beneath the message
 - Each group shows: emoji + count (e.g., `👍 3`)
-- Tooltip on hover lists the display names of users who reacted
+- **Desktop:** tooltip on hover lists the display names of users who reacted
+- **Mobile:** tapping the reaction count opens a bottom sheet listing who reacted (hover does not exist on touch devices)
 - Current user's reactions highlighted (filled/bordered style)
 
 ### Database
@@ -65,7 +66,8 @@ One row per user per emoji per message — the unique constraint prevents duplic
 
 **Component:** `apps/chat/src/lib/components/ThreadDrawer.svelte`
 
-- Opens as a right-side panel overlaying (or alongside) the message list
+- **Sidebar mode (narrow iframe, ~300–420px):** opens as a full overlay covering the message list. Side-by-side is geometrically impossible at sidebar width.
+- **Pop-out mode (standalone window, wider):** may open alongside the message list if width permits; overlay is the fallback.
 - Closes via an X button or pressing `Escape`
 - Focus moves to the reply composer when the drawer opens
 - Focus returns to the triggering message when the drawer closes
@@ -85,6 +87,13 @@ Thread replies are delivered via the existing `chat_messages` Realtime subscript
 
 ---
 
+## Open Issues
+
+All issues resolved:
+
+- **Thread drawer layout** — resolved: sidebar mode = overlay; pop-out mode = alongside if width allows, overlay otherwise (see Thread Drawer Component section)
+- **Reaction tooltip on mobile** — resolved: tap-on-count opens a bottom sheet listing who reacted (see Display section)
+
 ## Verification Checklist
 
 - [ ] Emoji picker opens on reaction button click
@@ -93,7 +102,10 @@ Thread replies are delivered via the existing `chat_messages` Realtime subscript
 - [ ] Clicking another user's reaction adds the current user's reaction
 - [ ] Unique constraint prevents duplicate reactions (one per user per emoji per message)
 - [ ] Reaction counts update in real time via Supabase subscription
+- [ ] Desktop: hover on reaction count shows tooltip with reacting users' names
+- [ ] Mobile: tap on reaction count opens a bottom sheet listing reacting users
 - [ ] Reply action opens thread drawer for the selected message
+- [ ] Thread drawer renders as overlay in sidebar mode; may render alongside in pop-out mode
 - [ ] Thread drawer shows parent message and all replies
 - [ ] Replies send correctly and appear in real time
 - [ ] Thread count badge shows reply count + last-reply timestamp (e.g., `3 replies · Today at 2:04 PM`)

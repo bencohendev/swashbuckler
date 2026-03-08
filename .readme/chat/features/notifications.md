@@ -28,6 +28,8 @@ Multiple notification surfaces keep users aware of new messages across different
 
 The cursor is not updated while the user is scrolled up reading history.
 
+**Clock skew:** `last_read_at` **must not** be set from the client clock (`new Date()`). Messages use `now()` server-side; if the cursor is set from a device with a skewed clock, unread counts will be incorrect across devices. All cursor updates use the `update_read_cursor(channel_id)` SECURITY DEFINER RPC defined in `036_chat.sql`, which calls `now()` server-side.
+
 ---
 
 ## Unread Badge (notes app sidebar)
@@ -69,10 +71,10 @@ The iframe stores this value. When deciding whether to play sound, the iframe tr
   - The browser tab is not active (`document.hidden === true`), or
   - The chat panel is collapsed in the notes app sidebar
 
-### Reduced Motion
+### Sound Muting
 
-- Check `window.matchMedia('(prefers-reduced-motion: reduce)').matches`
-- If reduced motion is preferred, suppress the sound notification
+- Sound is suppressed when `window.matchMedia('(prefers-reduced-motion: reduce)').matches`
+- **Note:** this is a deliberate coupling — `prefers-reduced-motion` controls animation, not audio. Users with vestibular disorders who want no animations but do want audio cues may find this frustrating. A dedicated per-user "mute notification sounds" preference is the correct long-term solution but is deferred to Phase 2. The coupling is intentional for Phase 1 simplicity and must be documented in user-facing help text.
 
 ---
 
@@ -98,7 +100,15 @@ Show a browser notification when a new message arrives and:
 
 ### Click Behavior
 
-Clicking the notification focuses the browser tab/window and scrolls the chat to the relevant message. When the chat panel is collapsed, the click handler must also send a `{ type: "panel-state", collapsed: false }` equivalent to expand the sidebar before scrolling.
+Clicking the notification focuses the browser tab/window. The click event fires in the chat iframe's `Notification.onclick` handler. The iframe then:
+
+1. Calls `window.focus()` to ensure the tab is foregrounded
+2. Posts `{ type: "sidebar-expand-request" }` to `window.parent` (validated by origin check)
+3. Scrolls the message list to the relevant message
+
+The `ChatSidebar` component in `apps/web` handles `sidebar-expand-request` messages by setting the panel to expanded (`collapsed: false`) and responding with a `panel-state` message back to the iframe.
+
+This uses the existing postMessage protocol — the iframe is already allowed to emit messages to its parent (it sends `unread-count` today). No BroadcastChannel or sessionStorage flag is needed.
 
 ---
 
@@ -111,10 +121,26 @@ Clicking the notification focuses the browser tab/window and scrolls the chat to
 
 ---
 
+## Multi-Tab Unread Sync
+
+When the user has chat open in multiple tabs or devices, reading on one tab must update the unread count on all others without a page reload.
+
+**Mechanism:** `chat_read_cursors` is included in the Supabase Realtime publication (see `036_chat.sql`). The `unread.ts` store subscribes to `chat_read_cursors` UPDATE events for the current user. When a cursor update arrives (whether local or from another device), the store recomputes unread count from the new `last_read_at`.
+
+---
+
+## Open Issues
+
+All issues resolved:
+
+- **Notification click handler** — resolved: iframe `Notification.onclick` posts `{ type: "sidebar-expand-request" }` to `window.parent`; `ChatSidebar` handles it (see Click Behavior section)
+- **`last_read_at` clock skew** — resolved: all cursor writes go through `update_read_cursor()` RPC using server-side `now()`
+- **`prefers-reduced-motion` / sound coupling** — resolved: coupling is intentional for Phase 1; documented in Sound Muting section; dedicated setting deferred to Phase 2
+
 ## Verification Checklist
 
 - [ ] Unread count increments correctly as new messages arrive (excluding thread replies)
-- [ ] `last_read_at` cursor updates on scroll-to-bottom or focus
+- [ ] `last_read_at` cursor updated via `update_read_cursor()` RPC (server-side clock) on scroll-to-bottom or focus
 - [ ] Unread count clears when messages are read
 - [ ] iframe postMessages `{ type: 'unread-count', count: N }` to parent window; origin validated on receipt
 - [ ] Notes app sidebar badge reflects current unread count
@@ -128,4 +154,5 @@ Clicking the notification focuses the browser tab/window and scrolls the chat to
 - [ ] Browser notification permission requested after user sends first message (not on load, not on receive)
 - [ ] Browser notification fires when document is hidden
 - [ ] @mention triggers browser notification even when document is visible
-- [ ] Clicking browser notification focuses the tab, expands the sidebar if collapsed, and scrolls to message
+- [ ] Clicking browser notification focuses the tab; iframe posts `sidebar-expand-request` to parent; parent expands sidebar; chat scrolls to message
+- [ ] Unread count syncs to 0 in all open tabs when cursor is updated in any one tab

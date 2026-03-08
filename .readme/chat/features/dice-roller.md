@@ -43,20 +43,29 @@ A full TTRPG dice roller integrated into chat. Users type `/r` or `/roll` follow
 
 ## Parser Module
 
-**File:** `apps/chat/src/lib/dice/parser.ts`
+**Package:** `packages/dice-parser`
+
+The parser lives in a shared package, not inside `apps/chat`. This is required for `apps/tabletop-sim` to import the same parser without modification — files inside one app cannot be imported by another app in this monorepo.
+
+**File:** `packages/dice-parser/src/parser.ts`
 
 - Standalone TypeScript module — no external dependencies
-- Reusable in the tabletop simulator (`apps/tabletop-sim`) without modification
-- Exports a single `parse(notation: string)` function
+- Exports a single `parse(notation: string)` function via `packages/dice-parser/src/index.ts`
 - Returns a structured result object (see Result Storage below) or throws on invalid notation
 
-**Test file:** `apps/chat/src/lib/dice/parser.test.ts`
+**Test file:** `packages/dice-parser/src/parser.test.ts`
 
-All notation types must have unit test coverage. Edge cases: zero dice, very large counts, invalid syntax.
+All notation types must have unit test coverage. Edge cases: zero dice, very large counts, invalid syntax, pathological reroll inputs.
 
-The parser enforces a maximum of **100 dice per group** (e.g., `101d6` is rejected as invalid).
+The parser enforces:
+- Maximum of **100 dice per group** (e.g., `101d6` is rejected)
+- Maximum of **100 reroll attempts** for `XdYrN` — if a reroll result still equals N after 100 attempts, the parser returns the last rolled value with a `reroll_limit_reached: true` flag in the group result. This prevents infinite loops on inputs like `2d1r1` where the condition can never be satisfied.
 
 ---
+
+## Rate Limiting
+
+The composer enforces a **client-side debounce of 500ms** between dice roll submissions. Back-to-back rapid submissions (e.g., keyboard macro spamming) are blocked — the send button re-enables after the debounce window passes. This is a UI-level safeguard only; a server-side rate limit can be added in a later phase if abuse is observed.
 
 ## Result Card Component
 
@@ -90,14 +99,16 @@ Dice rolls stored as `chat_messages` rows with:
       "rolls": [3, 5, 2, 6],
       "kept": [5, 6, 3],
       "dropped": [2],
-      "exploded": []
+      "exploded": [],
+      "reroll_limit_reached": false
     }
   ],
   "total": 14,
-  "label": "Strength check",
-  "private": false
+  "label": "Strength check"
 }
 ```
+
+Note: `"private"` is **not** stored in `metadata` — privacy is determined solely by `is_private_roll` on the message row. Storing it in both places would create ambiguity about which field is authoritative.
 
 ---
 
@@ -114,12 +125,20 @@ When the user submits a `/r` command with invalid notation:
 ## Private Rolls
 
 - `is_private_roll = true` on the message row
-- The RLS SELECT policy on `chat_messages` nulls `metadata` for private roll rows belonging to other users, so direct queries (page load, history fetch) are safe
-- **Realtime guard (client-side):** Supabase Realtime broadcasts the full row and cannot null columns mid-stream. When a Realtime INSERT event arrives with `is_private_roll = true` AND `user_id !== currentUser.id`, the client **must** discard the event's `metadata` and render the placeholder immediately — do not trust the Realtime payload for private rolls you don't own
+- Direct queries (page load, history fetch) use `chat_messages_safe` view, which nulls `metadata` for private roll rows where `user_id <> auth.uid()`. See [chat-v1.md](chat-v1.md) for the view definition.
+- **Realtime guard (client-side):** Supabase Realtime broadcasts the full row and cannot apply the view transformation. When a Realtime INSERT event arrives with `is_private_roll = true` AND `user_id !== currentUser.id`, the client **must** discard the event's `metadata` and render the placeholder immediately — do not trust the Realtime payload for private rolls you don't own
 - Message content shown to others: `[private roll]`
 - Roller sees the full `DiceResult` card
 
 ---
+
+## Open Issues
+
+All issues resolved:
+
+- **Parser location** — resolved: `packages/dice-parser` (see Parser Module section)
+- **Reroll loop** — resolved: 100-attempt cap with `reroll_limit_reached` flag in group result (see Parser Module section)
+- **`metadata.private` redundancy** — resolved: field removed from JSONB schema; `is_private_roll` column is the sole authority
 
 ## Verification Checklist
 
@@ -128,9 +147,12 @@ When the user submits a `/r` command with invalid notation:
 - [ ] All notation types parse correctly (XdY, modifiers, exploding, kh/kl, reroll, successes, Fudge, mixed, label)
 - [ ] Invalid notation shows an inline red error beneath the composer; message is not sent; error clears on edit
 - [ ] Parser rejects groups exceeding 100 dice (e.g., `101d6`)
+- [ ] `2d1r1` (pathological reroll) resolves with `reroll_limit_reached: true` instead of looping
 - [ ] Result card renders full breakdown with kept/dropped/exploded indicators
 - [ ] Private roll shows `[private roll]` to other members
 - [ ] Roller sees full result for private rolls
+- [ ] `metadata` contains no `"private"` field — `is_private_roll` column is authoritative
 - [ ] Result stored in `metadata JSONB` with correct schema
+- [ ] Rapid roll submissions are debounced (500ms) at the composer level
 - [ ] Parser module has unit tests for all notation types and edge cases
-- [ ] Parser is importable from `apps/tabletop-sim` without modification
+- [ ] Parser (`packages/dice-parser`) is importable from `apps/tabletop-sim` without modification

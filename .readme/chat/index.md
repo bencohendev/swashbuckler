@@ -42,9 +42,9 @@ See [implementation-plan.md](implementation-plan.md) for the ordered build check
 
 ```
 chat_channels              # one per shared space, auto-created on share
-chat_conversations         # DM threads between space members
-chat_conversation_members  # participants + last_read_at per conversation
 chat_messages              # content, type, metadata JSONB, thread_parent_id
 chat_reactions             # message_id + user_id + emoji (unique constraint)
 chat_read_cursors          # user_id + channel_id + last_read_at (unread tracking)
 ```
+
+> **Note:** `chat_conversations` and `chat_conversation_members` (for DMs) are Phase 2 and do not exist in the Phase 1 migration. They were previously listed here in error.
